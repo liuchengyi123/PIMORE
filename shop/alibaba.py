@@ -466,6 +466,48 @@ def weight_floor_cents(grams, grams_per_dollar=25):
     return int((Decimal(grams) / unit * 100).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
 
 
+
+def offer_is_held(offer):
+    """True when a SKU/offer was intercepted by the weight-price rule."""
+    value = offer.get("hold") if isinstance(offer, dict) else None
+    if isinstance(value, bool):
+        return value
+    return bool(str(value or "").strip())
+
+
+def apply_intercept_rules(item):
+    """Intercept rules (delete, do not hold unpublished):
+
+    - Some SKUs intercepted: drop only those offers; keep the product.
+    - Every SKU intercepted (整件拦截): drop the product (return None).
+    - Never leave listing.hold set — intercepted rows are removed, not parked.
+    """
+    if not isinstance(item, dict):
+        return None
+    offers = [dict(offer) for offer in (item.get("offers") or []) if isinstance(offer, dict)]
+    kept = []
+    for offer in offers:
+        if offer_is_held(offer):
+            continue
+        clean = dict(offer)
+        clean.pop("hold", None)
+        kept.append(clean)
+    if not kept:
+        return None
+    item = dict(item)
+    item["offers"] = kept
+    listing = dict(item.get("listing") or {})
+    listing["hold"] = ""
+    item["listing"] = listing
+    chosen = min(kept, key=lambda offer: (int(offer.get("price_cents") or 0), int(offer.get("original_cents") or 0)))
+    item["price_cents"] = chosen["price_cents"]
+    item["original_cents"] = chosen["original_cents"]
+    if "source_cents" in chosen:
+        item["source_cents"] = chosen["source_cents"]
+    if not item.get("image_url"):
+        item["image_url"] = next((offer.get("image") for offer in kept if offer.get("image")), "") or item.get("image_url") or ""
+    return item
+
 def hold_reason(percent=20):
     number = Decimal(str(percent))
     if number == number.to_integral_value():
@@ -562,6 +604,7 @@ def group_rows(items):
             "hold": bool(item.get("hold")),
         })
     seen = set()
+    kept_products = []
     for item in grouped:
         sku = item["sku"]
         base = sku
@@ -572,17 +615,12 @@ def group_rows(items):
             number += 1
         seen.add(sku)
         item["sku"] = sku
-        sellable = [offer for offer in item["offers"] if not offer.get("hold")]
-        if item["offers"] and not sellable:
-            item["listing"]["hold"] = HOLD_REASON
-        else:
-            item["listing"]["hold"] = ""
-        chosen = min(sellable or item["offers"], key=lambda offer: (offer["price_cents"], offer["original_cents"]))
-        item["price_cents"] = chosen["price_cents"]
-        item["original_cents"] = chosen["original_cents"]
-        if not item.get("image_url"):
-            item["image_url"] = next((offer["image"] for offer in item["offers"] if offer["image"]), "")
-    return grouped
+        # 拦截规则：超线规格直接删掉；整件超线则整件不入库。
+        cleaned = apply_intercept_rules(item)
+        if cleaned is None:
+            continue
+        kept_products.append(cleaned)
+    return kept_products
 
 
 def parse_sheet(raw, filename):

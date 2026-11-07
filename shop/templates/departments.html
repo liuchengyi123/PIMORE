@@ -5,10 +5,10 @@
   <header class="fn-depts-top">
     <h1 class="fn-depts-title">{% if t.browse is defined %}{{ t.browse }}{% elif lang.startswith('en') %}Browse{% else %}{{ t.departments }}{% endif %}</h1>
     <form method="get" action="{{ request.url.path }}" class="fn-depts-loc-form">
-      <label class="fn-depts-loc">{{ country }}
-        <select name="country" aria-label="{{ t.locale }}" onchange="this.form.submit()">
-          {% for row in ship_countries %}
-          <option value="{{ row[0] }}" {% if country == row[0] %}selected{% endif %}>{{ row[0] }} · {{ row[1] }}</option>
+      <label class="fn-depts-loc">{{ country }} · {{ currency }}
+        <select name="lang" aria-label="{{ t.locale }}" onchange="harborLang(this)">
+          {% for code, label in [('en', 'English'), ('zh', '简体中文'), ('zh-Hant', '繁體中文'), ('ja', '日本語'), ('de', 'Deutsch'), ('fr', 'Français'), ('es', 'Español'), ('pt', 'Português')] %}
+          <option value="{{ code }}" {% if lang == code %}selected{% endif %}>{{ label }}</option>
           {% endfor %}
         </select>
       </label>

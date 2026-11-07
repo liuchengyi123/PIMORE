@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="{{ lang }}">
 <head>
   <meta charset="utf-8">
@@ -23,10 +23,13 @@
   {% for block in seo_jsonld %}
   <script type="application/ld+json">{{ block|tojson }}</script>
   {% endfor %}
-  <link rel="stylesheet" href="/static/shop.css?v=97">
-  <link rel="stylesheet" href="/static/harbor-ui.css?v=70">
-  <link rel="stylesheet" href="/static/fn-desktop.css?v=33">
-  <link rel="stylesheet" href="/static/fn-mobile.css?v=52">
+  <link rel="stylesheet" href="/static/shop.css?v=99">
+  <link rel="stylesheet" href="/static/harbor-ui.css?v=71">
+  {% if is_mobile|default(false) %}
+  <link rel="stylesheet" href="/static/fn-mobile.css?v=55">
+  {% else %}
+  <link rel="stylesheet" href="/static/fn-desktop.css?v=34">
+  {% endif %}
   {% block head %}{% endblock %}
 
   {% if ad_pixels is defined and (ad_pixels.meta_ok or ad_pixels.google_ok or ad_pixels.tiktok_ok) %}
@@ -128,9 +131,10 @@
         <form method="get" action="{{ request.url.path }}">
           <label class="fn-country" style="position:relative;display:inline-flex;align-items:center;gap:6px;cursor:pointer">
             <span>{{ country }} · {{ currency }}</span>
-            <select name="country" aria-label="{{ t.locale }}" onchange="this.form.submit()" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%">
-              {% for row in ship_countries %}
-              <option value="{{ row[0] }}" {% if country == row[0] %}selected{% endif %}>{{ row[0] }} · {{ row[1] }}</option>
+            <span>{{ country }} · {{ currency }}</span>
+            <select name="lang" aria-label="{{ t.locale }}" onchange="harborLang(this)" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%">
+              {% for code, label in [('en', 'English'), ('zh', '简体中文'), ('zh-Hant', '繁體中文'), ('ja', '日本語'), ('de', 'Deutsch'), ('fr', 'Français'), ('es', 'Español'), ('pt', 'Português')] %}
+              <option value="{{ code }}" {% if lang == code %}selected{% endif %}>{{ label }}</option>
               {% endfor %}
             </select>
           </label>
@@ -709,23 +713,27 @@
         var left = end - Date.now();
         var key = node.getAttribute("data-ends") + (msMode ? ":ms" : "");
         if (left <= 0) {
-          node.textContent = "00:00:00";
+          node.textContent = (msMode || node.classList.contains("urg-cd") || node.id === "hold-clock") ? "00:00" : "00:00:00";
           if (crossed[key] && !node.classList.contains("urg-cd")) location.reload();
           return;
         }
         crossed[key] = true;
-        if (msMode) {
-          var total = Math.floor(left);
-          var m = Math.floor(total / 60000);
-          var sec = Math.floor((total % 60000) / 1000);
-          var ms = Math.floor((total % 1000) / 10);
-          node.textContent = String(m).padStart(2, "0") + ":" + String(sec).padStart(2, "0") + ":" + String(ms).padStart(2, "0");
+        if (msMode || node.classList.contains("urg-cd") || node.id === "hold-clock") {
+          // mm:ss only — never show centiseconds in shopper-facing timers
+          var sMs = Math.floor(left / 1000);
+          var mMs = Math.floor(sMs / 60);
+          var secMs = sMs % 60;
+          node.textContent = String(mMs).padStart(2, "0") + ":" + String(secMs).padStart(2, "0");
         } else {
           var s = Math.floor(left / 1000);
           var h = Math.floor(s / 3600);
           var mm = Math.floor((s % 3600) / 60);
           var sec2 = s % 60;
-          node.textContent = String(h).padStart(2, "0") + ":" + String(mm).padStart(2, "0") + ":" + String(sec2).padStart(2, "0");
+          if (h <= 0) {
+            node.textContent = String(mm).padStart(2, "0") + ":" + String(sec2).padStart(2, "0");
+          } else {
+            node.textContent = String(h).padStart(2, "0") + ":" + String(mm).padStart(2, "0") + ":" + String(sec2).padStart(2, "0");
+          }
         }
       }
       function tickAll() {
@@ -1261,6 +1269,12 @@ var hold = document.getElementById("pop-hold");
     })();
   </script>
   <script>
+    function harborLang(select) {
+      var url = new URL(location.href);
+      url.searchParams.delete("country");
+      url.searchParams.set("lang", select.value);
+      location.href = url.pathname + "?" + url.searchParams.toString();
+    }
     (function () {
       var pending = null;
       document.addEventListener("click", function (event) {
@@ -1278,7 +1292,12 @@ var hold = document.getElementById("pop-hold");
           if (select) {
             select.value = pick.getAttribute("data-cur");
             form.submit();
+            return;
           }
+          var url = new URL(location.href);
+          url.searchParams.delete("country");
+          url.searchParams.set("lang", pick.getAttribute("data-cur"));
+          location.href = url.pathname + "?" + url.searchParams.toString();
           return;
         }
         var closer = event.target.closest("[data-x]");
@@ -1540,6 +1559,18 @@ var hold = document.getElementById("pop-hold");
     if (!fromPeek && next && (next.value || "").indexOf("/cart") === 0) return;
     // Stay on the page. Desktop opens a centered gap window; phone opens a bottom sheet.
     ev.preventDefault();
+    // Make sure a SKU offer is chosen and enabled (avoid silent miss when radios disabled).
+    var offerInputs = form.querySelectorAll(".sku-input");
+    if (offerInputs.length) {
+      var picked = form.querySelector(".sku-input:checked:not([disabled])") || form.querySelector(".sku-input:checked");
+      if (!picked) {
+        picked = form.querySelector(".sku-input:not([disabled])") || offerInputs[0];
+        if (picked) picked.checked = true;
+      }
+      offerInputs.forEach(function (el) {
+        if (el.disabled && el.checked) el.disabled = false;
+      });
+    }
     var fd = new FormData(form);
     fd.set("ajax", "1");
     var country = fd.get("country") || "";
@@ -1549,10 +1580,16 @@ var hold = document.getElementById("pop-hold");
       body: fd,
       credentials: "same-origin",
       headers: { "X-Harbor-Ajax": "1", "Accept": "application/json" }
-    }).then(function (r) { return r.json(); }).then(function (data) {
+    }).then(function (r) {
+      return r.json().then(function (data) { return { status: r.status, data: data }; }).catch(function () {
+        return { status: r.status, data: null };
+      });
+    }).then(function (pack) {
+      var data = pack && pack.data;
       if (!data || !data.ok) {
-        form.removeEventListener; // no-op
-        form.submit();
+        var msg = (data && (data.message || data.error)) || "Could not add to cart";
+        if (window.harborToast) window.harborToast(String(msg));
+        else if (window.alert) window.alert(String(msg));
         return;
       }
       paintRail(data);

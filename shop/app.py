@@ -61,6 +61,7 @@ from shop.adtrack import (
 )
 from shop.alibaba import (
     AlibabaFormatError,
+    apply_intercept_rules,
     apply_prices,
     detail_image_urls,
     group_rows,
@@ -150,19 +151,32 @@ from shop.image_gen import (
     CommerceImageClient,
     GenError,
     HttpEditor,
+    claim_sku_task,
     claim_task,
     enqueue,
+    enqueue_sku,
+    enqueue_sku_shots,
+    finish_sku_task,
     finish_task,
     generate_product,
+    generate_one_sku_shot,
+    generate_sku_shots,
     generate_story,
+    has_pending_sku_shot,
+    list_pending_sku_shot_units,
+    count_pending_sku_shots,
     main_urls,
     missing_story_slots,
     has_pending_shot,
     pending_rows,
     plan_product,
     plan_queue,
+    plan_sku_product,
+    plan_sku_queue,
     release_abandoned,
+    release_abandoned_sku,
     source_url,
+    sku_task_progress,
     story_urls,
     task_progress,
 )
@@ -714,6 +728,84 @@ def sale_list_cents(row):
     return sale, strike_list_cents(sale, key)
 
 
+
+def line_sale_list_cents(row, line_sku):
+    """Sale/list cents for a cart line (parent~offerId uses that offer, else cheapest)."""
+    parent, sep, oid = str(line_sku or "").partition("~")
+    sku = row["sku"] if "sku" in row.keys() else parent
+    if sep and oid:
+        for offer in live_offers(row):
+            if str(offer.get("id") or "") == str(oid):
+                sale = int(offer.get("price_cents") or 0)
+                return sale, strike_list_cents(sale, f"{sku}~{oid}")
+    return sale_list_cents(row)
+
+
+def catalog_file_exists(url, root):
+    text = str(url or "").strip()
+    if not text.startswith("/static/"):
+        return bool(text)
+    path = Path(root) / "static" / text[len("/static/"):]
+    return path.is_file()
+
+
+def resolve_catalog_image(url, row, lang, root):
+    """Use url when the file exists; else product image_url / generated main / any on-disk shot / svg."""
+    sku = ""
+    fallbacks = []
+    if url:
+        fallbacks.append(str(url))
+    if row is not None:
+        sku = str(row["sku"] if "sku" in row.keys() else "")
+        img = ""
+        if "image_url" in row.keys() and row["image_url"]:
+            img = str(row["image_url"])
+        if img:
+            fallbacks.append(img)
+        if sku:
+            try:
+                mains = list(main_urls(sku, lang, root) or [])
+            except Exception:
+                mains = []
+            if not mains and lang != "en":
+                try:
+                    mains = list(main_urls(sku, "en", root) or [])
+                except Exception:
+                    mains = []
+            fallbacks.extend(mains)
+            # Any existing catalog file for this SKU (s0/c1/etc.) before SVG placeholder.
+            folder = Path(root) / "static" / "catalog" / sku
+            if folder.is_dir():
+                for path in sorted(folder.glob("*.jpg")) + sorted(folder.glob("*.png")) + sorted(folder.glob("*.webp")):
+                    fallbacks.append(f"/static/catalog/{sku}/{path.name}")
+                for sub in ("en/main", f"{lang}/main"):
+                    subdir = folder / sub
+                    if subdir.is_dir():
+                        for path in sorted(subdir.glob("*.jpg")):
+                            fallbacks.append(f"/static/catalog/{sku}/{sub}/{path.name}")
+            fallbacks.append(f"/static/products/{sku}.svg")
+    seen = set()
+    for cand in fallbacks:
+        cand = str(cand or "").strip()
+        if not cand or cand in seen:
+            continue
+        seen.add(cand)
+        if cand.startswith("/static/"):
+            if catalog_file_exists(cand, root):
+                if "/catalog/" in cand and "/products/" not in cand:
+                    try:
+                        return storefront_image(cand, lang, root)
+                    except Exception:
+                        return cand
+                return cand
+        elif cand.startswith("http://") or cand.startswith("https://"):
+            return cand
+    # Last resort: SVG path even if missing (browser may 404 less harshly than broken jpg)
+    if sku:
+        return f"/static/products/{sku}.svg"
+    return ""
+
+
 def format_off_pct(sale_cents, list_cents):
     """Percent off vs list, only when list > sale. One decimal when needed."""
     if not (list_cents > sale_cents > 0):
@@ -786,6 +878,7 @@ def offer_view(row, ctx):
             "higher": listed > sale,
             "off_pct": format_off_pct(sale, listed) if listed > sale else "",
             "image": offer.get("image") or "",
+            "generated": 1 if offer.get("generated") else 0,
         })
     pictures = []
     for offer in offers:
@@ -1703,8 +1796,10 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             parent = str(line.get("sku") or "").split("~", 1)[0]
             row = by_sku.get(parent) or by_sku.get(line.get("sku"))
             if row is not None:
-                merchandise += int(row["price_cents"]) * int(line.get("qty") or 1)
-        if free_cents and 0 < merchandise < free_cents:
+                unit_cents, _ = line_sale_list_cents(row, line.get("sku"))
+                merchandise += int(unit_cents) * int(line.get("qty") or 1)
+        # Shipping is always free in quote; do not use free_shipping threshold for fillers.
+        if False and free_cents and 0 < merchandise < free_cents:
             need = free_cents - merchandise
             fillers = []
             for sku in ordered:
@@ -1767,11 +1862,21 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         promos = cached_promos()
         cart_count = sum(line["qty"] for line in load_lines(request.cookies.get("cart")))
         prefer_zh = prefer_zh_copy(request)
+        ua = (request.headers.get("user-agent") or "").lower()
+        is_mobile = (
+            "mobile" in ua
+            or "android" in ua
+            or "iphone" in ua
+            or "ipod" in ua
+            or "webos" in ua
+            or "blackberry" in ua
+        ) and "ipad" not in ua
         ctx = {
             "request": request,
             "t": UI.get(lang) or UI["en"],
             "lang": lang,
             "prefer_zh": prefer_zh,
+            "is_mobile": is_mobile,
             "country": country,
             "currency": currency,
             "units": units,
@@ -1825,18 +1930,21 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         ctx["gift_offer"] = None
         ctx["hold"] = parse_hold(request.cookies.get("harbor_hold"))
         ctx["cart_needs_ship"] = False
-        try:
-            rows = catalog_rows()
-        except Exception:
-            rows = []
-        by_sku = {row["sku"]: row for row in rows}
         lines = load_lines(request.cookies.get("cart"))
+        if lines:
+            try:
+                by_sku = catalog_index()
+            except Exception:
+                by_sku = {}
+        else:
+            by_sku = {}
         merchandise = 0
         for line in lines:
             parent = line["sku"].split("~", 1)[0]
             row = by_sku.get(parent) or by_sku.get(line["sku"])
             if row is not None:
-                merchandise += int(row["price_cents"]) * int(line["qty"])
+                unit_cents, _list_cents = line_sale_list_cents(row, line["sku"])
+                merchandise += int(unit_cents) * int(line["qty"])
         ctx["cart_cents"] = merchandise
         ctx["cart_needs_ship"] = False
         cart_rail = []
@@ -1848,12 +1956,12 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             if row is None:
                 continue
             names = json.loads(row["names"])
-            unit_cents, list_cents = sale_list_cents(row)
+            unit_cents, list_cents = line_sale_list_cents(row, line["sku"])
             qty = int(line["qty"])
             sale_merchandise += unit_cents * qty
             list_merchandise += (list_cents if list_cents > unit_cents else unit_cents) * qty
             image = (row["image_url"] if "image_url" in row.keys() and row["image_url"] else "") or f"/static/products/{row['sku']}.svg"
-            image = card_image(storefront_image(image, lang, ROOT), ROOT)
+            image = card_image(listing_photo(parent, lang, image), ROOT)
             if units is None or not unit_cents:
                 price_text = "—"
             else:
@@ -1872,7 +1980,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             row = by_sku.get(parent) or by_sku.get(line["sku"])
             if row is None:
                 continue
-            unit_cents, list_cents = sale_list_cents(row)
+            unit_cents, list_cents = line_sale_list_cents(row, line["sku"])
             qty = int(line["qty"])
             sale_merchandise += unit_cents * qty
             list_merchandise += (list_cents if list_cents > unit_cents else unit_cents) * qty
@@ -1893,8 +2001,10 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 format_money(goods_local(save_cents, units, currency), currency) if save_cents else ""
             )
         ctx["cart_ship_progress"] = 0
-        ctx["cart_ship_met"] = False
+        # Quote always charges $0 shipping — treat as always-free for UI.
+        ctx["cart_ship_met"] = bool(merchandise > 0)
         ctx["free_ship_policy"] = True
+        ctx["always_free_shipping"] = True
         guarantees = cached_guarantees()
         ctx["guarantees"] = guarantees
         late_cents = int(guarantees.get("late_delivery_credit_cents") or 0)
@@ -1915,12 +2025,11 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             ctx["t"]["returns_window"] = text["returns_window"].format(days=return_days)
         ctx["checkout_min_cents"] = int(guarantees.get("checkout_min_cents") or 0)
         min_cents = ctx["checkout_min_cents"]
+        # Shipping is always free in build_quote — never advertise a false free-shipping threshold.
         if units is None:
             ctx["promise_line"] = ""
-        elif int(promos.get("free_shipping_cents") or 0) <= 0:
-            ctx["promise_line"] = text.get("free_ship_badge") or text.get("free_shipping") or ""
         else:
-            ctx["promise_line"] = text["promise"].format(amount=free_ship)
+            ctx["promise_line"] = text.get("free_ship_badge") or text.get("free_shipping") or ""
         ctx["cart_gap"] = ""
         ctx["cart_gap_role"] = ""
         if units is not None and merchandise > 0 and min_cents and merchandise < min_cents:
@@ -1930,10 +2039,11 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 amount=format_money(goods_local(min_cents - merchandise, units, currency), currency)
             )
             ctx["cart_ship_progress"] = min(100, int(merchandise * 100 / min_cents))
-            ctx["cart_ship_met"] = False
+            # Shipping still free; progress bar is toward checkout minimum only.
+            ctx["cart_ship_met"] = True
         elif units is not None and merchandise > 0:
+            ctx["cart_ship_met"] = True
             if min_cents and merchandise >= min_cents:
-                ctx["cart_ship_met"] = True
                 ctx["cart_ship_progress"] = 100
             tiers = sorted(
                 (int(threshold), int(save))
@@ -1984,7 +2094,11 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                     "kept": kept,
                 }
         
-        stocked = [row for row in rows if int(row["stock"] or 0) > 0]
+        try:
+            shelf_rows = catalog_list_rows()
+        except Exception:
+            shelf_rows = list(by_sku.values()) if by_sku else []
+        stocked = [row for row in shelf_rows if int(row["stock"] or 0) > 0]
         near = [item for item in stocked if 80 <= int(item["price_cents"]) <= 150]
         if not near:
             near = sorted(stocked, key=lambda item: abs(int(item["price_cents"]) - 100))[:1]
@@ -2046,7 +2160,57 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         ctx["gap_tab"] = hint_tab
         return ctx
 
+    _CATALOG_SLIM_COLS = (
+        "sku",
+        "category",
+        "subcategory",
+        "price_cents",
+        "original_cents",
+        "stock",
+        "names",
+        "image_url",
+        "source_zh",
+        "published",
+        "offers",
+    )
+    _CATALOG_FAT_KEYS = (
+        "description",
+        "bullets",
+        "specs",
+        "listing",
+        "markets",
+        "markets_lock",
+        "gen_at",
+        "uploaded_at",
+    )
+
+    def _compact_list_row(row):
+        """Card/home row: drop fat blobs; keep sale price without full offers JSON."""
+        item = {key: row[key] for key in row.keys() if key not in _CATALOG_FAT_KEYS}
+        try:
+            offer = cheapest_live_offer(item)
+        except Exception:
+            offer = None
+        if offer is not None:
+            sale = int(offer.get("price_cents") or item.get("price_cents") or 0)
+            item["price_cents"] = sale
+            item["offers"] = json.dumps(
+                [
+                    {
+                        "id": offer.get("id") or "a",
+                        "price_cents": sale,
+                        "label": offer.get("label") or {},
+                        "image": offer.get("image") or "",
+                    }
+                ],
+                ensure_ascii=False,
+            )
+        else:
+            item["offers"] = "[]"
+        return item
+
     def catalog_rows():
+        """Full published catalog (includes offers/listing/description). Prefer catalog_list_rows for shelves."""
         cached = app.state.cache.get("shop:catalog")
         if cached is not None:
             return cached
@@ -2059,6 +2223,22 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         app.state.catalog_token += 1
         app.state.cache.set("shop:catalog", rows)
         app.state.cache.set("shop:catalog-index", {row["sku"]: row for row in rows})
+        return rows
+
+    def catalog_list_rows():
+        """Slim published catalog for home/list/api cards — no description/listing blobs."""
+        cached = app.state.cache.get("shop:catalog-slim")
+        if cached is not None:
+            return cached
+        cols = ", ".join(_CATALOG_SLIM_COLS)
+        rows = [
+            _compact_list_row(dict(row))
+            for row in conn.execute(
+                f"select {cols} from products where published = 1 order by rowid"
+            ).fetchall()
+        ]
+        app.state.catalog_token += 1
+        app.state.cache.set("shop:catalog-slim", rows)
         return rows
 
     def catalog_index():
@@ -2074,6 +2254,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
 
     def forget_catalog():
         app.state.cache.delete("shop:catalog")
+        app.state.cache.delete("shop:catalog-slim")
         app.state.cache.delete("shop:catalog-index")
         forget_public()
 
@@ -2085,7 +2266,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         for row in conn.execute("select country, title from hot_titles").fetchall():
             grouped.setdefault(row["country"], []).append(row["title"])
         app.state.hot_ready = bool(grouped)
-        app.state.hot = build_scores(catalog_rows(), grouped)
+        app.state.hot = build_scores(catalog_list_rows(), grouped)
         app.state.hot_token += 1
         forget_public()
 
@@ -2097,17 +2278,17 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         else:
             # No live offer (none, or every offer held): the product price is the sale price.
             cents = int(row["price_cents"] or 0)
-        ship_cents = ctx["promos"]["shipping"][shipping_tier(ctx["country"])]
-        free = int(ctx["promos"].get("free_shipping_cents") or 0) < 10**10
+        ship_cents = 0  # quote always free shipping
+        free = True
         if ctx["units"] is None:
             price = "—"
             shipping = "—"
         elif not cents:
             price = "—"
-            shipping = format_money(goods_local(ship_cents, ctx["units"], ctx["currency"]), ctx["currency"])
+            shipping = format_money(0, ctx["currency"]) if ctx["units"] is not None else "—"
         else:
             price = format_money(goods_local(cents, ctx["units"], ctx["currency"]), ctx["currency"])
-            shipping = format_money(goods_local(ship_cents, ctx["units"], ctx["currency"]), ctx["currency"])
+            shipping = format_money(0, ctx["currency"])
         raw_specs = json.loads(row["specs"])
 
         def spec_text(key):
@@ -2144,37 +2325,57 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             "detail_images": stored_detail_images(row["listing"]) if "listing" in row.keys() else [],
             "images": stored_gallery(row["listing"]) if "listing" in row.keys() else [],
         }
+        item["image"] = resolve_catalog_image(item["image"], row, ctx["lang"], ROOT) or item["image"]
         shots = list(item["images"])
         if item["image"] and item["image"] not in shots:
             shots.insert(0, item["image"])
         extra = offer_view(row, ctx)
-        offer_images = {picture for picture in extra.pop("images") if picture}
+        # Fall back missing offer packshots to product image / main.
+        fixed_offers = []
+        for offer in extra.get("offers") or []:
+            shot = resolve_catalog_image(offer.get("image") or "", row, ctx["lang"], ROOT)
+            offer = dict(offer)
+            offer["image"] = shot or item["image"]
+            fixed_offers.append(offer)
+        extra["offers"] = fixed_offers
+        offer_images = {picture for picture in extra.pop("images") if picture and catalog_file_exists(picture, ROOT)}
         # SKU photos stay in the picker. The gallery only keeps pictures that are not a SKU shot.
         shots = [picture for picture in shots if picture not in offer_images]
+        shots = [resolve_catalog_image(picture, row, ctx["lang"], ROOT) or picture for picture in shots]
+        shots = [picture for picture in shots if picture]
         if not shots and item["image"]:
             shots = [item["image"]]
         item.update(extra)
         item["images"] = shots
 
         def shown(url):
-            return storefront_image(url, ctx["lang"], ROOT)
+            return resolve_catalog_image(url, row, ctx["lang"], ROOT) or storefront_image(url, ctx["lang"], ROOT)
 
         item["image"] = shown(item["image"])
         item["detail_images"] = [shown(url) for url in item["detail_images"]]
         story = story_urls(row["sku"], ctx["lang"], ROOT)
-        if not story and ctx["lang"] != "en":
+        # Chinese keeps the original detail photos. English fills in only for other store languages.
+        if not story and ctx["lang"] != "en" and not str(ctx["lang"]).startswith("zh"):
             story = story_urls(row["sku"], "en", ROOT)
         if story:
             item["detail_images"] = story
         item["images"] = [shown(url) for url in item["images"]]
         mains = main_urls(row["sku"], ctx["lang"], ROOT)
-        if not mains and ctx["lang"] != "en":
+        if not mains and ctx["lang"] != "en" and not str(ctx["lang"]).startswith("zh"):
             mains = main_urls(row["sku"], "en", ROOT)
         if mains:
             item["images"] = mains
             item["image"] = mains[0]
         for offer in item.get("offers") or []:
-            offer["image"] = shown(offer.get("image") or "")
+            # Generated SKU packshots are shared across all languages (no en/ja sidecars).
+            if offer.get("generated"):
+                offer["image"] = offer.get("image") or ""
+            else:
+                offer["image"] = shown(offer.get("image") or "")
+                # Quantity packs are not redrawn, so the file is still the Chinese upload.
+                # On a non-Chinese page, show the generated main instead of that poster.
+                if mains and not str(ctx["lang"]).startswith("zh"):
+                    offer["image"] = mains[0]
         first = item["images"][0] if item["images"] else item["image"]
         item["image_phone"] = phone_image(first, ROOT)
         sale_cents, list_cents = sale_list_cents(row)
@@ -2194,25 +2395,36 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             item.setdefault("save_amount", "")
         return item
 
+    def listing_photo(sku, lang, fallback):
+        """Thumbnail. Chinese keeps the upload. Any other language uses its generated main, then the English one."""
+        if str(lang or "").startswith("zh"):
+            return storefront_image(fallback, lang, ROOT)
+        mains = main_urls(sku, lang, ROOT)
+        if not mains and lang != "en":
+            mains = main_urls(sku, "en", ROOT)
+        if mains:
+            return mains[0]
+        return storefront_image(fallback, lang, ROOT)
+
     def present_card(row, ctx, with_offers=False):
         names = json.loads(row["names"])
         cents, original_cents = sale_list_cents(row)
-        ship_cents = ctx["promos"]["shipping"][shipping_tier(ctx["country"])]
         if ctx["units"] is None:
             price = "—"
             shipping = "—"
         elif not cents:
             price = "—"
-            shipping = format_money(goods_local(ship_cents, ctx["units"], ctx["currency"]), ctx["currency"])
+            shipping = format_money(0, ctx["currency"]) if ctx["units"] is not None else "—"
         else:
             price = format_money(goods_local(cents, ctx["units"], ctx["currency"]), ctx["currency"])
-            shipping = format_money(goods_local(ship_cents, ctx["units"], ctx["currency"]), ctx["currency"])
+            shipping = format_money(0, ctx["currency"])
         if ctx["units"] is None or not original_cents or original_cents == cents:
             original = ""
         else:
             original = format_money(goods_local(original_cents, ctx["units"], ctx["currency"]), ctx["currency"])
         image = (row["image_url"] if "image_url" in row.keys() and row["image_url"] else "") or f"/static/products/{row['sku']}.svg"
-        image = card_image(storefront_image(image, ctx["lang"], ROOT), ROOT)
+        image = resolve_catalog_image(image, row, ctx["lang"], ROOT) or image
+        image = card_image(listing_photo(row["sku"], ctx["lang"], image), ROOT)
         if ctx.get("prefer_zh"):
             card_name = _product_label(
                 row["source_zh"] if "source_zh" in row.keys() else "",
@@ -2229,7 +2441,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             "price_cents": cents,
             "stock": row["stock"],
             "shipping": shipping,
-            "free_shipping": int(ctx["promos"].get("free_shipping_cents") or 0) < 10**10,
+            "free_shipping": True,
             "image": image,
             "original": original,
             "higher": original_cents > cents,
@@ -2237,7 +2449,12 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         }
         if with_offers:
             extra = offer_view(row, ctx)
-            item["offers"] = extra["offers"]
+            fixed = []
+            for offer in extra.get("offers") or []:
+                offer = dict(offer)
+                offer["image"] = resolve_catalog_image(offer.get("image") or "", row, ctx["lang"], ROOT) or image
+                fixed.append(offer)
+            item["offers"] = fixed
         try:
             _heat = int(heat(row, ctx["country"]) or 0)
         except Exception:
@@ -2295,6 +2512,10 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         ctx.setdefault("gen_left", 0)
         ctx.setdefault("gen_error", "")
         ctx.setdefault("gen_plan", None)
+        ctx.setdefault("sku_gen_left", 0)
+        ctx.setdefault("sku_gen_queue", {"pending": 0, "calling": 0, "shots": 0, "idle": 0, "page": 1, "pages": 1, "items": []})
+        ctx.setdefault("sku_gen_plan", None)
+        ctx.setdefault("sku_gen_job", {"running": False, "label": "", "total": 0, "pending": 0, "active": 0, "error": "", "result": {"done": 0, "failed": 0}})
         ctx.setdefault("ad_pixels", {"meta_ok": False, "google_ok": False, "tiktok_ok": False})
         ctx.setdefault("ad_attrs", {})
         if status_code >= 400:
@@ -2340,7 +2561,9 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             if text:
                 item["name"] = f"{item['name']} · {text}"
             if sold["image"]:
-                item["image"] = sold["image"]
+                item["image"] = resolve_catalog_image(sold["image"], sold["row"], ctx["lang"], ROOT) or sold["image"]
+            else:
+                item["image"] = resolve_catalog_image(item.get("image") or "", sold["row"], ctx["lang"], ROOT) or item.get("image")
             item["product_sku"] = sold["parent"]
             item["sku"] = sold["code"]
             unit = int(sold["price_cents"])
@@ -2397,11 +2620,14 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 "price_cents": row["price_cents"],
                 "stock": row["stock"],
             }
-            for row in catalog_rows()
+            for row in catalog_list_rows()
         ]
 
     def cards_for(ctx, picks, with_offers=False):
-        by_sku = {row["sku"]: row for row in catalog_rows()}
+        if with_offers:
+            by_sku = catalog_index()
+        else:
+            by_sku = {row["sku"]: row for row in catalog_list_rows()}
         return [present_card(by_sku[item["sku"]], ctx, with_offers) for item in picks if item["sku"] in by_sku]
 
     def nudge_for(ctx, merchandise, has_lines):
@@ -2424,7 +2650,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 "save_text": "",
                 "ship_done": False,
             }
-        # Past free shipping: celebrate, then push spend-save ($30 / $60 tiers).
+        # Shipping is always free; after checkout min, push spend-save tiers.
         next_tier = next(((t, s) for t, s in tiers if merchandise < t), None)
         if next_tier is not None:
             threshold, save = next_tier
@@ -2502,7 +2728,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
     def listing(request, forced_category=None, forced_sub=""):
         ctx = view(request)
         params = request.query_params
-        catalog_rows()
+        catalog_list_rows()
         key = "page:list:{lang}:{zh}:{country}:{category}:{sub}:{q}:{sort}:{low}:{high}:{page}:{partial}:{token}".format(
             lang=ctx["lang"],
             zh="1" if ctx.get("prefer_zh") else "0",
@@ -2527,7 +2753,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             sort = "featured"
         category = params.get("category") or forced_category
         sub = forced_sub if category and known(category, forced_sub) else ""
-        rows = list(catalog_rows())
+        rows = list(catalog_list_rows())
         if category:
             rows = [row for row in rows if row["category"] == category]
         chips = []
@@ -2607,7 +2833,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 )
             )
         elif not params.get("q") and sort == "featured":
-            catalog = list(catalog_rows())
+            catalog = list(catalog_list_rows())
             by_sku = {row["sku"]: row for row in catalog}
             cart_skus = [line["sku"].split("~", 1)[0] for line in load_lines(request.cookies.get("cart"))]
             interest = interest_profile(request, by_sku=by_sku, cart_skus=cart_skus)
@@ -2626,7 +2852,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             rows.sort(key=lambda row: 0 if row["sku"] in promoted else 1)
         total = len(rows)
         page = max(1, int(params.get("page") or 1))
-        page_size = 12
+        page_size = 20
         rows = rows[(page - 1) * page_size:page * page_size]
         items = [present_card(row, ctx) for row in rows]
         for item in items:
@@ -2736,9 +2962,9 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         body.append("</urlset>")
         return Response("\n".join(body), media_type="application/xml")
 
-    def home_feed_cards(request, ctx, tab="recommended", page=1, page_size=12, q="", exclude=()):
+    def home_feed_cards(request, ctx, tab="recommended", page=1, page_size=20, q="", exclude=()):
         """Liked items first, then the rest of this shelf. Order is stable across pages."""
-        catalog = list(catalog_rows())
+        catalog = list(catalog_list_rows())
         rows = catalog
         needle = (q or "").strip().casefold()
         if needle:
@@ -2761,7 +2987,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         salt = rec_salt(request)
         tab = (tab or "recommended").strip().lower()
         page = max(1, int(page or 1))
-        page_size = max(4, min(48, int(page_size or 12)))
+        page_size = max(4, min(48, int(page_size or 20)))
         feed_exclude = {str(sku) for sku in (exclude or ()) if sku}
         if tab in CATEGORIES:
             pool = [row for row in rows if row.get("category") == tab]
@@ -2808,7 +3034,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
     @app.get("/", response_class=HTMLResponse)
     def home(request: Request):
         ctx = view(request)
-        rows = list(catalog_rows())
+        rows = list(catalog_list_rows())
         # Never serve a frozen public cache for the product shelf — each visitor / refresh must reshuffle.
         promoted = set(sponsored_skus(ctx["ads"]))
         by_sku = {row["sku"]: row for row in rows}
@@ -2867,14 +3093,14 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         shop_skus = {row["sku"] for row in shop_pick_rows}
         # Recommended feed first so Featured / For you can exclude its SKUs.
         feed_rows_cards, feed_has_more, _tab = home_feed_cards(
-            request, ctx, tab="recommended", page=1, page_size=10, exclude=shop_skus
+            request, ctx, tab="recommended", page=1, page_size=20, exclude=shop_skus
         )
         feed_skus = {item["sku"] for item in feed_rows_cards}
         # Prefer feed cards that do not repeat the In the shop strip on first paint.
         overlap = feed_skus & shop_skus
         if overlap and feed_has_more:
             alt_cards, alt_more, _alt_tab = home_feed_cards(
-                request, ctx, tab="recommended", page=2, page_size=12, exclude=shop_skus
+                request, ctx, tab="recommended", page=2, page_size=20, exclude=shop_skus
             )
             replaced = []
             used = set()
@@ -2985,7 +3211,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             page = int(request.query_params.get("page") or 1)
         except ValueError:
             page = 1
-        cards, has_more, tab = home_feed_cards(request, ctx, tab=tab, page=page, page_size=10)
+        cards, has_more, tab = home_feed_cards(request, ctx, tab=tab, page=page, page_size=20)
         # partial: cards only
         if (request.query_params.get("partial") or "") in {"1", "cards", "true"}:
             html = templates.env.get_template("home_cards.html").render({**ctx, "products": cards})
@@ -3306,7 +3532,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         """Pull live sellable catalog cards biased to seg category/keywords."""
         seg = normalize_seg(seg or "")
         lang = ctx.get("lang") or "en"
-        rows = catalog_rows()
+        rows = catalog_list_rows()
         scored = []
         for row in rows:
             if int(row.get("published") or 0) != 1:
@@ -3391,7 +3617,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         if len(items) < 12:
             stocked = [
                 row
-                for row in catalog_rows()
+                for row in catalog_list_rows()
                 if int(row.get("stock") or 0) > 0
                 and int(row.get("published") or 0) == 1
                 and row["sku"] not in seen
@@ -3481,7 +3707,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         ctx = view(request)
         labels = labels_for(ctx["lang"])
         counted = {}
-        for row in catalog_rows():
+        for row in catalog_list_rows():
             slug = row.get("subcategory") or ""
             if known(row["category"], slug):
                 counted.setdefault(row["category"], {})
@@ -3583,10 +3809,8 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         item = present(row, ctx)
         paint_deal(item, request, ctx)
         stored = json.loads(row["bullets"]).get(ctx["lang"]) or []
-        if len(stored) >= 4:
-            lines = stored[:4]
-        else:
-            lines = [line.format(name=item["name"]) for line in ctx["t"]["advantages_for"]]
+        # Prefer real bullets only — hide section when empty instead of fake boilerplate.
+        lines = [str(line).strip() for line in stored if str(line).strip()][:4]
         related = cards_for(
             ctx,
             [
@@ -3784,30 +4008,26 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             ctx = view(request)
             # Override cart lines in ctx by recomputing with dumped cookie already set on response —
             # view() still reads old request cookies, so rebuild rail from `lines`.
-            by_sku = {row["sku"]: row for row in catalog_rows()}
+            # Full catalog (not slim) so selected offer prices resolve correctly.
+            by_sku = catalog_index()
             merchandise = 0
+            list_merchandise = 0
             rail = []
-            for line in lines[:8]:
+            for index, line in enumerate(lines):
                 parent = line["sku"].split("~", 1)[0]
                 prow = by_sku.get(parent) or by_sku.get(line["sku"])
                 if prow is None:
                     continue
                 names = json.loads(prow["names"])
-                off = cheapest_live_offer(prow)
-                try:
-                    raw_all = json.loads(prow["offers"] or "[]") if "offers" in prow.keys() else []
-                except json.JSONDecodeError:
-                    raw_all = []
-                if off is not None:
-                    unit_cents = int(off.get("price_cents") or 0)
-                elif raw_all:
-                    unit_cents = 0
-                else:
-                    unit_cents = int(prow["price_cents"] or 0)
+                unit_cents, list_cents = line_sale_list_cents(prow, line["sku"])
                 qn = int(line["qty"])
                 merchandise += unit_cents * qn
+                list_merchandise += (list_cents if list_cents > unit_cents else unit_cents) * qn
+                if index >= 8:
+                    continue
                 image = (prow["image_url"] if "image_url" in prow.keys() and prow["image_url"] else "") or f"/static/products/{prow['sku']}.svg"
-                image = card_image(storefront_image(image, ctx["lang"], ROOT), ROOT)
+                image = resolve_catalog_image(image, prow, ctx["lang"], ROOT)
+                image = card_image(image, ROOT)
                 if ctx["units"] is None or not unit_cents:
                     price_text = "—"
                 else:
@@ -3820,16 +4040,8 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                     "price": price_text,
                     "image": image,
                 })
-            free_cents = int(ctx.get("checkout_min_cents") or 0) or int(ctx["promos"]["free_shipping_cents"])
-            list_merchandise = 0
-            for line in lines:
-                parent = line["sku"].split("~", 1)[0]
-                prow = by_sku.get(parent) or by_sku.get(line["sku"])
-                if prow is None:
-                    continue
-                unit_cents, list_cents = sale_list_cents(prow)
-                qn = int(line["qty"])
-                list_merchandise += (list_cents if list_cents > unit_cents else unit_cents) * qn
+            # Progress is toward checkout minimum only; shipping is always free in quote.
+            free_cents = int(ctx.get("checkout_min_cents") or 0)
             save_cents = max(0, list_merchandise - merchandise)
             off_pct = format_off_pct(merchandise, list_merchandise) if save_cents else ""
             if ctx["units"] is None:
@@ -3841,8 +4053,8 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                     format_money(goods_local(save_cents, ctx["units"], ctx["currency"]), ctx["currency"])
                     if save_cents else ""
                 )
-            progress = min(100, int(merchandise * 100 / free_cents)) if free_cents and merchandise > 0 else 0
-            ship_met = bool(free_cents) and free_cents < 10**10 and merchandise >= free_cents and merchandise > 0
+            progress = min(100, int(merchandise * 100 / free_cents)) if free_cents and merchandise > 0 else (100 if merchandise > 0 else 0)
+            ship_met = bool(merchandise > 0)  # always-free shipping
             added_name = ""
             added_image = ""
             added_label = ""
@@ -3870,40 +4082,35 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                             added_label = lab.get(ctx["lang"]) or lab.get("en") or ""
                         shot = item.get("image") or ""
                         if isinstance(shot, str) and shot:
-                            added_image = card_image(storefront_image(shot, ctx["lang"], ROOT), ROOT)
+                            # Shared white packshot: do not swap to language sidecars.
+                            if item.get("generated"):
+                                added_image = card_image(shot, ROOT)
+                            else:
+                                added_image = card_image(storefront_image(shot, ctx["lang"], ROOT), ROOT)
                         break
             gap_title = ""
             gap_body = ""
-            if ctx["units"] is None or not free_cents or free_cents >= 10**10:
+            min_cents = int(ctx.get("checkout_min_cents") or 0)
+            if ctx["units"] is None:
                 ship_line = ctx.get("promise_line") or ""
-            elif ship_met:
-                ship_line = ctx["t"]["gap_free"]
-            else:
+            elif min_cents and merchandise < min_cents:
                 need_text = format_money(
-                    goods_local(free_cents - merchandise, ctx["units"], ctx["currency"]),
+                    goods_local(min_cents - merchandise, ctx["units"], ctx["currency"]),
                     ctx["currency"],
                 )
                 target_text = format_money(
-                    goods_local(free_cents, ctx["units"], ctx["currency"]),
+                    goods_local(min_cents, ctx["units"], ctx["currency"]),
                     ctx["currency"],
                 )
-                if int(ctx.get("checkout_min_cents") or 0):
-                    ship_line = (ctx["t"].get("gap_min") or "Add {amount} to check out").format(amount=need_text)
-                    gap_title = ctx["t"]["gap_modal_min_title"].format(
-                        need=f'<em class="m">{need_text}</em>',
-                        target=f'<em class="m">{target_text}</em>',
-                    )
-                    gap_body = ctx["t"]["gap_modal_min_body"].format(target=target_text)
-                else:
-                    ship_line = ctx["t"]["gap_ship_now"].format(
-                        amount=need_text,
-                        fee=ctx.get("ship_fee_text") or "",
-                    )
-                    gap_title = ctx["t"]["gap_modal_ship_title"].format(
-                        need=f'<em class="m">{need_text}</em>',
-                        target=f'<em class="m">{target_text}</em>',
-                    )
-                    gap_body = ctx["t"]["gap_modal_ship_body"].format(threshold=target_text)
+                ship_line = (ctx["t"].get("gap_min") or "Add {amount} to check out").format(amount=need_text)
+                gap_title = ctx["t"]["gap_modal_min_title"].format(
+                    need=f'<em class="m">{need_text}</em>',
+                    target=f'<em class="m">{target_text}</em>',
+                )
+                gap_body = ctx["t"]["gap_modal_min_body"].format(target=target_text)
+            else:
+                # Shipping is always free — celebrate free shipping / ready to check out.
+                ship_line = ctx["t"].get("gap_free") or ctx.get("promise_line") or ""
             response = JSONResponse({
                 "ok": True,
                 "sku": sku,
@@ -4049,17 +4256,25 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         list_cents_total = 0
         for line in shown:
             unit = int(line.get("price_cents") or 0)
-            # present() may have higher/original; recover list from cents when higher
+            # present() may have higher/original; recover list from the selected offer
             parent = (line.get("product_sku") or line.get("sku") or "").split("~", 1)[0]
             prow = catalog_index().get(parent)
-            sale_u, list_u = sale_list_cents(prow) if prow is not None else (unit, 0)
+            sale_u, list_u = (
+                line_sale_list_cents(prow, line.get("sku"))
+                if prow is not None
+                else (unit, 0)
+            )
             qty = int(line.get("qty") or 1)
             list_cents_total += (list_u if list_u > sale_u else sale_u) * qty
-        list_save_cents = max(0, list_cents_total - merchandise)
-        list_off_pct = format_off_pct(merchandise, list_cents_total) if list_save_cents else ""
-        original_local = goods_local(merchandise, ctx["units"], ctx["currency"]) if ctx["units"] is not None else None
+        # Prefer strike-list total for "Original"; never show Original == Total.
+        list_basis = list_cents_total if list_cents_total > merchandise else merchandise
+        list_save_cents = max(0, list_basis - merchandise)
+        list_off_pct = format_off_pct(merchandise, list_basis) if list_save_cents else ""
+        original_local = goods_local(list_basis, ctx["units"], ctx["currency"]) if ctx["units"] is not None else None
         pay_local = goods_local(goods_cents, ctx["units"], ctx["currency"]) if original_local is not None else None
-        save_local = max(0, original_local - pay_local) if pay_local is not None else 0
+        save_local = max(0, (original_local or 0) - (pay_local or 0)) if pay_local is not None else 0
+        # Hide struck Original when it would equal what the shopper pays (no real save).
+        show_original = bool(original_local is not None and pay_local is not None and original_local > pay_local)
         ctx.update({
             "lines": shown,
             "saved": saved,
@@ -4069,15 +4284,15 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             "discount_text": discount_text,
             "bundle_groups": bundle_groups,
             "nudge": nudge,
-            "original_text": format_money(original_local, ctx["currency"]) if original_local is not None else "",
+            "original_text": format_money(original_local, ctx["currency"]) if show_original else "",
             "pay_text": format_money(pay_local, ctx["currency"]) if pay_local is not None else "",
-            "save_text": format_money(save_local, ctx["currency"]) if save_local else "",
-            "save_local": save_local,
+            "save_text": format_money(save_local, ctx["currency"]) if show_original and save_local else "",
+            "save_local": save_local if show_original else 0,
             "list_save_text": money(ctx, list_save_cents) if list_save_cents else "",
             "list_off_pct": list_off_pct,
             "list_save_cents": list_save_cents,
             "deal_met": bool(bill and bill.discount_cents > 0),
-            "ship_met": bool(bill),
+            "ship_met": True,  # always-free shipping
             "ship_gap": "",
             "picks": cards_for(ctx, cart_picks(request, ctx, shown, budget)),
             "gap_pick": gap_pick,
@@ -4225,7 +4440,8 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         ship_country = posted["ship_country"]
         email = posted["email"]
         coupons = list_coupons(conn, email, merchandise)
-        picked = best_coupon(coupons)
+        # Do not auto-apply a coupon until the shopper selects one.
+        picked = None
         bill = quote_for(ctx, merchandise, ship_country, coupon=picked)
         due_text = format_money(bill.due_local, ctx["currency"]) if bill else "—"
         ship_text = money(ctx, bill.shipping_cents) if bill else "—"
@@ -4333,8 +4549,17 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         return lookup_postal(country, code)
 
     @app.get("/lookup/here")
-    def here_lookup(lat: float = 0, lon: float = 0):
+    def here_lookup(lat: float | None = None, lon: float | None = None):
+        if lat is None or lon is None:
+            return {}
         return lookup_here(lat, lon)
+
+    @app.get("/api/geo")
+    def api_geo(request: Request):
+        """Lightweight IP country + currency for native apps. No HTML."""
+        country = country_for(request)
+        _lang, currency = resolve(country)
+        return {"ok": True, "country": country, "currency": currency}
 
     @app.get("/checkout", response_class=HTMLResponse)
     def checkout(request: Request):
@@ -5149,6 +5374,10 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                             option = label.get(lang) or label.get("zh") or label.get("en") or ""
                         else:
                             option = str(label or "")
+                        # Shared SKU packshot: keep base catalog URL across languages.
+                        if offer.get("generated") and image:
+                            image = card_image(image, ROOT)
+                            return {"name": name, "image": image, "qty": int(qty or 1), "option": option}
                         break
             if image:
                 image = card_image(storefront_image(image, lang, ROOT), ROOT)
@@ -6842,6 +7071,92 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
     release_abandoned(conn)
     ensure_supervisor()
 
+    def stop_sku_gen_pool():
+        for slot in list(app.state.sku_gen_pool.values()):
+            slot["stop"].set()
+        app.state.sku_gen_pool.clear()
+
+    def consume_sku(editor, stop, key):
+        if stop.is_set() or gen_is_paused() or not app.state.sku_gen_armed:
+            return False
+        task = claim_sku_task(conn, key)
+        if not task:
+            return False
+        task_id = task["id"]
+        try:
+            generate_one_sku_shot(
+                conn,
+                ROOT,
+                task["product_sku"],
+                task["image"],
+                editor,
+                gen_backup_root(),
+            )
+            finish_sku_task(conn, task_id, True)
+            forget_catalog()
+        except GenError as exc:
+            finish_sku_task(
+                conn,
+                task_id,
+                "不会再跑" in str(exc) or "没有要出的规格图" in str(exc),
+                str(exc),
+            )
+        except Exception:
+            finish_sku_task(conn, task_id, False, "这张规格图没有出成。")
+        return True
+
+    def sku_worker_loop(editor, stop, key):
+        while consume_sku(editor, stop, key):
+            pass
+
+    def supervise_sku():
+        while True:
+            if gen_is_paused() or not app.state.sku_gen_armed:
+                stop_sku_gen_pool()
+                time.sleep(0.4)
+                continue
+            wanted = max(1, min(MAX_GEN_API_WORKERS, gen_api_account()["workers"]))
+            alive = {}
+            for name, slot in list(app.state.sku_gen_pool.items()):
+                if slot["thread"].is_alive():
+                    alive[name] = slot
+                else:
+                    slot["stop"].set()
+            app.state.sku_gen_pool = alive
+            pending = conn.execute(
+                "select 1 from sku_gen_tasks where status = 'pending' limit 1"
+            ).fetchone()
+            editors = gen_editors() if pending else []
+            if pending and editors:
+                index = 0
+                while len(app.state.sku_gen_pool) < wanted:
+                    name = "s%s" % index
+                    index += 1
+                    if name in app.state.sku_gen_pool:
+                        continue
+                    stop = threading.Event()
+                    editor = editors[len(app.state.sku_gen_pool) % len(editors)]
+                    thread = threading.Thread(
+                        target=sku_worker_loop, args=(editor, stop, name), daemon=True
+                    )
+                    app.state.sku_gen_pool[name] = {"stop": stop, "thread": thread}
+                    thread.start()
+            time.sleep(0.4)
+
+    def ensure_sku_supervisor():
+        if app.state.sku_gen_supervisor_started:
+            return
+        app.state.sku_gen_supervisor_started = True
+        app.state.sku_gen_pool = {}
+        threading.Thread(target=supervise_sku, daemon=True).start()
+
+    app.state.sku_gen_supervisor_started = False
+    app.state.sku_gen_pool = {}
+    app.state.sku_gen_armed = not gen_is_paused()
+    app.state.sku_gen_queue_snapshot = None
+    release_abandoned_sku(conn)
+    ensure_sku_supervisor()
+
     def images_page(request, status_code=200, image_error="", gen_error="", gen_plan=None):
         try:
             gpage = int(request.query_params.get("gpage") or 1)
@@ -6851,6 +7166,10 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             qpage = int(request.query_params.get("qpage") or 1)
         except (TypeError, ValueError):
             qpage = 1
+        try:
+            spage = int(request.query_params.get("spage") or 1)
+        except (TypeError, ValueError):
+            spage = 1
         return render(
             request,
             "admin.html",
@@ -6864,6 +7183,10 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             gen_compare=gen_compare(gpage),
             gen_queue=gen_queue_view(qpage),
             gen_plan=gen_plan,
+            sku_gen_left=sku_gen_remaining_count(),
+            sku_gen_queue=sku_gen_queue_view(spage),
+            sku_gen_plan=getattr(request.state, "sku_gen_plan", None),
+            sku_gen_job=sku_gen_job_read(),
         )
 
     def gen_queue_view(page):
@@ -6900,6 +7223,57 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             "items": items[start:start + size],
         }
 
+
+    def sku_gen_remaining_count():
+        """待出规格图张数（已上架、c*/s*、文件在、未 generated）。"""
+        cached = getattr(app.state, "sku_gen_left_cache", None)
+        now = time.time()
+        if cached and now - cached.get("at", 0) < 30:
+            return int(cached["n"])
+        n = count_pending_sku_shots(conn, root=ROOT, force=False)
+        app.state.sku_gen_left_cache = {"at": now, "n": n}
+        return n
+
+    def sku_gen_queue_view(page):
+        snapshot = app.state.sku_gen_queue_snapshot
+        if snapshot is None:
+            snapshot = plan_sku_queue(conn)
+            app.state.sku_gen_queue_snapshot = snapshot
+        pending = {
+            row["id"]
+            for row in conn.execute("select id from sku_gen_tasks where status = 'pending'").fetchall()
+        }
+        items = [item for item in snapshot.get("items") or [] if item.get("id") in pending]
+        size = 10
+        page = max(1, int(page or 1))
+        pages = max(1, (len(items) + size - 1) // size) if items else 1
+        if page > pages:
+            page = pages
+        calling = sum(1 for item in items if item.get("generate"))
+        shots = sum(int(item.get("generate") or 0) for item in items)
+        start = (page - 1) * size
+        return {
+            "pending": len(items),
+            "calling": calling,
+            "shots": shots,
+            "idle": len(items) - calling,
+            "page": page,
+            "pages": pages,
+            "items": items[start:start + size],
+        }
+
+    def sku_gen_job_read():
+        progress = sku_task_progress(conn)
+        return {
+            "running": progress["running"] and app.state.sku_gen_armed and not gen_is_paused(),
+            "label": progress.get("label") or "",
+            "total": progress.get("total") or 0,
+            "pending": progress.get("pending") or 0,
+            "active": progress.get("active") or 0,
+            "error": progress.get("error") or "",
+            "result": progress.get("result") or {"done": 0, "failed": 0},
+        }
+
     def gen_compare(page):
         size = 10
         page = max(1, int(page or 1))
@@ -6926,15 +7300,20 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         for row in rows:
             sku = str(row["sku"] or "")
             current = str(row["image_url"] or "")
-            has_backup = _gen_before_file(backup, sku) is not None
-            stamp = int(row["touched"] or 0)
+            fourth = ROOT / "static" / "catalog" / sku / "en" / "main" / "4.jpg"
+            stamp = int(fourth.stat().st_mtime) if fourth.is_file() else int(row["touched"] or 0)
             after = ""
             before = current
             fresh = False
-            if has_backup:
-                before = "/admin/images/gen/before/" + sku
-                after = current
+            if fourth.is_file():
+                after = "/static/catalog/%s/en/main/4.jpg" % sku
                 fresh = True
+            else:
+                main_name = Path(current.split("?", 1)[0]).name
+                if current and _gen_before_file(backup, sku, main_name) is not None:
+                    before = "/admin/images/gen/before/" + sku
+                    after = current
+                    fresh = True
             if after and stamp:
                 after = after + ("&" if "?" in after else "?") + "g=" + str(stamp)
             items.append({
@@ -6947,20 +7326,18 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             })
         return {"items": items, "page": page, "pages": pages, "total": int(total)}
 
-    def _gen_before_file(backup, sku):
+    def _gen_before_file(backup, sku, name=""):
         if not re.fullmatch(r"[A-Za-z0-9._-]{1,80}", sku or ""):
             return None
         folder = Path(backup) / sku
         if not folder.is_dir():
             return None
-        files = [
-            path for path in folder.iterdir()
-            if path.is_file() and path.suffix.lower() in {".jpg", ".jpeg", ".png", ".webp"}
-        ]
-        if not files:
-            return None
-        files.sort(key=lambda path: path.stat().st_size, reverse=True)
-        return files[0]
+        wanted = Path(str(name or "")).name
+        if wanted and re.fullmatch(r"[A-Za-z0-9._-]{1,80}", wanted):
+            picked = folder / wanted
+            if picked.is_file() and picked.suffix.lower() in {".jpg", ".jpeg", ".png", ".webp"}:
+                return picked
+        return None
 
     @app.get("/admin/products", response_class=HTMLResponse)
     def admin_products(request: Request):
@@ -7439,6 +7816,105 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         require_admin(request)
         ad_rows = conn.execute("select slot, lang, image_url, href, body from ads order by slot, lang").fetchall()
         return render(request, "admin.html", panel="ads", ad_rows=ad_rows)
+
+    def strip_held_offers_from_product(sku, offers, listing, price_cents, original_cents):
+        """Apply intercept delete rules to one saved product.
+
+        Returns (action, offers_json, listing_json, price, original, removed_offers)
+        action: 'delete_product' | 'strip_offers' | 'noop'
+        """
+        try:
+            offer_list = json.loads(offers or "[]")
+        except json.JSONDecodeError:
+            offer_list = []
+        if not isinstance(offer_list, list):
+            offer_list = []
+        try:
+            listing_obj = json.loads(listing or "{}") if listing else {}
+        except json.JSONDecodeError:
+            listing_obj = {}
+        if not isinstance(listing_obj, dict):
+            listing_obj = {}
+        before = len(offer_list)
+        held_n = sum(1 for o in offer_list if isinstance(o, dict) and o.get("hold"))
+        whole_held = bool(str(listing_obj.get("hold") or "").strip())
+        draft = {
+            "sku": sku,
+            "offers": offer_list,
+            "listing": listing_obj,
+            "price_cents": price_cents,
+            "original_cents": original_cents,
+        }
+        cleaned = apply_intercept_rules(draft)
+        if cleaned is None:
+            return "delete_product", None, None, None, None, max(held_n, before)
+        removed = before - len(cleaned["offers"])
+        changed = whole_held or removed > 0 or held_n > 0
+        if not changed:
+            return "noop", None, None, None, None, 0
+        return (
+            "strip_offers",
+            json.dumps(cleaned["offers"], ensure_ascii=False),
+            json.dumps(cleaned["listing"], ensure_ascii=False),
+            int(cleaned.get("price_cents") or price_cents or 0),
+            int(cleaned.get("original_cents") or original_cents or 0),
+            removed,
+        )
+
+    def purge_intercepted_products():
+        """拦截清理规则（存量与后续一致），
+
+        - 整件拦截且未上架（listing.hold，或全部规格 hold）：删除整件 + catalog 目录。
+        - 仅部分规格拦截：只删这些 SKU/规格，保留商品并重算售价。
+        不再把拦截商品挂在「已拦截/未上架」里。
+        """
+        deleted_products = 0
+        stripped_products = 0
+        deleted_offers = 0
+        to_delete = []
+        for row in conn.execute(
+            "select sku, published, listing, offers, price_cents, original_cents from products"
+        ).fetchall():
+            sku = str(row["sku"] or "")
+            published = int(row["published"] or 0)
+            try:
+                listing_obj = json.loads(row["listing"] or "{}") if row["listing"] else {}
+            except json.JSONDecodeError:
+                listing_obj = {}
+            whole_held = bool(str((listing_obj or {}).get("hold") or "").strip())
+            action, offers_json, listing_json, price, original, removed = strip_held_offers_from_product(
+                sku,
+                row["offers"],
+                row["listing"],
+                row["price_cents"],
+                row["original_cents"],
+            )
+            # 未上架 + 整件拦截标记：无论 offers 残缺与否，整件删除。
+            if published == 0 and whole_held:
+                to_delete.append(sku)
+                deleted_offers += int(removed or 0)
+                continue
+            if action == "delete_product":
+                # 规格全灭：未上架删；已上架异常态也删。
+                to_delete.append(sku)
+                deleted_offers += int(removed or 0)
+                continue
+            if action == "strip_offers":
+                conn.execute(
+                    "update products set offers = ?, listing = ?, price_cents = ?, original_cents = ? where sku = ?",
+                    (offers_json, listing_json, price, original, sku),
+                )
+                stripped_products += 1
+                deleted_offers += int(removed or 0)
+        if to_delete:
+            deleted_products = remove_products(to_delete)
+        else:
+            forget_catalog()
+        return {
+            "deleted_products": deleted_products,
+            "stripped_products": stripped_products,
+            "deleted_offers": deleted_offers,
+        }
 
     def remove_products(skus):
         removed = 0
@@ -8863,16 +9339,22 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         )
         if paused:
             app.state.gen_armed = False
+            app.state.sku_gen_armed = False
             stop_gen_pool()
+            stop_sku_gen_pool()
         else:
             app.state.gen_armed = True
+            app.state.sku_gen_armed = True
             ensure_supervisor()
+            ensure_sku_supervisor()
         return RedirectResponse("/admin/images", status_code=303)
 
     @app.get("/admin/images/gen/before/{sku}")
     def admin_gen_before(request: Request, sku: str):
         require_admin(request)
-        path = _gen_before_file(gen_backup_root(), sku)
+        row = conn.execute("select image_url from products where sku = ?", (sku,)).fetchone()
+        name = Path(str(row["image_url"] if row else "").split("?", 1)[0]).name
+        path = _gen_before_file(gen_backup_root(), sku, name)
         if path is None:
             raise HTTPException(status_code=404)
         return FileResponse(path)
@@ -8911,7 +9393,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             (sku,),
         ).fetchone()
         if str(full["gen_at"] or "").strip() and not has_pending_shot(full):
-            return images_page(request, 400, gen_error="这个商品已经出过图，没有失败的规格要补。")
+            return images_page(request, 400, gen_error="这个商品已经出过主图第4张。规格白底图请用下面的「只出规格图」。")
         if held is None:
             conn.execute(
                 "insert into gen_tasks (sku, status, worker, error, touched) values (?, 'running', 'one', '', ?)",
@@ -8976,7 +9458,144 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             return images_page(request, 400, gen_error=missing)
         if gen_is_paused():
             return images_page(request, 400, gen_error="生图已暂停。先点「继续生图」。")
-        return images_page(request, 400, gen_error="待生成已经在队列里。点「继续生图」就会按并发领。")
+        skus = [
+            row["sku"]
+            for row in conn.execute(
+                """
+                select p.sku as sku
+                from products p
+                left join gen_tasks t on t.sku = p.sku
+                where trim(ifnull(p.gen_at, '')) = ''
+                  and ifnull(p.image_url, '') like '/static/catalog/%'
+                  and (t.sku is null or t.status not in ('pending', 'running'))
+                """
+            ).fetchall()
+        ]
+        skus.extend(
+            row["sku"]
+            for row in conn.execute("select sku from gen_tasks where status = 'failed'").fetchall()
+        )
+        added = enqueue(conn, skus)
+        app.state.gen_queue_snapshot = None
+        if not added:
+            return images_page(request, 400, gen_error="没有还要出的商品。失败的规格已经补完，或者都在队列里。")
+        app.state.gen_armed = True
+        ensure_supervisor()
+        return RedirectResponse("/admin/images", status_code=303)
+
+    @app.get("/admin/images/sku/progress")
+    def admin_sku_gen_progress(request: Request):
+        require_admin(request)
+        return JSONResponse(sku_gen_job_read())
+
+    @app.post("/admin/images/sku/plan")
+    async def admin_sku_gen_plan(request: Request):
+        require_admin(request)
+        form = await request.form()
+        sku = str(form.get("sku") or "").strip()
+        if not sku:
+            return images_page(request, 400, gen_error="先填写要算规格图的货号。")
+        row = conn.execute(
+            "select sku, image_url, listing, offers, gen_at, published from products where sku = ?",
+            (sku,),
+        ).fetchone()
+        if row is None:
+            return images_page(request, 400, gen_error="没有这个商品。")
+        rows = plan_sku_product(row, root=ROOT)
+        request.state.sku_gen_plan = {
+            "sku": sku,
+            "rows": rows,
+            "generate": sum(1 for item in rows if item["action"] == "generate"),
+            "skip": sum(1 for item in rows if item["action"] != "generate"),
+        }
+        return images_page(request)
+
+    @app.post("/admin/images/sku/one")
+    async def admin_sku_gen_one(request: Request):
+        """把这一件商品待出的规格图（按张）放进 SKU 队列。"""
+        require_admin(request)
+        missing = gen_ready_or_error()
+        if missing:
+            return images_page(request, 400, gen_error=missing)
+        form = await request.form()
+        sku = str(form.get("sku") or "").strip()
+        force = str(form.get("force") or "").strip() in {"1", "true", "on", "yes"}
+        if not sku:
+            return images_page(request, 400, gen_error="先填写要出规格图的货号。")
+        row = conn.execute(
+            "select sku, image_url, listing, offers, gen_at, published from products where sku = ?",
+            (sku,),
+        ).fetchone()
+        if row is None:
+            return images_page(request, 400, gen_error="没有这个商品。")
+        if not has_pending_sku_shot(row, force=force, root=ROOT):
+            return images_page(request, 400, gen_error="这个商品没有要出的规格图（已生成的会跳过，除非勾选强制）。")
+        if not gen_editors():
+            return images_page(request, 400, gen_error="先保存生图 API 密钥，或连上至少一张显卡。")
+        units = list(list_pending_sku_shot_units(conn, root=ROOT, force=force, product_sku=sku))
+        added = enqueue_sku_shots(conn, units, force=force)
+        app.state.sku_gen_queue_snapshot = None
+        app.state.sku_gen_left_cache = None
+        if not added:
+            return images_page(request, 400, gen_error="没有新的规格图可入队（可能已在队列里）。")
+        app.state.sku_gen_armed = True
+        ensure_sku_supervisor()
+        return RedirectResponse("/admin/images", status_code=303)
+
+    @app.post("/admin/images/sku/rest")
+    async def admin_sku_gen_rest(request: Request):
+        """把已上架、仍缺的规格图按「张」全部放进 SKU 队列。不碰主图。"""
+        require_admin(request)
+        missing = gen_ready_or_error()
+        if missing:
+            return images_page(request, 400, gen_error=missing)
+        if gen_is_paused():
+            return images_page(request, 400, gen_error="生图已暂停。先点「继续生图」。")
+        form = await request.form()
+        force = str(form.get("force") or "").strip() in {"1", "true", "on", "yes"}
+        units = list(list_pending_sku_shot_units(conn, root=ROOT, force=force))
+        for row in conn.execute(
+            "select id, product_sku, image from sku_gen_tasks where status = 'failed'"
+        ).fetchall():
+            units.append({
+                "id": row["id"],
+                "product_sku": row["product_sku"],
+                "image": row["image"],
+                "label": "",
+            })
+        seen = set()
+        unique_units = []
+        for unit in units:
+            tid = unit.get("id") or ""
+            if not tid or tid in seen:
+                continue
+            held = conn.execute(
+                "select status from sku_gen_tasks where id = ?", (tid,)
+            ).fetchone()
+            if held and held["status"] in ("pending", "running") and not force:
+                continue
+            seen.add(tid)
+            unique_units.append(unit)
+        added = enqueue_sku_shots(conn, unique_units, force=force)
+        app.state.sku_gen_queue_snapshot = None
+        app.state.sku_gen_left_cache = None
+        if not added:
+            return images_page(request, 400, gen_error="没有还要出的规格图。失败的已补完，或都在队列里。")
+        app.state.sku_gen_armed = True
+        ensure_sku_supervisor()
+        return RedirectResponse("/admin/images", status_code=303)
+
+    @app.post("/admin/catalog/purge-intercept")
+    def admin_purge_intercept(request: Request):
+        """按拦截删除规则清理存量：整件未上架删商品，部分只删规格。"""
+        require_admin_role(request)
+        result = purge_intercepted_products()
+        return RedirectResponse(
+            "/admin/products?section=import&purged=%s&stripped=%s&offers=%s"
+            % (result["deleted_products"], result["stripped_products"], result["deleted_offers"]),
+            status_code=303,
+        )
+
 
     def products_missing_story(lang):
         """Published products with no pictures in this language yet."""
@@ -9057,6 +9676,15 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                     item["grams"] = priced["grams"]
                     item["hold"] = hold_reason(hold_percent) if priced["hold"] else ""
                 groups = group_rows(ready)
+            kept = []
+            price_held = 0
+            for item in groups:
+                cleaned = apply_intercept_rules(item)
+                if cleaned is None:
+                    price_held += 1
+                    continue
+                kept.append(cleaned)
+            groups = kept
             total = len(groups)
             imported = 0
             for index, item in enumerate(groups, 1):
@@ -9117,7 +9745,17 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 groups = []
                 for item in preview_products:
                     cargo = item["listing"].get("cargo") or item["sku"]
-                    groups.append(by_cargo.get(cargo) or item)
+                    loaded_item = by_cargo.get(cargo)
+                    if loaded_item is None:
+                        # 整件拦截：不再入库，计入本批定价拦截。
+                        price_held += 1
+                        continue
+                    # 再保险：若预览回退市 hold，按删除规则剥掉。
+                    cleaned = apply_intercept_rules(loaded_item)
+                    if cleaned is None:
+                        price_held += 1
+                        continue
+                    groups.append(cleaned)
                 total = len(groups)
                 for index, item in enumerate(groups, 1):
                     label = f"[{pack_index}/{package_total}] {item.get('title') or item['sku']}"
@@ -9842,7 +10480,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         mount_mobile_api(
             app,
             view=view,
-            catalog_rows=catalog_rows,
+            catalog_rows=catalog_list_rows,
             catalog_index=catalog_index,
             present_card=present_card,
             present=present,

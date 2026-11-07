@@ -46,16 +46,16 @@ DETAIL_PROMPT = commerce_prompt("en")
 STORY_SIZE = "1024x1536"
 MAIN_SIZE = "1024x1024"
 MAIN_ROLES = (
-    (1, "Placed", "Show the product on display in a fitting scene, placed where this kind of product is used. The product is the subject. No person. No words of any kind. Do not draw a grid of options or color chips."),
-    (2, "In use", "Show the product being used, so a shopper can tell what it is for at a glance. Western home. Generate a photorealistic adult when a person is needed. The person is generic, in Western clothing, not a celebrity and not a real identifiable person. One short headline is enough."),
-    (3, "Fact", "Show one measurement or material from the facts. Copy numbers and units exactly. If the facts have no number, show the product with no invented figure."),
+    (1, "Placed", "Show the product on display in a real Western home, placed where this kind of product is used. The product is the subject. One photograph only. No person. No words of any kind. Do not draw a grid of options or color chips."),
+    (2, "In use", "Show the product being used in a Western home, so a shopper can tell what it is for at a glance. Generate a photorealistic adult when a person is needed. The person is generic, in Western clothing, not a celebrity and not a real identifiable person. One short headline is enough."),
+    (3, "Fact", "One clean product photograph with one measurement or material from the facts. Copy numbers and units exactly. If the facts have no number, show the product with no invented figure. At most a short callout, not a specification table."),
 )
 STORY_ROLES = (
-    (1, "Hero", "One photograph of the product being used, with one short headline. No second photo, no inset circle, no row of products, no specification table."),
-    (2, "Use", "A Western model using the product. The person is in the frame, holding and using it. Generate a photorealistic adult. The person is generic, in Western clothing, not a celebrity and not a real identifiable person. If the facts describe a set, the set stays together. No specification numbers, no inset circle."),
-    (3, "Specs", "Show the whole product with one large number copied exactly from the facts, plus at most two more short lines: one material and one count if they are written. If the facts describe a set, show the whole set, not one piece. No person, no room scene, no product-name headline. Do not invent a number."),
-    (4, "Construction", "Fill the frame with a close-up of one piece from the product. If it is a set, this is one piece of that set, not a different product. No person, no headline."),
-    (5, "Second detail", "A close-up of a different piece from the construction image. If it is a set, this is another piece of that set. No person, no specification table."),
+    (1, "Hero", "One photograph of the product being used in a Western home, with one short headline. No second photo, no inset circle, no row of products, no specification table."),
+    (2, "Use", "A Western model using the product in a Western home. The person is in the frame, holding and using it. Generate a photorealistic adult. The person is generic, in Western clothing, not a celebrity and not a real identifiable person. If the facts describe a set, the set stays together. No specification numbers, no inset circle."),
+    (3, "Specs", "Show the whole product on a plain light background with one large number copied exactly from the facts, plus at most two more short lines: one material and one count if they are written. If the facts describe a set, show the whole set, not one piece. No person, no room scene, no product-name headline. Do not invent a number."),
+    (4, "Construction", "Fill the frame with a close-up of one piece from the product, so the material and the make are visible. If it is a set, this is one piece of that set, not a different product. No person, no headline."),
+    (5, "Second detail", "A close-up of a different piece from the construction image, another part a shopper would inspect. If it is a set, this is another piece of that set. No person, no specification table."),
 )
 
 
@@ -151,6 +151,18 @@ def story_panel_facts(panel, name, specs, detail_text):
     return body[:400]
 
 
+def _market_look(square):
+    """Shared look for the three square mains and the five portrait details."""
+    kind = "square main photo" if square else "portrait detail photo"
+    return (
+        "Make a photorealistic %s for a Western European or North American online shop. "
+        "Natural daylight, a real home or a plain studio, simple framing, the product easy to recognize. "
+        "Do not copy a Chinese marketplace poster. "
+        "No red stamps, price tags, QR codes, cartoon icons, badge walls, dense caption blocks, "
+        "multi-panel collages, or before-and-after grids. "
+    ) % kind
+
+
 def _reference_sentence(title):
     if title in ("Construction", "Second detail", "Detail"):
         return (
@@ -186,20 +198,23 @@ def story_prompt(lang, facts, panel, previous):
         fact_line = "Use only these facts: %s. " % " ".join(str(facts).split())
     return (
         "The attached photo is the product. "
-        "Take a new portrait US e-commerce detail photo of that same product. "
+        "%s"
+        "Take a new portrait detail photo of that same product for a Western product page. "
         "This photo is the %s photo. %s "
         "%s%s "
         "%s"
         "Any words on the image are short and in %s. "
-        "Copy numbers and units exactly. Do not invent a number. "
+        "Translate the facts into %s. Copy numbers and units exactly. Do not invent a number. "
         "No brand names, prices, rankings, or claims that are not in the attached photo. "
         "No Chinese characters."
     ) % (
+        _market_look(False),
         panel["title"],
         panel["task"],
         _reference_sentence(panel["title"]),
         _set_sentence(panel["title"], facts),
         fact_line,
+        name,
         name,
     )
 
@@ -268,13 +283,18 @@ class GenError(Exception):
 
 
 def sku_prompt(label):
+    """Shared white studio packshot for every language (no on-image text)."""
     return (
-        "Use this reference photo of the color variant. "
-        "Take a new square studio packshot of this same product. "
+        "Use this reference photo of the color variant only to identify this exact product. "
+        "Take a new square studio packshot of this same product on a seamless white sweep (#FFFFFF). "
         f"The product color is: {label}. "
-        "Keep the same shape, parts, hole count, logos, printed marks, and material. "
-        "Center it on a seamless white sweep (#FFFFFF), occupying about 80% of the frame. "
-        "Relight it with a soft overhead studio light and leave a soft contact shadow under the product. "
+        "Keep the same object: same shape, parts, hole count, color, logos, printed marks, and material. "
+        "Keep it centered, occupying about 80% of the frame, with a similar margin on every side. "
+        "Do not keep the original crop, camera distance, or background. "
+        "Relight it with a soft overhead studio light. "
+        "Leave a soft contact shadow directly under the product so it sits on the white surface. "
+        "Glass and metal keep soft highlights from that light. "
+        "No hands, extra props, room, or colored backdrop. "
         "Do not add any text, letters, numbers, watermark, caption, label, or border. "
         "Do not turn it into a different product."
     )
@@ -330,6 +350,17 @@ def skip_reason(label):
 
 def redraws_product(label):
     return skip_reason(label) == ""
+
+
+def is_sku_spec_image(image):
+    """True for dedicated SKU/规格图 files like c0.jpg / s1.png (not main gallery)."""
+    name = Path(str(image or "").split("?", 1)[0]).name.lower()
+    return re.match(r"^[cs]\d+\.(jpg|jpeg|png|webp)$", name) is not None
+
+
+def shot_task_id(product_sku, image):
+    key = _jpg_url(image) or str(image or "").strip()
+    return "%s::%s" % (product_sku, key)
 
 
 def offer_text(offer):
@@ -529,6 +560,7 @@ class HttpEditor:
                 },
                 headers=headers,
                 timeout=httpx.Timeout(300.0, connect=10.0),
+                trust_env=False,
             )
             response.raise_for_status()
         except httpx.HTTPError as exc:
@@ -572,7 +604,7 @@ def _image_bytes_from_payload(payload):
     if not url:
         raise GenError("生图接口没有返回图片地址。")
     try:
-        response = httpx.get(url, timeout=httpx.Timeout(120.0, connect=10.0), follow_redirects=True)
+        response = httpx.get(url, timeout=httpx.Timeout(120.0, connect=10.0), follow_redirects=True, trust_env=False)
         response.raise_for_status()
     except httpx.HTTPError as exc:
         raise GenError("下载生成图失败。") from exc
@@ -587,7 +619,7 @@ def _wait_api_task(status_url, deadline):
     while time.monotonic() < deadline:
         time.sleep(3)
         try:
-            response = httpx.get(status_url, timeout=httpx.Timeout(30.0, connect=10.0), follow_redirects=True)
+            response = httpx.get(status_url, timeout=httpx.Timeout(30.0, connect=10.0), follow_redirects=True, trust_env=False)
             if response.status_code in (429, 466, 477, 488, 502, 503, 504):
                 time.sleep(5)
                 continue
@@ -647,6 +679,7 @@ class ApiEditor:
                 files=files,
                 headers=headers,
                 timeout=httpx.Timeout(420.0, connect=15.0),
+                trust_env=False,
             )
         except httpx.HTTPError as exc:
             raise GenError("生图接口连不上。") from exc
@@ -919,35 +952,19 @@ def plan_queue(conn):
 
 
 def plan_product(row):
+    """Normal product gen plans only main #4 (白底棚拍). SKU packshots use sku_gen_*."""
     source = source_url(row)
-    offers = _offers(row["offers"] if "offers" in row.keys() else "[]")
     items = []
     if str(row["gen_at"] or "").strip():
-        items.append({"label": "主图", "action": "skip", "reason": "主图已经落库"})
+        items.append({"label": "主图第4张", "action": "skip", "reason": "主图第4张已经落库"})
     elif not source:
-        items.append({"label": "主图", "action": "skip", "reason": "没有原图"})
+        items.append({"label": "主图第4张", "action": "skip", "reason": "没有原图"})
     else:
-        items.append({"label": "主图", "action": "generate", "reason": "按原图出一张白底图，放在主图第4张"})
-    seen = set()
-    for offer in offers:
-        label = offer_text(offer) or "未命名规格"
-        image = str(offer.get("image") or "").strip()
-        if offer.get("generated"):
-            items.append({"label": label, "action": "skip", "reason": "这张已经落库"})
-            continue
-        if _uses_main_image(image, source):
-            items.append({"label": label, "action": "skip", "reason": "用的是主图，盖成主图，不另出"})
-            continue
-        reason = skip_reason(label)
-        if reason:
-            items.append({"label": label, "action": "skip", "reason": reason})
-            continue
-        key = _jpg_url(image)
-        if key in seen:
-            items.append({"label": label, "action": "skip", "reason": "和上面同一张原图，只出一次"})
-            continue
-        seen.add(key)
-        items.append({"label": label, "action": "generate", "reason": "有自己的原图，出一张"})
+        items.append({
+            "label": "主图第4张",
+            "action": "generate",
+            "reason": "按原图出一张白底主图，写入 en/main/4.jpg",
+        })
     return items
 
 
@@ -957,7 +974,7 @@ def _shot_key(offer, source_url_value):
     image = str(offer.get("image") or "").strip()
     if _uses_main_image(image, source_url_value):
         return ""
-    if not redraws_product(offer_text(offer)):
+    if not is_sku_spec_image(image):
         return ""
     return _jpg_url(image)
 
@@ -1046,7 +1063,284 @@ def generate_details(conn, root, sku, editor, workers=1):
 
 
 def generate_product(conn, root, sku, editor, backup_root=None, force=False, workers=1):
-    del force
+    """Only generate the 1 main packshot at slot 4 (en/main/4.jpg).
+
+    SKU/规格白底图走 generate_sku_shots / sku_gen_tasks，不在这条链路里出。
+    """
+    del workers  # main path is one shot; workers kept for call-site compatibility
+    row = conn.execute(
+        "select sku, image_url, listing, offers, gen_at from products where sku = ?",
+        (sku,),
+    ).fetchone()
+    if row is None:
+        raise GenError("没有这个商品。")
+    source_url_value = source_url(row)
+    offers = [dict(offer) for offer in _offers(row["offers"])]
+    gen_at = str(row["gen_at"] or "").strip()
+    fourth = Path(root) / "static" / "catalog" / str(sku) / "en" / "main" / "4.jpg"
+    if gen_at and fourth.is_file() and not force:
+        raise GenError("这个商品已经出过主图第4张，不会再跑。")
+    if not source_url_value and not force:
+        raise GenError("这个商品没有原图，不能出图。")
+
+    source_url_value, source = _read_source(row, root)
+    hero = to_square(editor.edit(source, HERO_PROMPT))
+    _commit_image(fourth, hero, backup_root, sku)
+    hero_url = _jpg_url(source_url_value) or source_url_value
+    for offer in offers:
+        image = str(offer.get("image") or "").strip()
+        if _uses_main_image(image, source_url_value):
+            offer["image"] = hero_url
+    gen_at = date.today().isoformat()
+    conn.execute(
+        "update products set image_url = ?, offers = ?, gen_at = ? where sku = ?",
+        (
+            hero_url,
+            json.dumps(offers, ensure_ascii=False) if offers else (row["offers"] or "[]"),
+            gen_at,
+            sku,
+        ),
+    )
+    return hero_url
+
+
+def plan_sku_product(row, force=False, root=None):
+    """Budget SKU packshots for one product.
+
+    Eligible units are dedicated 规格图 files (c*/s* under catalog), not main image.
+    Color/quantity label filters are NOT used — every real SKU shot is queued.
+    Shared white studio shots; no language sidecars.
+    """
+    source = source_url(row)
+    offers = _offers(row["offers"] if "offers" in row.keys() else "[]")
+    items = []
+    seen = set()
+    for offer in offers:
+        label = offer_text(offer) or "未命名规格"
+        image = str(offer.get("image") or "").strip()
+        if offer.get("generated") and not force:
+            items.append({"label": label, "action": "skip", "reason": "规格白底图已经落库", "image": image})
+            continue
+        if _uses_main_image(image, source):
+            items.append({"label": label, "action": "skip", "reason": "用的是主图，不另出规格图", "image": image})
+            continue
+        if not is_sku_spec_image(image):
+            items.append({"label": label, "action": "skip", "reason": "不是 c*/s* 规格图文件", "image": image})
+            continue
+        key = _jpg_url(image)
+        if not key:
+            items.append({"label": label, "action": "skip", "reason": "没有规格原图", "image": image})
+            continue
+        if key in seen:
+            items.append({"label": label, "action": "skip", "reason": "和上面同一张原图，只出一次", "image": image})
+            continue
+        seen.add(key)
+        if root is not None:
+            path = catalog_path(image, root)
+            if path is None or not path.is_file():
+                items.append({"label": label, "action": "skip", "reason": "规格原图文件不存在", "image": image})
+                continue
+        items.append({
+            "label": label,
+            "action": "generate",
+            "reason": "参照原规格图出白底棚拍（各国语言共用）",
+            "image": key,
+        })
+    return items
+
+
+def has_pending_sku_shot(row, force=False, root=None):
+    return any(item["action"] == "generate" for item in plan_sku_product(row, force=force, root=root))
+
+
+def list_pending_sku_shot_units(conn, root=None, force=False, product_sku=None):
+    """Yield dicts: id, product_sku, image, label — one per unique pending 规格图."""
+    sql = (
+        "select sku, image_url, listing, offers, gen_at, published from products "
+        "where ifnull(published, 0) = 1"
+    )
+    args = []
+    if product_sku:
+        sql += " and sku = ?"
+        args.append(product_sku)
+    for row in conn.execute(sql, args).fetchall():
+        for item in plan_sku_product(row, force=force, root=root):
+            if item["action"] != "generate":
+                continue
+            image = item.get("image") or ""
+            yield {
+                "id": shot_task_id(row["sku"], image),
+                "product_sku": row["sku"],
+                "image": image,
+                "label": item.get("label") or "",
+            }
+
+
+def count_pending_sku_shots(conn, root=None, force=False):
+    return sum(1 for _ in list_pending_sku_shot_units(conn, root=root, force=force))
+
+
+def enqueue_sku(conn, skus, force=False):
+    """Back-compat: expand product SKUs into pending image-level shot tasks."""
+    units = []
+    wanted = {str(sku) for sku in skus}
+    rows = (
+        conn.execute(
+            "select sku, image_url, listing, offers, gen_at, published from products where sku in (%s)"
+            % ",".join("?" * len(wanted)),
+            tuple(wanted),
+        ).fetchall()
+        if wanted
+        else []
+    )
+    for row in rows:
+        for item in plan_sku_product(row, force=force):
+            if item["action"] != "generate":
+                continue
+            units.append({
+                "id": shot_task_id(row["sku"], item["image"]),
+                "product_sku": row["sku"],
+                "image": item["image"],
+                "label": item.get("label") or "",
+            })
+    # also re-queue failed shot tasks for these products
+    return enqueue_sku_shots(conn, units, force=force)
+
+
+def enqueue_sku_shots(conn, units, force=False):
+    """Enqueue image-level SKU packshot tasks. Each unit is one 规格图."""
+    added = 0
+    for unit in units:
+        task_id = unit.get("id") or shot_task_id(unit["product_sku"], unit["image"])
+        product_sku = unit["product_sku"]
+        image = unit["image"]
+        row = conn.execute("select status from sku_gen_tasks where id = ?", (task_id,)).fetchone()
+        if row is None:
+            conn.execute(
+                "insert into sku_gen_tasks (id, product_sku, image, status, worker, error) values (?, ?, ?, 'pending', '', '')",
+                (task_id, product_sku, image),
+            )
+            added += 1
+        elif row["status"] == "failed" or (force and row["status"] not in ("pending", "running")):
+            conn.execute(
+                "update sku_gen_tasks set status = 'pending', worker = '', error = '', product_sku = ?, image = ? where id = ?",
+                (product_sku, image, task_id),
+            )
+            added += 1
+        elif force and row["status"] == "pending":
+            added += 1
+    # Re-queue failed tasks globally when force=False was used by rest endpoint separately
+    return added
+
+
+def claim_sku_task(conn, worker):
+    """Claim one pending 规格图 task. Returns dict or None."""
+    with _claim_lock:
+        row = conn.execute(
+            "select id, product_sku, image from sku_gen_tasks where status = 'pending' order by rowid limit 1"
+        ).fetchone()
+        if row is None:
+            return None
+        conn.execute(
+            "update sku_gen_tasks set status = 'running', worker = ?, touched = ? where id = ? and status = 'pending'",
+            (worker, time.time(), row["id"]),
+        )
+        held = conn.execute(
+            "select status, worker from sku_gen_tasks where id = ?",
+            (row["id"],),
+        ).fetchone()
+        if held and held["status"] == "running" and held["worker"] == worker:
+            return {
+                "id": row["id"],
+                "product_sku": row["product_sku"],
+                "image": row["image"],
+            }
+        return None
+
+
+def finish_sku_task(conn, task_id, ok, error=""):
+    conn.execute(
+        "update sku_gen_tasks set status = ?, worker = '', error = ?, touched = ? where id = ?",
+        ("done" if ok else "failed", "" if ok else str(error or ""), time.time(), task_id),
+    )
+
+
+def release_abandoned_sku(conn):
+    conn.execute(
+        "update sku_gen_tasks set status = 'failed', worker = '', error = ? where status = 'running'",
+        ("上次中断了。再出规格图时，只补还没落库的。",),
+    )
+
+
+def sku_task_progress(conn):
+    counts = {"pending": 0, "running": 0, "done": 0, "failed": 0}
+    for row in conn.execute("select status, count(*) as n from sku_gen_tasks group by status").fetchall():
+        counts[row["status"]] = row["n"]
+    current = conn.execute(
+        "select product_sku, image from sku_gen_tasks where status = 'running' order by touched desc, rowid limit 1"
+    ).fetchone()
+    latest = conn.execute(
+        "select error from sku_gen_tasks where status = 'failed' and error != '' order by touched desc, rowid desc limit 1"
+    ).fetchone()
+    total = sum(counts.values())
+    label = ""
+    if current:
+        name = Path(str(current["image"] or "")).name
+        label = "%s %s" % (current["product_sku"], name)
+    return {
+        "running": bool(counts["pending"] or counts["running"]),
+        "label": label,
+        "done": counts["done"] + counts["failed"],
+        "total": total,
+        "pending": counts["pending"],
+        "active": counts["running"],
+        "error": latest["error"] if latest else "",
+        "result": {
+            "done": counts["done"],
+            "failed": counts["failed"],
+        },
+    }
+
+
+def plan_sku_queue(conn):
+    rows = conn.execute(
+        """
+        select id, product_sku, image, status
+        from sku_gen_tasks
+        where status = 'pending'
+        order by rowid
+        """
+    ).fetchall()
+    items = []
+    for row in rows:
+        name = Path(str(row["image"] or "")).name
+        items.append({
+            "sku": row["product_sku"],
+            "generate": 1,
+            "skip": 0,
+            "note": name,
+            "image": row["image"],
+            "id": row["id"],
+        })
+    return {
+        "pending": len(items),
+        "calling": len(items),
+        "shots": len(items),
+        "idle": 0,
+        "items": items,
+    }
+
+
+def generate_sku_shots(conn, root, sku, editor, backup_root=None, force=False, workers=1):
+    """SKU-only white studio packshots.
+
+    调用规则：
+    - 参照该规格原图重拍；白底居中、软光接触阴影、画面无任何文字。
+    - 成功后 offer.generated=1，各国语言共用同一张，不入多语言译图队列。
+    - 默认跳过已 generated=1；force=True 才重出。
+    - 并发用传入的 workers（后台 gen_api_workers）。
+    - 优先给已上架商品用；本函数本身不筛选 published。
+    """
     row = conn.execute(
         "select sku, image_url, listing, offers, gen_at from products where sku = ?",
         (sku,),
@@ -1056,36 +1350,34 @@ def generate_product(conn, root, sku, editor, backup_root=None, force=False, wor
     source_url_value = source_url(row)
     offers = [dict(offer) for offer in _offers(row["offers"])]
     hero_url = _jpg_url(source_url_value) if source_url_value else ""
-    gen_at = str(row["gen_at"] or "").strip()
     pending = []
     seen = set()
     for index, offer in enumerate(offers):
-        key = _shot_key(offer, source_url_value)
+        if offer.get("generated") and not force:
+            continue
+        key = _shot_key(offer, source_url_value) if not force else None
+        if force:
+            image = str(offer.get("image") or "").strip()
+            if _uses_main_image(image, source_url_value):
+                continue
+            if not is_sku_spec_image(image):
+                continue
+            key = _jpg_url(image)
+            if not key:
+                continue
         if not key or key in seen:
             continue
         seen.add(key)
         pending.append(index)
-    if gen_at and not pending:
-        raise GenError("这个商品已经出过图，不会再跑。")
+    if not pending:
+        raise GenError("这个商品没有要出的规格图。")
 
     def persist():
         conn.execute(
-            "update products set image_url = ?, offers = ?, gen_at = ? where sku = ?",
-            (hero_url, json.dumps(offers, ensure_ascii=False) if offers else (row["offers"] or "[]"), gen_at, sku),
+            "update products set offers = ? where sku = ?",
+            (json.dumps(offers, ensure_ascii=False), sku),
         )
 
-    if not gen_at:
-        source_url_value, source = _read_source(row, root)
-        hero = to_square(editor.edit(source, HERO_PROMPT))
-        fourth = Path(root) / "static" / "catalog" / str(sku) / "en" / "main" / "4.jpg"
-        _commit_image(fourth, hero, backup_root, sku)
-        hero_url = _jpg_url(source_url_value) or source_url_value
-        for offer in offers:
-            image = str(offer.get("image") or "").strip()
-            if _uses_main_image(image, source_url_value):
-                offer["image"] = hero_url
-        gen_at = date.today().isoformat()
-        persist()
     errors = []
     lock = threading.Lock()
 
@@ -1095,14 +1387,16 @@ def generate_product(conn, root, sku, editor, backup_root=None, force=False, wor
         key = _jpg_url(image)
         siblings = [
             item for item in offers
-            if _jpg_url(str(item.get("image") or "")) == key and not item.get("generated")
+            if _jpg_url(str(item.get("image") or "")) == key
+            and (force or not item.get("generated"))
         ]
         label = offer_text(offer)
         src_path = catalog_path(image, root)
         if src_path is None or not src_path.is_file():
             with lock:
                 for item in siblings:
-                    item["image"] = hero_url
+                    if hero_url:
+                        item["image"] = hero_url
                     item.pop("gen_error", None)
                 persist()
             return
@@ -1127,12 +1421,93 @@ def generate_product(conn, root, sku, editor, backup_root=None, force=False, wor
             persist()
 
     width = max(1, min(MAX_GEN_API_WORKERS, int(workers or 1)))
-    if pending:
-        with ThreadPoolExecutor(max_workers=min(width, len(pending))) as pool:
-            list(pool.map(run_shot, pending))
+    with ThreadPoolExecutor(max_workers=min(width, len(pending))) as pool:
+        list(pool.map(run_shot, pending))
     if errors:
         raise GenError("有规格没出成，已经落库的不会再出。再跑一次只补失败的。")
-    return hero_url
+    return len(pending)
+
+
+_product_offer_locks = {}
+_product_offer_locks_guard = threading.Lock()
+
+
+def _product_lock(product_sku):
+    with _product_offer_locks_guard:
+        lock = _product_offer_locks.get(product_sku)
+        if lock is None:
+            lock = threading.Lock()
+            _product_offer_locks[product_sku] = lock
+        return lock
+
+
+def generate_one_sku_shot(conn, root, product_sku, image, editor, backup_root=None, force=False):
+    """Generate a single SKU/规格白底图 unit (one c*/s* file). Thread-safe per product."""
+    product_sku = str(product_sku or "").strip()
+    image_key = _jpg_url(image) or str(image or "").strip()
+    if not product_sku or not image_key:
+        raise GenError("缺少货号或规格图路径。")
+    with _product_lock(product_sku):
+        row = conn.execute(
+            "select sku, image_url, listing, offers, gen_at from products where sku = ?",
+            (product_sku,),
+        ).fetchone()
+        if row is None:
+            raise GenError("没有这个商品。")
+        source_url_value = source_url(row)
+        offers = [dict(offer) for offer in _offers(row["offers"])]
+        hero_url = _jpg_url(source_url_value) if source_url_value else ""
+        siblings = []
+        for offer in offers:
+            key = _jpg_url(str(offer.get("image") or ""))
+            if key != image_key:
+                continue
+            if offer.get("generated") and not force:
+                continue
+            if _uses_main_image(str(offer.get("image") or ""), source_url_value):
+                continue
+            if not is_sku_spec_image(str(offer.get("image") or "")):
+                continue
+            siblings.append(offer)
+        if not siblings:
+            raise GenError("没有要出的规格图")
+        src_image = str(siblings[0].get("image") or image_key).strip()
+        src_path = catalog_path(src_image, root)
+        if src_path is None or not src_path.is_file():
+            for item in siblings:
+                if hero_url:
+                    item["image"] = hero_url
+                item.pop("gen_error", None)
+            conn.execute(
+                "update products set offers = ? where sku = ?",
+                (json.dumps(offers, ensure_ascii=False), product_sku),
+            )
+            raise GenError("规格原图文件不存在")
+        label = offer_text(siblings[0])
+        try:
+            shot = to_square(editor.edit(src_path.read_bytes(), sku_prompt(label)))
+            dest_url = _jpg_url(src_image)
+            dest = catalog_path(dest_url, root)
+            _commit_image(dest, shot, backup_root, product_sku)
+        except GenError as exc:
+            message = str(exc)[:180]
+            for item in siblings:
+                item["gen_error"] = message
+            conn.execute(
+                "update products set offers = ? where sku = ?",
+                (json.dumps(offers, ensure_ascii=False), product_sku),
+            )
+            raise
+        for item in siblings:
+            item["image"] = dest_url
+            item["generated"] = 1
+            item.pop("gen_error", None)
+        conn.execute(
+            "update products set offers = ? where sku = ?",
+            (json.dumps(offers, ensure_ascii=False), product_sku),
+        )
+        return 1
+
 
 
 def main_urls(sku, lang, root):
@@ -1155,25 +1530,28 @@ def main_prompt(lang, facts, role, previous):
     if role[1] == "Placed":
         return (
             "The attached photo is the product. "
-            "Take a new square US e-commerce photo of that same product. "
+            "%s"
+            "Take a new square main photo of that same product for a Western product page. "
             "This photo is image 1 of 3. %s "
             "%s%s "
             "Do not add any text, letters, numbers, watermark, caption, headline, label, or border."
-        ) % (role[2], _reference_sentence(role[1]), _set_sentence(role[1], facts))
+        ) % (_market_look(True), role[2], _reference_sentence(role[1]), _set_sentence(role[1], facts))
     name = COMMERCE_LANGS.get(str(lang or "").strip(), "English")
     fact_line = ""
     if str(facts or "").strip():
         fact_line = "Use only these facts: %s. " % " ".join(str(facts).split())
     return (
         "The attached photo is the product. "
-        "Take a new square US e-commerce photo of that same product. "
+        "%s"
+        "Take a new square main photo of that same product for a Western product page. "
         "This photo is image %s of 3. %s "
         "%s%s "
         "%s"
         "Any words on the image are short and in %s. "
+        "Translate the facts into %s. Copy numbers and units exactly. Do not invent a number. "
         "No brand names, prices, rankings, or claims that are not in the attached photo. "
         "No Chinese characters."
-    ) % (role[0], role[2], _reference_sentence(role[1]), _set_sentence(role[1], facts), fact_line, name)
+    ) % (_market_look(True), role[0], role[2], _reference_sentence(role[1]), _set_sentence(role[1], facts), fact_line, name, name)
 
 
 def story_urls(sku, lang, root):
@@ -1237,7 +1615,6 @@ def _edit_shot(editor, reference, prompt, size):
 
 _UPSTREAM_TRIES = 3
 _UPSTREAM_PAUSE = 2
-_OCR_LANES = threading.Semaphore(4)
 
 
 def _chat_reply(exc):
@@ -1373,11 +1750,13 @@ def _write_jobs(editor, reference, jobs, on_progress, done, total, workers=1, re
 
 
 def generate_story(conn, root, sku, lang, editor, complete=None, ocr=None, on_progress=None, workers=1, only_missing=False):
-    """Scan one product's details, then draw three main images and five detail images.
+    """Draw three main images and five detail images from the product photo.
 
+    Detail copy comes from the product name and specs. Detail-page text is not read.
     only_missing keeps frames that already landed and draws just the gaps.
     """
-    from shop.image_translate import catalog_file, image_ocr_text
+    from shop.image_translate import catalog_file
+    del ocr
 
     lang = str(lang or "").strip()
     if lang not in COMMERCE_LANGS:
@@ -1410,15 +1789,6 @@ def generate_story(conn, root, sku, lang, editor, complete=None, ocr=None, on_pr
         hero = detail_paths[0]
     if hero is None:
         raise GenError("这个商品没有可参考的图。")
-    read = ocr or image_ocr_text
-    seen = []
-    with _OCR_LANES:
-        for path in detail_paths:
-            text = read(path) or ""
-            for line in str(text).splitlines():
-                line = line.strip()
-                if line and line not in seen:
-                    seen.append(line)
     try:
         offers = json.loads(row["offers"] or "[]") if "offers" in keys else []
     except json.JSONDecodeError:
@@ -1435,7 +1805,7 @@ def generate_story(conn, root, sku, lang, editor, complete=None, ocr=None, on_pr
             labels.append(label)
     name = _json_text(row["names"] if "names" in keys else "", "en")
     specs = _json_text(row["specs"] if "specs" in keys else "", "en")
-    detail_text = "\n".join(seen)
+    detail_text = ""
     source = "\n".join(part for part in (name, specs, detail_text, " | ".join(labels)) if part)
     facts = _tighten_facts(story_fact_sheet(name, specs, detail_text, labels), complete)
     picture = "\n".join(
