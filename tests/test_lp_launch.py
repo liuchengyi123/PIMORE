@@ -203,6 +203,75 @@ def test_preview_resolves_each_template_skin_and_category_pool():
     assert 'data-lp-lang="en"' in page.text
 
 
+def test_localized_copy_rejects_cjk_on_non_zh_markets():
+    from shop.app import localized_copy
+
+    assert localized_copy({"en": "厨房喷壶"}, "en", fallback="cjk-leak", source_zh="源中文名") == "cjk-leak"
+    assert (
+        localized_copy({"de": "中文标题", "en": "Glass sprayer"}, "de", fallback="cjk-leak", source_zh="源中文名")
+        == "Glass sprayer"
+    )
+    assert localized_copy({"en": "Glass sprayer"}, "en", fallback="cjk-leak", source_zh="源中文名") == "Glass sprayer"
+    assert localized_copy({"ja": "排水口ゴミ受け"}, "ja", fallback="cjk-leak", source_zh="源中文名") == "排水口ゴミ受け"
+    assert localized_copy({}, "zh", fallback="cjk-leak", source_zh="源中文名") == "源中文名"
+    assert localized_copy({"en": "オイル"}, "en", fallback="cjk-leak") == "cjk-leak"
+
+
+def test_ad_lp_card_hides_chinese_titles_on_a_latin_market():
+    import json
+
+    client = _client()
+    client.app.state.db.execute(
+        """
+        insert into products
+            (sku, category, price_cents, stock, names, bullets, description, specs, source_zh, published)
+        values ('cjk-leak', 'kitchen', 500, 8, ?, '{}', ?, '{}', ?, 1)
+        """,
+        (
+            json.dumps({"en": "厨房喷壶", "de": "中文标题"}, ensure_ascii=False),
+            json.dumps({"en": "中文描述", "de": "Eine Sprühflasche"}, ensure_ascii=False),
+            "源中文名",
+        ),
+    )
+    client.app.state.db.execute(
+        """
+        insert into products
+            (sku, category, price_cents, stock, names, bullets, description, specs, source_zh, published)
+        values ('en-ok', 'kitchen', 550, 8, ?, '{}', '{}', '{}', ?, 1)
+        """,
+        (
+            json.dumps({"en": "Glass sprayer"}, ensure_ascii=False),
+            "玻璃喷壶",
+        ),
+    )
+    page = client.get(
+        "/lp/ad/preview",
+        params={"template": "dense_flash", "category": "kitchen", "skin": "kitchen", "country": "US", "preview": "1"},
+        headers={"Accept-Language": "zh-CN"},
+        cookies={"harbor_hl": "zh"},
+    )
+    assert page.status_code == 200
+    assert 'data-lp-lang="en"' in page.text
+    assert 'data-sku="cjk-leak"' in page.text
+    assert "厨房喷壶" not in page.text
+    assert "中文标题" not in page.text
+    assert "中文描述" not in page.text
+    assert "源中文名" not in page.text
+    assert "Glass sprayer" in page.text
+    assert "玻璃喷壶" not in page.text
+    german = client.get(
+        "/lp/ad/preview",
+        params={"template": "dense_flash", "category": "kitchen", "skin": "kitchen", "country": "DE", "preview": "1"},
+    )
+    assert "Glass sprayer" in german.text
+    assert "中文标题" not in german.text
+    product = client.get("/p/cjk-leak?country=US", headers={"Accept-Language": "zh-CN"})
+    assert product.status_code == 200
+    assert "厨房喷壶" not in product.text
+    assert "源中文名" not in product.text
+    assert "cjk-leak" in product.text
+
+
 def test_ui_lang_for_uses_country_unless_the_visitor_chose():
     from shop.app import ui_lang_for
 

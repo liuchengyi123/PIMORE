@@ -501,6 +501,81 @@ def _product_label(source_zh, names, sku):
     return _plain_name(source_zh) or _plain_name(names) or sku
 
 
+def _has_cjk(text):
+    """Han, kana, or hangul. Latin storefronts must not show these."""
+    for ch in str(text or ""):
+        code = ord(ch)
+        if (
+            0x3400 <= code <= 0x4DBF
+            or 0x4E00 <= code <= 0x9FFF
+            or 0xF900 <= code <= 0xFAFF
+            or 0x3040 <= code <= 0x30FF
+            or 0x31F0 <= code <= 0x31FF
+            or 0xAC00 <= code <= 0xD7AF
+        ):
+            return True
+    return False
+
+
+def _lang_allows_cjk(lang):
+    key = str(lang or "")
+    # zh* is Chinese. Japanese titles use kanji and kana, so ja keeps them.
+    # Every other language drops CJK and falls back to English, then sku.
+    return key == "ja" or key.startswith("zh")
+
+
+def localized_copy(value, lang, fallback="", source_zh=""):
+    """Pick product copy: names[lang] → names[en] → fallback.
+
+    ``source_zh`` is used only when lang is zh*. A non-zh/ja candidate that
+    still contains CJK is skipped, so an English page cannot show a Chinese
+    title that was stored under ``en`` or only in ``source_zh``.
+    """
+    lang = str(lang or "en")
+    names = {}
+    bare = ""
+    if isinstance(value, dict):
+        names = value
+    elif isinstance(value, str):
+        text = value.strip()
+        if text[:1] in "{[":
+            try:
+                parsed = json.loads(text)
+            except json.JSONDecodeError:
+                parsed = None
+            if isinstance(parsed, dict):
+                names = parsed
+            else:
+                bare = text
+        else:
+            bare = text
+    else:
+        bare = _plain_name(value)
+
+    def accept(raw):
+        text = _plain_name(raw)
+        if not text:
+            return ""
+        if not _lang_allows_cjk(lang) and _has_cjk(text):
+            return ""
+        return text
+
+    if str(lang).startswith("zh"):
+        zh = accept(source_zh)
+        if zh:
+            return zh
+    if names:
+        picked = accept(names.get(lang))
+        if picked:
+            return picked
+        if lang != "en":
+            picked = accept(names.get("en"))
+            if picked:
+                return picked
+        return fallback
+    return accept(bare) or fallback
+
+
 def load_promos(conn):
     rows = conn.execute("select key, value from promos").fetchall()
     data = {row["key"]: json.loads(row["value"]) for row in rows}
@@ -778,10 +853,11 @@ def offer_view(row, ctx):
         if offer.get("hold"):
             continue
         label = offer.get("label") or ""
-        if ctx.get("prefer_zh") and (offer.get("source_label") or "").strip():
+        offer_lang = ctx.get("lang") or "en"
+        if str(offer_lang).startswith("zh") and (offer.get("source_label") or "").strip():
             text = str(offer.get("source_label") or "").strip()
         else:
-            text = label.get(ctx["lang"]) or label.get("en") or "" if isinstance(label, dict) else ""
+            text = localized_copy(label, offer_lang, fallback="")
         if not text:
             text = str(offer.get("id") or "")
         sale = int(offer.get("price_cents") or 0)
@@ -2125,20 +2201,13 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             shipping = format_money(goods_local(ship_cents, ctx["units"], ctx["currency"]), ctx["currency"])
         raw_specs = json.loads(row["specs"])
 
-        def spec_text(key):
-            value = raw_specs.get(key) or ""
-            if isinstance(value, dict):
-                return value.get(ctx["lang"]) or value.get("en") or ""
-            return value
+        copy_lang = ctx.get("lang") or "en"
+        source_zh = row["source_zh"] if "source_zh" in row.keys() else ""
 
-        if ctx.get("prefer_zh"):
-            display_name = _product_label(
-                row["source_zh"] if "source_zh" in row.keys() else "",
-                names,
-                row["sku"],
-            )
-        else:
-            display_name = names.get(ctx["lang"]) or names["en"]
+        def spec_text(key):
+            return localized_copy(raw_specs.get(key) or "", copy_lang, fallback="")
+
+        display_name = localized_copy(names, copy_lang, fallback=row["sku"], source_zh=source_zh)
         item = {
             "sku": row["sku"],
             "category": row["category"],
@@ -2148,7 +2217,11 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             "stock": row["stock"],
             "shipping": shipping,
             "free_shipping": free,
-            "description": json.loads(row["description"]).get(ctx["lang"]) or names["en"],
+            "description": localized_copy(
+                json.loads(row["description"]) if row["description"] else {},
+                copy_lang,
+                fallback=display_name,
+            ),
             "specs": {
                 "material": spec_text("material"),
                 "size": spec_text("size"),
@@ -2228,14 +2301,12 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             original = format_money(goods_local(original_cents, ctx["units"], ctx["currency"]), ctx["currency"])
         image = (row["image_url"] if "image_url" in row.keys() and row["image_url"] else "") or f"/static/products/{row['sku']}.svg"
         image = card_image(storefront_image(image, ctx["lang"], ROOT), ROOT)
-        if ctx.get("prefer_zh"):
-            card_name = _product_label(
-                row["source_zh"] if "source_zh" in row.keys() else "",
-                names,
-                row["sku"],
-            )
-        else:
-            card_name = names.get(ctx["lang"]) or names.get("en") or row["sku"]
+        card_name = localized_copy(
+            names,
+            ctx.get("lang") or "en",
+            fallback=row["sku"],
+            source_zh=row["source_zh"] if "source_zh" in row.keys() else "",
+        )
         item = {
             "sku": row["sku"],
             "category": row["category"],
