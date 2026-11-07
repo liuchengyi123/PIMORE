@@ -468,4 +468,7 @@ def migrate(conn):
         )
         """
     )
+    from shop.lp_links import ensure_table as ensure_lp_links
+
+    ensure_lp_links(conn)
     conn.commit()

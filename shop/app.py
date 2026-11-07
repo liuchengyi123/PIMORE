@@ -59,6 +59,21 @@ from shop.adtrack import (
     update_account,
     delete_account,
 )
+from shop.lp_links import (
+    create_link as create_lp_link,
+    get_by_code as get_lp_link,
+    list_recent as list_lp_links,
+    preview_path as lp_preview_path,
+)
+from shop.lp_modules import (
+    IMPULSE_MAX_CENTS,
+    IMPULSE_MIN_CENTS,
+    SKINS as LP_SKINS,
+    TEMPLATES as LP_TEMPLATES,
+    LpChoiceError,
+    band_groups,
+    resolve_module,
+)
 from shop.alibaba import (
     AlibabaFormatError,
     apply_intercept_rules,
@@ -455,10 +470,11 @@ def accept_ui_lang(header):
 
 
 def ui_lang_for(request, country_lang):
-    """Language is independent of the store country and its currency.
+    """Manual choice, otherwise the IP country's language.
 
-    Query lang/hl wins, then the language cookie, then the browser language.
-    The country only supplies a default, and it never changes the currency.
+    Explicit ``?lang=`` / ``?hl=`` and the ``harbor_hl`` cookie are a manual
+    choice. Accept-Language never overrides the country default. Currency
+    stays on the IP country and is not read here.
     """
     raw = ""
     try:
@@ -474,12 +490,6 @@ def ui_lang_for(request, country_lang):
         saved = ""
     if saved and saved in UI:
         return saved
-    try:
-        browser = accept_ui_lang(request.headers.get("accept-language"))
-    except Exception:
-        browser = ""
-    if browser and browser in UI:
-        return browser
     if country_lang in UI:
         return country_lang
     return "en"
@@ -503,6 +513,81 @@ def prefer_zh_copy(request_or_hint):
 
 def _product_label(source_zh, names, sku):
     return _plain_name(source_zh) or _plain_name(names) or sku
+
+
+def _has_cjk(text):
+    """Han, kana, or hangul. Latin storefronts must not show these."""
+    for ch in str(text or ""):
+        code = ord(ch)
+        if (
+            0x3400 <= code <= 0x4DBF
+            or 0x4E00 <= code <= 0x9FFF
+            or 0xF900 <= code <= 0xFAFF
+            or 0x3040 <= code <= 0x30FF
+            or 0x31F0 <= code <= 0x31FF
+            or 0xAC00 <= code <= 0xD7AF
+        ):
+            return True
+    return False
+
+
+def _lang_allows_cjk(lang):
+    key = str(lang or "")
+    # zh* is Chinese. Japanese titles use kanji and kana, so ja keeps them.
+    # Every other language drops CJK and falls back to English, then sku.
+    return key == "ja" or key.startswith("zh")
+
+
+def localized_copy(value, lang, fallback="", source_zh=""):
+    """Pick product copy: names[lang] → names[en] → fallback.
+
+    ``source_zh`` is used only when lang is zh*. A non-zh/ja candidate that
+    still contains CJK is skipped, so an English page cannot show a Chinese
+    title that was stored under ``en`` or only in ``source_zh``.
+    """
+    lang = str(lang or "en")
+    names = {}
+    bare = ""
+    if isinstance(value, dict):
+        names = value
+    elif isinstance(value, str):
+        text = value.strip()
+        if text[:1] in "{[":
+            try:
+                parsed = json.loads(text)
+            except json.JSONDecodeError:
+                parsed = None
+            if isinstance(parsed, dict):
+                names = parsed
+            else:
+                bare = text
+        else:
+            bare = text
+    else:
+        bare = _plain_name(value)
+
+    def accept(raw):
+        text = _plain_name(raw)
+        if not text:
+            return ""
+        if not _lang_allows_cjk(lang) and _has_cjk(text):
+            return ""
+        return text
+
+    if str(lang).startswith("zh"):
+        zh = accept(source_zh)
+        if zh:
+            return zh
+    if names:
+        picked = accept(names.get(lang))
+        if picked:
+            return picked
+        if lang != "en":
+            picked = accept(names.get("en"))
+            if picked:
+                return picked
+        return fallback
+    return accept(bare) or fallback
 
 
 def load_promos(conn):
@@ -860,10 +945,11 @@ def offer_view(row, ctx):
         if offer.get("hold"):
             continue
         label = offer.get("label") or ""
-        if ctx.get("prefer_zh") and (offer.get("source_label") or "").strip():
+        offer_lang = ctx.get("lang") or "en"
+        if str(offer_lang).startswith("zh") and (offer.get("source_label") or "").strip():
             text = str(offer.get("source_label") or "").strip()
         else:
-            text = label.get(ctx["lang"]) or label.get("en") or "" if isinstance(label, dict) else ""
+            text = localized_copy(label, offer_lang, fallback="")
         if not text:
             text = str(offer.get("id") or "")
         sale = int(offer.get("price_cents") or 0)
@@ -920,6 +1006,10 @@ class HarborLangCookie:
 
     async def __call__(self, scope, receive, send):
         if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+        # Ad landing pages never record a manual language choice.
+        if str(scope.get("path") or "").startswith("/lp/ad"):
             await self.app(scope, receive, send)
             return
         qs = scope.get("query_string") or b""
@@ -1843,7 +1933,8 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         forced = getattr(request.state, "seo_lang", None)
         if forced in OPEN_LANGS:
             lang = forced
-        # Language can be Chinese on a US IP. Currency stays on country.
+        # Manual ?lang= / ?hl= or harbor_hl wins. Otherwise keep the IP language.
+        # Accept-Language is not consulted. Currency stays on country.
         lang = ui_lang_for(request, lang)
         now = datetime.now(timezone.utc)
         try:
@@ -1861,6 +1952,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             no_rate = True
         promos = cached_promos()
         cart_count = sum(line["qty"] for line in load_lines(request.cookies.get("cart")))
+<<<<<<< HEAD
         prefer_zh = prefer_zh_copy(request)
         ua = (request.headers.get("user-agent") or "").lower()
         is_mobile = (
@@ -1871,6 +1963,9 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             or "webos" in ua
             or "blackberry" in ua
         ) and "ipad" not in ua
+=======
+        prefer_zh = prefer_zh_copy(request) or str(lang).startswith("zh")
+>>>>>>> origin/cursor/ad-lp-modules-455a
         ctx = {
             "request": request,
             "t": UI.get(lang) or UI["en"],
@@ -2291,20 +2386,13 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             shipping = format_money(0, ctx["currency"])
         raw_specs = json.loads(row["specs"])
 
-        def spec_text(key):
-            value = raw_specs.get(key) or ""
-            if isinstance(value, dict):
-                return value.get(ctx["lang"]) or value.get("en") or ""
-            return value
+        copy_lang = ctx.get("lang") or "en"
+        source_zh = row["source_zh"] if "source_zh" in row.keys() else ""
 
-        if ctx.get("prefer_zh"):
-            display_name = _product_label(
-                row["source_zh"] if "source_zh" in row.keys() else "",
-                names,
-                row["sku"],
-            )
-        else:
-            display_name = names.get(ctx["lang"]) or names["en"]
+        def spec_text(key):
+            return localized_copy(raw_specs.get(key) or "", copy_lang, fallback="")
+
+        display_name = localized_copy(names, copy_lang, fallback=row["sku"], source_zh=source_zh)
         item = {
             "sku": row["sku"],
             "category": row["category"],
@@ -2314,7 +2402,11 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             "stock": row["stock"],
             "shipping": shipping,
             "free_shipping": free,
-            "description": json.loads(row["description"]).get(ctx["lang"]) or names["en"],
+            "description": localized_copy(
+                json.loads(row["description"]) if row["description"] else {},
+                copy_lang,
+                fallback=display_name,
+            ),
             "specs": {
                 "material": spec_text("material"),
                 "size": spec_text("size"),
@@ -2423,6 +2515,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         else:
             original = format_money(goods_local(original_cents, ctx["units"], ctx["currency"]), ctx["currency"])
         image = (row["image_url"] if "image_url" in row.keys() and row["image_url"] else "") or f"/static/products/{row['sku']}.svg"
+<<<<<<< HEAD
         image = resolve_catalog_image(image, row, ctx["lang"], ROOT) or image
         image = card_image(listing_photo(row["sku"], ctx["lang"], image), ROOT)
         if ctx.get("prefer_zh"):
@@ -2433,6 +2526,15 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             )
         else:
             card_name = names.get(ctx["lang"]) or names.get("en") or row["sku"]
+=======
+        image = card_image(storefront_image(image, ctx["lang"], ROOT), ROOT)
+        card_name = localized_copy(
+            names,
+            ctx.get("lang") or "en",
+            fallback=row["sku"],
+            source_zh=row["source_zh"] if "source_zh" in row.keys() else "",
+        )
+>>>>>>> origin/cursor/ad-lp-modules-455a
         item = {
             "sku": row["sku"],
             "category": row["category"],
@@ -2527,7 +2629,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         except Exception:
             qlang = ""
         code = normalize_ui_lang(qlang)
-        if code and code in UI:
+        if code and code in UI and not request.url.path.startswith("/lp/ad"):
             response.set_cookie("harbor_hl", code, max_age=31536000, path="/", samesite="lax")
         if request.cookies.get("locale"):
             response.delete_cookie("locale", path="/")
@@ -7810,6 +7912,231 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
     async def admin_traffic_save_legacy(request: Request):
         require_admin(request)
         return RedirectResponse("/admin/traffic?notice=saved", status_code=303)
+
+    def _lp_text(source, key, default=""):
+        if source is None:
+            return default
+        raw = source.get(key)
+        if raw is None:
+            return default
+        text = str(raw).strip()
+        return text or default
+
+    def _lp_form_state(source=None):
+        platform = _lp_text(source, "platform", "meta") or "meta"
+        category = _lp_text(source, "category", "kitchen") or "kitchen"
+        return {
+            "template": _lp_text(source, "template", "dense_flash") or "dense_flash",
+            "category": category,
+            "skin": _lp_text(source, "skin", category) or category,
+            "platform": platform,
+            "utm_source": _lp_text(source, "utm_source", platform) or platform,
+            "utm_medium": _lp_text(source, "utm_medium", "paid") or "paid",
+            "utm_campaign": _lp_text(source, "utm_campaign"),
+            "utm_content": _lp_text(source, "utm_content"),
+            "utm_term": _lp_text(source, "utm_term"),
+            "acct": _lp_text(source, "acct"),
+            "country": (_lp_text(source, "country", "US") or "US").upper()[:2],
+            "label": _lp_text(source, "label"),
+        }
+
+    def _lp_market(request, ctx, preview):
+        """Ad LP language follows the IP country. Preview may pass ?country=.
+
+        Uses the country view() already resolved from the local MMDB. No second
+        lookup and no remote geo call. A manual storefront cookie is ignored.
+        """
+        country = ctx["country"]
+        if preview:
+            query = str(request.query_params.get("country") or "").strip().upper()[:2]
+            if len(query) == 2 and query.isalpha():
+                country = query
+        lang, currency = resolve(country)
+        if lang not in UI:
+            lang = "en"
+        text = UI.get(lang) or UI["en"]
+        market = dict(ctx)
+        market["country"] = country
+        market["lang"] = lang
+        market["currency"] = currency
+        market["t"] = text
+        market["prefer_zh"] = str(lang).startswith("zh")
+        if currency != ctx.get("currency") or country != ctx.get("country"):
+            try:
+                rate = app.state.book.rate_for(currency, datetime.now(timezone.utc))
+                units = rate.units_per_usd
+                coef = coefficient_for(conn, country)
+                if coef != 1.0:
+                    units = float(units) * float(coef)
+                market["units"] = units
+                market["coefficient"] = coef
+            except NoRate:
+                market["units"] = None
+        return market
+
+    def _lp_cards(request, category, preview):
+        ctx = view(request)
+        market = _lp_market(request, ctx, preview)
+        picked = []
+        fallback = []
+        for row in catalog_rows():
+            if str(row.get("category") or "") != category:
+                continue
+            if int(row.get("published") or 0) != 1:
+                continue
+            if int(row.get("stock") or 0) <= 0:
+                continue
+            cents = int(row.get("price_cents") or 0)
+            if IMPULSE_MIN_CENTS <= cents <= IMPULSE_MAX_CENTS:
+                picked.append(row)
+            else:
+                fallback.append(row)
+        rows = picked or fallback
+        rows.sort(key=lambda row: (int(row.get("price_cents") or 0), str(row.get("sku") or "")))
+        cards = []
+        country = market["country"]
+        for row in rows[:24]:
+            card = present_card(row, market)
+            sku = card["sku"]
+            card["grab_href"] = f"/api/ad/deal?sku={sku}&country={country}&to=/p/{sku}"
+            cards.append(card)
+        return cards, market
+
+    def _lp_response(request, spec, *, preview=False, code=""):
+        cards, ctx = _lp_cards(request, spec["category"], preview)
+        bands, overflow = band_groups(cards)
+        ends_at, _set_cookie = lp_flash_window(request)
+        lp = {
+            **spec,
+            "ends_at": ends_at,
+            "enter_href": href(f"/c/{spec['category']}", ctx["country"]),
+            "preview": preview,
+            "code": code,
+            "product_count": len(cards),
+        }
+        if not preview:
+            try:
+                attrs = getattr(request.state, "ad_attrs", None) or {}
+                record_funnel(
+                    conn,
+                    "land",
+                    seg=spec["category"],
+                    utm_source=attrs.get("utm_source") or request.query_params.get("utm_source") or "",
+                    utm_campaign=attrs.get("utm_campaign") or request.query_params.get("utm_campaign") or "",
+                    visitor=lp_visitor_seed(request),
+                    extra=f"template={spec['template_id']}",
+                    acct=attrs.get("acct") or request.query_params.get("acct") or "",
+                )
+            except Exception:
+                pass
+        response = render(
+            request,
+            "lp_ad.html",
+            lp=lp,
+            cards=cards,
+            hero=cards[0] if cards else None,
+            rest=cards[1:] if len(cards) > 1 else [],
+            bands=bands,
+            overflow=overflow,
+            lang=ctx["lang"],
+            t=ctx["t"],
+            prefer_zh=ctx["prefer_zh"],
+            seo_title=page_title(ctx["t"]["categories"].get(spec["category"]) or spec["category_en"]),
+            seo_description=ctx["t"].get("lp_dense_sub") or "",
+            seo_robots="noindex, nofollow",
+        )
+        if ends_at:
+            response.set_cookie(
+                "lp_flash_end",
+                ends_at,
+                max_age=60 * 11,
+                path="/",
+                samesite="lax",
+            )
+        return response
+
+    @app.get("/lp/ad/preview", response_class=HTMLResponse)
+    def lp_ad_preview(request: Request):
+        try:
+            spec = resolve_module(
+                request.query_params.get("template"),
+                request.query_params.get("category"),
+                request.query_params.get("skin"),
+            )
+        except LpChoiceError:
+            return render(request, "not_found.html", status_code=404)
+        return _lp_response(request, spec, preview=True)
+
+    @app.get("/lp/ad/{code}", response_class=HTMLResponse)
+    def lp_ad_saved(request: Request, code: str):
+        row = get_lp_link(conn, code)
+        if row is None:
+            return render(request, "not_found.html", status_code=404)
+        try:
+            spec = resolve_module(row["template"], row["category"], row["skin"])
+        except LpChoiceError:
+            return render(request, "not_found.html", status_code=404)
+        return _lp_response(request, spec, preview=False, code=row["code"])
+
+    _LP_ERRORS = {
+        "template": "请选择有效的落地页模块。",
+        "category": "请选择有效的类目。",
+        "skin": "请选择有效的皮肤。",
+    }
+
+    def _launch_page(request, form_state, notice="", error="", built=None):
+        try:
+            resolve_module(form_state["template"], form_state["category"], form_state["skin"])
+            preview_src = lp_preview_path(
+                form_state["template"],
+                form_state["category"],
+                form_state["skin"],
+                form_state["country"],
+            )
+        except LpChoiceError:
+            preview_src = lp_preview_path("dense_flash", "kitchen", "kitchen", "US")
+        return render(
+            request,
+            "admin_launch.html",
+            lp_templates=LP_TEMPLATES,
+            lp_skins=LP_SKINS,
+            form_state=form_state,
+            preview_src=preview_src,
+            launch_notice=notice,
+            launch_error=error,
+            built_link=built,
+            launch_links=list_lp_links(conn),
+        )
+
+    @app.get("/admin/launch", response_class=HTMLResponse)
+    def admin_launch(request: Request):
+        require_admin(request)
+        return _launch_page(request, _lp_form_state())
+
+    @app.post("/admin/launch", response_class=HTMLResponse)
+    async def admin_launch_create(request: Request):
+        require_admin(request)
+        form = await request.form()
+        state = _lp_form_state(form)
+        try:
+            built = create_lp_link(
+                conn,
+                template=state["template"],
+                category=state["category"],
+                skin=state["skin"],
+                platform=state["platform"],
+                utm_source=state["utm_source"],
+                utm_medium=state["utm_medium"],
+                utm_campaign=state["utm_campaign"],
+                utm_content=state["utm_content"],
+                utm_term=state["utm_term"],
+                acct=state["acct"],
+                country=state["country"],
+                label=state["label"],
+            )
+        except LpChoiceError as exc:
+            return _launch_page(request, state, error=_LP_ERRORS.get(exc.field, "无法生成链接。"))
+        return _launch_page(request, state, notice="built", built=built)
 
     @app.get("/admin/ads", response_class=HTMLResponse)
     def admin_ads(request: Request):

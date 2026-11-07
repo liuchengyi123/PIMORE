@@ -1,0 +1,142 @@
+{% extends "admin_base.html" %}
+{% block body %}
+<header class="page-head">
+  <div>
+    <h1>投放落地页</h1>
+    <p class="muted">选类目和落地页模块，生成 Meta / TikTok 投放链接。类目广告进站，不直达结算。页面不写满额包邮。</p>
+  </div>
+</header>
+
+{% if launch_notice == "built" %}<p class="ok">链接已生成，可复制到广告后台。右侧预览与公开页使用同一套模板。</p>{% endif %}
+{% if launch_error %}<p class="error">{{ launch_error }}</p>{% endif %}
+
+<div class="launch-split">
+  <form id="lp-launch-form" class="card" method="post" action="/admin/launch">
+    <h2>选择落地页模块</h2>
+    <div class="pad">
+      <div class="lp-mod-picks" role="radiogroup" aria-label="落地页模块">
+        {% for mod in lp_templates %}
+        <label>
+          <input type="radio" name="template" value="{{ mod.id }}" {% if form_state.template == mod.id %}checked{% endif %}>
+          <span><b>{{ mod.label_zh }}</b> <code>{{ mod.id }}</code><br><span class="muted small">{{ mod.blurb_zh }}</span></span>
+        </label>
+        {% endfor %}
+      </div>
+
+      <div class="fields" style="margin-top:14px">
+        <label>类目（商品池）
+          <select name="category" id="lp-category">
+            {% for skin in lp_skins %}
+            <option value="{{ skin.id }}" {% if form_state.category == skin.id %}selected{% endif %}>{{ skin.label_zh }} · {{ skin.label_en }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>皮肤（配色）
+          <select name="skin" id="lp-skin">
+            {% for skin in lp_skins %}
+            <option value="{{ skin.id }}" {% if form_state.skin == skin.id %}selected{% endif %}>{{ skin.label_zh }}{% if skin.master %} · 主色{% endif %}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>平台
+          <select name="platform" id="lp-platform">
+            {% for code, label in (("meta", "Meta"), ("tiktok", "TikTok"), ("google", "Google")) %}
+            <option value="{{ code }}" {% if form_state.platform == code %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>country <input name="country" value="{{ form_state.country }}" maxlength="2"></label>
+        <label>内部备注 <input name="label" value="{{ form_state.label }}" maxlength="80" placeholder="例如 厨房-密铺-0312"></label>
+        <label>acct <input name="acct" value="{{ form_state.acct }}" placeholder="投放账户代码，可空"></label>
+        <label>utm_source <input name="utm_source" value="{{ form_state.utm_source }}"></label>
+        <label>utm_medium <input name="utm_medium" value="{{ form_state.utm_medium }}"></label>
+        <label>utm_campaign <input name="utm_campaign" value="{{ form_state.utm_campaign }}"></label>
+        <label>utm_content <input name="utm_content" value="{{ form_state.utm_content }}"></label>
+        <label class="wide">utm_term <input name="utm_term" value="{{ form_state.utm_term }}"></label>
+      </div>
+      <p class="muted small">改模块、类目或皮肤时，右侧用同一公开渲染器即时预览，不必先保存。</p>
+      <div class="actions"><button class="btn" type="submit">生成投放链接</button></div>
+      {% if built_link %}
+      <div class="link-box">
+        <input id="launch-link" readonly value="{{ built_link.url }}">
+        <button class="btn ghost sm" type="button" data-copy="#launch-link">复制</button>
+      </div>
+      <p class="muted small">稳定路径 <code>{{ built_link.path.split('?')[0] }}</code> · {{ built_link.template_label }} · {{ built_link.category_zh }} / {{ built_link.skin_zh }}</p>
+      {% endif %}
+    </div>
+  </form>
+
+  <aside class="lp-preview-frame">
+    <div class="lp-preview-label">实时预览</div>
+    <iframe id="lp-preview" title="落地页实时预览" src="{{ preview_src }}"></iframe>
+  </aside>
+</div>
+
+<div class="card">
+  <h2>已生成的链接</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>备注</th><th>模块</th><th>类目 / 皮肤</th><th>链接</th></tr></thead>
+      <tbody>
+      {% for row in launch_links %}
+      <tr>
+        <td>{{ row.label or "—" }}</td>
+        <td>{{ row.template_label }} <code>{{ row.template }}</code></td>
+        <td>{{ row.category_zh }} / {{ row.skin_zh }}</td>
+        <td><a href="{{ row.path }}">{{ row.url }}</a></td>
+      </tr>
+      {% else %}
+      <tr><td class="empty" colspan="4">还没有投放链接。</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<script>
+(function () {
+  var form = document.getElementById("lp-launch-form");
+  var frame = document.getElementById("lp-preview");
+  var category = document.getElementById("lp-category");
+  var skin = document.getElementById("lp-skin");
+  if (!form || !frame) return;
+  var skinLocked = !!(skin && category && skin.value !== category.value);
+  var timer = 0;
+  function previewSrc() {
+    var data = new FormData(form);
+    var cat = data.get("category") || "kitchen";
+    var q = new URLSearchParams();
+    q.set("template", data.get("template") || "dense_flash");
+    q.set("category", cat);
+    q.set("skin", data.get("skin") || cat);
+    q.set("preview", "1");
+    q.set("country", (data.get("country") || "US").toString().slice(0, 2));
+    return "/lp/ad/preview?" + q.toString();
+  }
+  function paint() {
+    var next = previewSrc();
+    if (frame.getAttribute("src") !== next) frame.setAttribute("src", next);
+  }
+  function schedule() {
+    window.clearTimeout(timer);
+    timer = window.setTimeout(paint, 120);
+  }
+  if (skin) skin.addEventListener("change", function () { skinLocked = true; });
+  if (category && skin) {
+    category.addEventListener("change", function () {
+      if (!skinLocked) skin.value = category.value;
+    });
+  }
+  form.addEventListener("input", schedule);
+  form.addEventListener("change", schedule);
+  document.querySelectorAll("[data-copy]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var node = document.querySelector(btn.getAttribute("data-copy"));
+      if (!node) return;
+      var text = node.value || node.textContent || "";
+      if (navigator.clipboard) navigator.clipboard.writeText(text);
+      btn.textContent = "已复制";
+    });
+  });
+})();
+</script>
+{% endblock %}
