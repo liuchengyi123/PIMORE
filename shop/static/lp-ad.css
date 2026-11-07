@@ -29,7 +29,7 @@
   border-radius: 999px;
   padding: 3px 8px;
 }
-.lp-main { max-width: 480px; margin: 0 auto; padding: 14px 12px 28px; }
+.lp-main { max-width: 480px; margin: 0 auto; padding: 14px 12px 88px; }
 .lp-kicker {
   margin: 0 0 6px;
   font-size: 12px;
@@ -174,3 +174,23 @@
   to { transform: translateX(-50%); }
 }
 .lp-ticker-track span { padding: 6px 0; }
+
+
+/* Sticky enter CTA — always visible while scrolling products */
+.lp-main .lp-enter,
+.lp-main .lp-foot { display: none !important; }
+.lp-enter-dock {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.92) 28%, #fff 100%);
+  box-sizing: border-box;
+}
+.lp-enter-dock .lp-enter-sticky {
+  max-width: 480px;
+  margin: 0 auto;
+  box-shadow: 0 8px 24px rgba(28, 25, 23, 0.18);
+}
