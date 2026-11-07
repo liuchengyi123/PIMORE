@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+{% from "shot.html" import shot %}
+{% block body_class %} fn-listing-page{% endblock %}
+{% block body %}
+<div class="fn-listing{% if q and not category %} fn-search{% endif %}">
+  {# Mobile M06 / M03 top chrome #}
+  <header class="fn-list-mbar">
+    <a class="fn-list-back" href="{% if category %}{{ href('/categories', country) }}{% else %}{{ href('/', country) }}{% endif %}" aria-label="{{ t.back }}">‹</a>
+    <h1 class="fn-list-mtitle">{% if q %}{{ t.results if t.results is defined else 'Results' }}{% elif sub %}{{ sub_name }}{% elif category %}{{ t.categories[category] }}{% else %}{{ t.departments }}{% endif %}</h1>
+    {% if not q or category %}
+    <a class="fn-list-filter" href="#fn-m-filters">{% if lang.startswith('en') %}Filter{% else %}{{ t.filters }}{% endif %}</a>
+    {% else %}
+    <span class="fn-list-filter-spacer"></span>
+    {% endif %}
+  </header>
+
+  {% if category and chips %}
+  <nav class="fn-list-chips" aria-label="{{ t.category }}">
+    <a class="chip{% if not sub %} on{% endif %}" href="{{ href('/c/' ~ category, country) }}">{{ t.all if t.all is defined else 'All' }}</a>
+    {% for chip in chips %}
+    <a class="chip{% if sub == chip.slug %} on{% endif %}" href="{{ href('/c/' ~ category ~ '/' ~ chip.slug, country) }}">{{ chip.name }}</a>
+    {% endfor %}
+  </nav>
+  {% elif q and not category %}
+  <nav class="fn-list-chips fn-list-sortchips" aria-label="{{ t.sort }}">
+    <a class="chip{% if sort == 'featured' or not sort %} on{% endif %}" href="?country={{ country }}&amp;q={{ q }}&amp;sort=featured&amp;lang={{ lang }}">{{ t.featured }}</a>
+    <a class="chip{% if sort == 'price_asc' %} on{% endif %}" href="?country={{ country }}&amp;q={{ q }}&amp;sort=price_asc&amp;lang={{ lang }}">{{ t.price_asc }}</a>
+    <a class="chip{% if sort == 'price_desc' %} on{% endif %}" href="?country={{ country }}&amp;q={{ q }}&amp;sort=price_desc&amp;lang={{ lang }}">{{ t.price_desc }}</a>
+    <a class="chip{% if sort == 'newest' %} on{% endif %}" href="?country={{ country }}&amp;q={{ q }}&amp;sort=newest&amp;lang={{ lang }}">{{ t.newest }}</a>
+  </nav>
+  {% endif %}
+
+  <div class="fn-list-meta">
+    <span class="tiny">{{ total }} {% if t.items_label is defined %}{{ t.items_label }}{% else %}{{ t.results }}{% endif %}</span>
+    {% if not q or category %}
+    <form class="fn-sort" method="get" action="">
+      <input type="hidden" name="country" value="{{ country }}">
+      <input type="hidden" name="lang" value="{{ lang }}">
+      {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+      {% if category %}<input type="hidden" name="category" value="{{ category }}">{% endif %}
+      <input type="hidden" name="min" value="{{ min }}">
+      <input type="hidden" name="max" value="{{ max }}">
+      <label class="tiny">{{ t.sort }}:
+        <select name="sort" onchange="this.form.submit()">
+          <option value="featured" {% if sort == 'featured' %}selected{% endif %}>{{ t.featured }}</option>
+          <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>{{ t.price_asc }}</option>
+          <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>{{ t.price_desc }}</option>
+          <option value="newest" {% if sort == 'newest' %}selected{% endif %}>{{ t.newest }}</option>
+        </select>
+      </label>
+    </form>
+    {% endif %}
+  </div>
+
+  {% if not q or category %}
+  <aside class="fn-filters" id="fn-m-filters">
+    <div class="fn-filters-title">{{ t.filters }}</div>
+    <form method="get" action="">
+      <input type="hidden" name="country" value="{{ country }}">
+      <input type="hidden" name="lang" value="{{ lang }}">
+      {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+      <div class="fn-filter-label">{{ t.departments }}</div>
+      <div class="fn-dept-list">
+        {% for key in categories %}
+        <a class="{% if category == key %}on{% endif %}" href="{{ href('/c/' ~ key, country) }}">{{ t.categories[key] }}</a>
+        {% endfor %}
+      </div>
+      <div class="fn-filter-label">{{ t.min_price }} / {{ t.max_price }}</div>
+      <div class="fn-price-row">
+        <input name="min" value="{{ min }}" placeholder="Min" inputmode="decimal">
+        <input name="max" value="{{ max }}" placeholder="Max" inputmode="decimal">
+      </div>
+      {% if chips %}
+      <div class="fn-filter-label">{{ t.category }}</div>
+      <div class="fn-chips">
+        <a class="chip{% if not sub %} on{% endif %}" href="{{ href('/c/' ~ category, country) }}">{{ t.categories[category] }}</a>
+        {% for chip in chips %}
+        <a class="chip{% if sub == chip.slug %} on{% endif %}" href="{{ href('/c/' ~ category ~ '/' ~ chip.slug, country) }}">{{ chip.name }}</a>
+        {% endfor %}
+      </div>
+      {% endif %}
+      <button class="btn" type="submit" style="width:100%;margin-top:14px">{{ t.apply }}</button>
+    </form>
+  </aside>
+  {% endif %}
+
+  <div class="fn-listing-main">
+    <div class="fn-listing-head fn-listing-head-desk">
+      <div>
+        {% if category and not q %}
+        <nav class="crumbs tiny"><a href="{{ href('/', country) }}">{{ t.home }}</a>
+          {% if sub %}<a href="{{ href('/c/' ~ category, country) }}">{{ t.categories[category] }}</a><span>{{ sub_name }}</span>
+          {% else %}<span>{{ t.categories[category] }}</span>{% endif %}
+        </nav>
+        {% endif %}
+        <h1>{% if q %}{{ t.results if t.results is defined else 'Results' }}{% if q %} “{{ q }}”{% endif %}{% elif sub %}{{ sub_name }}{% elif category %}{{ t.categories[category] }}{% else %}{{ t.departments }}{% endif %}</h1>
+        <p class="tiny">{{ total }} {{ t.results }}</p>
+      </div>
+      {% if not q or category %}
+      <form class="fn-sort fn-sort-desk" method="get" action="">
+        <input type="hidden" name="country" value="{{ country }}">
+        <input type="hidden" name="lang" value="{{ lang }}">
+        {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+        {% if category %}<input type="hidden" name="category" value="{{ category }}">{% endif %}
+        <input type="hidden" name="min" value="{{ min }}">
+        <input type="hidden" name="max" value="{{ max }}">
+        <label class="tiny">{{ t.sort }}
+          <select name="sort" onchange="this.form.submit()">
+            <option value="featured" {% if sort == 'featured' %}selected{% endif %}>{{ t.featured }}</option>
+            <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>{{ t.price_asc }}</option>
+            <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>{{ t.price_desc }}</option>
+            <option value="newest" {% if sort == 'newest' %}selected{% endif %}>{{ t.newest }}</option>
+          </select>
+        </label>
+      </form>
+      {% endif %}
+    </div>
+
+    {% set top = ads.get('listing-top') %}
+    {% if top %}
+    {% set creative = top %}{% set slot = 'listing-top' %}{% set width = 970 %}{% set height = 250 %}
+    {% include "ad.html" %}
+    {% endif %}
+
+    <section class="product-grid dense fn-list-grid" id="list-grid">
+      {% for item in items %}
+      {% set eager = loop.first %}
+      {% include "card.html" %}
+      {% else %}
+      <div class="fn-search-empty">
+        <h1>{% if q %}{{ t.no_results if t.no_results is defined else 'No results' }}{% if q %} "{{ q }}"{% endif %}{% else %}{{ t.no_results if t.no_results is defined else t.results }}{% endif %}</h1>
+        <p class="tiny" style="margin-top:8px">Try kitchen, storage, or cleaning</p>
+        <div class="fn-suggest-chips">
+          <a href="{{ href('/search?q=kitchen', country) }}">kitchen</a>
+          <a href="{{ href('/search?q=storage', country) }}">storage</a>
+          <a href="{{ href('/search?q=cleaning', country) }}">cleaning</a>
+          <a href="{{ href('/search?q=organizer', country) }}">organizer</a>
+        </div>
+        <a class="btn" style="margin-top:24px;display:inline-flex" href="{{ href('/', country) }}">{{ t.home }}</a>
+      </div>
+      {% endfor %}
+    </section>
+
+    {% set size = page_size|default(12) %}
+    {% if total > size %}
+    <nav class="pager fn-pager" id="list-pager" data-page="{{ page }}" data-more="{{ 1 if list_has_more else 0 }}">
+      {% if page > 1 %}
+      <a href="?country={{ country }}&amp;q={{ q }}&amp;category={{ category }}&amp;sort={{ sort }}&amp;min={{ min }}&amp;max={{ max }}&amp;page={{ page - 1 }}&amp;lang={{ lang }}">{{ t.prev }}</a>
+      {% endif %}
+      <span>{{ t.page }} {{ page }}</span>
+      {% if list_has_more %}
+      <a href="?country={{ country }}&amp;q={{ q }}&amp;category={{ category }}&amp;sort={{ sort }}&amp;min={{ min }}&amp;max={{ max }}&amp;page={{ page + 1 }}&amp;lang={{ lang }}">{{ t.next }}</a>
+      {% endif %}
+    </nav>
+    {% endif %}
+  </div>
+</div>
+<script>
+  (function () {
+    var grid = document.getElementById("list-grid");
+    var pager = document.getElementById("list-pager");
+    if (!grid || !pager || pager.getAttribute("data-more") !== "1") return;
+    if (!("IntersectionObserver" in window)) return;
+    var busy = false;
+    var page = parseInt(pager.getAttribute("data-page"), 10) || 1;
+    var sentinel = document.createElement("div");
+    sentinel.style.height = "1px";
+    pager.parentNode.insertBefore(sentinel, pager);
+    function loadNext() {
+      if (busy || pager.getAttribute("data-more") !== "1") return;
+      busy = true;
+      page += 1;
+      var url = new URL(location.href);
+      url.searchParams.set("partial", "1");
+      url.searchParams.set("page", String(page));
+      fetch(url.toString(), { credentials: "same-origin", headers: { "Accept": "text/html" } })
+        .then(function (r) {
+          var has = r.headers.get("X-Harbor-Has-More") === "1";
+          return r.text().then(function (html) { return { html: html, has: has }; });
+        })
+        .then(function (pack) {
+          grid.insertAdjacentHTML("beforeend", pack.html);
+          pager.setAttribute("data-more", pack.has ? "1" : "0");
+          pager.hidden = true;
+          busy = false;
+        })
+        .catch(function () { busy = false; });
+    }
+    new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) { if (entry.isIntersecting) loadNext(); });
+    }, { rootMargin: "480px" }).observe(sentinel);
+  })();
+  </script>
+{% endblock %}

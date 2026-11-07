@@ -1,0 +1,60 @@
+﻿/* Harbor H5 design tokens — First Design (shopping, 2026) */
+$hb-forest: #0F2744; /* Function ink/navy */
+$hb-deep: #0E7490;
+$hb-soft: #E0F2FE;
+$hb-coral: #B91C1C; /* danger / alerts only — NOT price */
+$hb-coral-soft: #FEE2E2;
+$hb-paper: #F7F4EF;
+$hb-line: #E2E6EE;
+$hb-ink: #0F2744;
+$hb-muted: #5C6570;
+$hb-white: #FFFFFF;
+$hb-success: #128A5E;
+$hb-price: #B45309;
+$hb-radius-sm: 14px;
+$hb-radius-md: 20px;
+$hb-radius-lg: 24px;
+$hb-radius-pill: 999px;
+$hb-shadow-soft: 0 4px 20px rgba(14, 17, 22, 0.06);
+$hb-shadow-float: 0 10px 36px rgba(14, 17, 22, 0.10);
+$hb-icon-stroke: 1.65;
+
+:root {
+  --hb-forest: #{$hb-forest};
+  --hb-deep: #{$hb-deep};
+  --hb-soft: #{$hb-soft};
+  --hb-coral: #{$hb-coral};
+  --hb-coral-soft: #{$hb-coral-soft};
+  --hb-paper: #{$hb-paper};
+  --hb-line: #{$hb-line};
+  --hb-ink: #{$hb-ink};
+  --hb-muted: #{$hb-muted};
+  --hb-white: #{$hb-white};
+  --hb-success: #{$hb-success};
+  --hb-price: #{$hb-price};
+  --hb-radius-sm: #{$hb-radius-sm};
+  --hb-radius-md: #{$hb-radius-md};
+  --hb-radius-lg: #{$hb-radius-lg};
+  --hb-shadow-soft: #{$hb-shadow-soft};
+  --hb-shadow-float: #{$hb-shadow-float};
+  --hb-icon-stroke: #{$hb-icon-stroke};
+}
+
+.hb-page {
+  min-height: 100vh;
+  background: var(--hb-paper);
+  color: var(--hb-ink);
+}
+
+.hb-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.hb-state {
+  text-align: center;
+  color: var(--hb-muted);
+  padding: 48px 16px;
+  font-size: 14px;
+}

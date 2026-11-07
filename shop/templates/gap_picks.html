@@ -1,0 +1,21 @@
+{% if products %}
+{% for item in products %}
+<article class="atc-card">
+  <a class="peek-hit" href="{{ href('/p/' ~ item.sku, country) }}" data-peek="{{ item.sku }}">
+    <img src="{{ item.image }}" width="160" height="160" alt="" loading="lazy" decoding="async">
+    <p class="name">{{ item.name }}</p>
+    <p class="atc-cd">{{ t.flash_ends_label }} <b data-gap-cd>30:00.000</b></p>
+    <p class="pr"><b>{{ item.price }}</b>{% if item.original %}<s>{{ item.original }}</s>{% endif %}</p>
+  </a>
+  <form method="post" action="/cart/add">
+    <input type="hidden" name="sku" value="{{ item.sku }}">
+    <input type="hidden" name="country" value="{{ country }}">
+    <input type="hidden" name="qty" value="1">
+    {% if pick_next %}<input type="hidden" name="next" value="{{ pick_next }}">{% endif %}
+    <button type="submit">{{ t.add_on }}</button>
+  </form>
+</article>
+{% endfor %}
+{% else %}
+<p class="atc-empty">{{ t.empty }}</p>
+{% endif %}

@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Harbor — Mall home</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231E4D3B'/%3E%3Cpath d='M9 21V13h14v8' fill='none' stroke='%23FFFFFF' stroke-width='2.4' stroke-linecap='round'/%3E%3Cpath d='M16 9v4M12 12h8' stroke='%23FFFFFF' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://miaoda.feishu.cn">
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Karla:wght@400;500;700&amp;display=swap">
+<style>
+  :root{
+    --bg:#F6F6F5; --surface:#FFFFFF;
+    --ink:#1C1C1C; --ink2:#5F5F5F; --ink3:#999999;
+    --green:#1E4D3B; --green2:#153D2E; --green-tint:#EDF3EE;
+    --coral:#E0522E; --coral-tint:#FCEFEA;
+    --amber:#E2A93B;
+    --line:#E7E7E7; --cream:#F2F2F1;
+    --r:8px; --r-sm:4px; --pill:999px;
+    --sh:0 1px 2px rgba(0,0,0,.04);
+    --display:'Karla','Segoe UI',system-ui,sans-serif;
+    --ui:'Karla','Segoe UI',system-ui,-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);font-family:var(--ui);font-size:15px;line-height:1.55}
+  img{display:block;max-width:100%}
+  a{color:inherit;text-decoration:none}
+  button{font-family:inherit;cursor:pointer;border:0;background:none}
+  .wrap{max-width:1220px;margin:0 auto;padding:0 20px}
+
+  /* ===== announce ===== */
+  .announce{background:var(--green);color:#fff;text-align:center;padding:9px 16px;font-size:13px}
+  .announce b{font-weight:700}
+  .announce .sep{color:rgba(255,255,255,.5);margin:0 8px}
+
+  /* ===== header ===== */
+  .header{border-bottom:1px solid var(--line);background:var(--bg)}
+  .header .row1{display:flex;align-items:center;gap:18px;padding:14px 0}
+  .logo{font-family:var(--display);font-size:27px;font-weight:700;letter-spacing:.2px;color:var(--green);white-space:nowrap}
+  .logo sup{font-family:var(--ui);font-size:10px;color:var(--ink3);margin-left:2px}
+  .search{flex:1;display:flex;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--pill);padding:3px 6px 3px 16px;max-width:560px;transition:border-color .15s}
+  .search:focus-within{border-color:var(--green)}
+  .search input{flex:1;border:0;outline:0;background:none;font-family:inherit;font-size:16px;color:var(--ink);padding:8px 0}
+  .search button{background:var(--green);color:#fff;border-radius:var(--pill);padding:7px 18px;font-size:14px;font-weight:700}
+  .search button:hover{background:var(--green2)}
+  .headtools{display:flex;align-items:center;gap:6px;margin-left:auto}
+  .ht{display:inline-flex;align-items:center;gap:7px;padding:8px 11px;border-radius:var(--r-sm);font-size:13px;color:var(--ink2);white-space:nowrap}
+  .ht:hover{background:var(--cream);color:var(--ink)}
+  .ht svg{width:18px;height:18px}
+  .cartbtn{position:relative}
+  .cartbtn .badge{position:absolute;top:-3px;right:-3px;min-width:17px;height:17px;border-radius:var(--pill);background:var(--coral);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px}
+  .navrow{border-top:1px solid var(--line)}
+  .navrow ul{list-style:none;display:flex;gap:2px;overflow-x:auto;padding:6px 0;scrollbar-width:none}
+  .navrow ul::-webkit-scrollbar{display:none}
+  .navrow a{display:block;padding:7px 12px;font-size:13px;color:var(--ink2);border-radius:var(--r-sm);white-space:nowrap}
+  .navrow a:hover{color:var(--green);background:var(--green-tint)}
+  .navrow a.on{color:var(--green);font-weight:700}
+
+  /* ===== mall first screen: 3 columns ===== */
+  .home3{display:grid;grid-template-columns:196px minmax(0,1fr) 248px;gap:14px;padding:14px 0}
+  /* left: department rail */
+  .dnav{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:6px 0;align-self:start}
+  .dnav h3{font-size:13px;font-weight:700;color:#fff;background:var(--green);padding:9px 14px;border-radius:var(--r) var(--r) 0 0;display:flex;align-items:center;justify-content:space-between}
+  .dnav ul{list-style:none}
+  .dnav li a{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 14px;font-size:13.5px;color:var(--ink2);border-left:2px solid transparent}
+  .dnav li a:hover{color:var(--green);background:var(--green-tint);border-left-color:var(--green)}
+  .dnav li a .ar{color:var(--ink3);font-size:12px}
+  .dnav .more{border-top:1px solid var(--line);padding:9px 14px;font-size:12.5px;font-weight:700;color:var(--green);display:block}
+  .dnav .more:hover{background:var(--green-tint)}
+  /* middle: rotating banner */
+  .banner{position:relative;background:#EAE7E0;border-radius:var(--r);overflow:hidden;min-height:330px}
+  .bslide{position:absolute;inset:0;display:flex;align-items:center;gap:18px;padding:26px 30px;opacity:0;transition:opacity .5s;pointer-events:none}
+  .bslide.on{opacity:1;pointer-events:auto}
+  .bslide .txt{flex:1;min-width:0;z-index:2}
+  .bslide .kicker{font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px}
+  .bslide h2{font-family:var(--display);font-size:clamp(26px,3.2vw,38px);line-height:1.08;max-width:12em}
+  .bslide p{font-size:14.5px;color:var(--ink2);margin:12px 0 18px;max-width:30em}
+  .bslide .cta{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:var(--pill);font-size:14px;font-weight:700;color:#fff;background:var(--ink)}
+  .bslide .cta:hover{opacity:.92}
+  .bslide .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:46%;flex:none}
+  .bslide .bcard{background:#fff;border-radius:var(--r);padding:8px;box-shadow:var(--sh)}
+  .bslide .bcard .bp{aspect-ratio:1/1;border-radius:var(--r-sm);background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .bslide .bcard .bp img{width:100%;height:100%;object-fit:cover}
+  .bslide .bcard .nm{font-size:12px;font-weight:700;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bslide .bcard .pr{font-size:14px;font-weight:700;color:var(--coral)}
+  .bslide .bcard .pr .was{font-size:11px;color:var(--ink3);text-decoration:line-through;font-weight:400;margin-left:4px}
+  .b1{background:linear-gradient(120deg,#FDEAE4,#F6C9B8)}
+  .b2{background:linear-gradient(120deg,#E4EDE6,#C9DCCE)}
+  .b3{background:linear-gradient(120deg,#EDEDF2,#D9DCE8)}
+  .dots{position:absolute;left:30px;bottom:16px;display:flex;gap:7px;z-index:3}
+  .dots button{width:22px;height:5px;border-radius:3px;background:rgba(28,28,28,.22)}
+  .dots button.on{background:var(--coral);width:30px}
+  /* right: side panel */
+  .side{display:flex;flex-direction:column;gap:12px}
+  .side .pane{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+  .side .pane h4{font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;margin-bottom:10px}
+  .side .pane h4 svg{width:15px;height:15px;color:var(--coral)}
+  .coupon-card{background:var(--coral-tint);border:1px solid #F5CFC2}
+  .coupon-card .code{display:inline-block;background:var(--coral);color:#fff;font-size:13px;font-weight:700;padding:3px 10px;border-radius:var(--r-sm);letter-spacing:.5px;margin:6px 0 4px}
+  .coupon-card .desc{font-size:12.5px;color:var(--ink2);line-height:1.5}
+  .coupon-card .get{display:block;width:100%;margin-top:10px;background:var(--coral);color:#fff;font-weight:700;font-size:13.5px;padding:9px;border-radius:var(--r-sm)}
+  .coupon-card .get:hover{opacity:.9}
+  .ship-card .rows{font-size:12.5px;color:var(--ink2);line-height:1.7}
+  .ship-card .rows b{color:var(--green)}
+  .ship-card .bar{height:6px;background:var(--cream);border-radius:3px;margin-top:10px;overflow:hidden}
+  .ship-card .bar i{display:block;height:100%;width:42%;background:var(--green);border-radius:3px}
+  .rank li{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--line)}
+  .rank li:first-child{border-top:0;padding-top:2px}
+  .rank .no{width:20px;height:20px;border-radius:var(--r-sm);background:var(--cream);color:var(--ink2);font-size:11.5px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none}
+  .rank li:nth-child(-n+3) .no{background:var(--coral-tint);color:var(--coral)}
+  .rank .rp{width:42px;height:42px;border-radius:var(--r-sm);overflow:hidden;flex:none;background:#fff}
+  .rank .rp img{width:100%;height:100%;object-fit:cover}
+  .rank .rn{flex:1;min-width:0}
+  .rank .rn b{display:block;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rank .rn span{font-size:11.5px;color:var(--ink3)}
+  .rank .pr{font-size:13.5px;font-weight:700;color:var(--coral);white-space:nowrap}
+
+  /* ===== icon grid (king kong) ===== */
+  .icongrid{display:grid;grid-template-columns:repeat(10,1fr);gap:8px}
+  .ic{display:flex;flex-direction:column;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:11px 4px 9px;font-size:12.5px;font-weight:700;color:var(--ink);transition:border-color .15s,transform .15s;min-width:0}
+  .ic:hover{border-color:var(--green);color:var(--green);transform:translateY(-1px)}
+  .ic img{width:30px;height:30px;object-fit:contain}
+
+  /* ===== section head ===== */
+  .sec{padding:30px 0}
+  .sechead{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:18px}
+  .sechead h2{font-family:var(--display);font-size:24px;letter-spacing:.2px;display:flex;align-items:center;gap:10px}
+  .sechead h2 .tag{font-size:11px;font-weight:700;color:var(--coral);background:var(--coral-tint);border-radius:var(--r-sm);padding:3px 8px;letter-spacing:.4px}
+  .sechead .lnk{font-size:13.5px;font-weight:700;color:var(--ink2)}
+  .sechead .lnk:hover{color:var(--green)}
+
+  /* ===== flash row ===== */
+  .flash{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+  .flash .ftop{display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap}
+  .flash .ftop h2{font-family:var(--display);font-size:22px;color:var(--coral);display:flex;align-items:center;gap:9px}
+  .flash .ftop .cd{font-size:12.5px;font-weight:700;color:var(--ink2);background:var(--coral-tint);border-radius:var(--pill);padding:4px 12px}
+  .flash .ftop .cd b{color:var(--coral)}
+  .flash .lnk{margin-left:auto}
+  .frow{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(168px,1fr);gap:10px;overflow-x:auto;padding-bottom:4px}
+  .fcard{border:1px solid var(--line);border-radius:var(--r);padding:10px;background:#fff;display:flex;flex-direction:column;gap:7px;min-width:0;transition:box-shadow .15s,transform .15s}
+  .fcard:hover{box-shadow:var(--sh);transform:translateY(-1px)}
+  .fcard .fp{aspect-ratio:1/1;border-radius:var(--r-sm);background:#fff;overflow:hidden;display:flex;align-items:center;justify-content:center}
+  .fcard .fp img{width:100%;height:100%;object-fit:cover}
+  .fcard .nm{font-size:13px;font-weight:700;line-height:1.3}
+  .fcard .rt{font-size:11.5px;color:var(--ink3)}
+  .fcard .rt svg{width:11px;height:11px;fill:var(--amber)}
+  .fcard .pr{font-size:15px;font-weight:700;color:var(--coral)}
+  .fcard .pr .was{font-size:12px;color:var(--ink3);text-decoration:line-through;font-weight:400}
+
+  /* ===== first order strip ===== */
+  .firstrow{display:flex;align-items:center;gap:16px;background:var(--green-tint);border:1px solid #DCE5DC;border-radius:var(--r);padding:13px 16px;margin-top:14px;flex-wrap:wrap}
+  .firstrow .fb{font-size:14px;font-weight:700;color:var(--green2);white-space:nowrap}
+  .firstrow .fs{font-size:12.5px;color:var(--green2);flex:1;min-width:200px;line-height:1.5}
+  .firstrow .fmini{display:flex;gap:9px;align-items:center;background:var(--surface);border-radius:var(--r-sm);padding:6px 10px;border:1px solid #DCE5DC}
+  .firstrow .fmini:hover{border-color:var(--green)}
+  .firstrow .fmini .fp{width:34px;height:34px;border-radius:var(--r-sm);overflow:hidden;flex:none;background:#fff}
+  .firstrow .fmini .fp img{width:100%;height:100%;object-fit:cover}
+  .firstrow .fmini b{font-size:13px;color:var(--green);white-space:nowrap}
+  .firstrow .fmini .was{font-size:11px;color:var(--ink3);text-decoration:line-through;font-weight:400}
+
+  /* ===== coupon strip (real thresholds) ===== */
+  .couponstrip{display:flex;align-items:center;gap:14px;background:var(--coral);color:#fff;border-radius:var(--r);padding:12px 18px;margin-top:14px;flex-wrap:wrap}
+  .couponstrip b{font-size:14px;white-space:nowrap}
+  .couponstrip .it{font-size:12.5px;opacity:.95}
+  .couponstrip .it b{font-size:13.5px}
+  .couponstrip .go{margin-left:auto;background:#fff;color:var(--coral);font-size:13px;font-weight:700;padding:7px 16px;border-radius:var(--pill)}
+  .couponstrip .go:hover{opacity:.9}
+
+  /* ===== dense product grid ===== */
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;transition:transform .15s,box-shadow .15s;display:flex;flex-direction:column;min-width:0}
+  .card:hover{transform:translateY(-2px);box-shadow:var(--sh)}
+  .card .pic{aspect-ratio:1/1;background:#fff;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+  .card .pic img{width:100%;height:100%;object-fit:cover}
+  .card .badge-pos{position:absolute;top:9px;left:9px;display:flex;flex-direction:column;gap:5px}
+  .badge{font-size:11px;font-weight:700;border-radius:2px;padding:3px 7px}
+  .badge-deal{background:var(--coral);color:#fff}
+  .badge-new{background:var(--green);color:#fff}
+  .card .body{padding:11px 13px 13px;display:flex;flex-direction:column;gap:4px;flex:1}
+  .card .nm{font-size:14px;font-weight:700;line-height:1.3}
+  .card .rt{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--ink3)}
+  .card .rt svg{width:12px;height:12px;fill:var(--amber)}
+  .card .rt .cnt{margin-left:auto}
+  .card .pr{display:flex;align-items:baseline;gap:8px;margin-top:auto;padding-top:8px}
+  .card .pr .now{font-size:17px;font-weight:700;color:var(--coral)}
+  .card .pr .was{font-size:13px;color:var(--ink3);text-decoration:line-through}
+  .add{position:absolute;right:10px;bottom:10px;width:38px;height:38px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;opacity:0;transform:translateY(4px);transition:opacity .18s,transform .18s,background .15s}
+  .add svg{width:17px;height:17px}
+  .add:hover{background:var(--green2)}
+  .card:hover .add{opacity:1;transform:none}
+
+  /* ===== trust ===== */
+  .trust{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .trust .t{display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:15px}
+  .trust .t svg{width:22px;height:22px;color:var(--green);flex:none;margin-top:2px}
+  .trust .t b{font-size:14px;display:block}
+  .trust .t span{font-size:12px;color:var(--ink3)}
+
+  /* ===== footer ===== */
+  footer{border-top:1px solid var(--line);margin-top:20px;background:var(--surface)}
+  .foot{padding:44px 0 26px;display:grid;grid-template-columns:1fr;gap:28px}
+  .foot h4{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:12px}
+  .foot a{display:block;font-size:13px;color:var(--ink2);padding:4px 0}
+  .foot a:hover{color:var(--green)}
+  .foot .cols{display:grid;grid-template-columns:repeat(2,1fr);gap:24px}
+  .foot .brand{font-family:var(--display);font-size:24px;font-weight:700;color:var(--green)}
+  .foot .brand-line{font-size:12px;color:var(--ink3);margin-top:6px;max-width:24em}
+  .foot .pay{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+  .paychip{border:1px solid var(--line);border-radius:6px;padding:5px 11px;font-size:11px;color:var(--ink2);font-weight:700}
+  .foot .bot{border-top:1px solid var(--line);margin-top:26px;padding-top:16px;display:flex;flex-wrap:wrap;gap:10px 22px;font-size:12px;color:var(--ink3)}
+
+  /* ===== toast ===== */
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;font-size:14px;padding:11px 20px;border-radius:var(--pill);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:50;max-width:88vw;text-align:center}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* ===== mobile-only: banner photo bg + bottom tab bar ===== */
+  .bslide .bgimg{display:none}
+  .tabbar{display:none}
+
+  @media (max-width:991px){
+    .home3{grid-template-columns:1fr}
+    .dnav{display:none}
+    .bslide .cards{width:52%}
+    .side{display:grid;grid-template-columns:repeat(3,1fr)}
+    .side .pane{padding:12px}
+  }
+  @media (max-width:767px){
+    body{padding-bottom:64px}
+    .announce{font-size:12px;padding:8px 10px}
+    .row1{flex-wrap:wrap;gap:10px 12px;padding:10px 0}
+    .logo{order:1;font-size:21px}
+    .logo sup{display:none}
+    .headtools{order:2;margin-left:auto;gap:2px}
+    .ht{padding:7px 8px}
+    .search{order:3;flex-basis:100%;max-width:none}
+    .search input{font-size:16px;padding:9px 0}
+    .ht span:not([data-c]){display:none}
+    .navrow{display:none}
+    /* banner -> full-bleed photo carousel */
+    .banner{min-height:0;height:470px}
+    .bslide{position:absolute;inset:0;flex-direction:column;justify-content:flex-end;align-items:flex-start;padding:24px 18px 24px;gap:10px;min-height:0;overflow:hidden}
+    .bslide .bgimg{display:block;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 68%;z-index:0}
+    .bslide::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.34) 0%,rgba(0,0,0,.08) 45%,rgba(0,0,0,.72) 100%);z-index:1}
+    .bslide h2,.bslide p,.bslide .kicker{text-shadow:0 1px 10px rgba(0,0,0,.45)}
+    .bslide .txt{position:relative;z-index:2;min-width:0}
+    .bslide .kicker{color:#FFDAD0!important}
+    .bslide.b2 .kicker{color:#C9E5D2!important}
+    .bslide.b3 .kicker{color:#E7E7EC!important}
+    .bslide h2{font-size:29px;color:#fff}
+    .bslide p{color:rgba(255,255,255,.88);font-size:13.5px;margin:8px 0 12px}
+    .bslide .cta{background:#fff;color:var(--ink)}
+    .bslide .cards{width:100%;grid-template-columns:repeat(3,1fr);gap:8px;position:relative;z-index:2}
+    .dots{left:18px;bottom:14px;z-index:3}
+    /* side panels -> compact banner row */
+    .side{grid-template-columns:1fr;gap:10px}
+    .side .pane{padding:12px 14px}
+    .side .pane:last-child{display:none}
+    .coupon-card{display:flex;align-items:center;gap:12px}
+    .side .pane.coupon-card h4{display:none}
+    .coupon-card .code{margin:0}
+    .coupon-card .desc{flex:1;min-width:0;font-size:12px}
+    .coupon-card .get{width:auto;margin-top:0;flex:none;padding:8px 14px}
+    .ship-card .rows{font-size:12px}
+    .ship-card .bar{margin-top:8px}
+    .icongrid{grid-template-columns:repeat(5,1fr);gap:7px}
+    .ic{padding:9px 2px 7px;font-size:11.5px}
+    .ic img{width:26px;height:26px}
+    .sec{padding:18px 0}
+    .sechead{margin-bottom:12px}
+    .sechead h2{font-size:20px}
+    .flash{padding:12px}
+    .flash .ftop h2{font-size:19px}
+    .frow{grid-auto-columns:minmax(150px,1fr)}
+    .firstrow{gap:10px;padding:11px 13px}
+    .firstrow .fs{min-width:0;flex-basis:100%}
+    .couponstrip{gap:8px;padding:11px 14px}
+    .couponstrip .go{margin-left:0}
+    .grid{grid-template-columns:repeat(2,1fr);gap:10px}
+    .card .body{padding:9px 10px 11px}
+    .add{opacity:1;transform:none}
+    .trust{gap:8px}
+    .trust .t{padding:11px}
+    .foot{padding:30px 0 22px}
+    /* bottom tab bar */
+    .tabbar{display:flex;position:fixed;left:0;right:0;bottom:0;height:56px;background:var(--surface);border-top:1px solid var(--line);z-index:40;align-items:center;justify-content:space-around;padding-bottom:env(safe-area-inset-bottom)}
+    .tabbar .tb{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:var(--ink3);padding:5px 14px;border-radius:var(--r-sm)}
+    .tabbar .tb.on{color:var(--green);font-weight:700}
+    .tabbar .tb svg{width:22px;height:22px}
+    .tabbar .tb .badge{top:-1px;right:-4px}
+  }
+  @media (min-width:768px){
+    .grid{grid-template-columns:repeat(3,1fr)}
+    .trust{grid-template-columns:repeat(4,1fr)}
+    .foot .cols{grid-template-columns:repeat(4,1fr)}
+    .foot{grid-template-columns:1.4fr 2fr}
+  }
+  @media (min-width:1100px){
+    .grid{grid-template-columns:repeat(5,1fr)}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important;animation:none!important}
+  }
+</style>
+</head>
+<body>
+<div class="announce">Free shipping over <b>$39</b> in the US · Spend <b>$30</b> get <b>$4</b> off · Spend <b>$60</b> get <b>$8</b> off</div>
+
+<header class="header">
+  <div class="wrap">
+    <div class="row1">
+      <a class="logo" href="#home" data-act="logo">Harbor<sup>small goods</sup></a>
+      <form class="search" data-act="search" onsubmit="return false;">
+        <input type="search" placeholder="Search household goods — spatulas, sponges, bins…" aria-label="Search">
+        <button data-act="searchbtn">Search</button>
+      </form>
+      <div class="headtools">
+        <button class="ht" data-act="country"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.8 2.3 2.8 14.7 0 17M12 3.5c-2.8 2.3-2.8 14.7 0 17"/></svg><span data-c="cur">US $</span></button>
+        <button class="ht" data-act="account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.8 20a7.5 7.5 0 0 1 14.4 0"/></svg>Account</button>
+        <button class="ht cartbtn" data-act="cart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5.5 8.5h13l-1.1 11h-10.8z"/><path d="M8.5 8.5V7a3.5 3.5 0 0 1 7 0v1.5"/></svg>Cart<span class="badge" data-c="n">0</span></button>
+      </div>
+    </div>
+    <nav class="navrow">
+      <ul>
+        <li><a href="#home" data-act="nav" class="on">Home</a></li>
+        <li><a href="#" data-act="nav">Kitchen</a></li>
+        <li><a href="#" data-act="nav">Cleaning</a></li>
+        <li><a href="#" data-act="nav">Storage</a></li>
+        <li><a href="#" data-act="nav">Pet</a></li>
+        <li><a href="#" data-act="nav">Tableware</a></li>
+        <li><a href="#" data-act="nav">Textiles</a></li>
+        <li><a href="#" data-act="nav">Home decor</a></li>
+        <li><a href="#" data-act="nav">Office</a></li>
+        <li><a href="#" data-act="nav">Personal care</a></li>
+        <li><a href="#" data-act="nav">Beauty</a></li>
+        <li><a href="#" data-act="nav">Appliances</a></li>
+        <li><a href="#" data-act="nav">Tools</a></li>
+        <li><a href="#" data-act="nav">Party</a></li>
+        <li><a href="#" data-act="nav">Gifts</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- mall first screen -->
+  <section class="wrap">
+    <div class="home3">
+      <div class="dnav">
+        <h3>All departments<span class="ar">▾</span></h3>
+        <ul>
+          <li><a href="#" data-act="nav">Kitchen<span class="ar">›</span></a></li>
+          <li><a href="#" data-act="nav">Cleaning<span class="ar">›</span></a></li>
+          <li><a href="#" data-act="nav">Storage<span class="ar">›</span></a></li>
+          <li><a href="#" data-act="nav">Pet<span class="ar">›</span></a></li>
+          <li><a href="#" data-act="nav">Tableware<span class="ar">›</span></a></li>
+          <li><a href="#" data-act="nav">Textiles<span class="ar">›</span></a></li>
+          <li><a href="#" data-act="nav">Home decor<span class="ar">›</span></a></li>
+          <li><a href="#" data-act="nav">Office<span class="ar">›</span></a></li>
+          <li><a href="#" data-act="nav">Personal care<span class="ar">›</span></a></li>
+          <li><a href="#" data-act="nav">Party<span class="ar">›</span></a></li>
+        </ul>
+        <a class="more" href="#" data-act="depts">All 16 departments →</a>
+      </div>
+
+      <div class="banner" id="banner" data-banner>
+        <div class="bslide b1 on">
+          <img class="bgimg" src="assets/products-photo/bath-sponge.jpg" alt="">
+          <div class="txt">
+            <div class="kicker" style="color:var(--coral)">Flash price</div>
+            <h2>Small goods,<br>prices that disappear</h2>
+            <p>Sponges, clips and brushes from $2.10. Grab them before the timer runs out.</p>
+            <span class="cta" data-act="viewall">Shop flash deals</span>
+          </div>
+          <div class="cards">
+            <div class="bcard" data-act="pcard"><div class="bp"><img src="assets/products-photo/bath-sponge.jpg" alt="Bath sponge"></div><span class="nm">Bath sponge</span><span class="pr">$2.10 <span class="was">$3.00</span></span></div>
+            <div class="bcard" data-act="pcard"><div class="bp"><img src="assets/products-photo/hair-clips.jpg" alt="Hair clips"></div><span class="nm">Hair clips</span><span class="pr">$2.80</span></div>
+            <div class="bcard" data-act="pcard"><div class="bp"><img src="assets/products-photo/cleaning-cloth.jpg" alt="Cleaning cloth"></div><span class="nm">Cleaning cloth</span><span class="pr">$2.80 <span class="was">$4.00</span></span></div>
+          </div>
+        </div>
+        <div class="bslide b2">
+          <img class="bgimg" src="assets/products-photo/oil-sprayer.jpg" alt="">
+          <div class="txt">
+            <div class="kicker" style="color:var(--green)">First order</div>
+            <h2>One item at<br>half price</h2>
+            <p>Pick any first-order item — 50% off on your first paid order. Yours the moment it's in your cart.</p>
+            <span class="cta" data-act="viewall">Claim the offer</span>
+          </div>
+          <div class="cards">
+            <div class="bcard" data-act="pcard"><div class="bp"><img src="assets/products-photo/oil-sprayer.jpg" alt="Oil sprayer"></div><span class="nm">Oil sprayer</span><span class="pr">$4.00 <span class="was">$8.00</span></span></div>
+            <div class="bcard" data-act="pcard"><div class="bp"><img src="assets/products-photo/folding-bowl.jpg" alt="Folding bowl"></div><span class="nm">Folding bowl</span><span class="pr">$4.00 <span class="was">$8.00</span></span></div>
+            <div class="bcard" data-act="pcard"><div class="bp"><img src="assets/products-photo/pet-lint-roller.jpg" alt="Pet lint roller"></div><span class="nm">Pet lint roller</span><span class="pr">$3.50 <span class="was">$7.00</span></span></div>
+          </div>
+        </div>
+        <div class="bslide b3">
+          <img class="bgimg" src="assets/products-photo/drain-rack.jpg" alt="">
+          <div class="txt">
+            <div class="kicker" style="color:var(--ink3)">Best sellers</div>
+            <h2>Everyday kitchen<br>essentials</h2>
+            <p>The tools home cooks keep re-ordering — racks, spatulas and dispensers.</p>
+            <span class="cta" data-act="viewall">Shop best sellers</span>
+          </div>
+          <div class="cards">
+            <div class="bcard" data-act="pcard"><div class="bp"><img src="assets/products-photo/oil-sprayer.jpg" alt="Oil sprayer"></div><span class="nm">Oil sprayer</span><span class="pr">$8.00</span></div>
+            <div class="bcard" data-act="pcard"><div class="bp"><img src="assets/products-photo/drain-rack.jpg" alt="Dish rack"></div><span class="nm">Dish rack</span><span class="pr">$12.00</span></div>
+            <div class="bcard" data-act="pcard"><div class="bp"><img src="assets/products-photo/silicone-spatula.jpg" alt="Spatula"></div><span class="nm">Silicone spatula</span><span class="pr">$6.00</span></div>
+          </div>
+        </div>
+        <div class="dots" data-dots></div>
+      </div>
+
+      <div class="side">
+        <div class="pane coupon-card">
+          <h4><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 8h16v9H4z"/><path d="M4 12.5h16"/><path d="M8 10v.5M8 14v.5M16 10v.5M16 14v.5"/></svg>New here?</h4>
+          <span class="code">HARBOR10</span>
+          <div class="desc">10% off your first order — plus one item at half price.</div>
+          <button class="get" data-act="coupon">Get the code</button>
+        </div>
+        <div class="pane ship-card">
+          <h4><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8h13v9H3zM16 11h4l1.5 3v3h-5.5"/><circle cx="7" cy="18.5" r="1.6"/><circle cx="17" cy="18.5" r="1.6"/></svg>Shipping</h4>
+          <div class="rows">
+            Free shipping over <b>$39</b> (US)<br>
+            Spend <b>$30</b> → <b>−$4</b> · Spend <b>$60</b> → <b>−$8</b><br>
+            Delivery in 5–9 days
+          </div>
+          <div class="bar"><i></i></div>
+        </div>
+        <div class="pane">
+          <h4><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l8 3v6c0 4.5-3.2 7.6-8 9-4.8-1.4-8-4.5-8-9V6z"/></svg>Hot this week</h4>
+          <ul class="rank">
+            <li><span class="no">1</span><span class="rp"><img src="assets/products-photo/bath-sponge.jpg" alt=""></span><span class="rn"><b>Bath sponge</b><span>Personal care</span></span><span class="pr">$2.10</span></li>
+            <li><span class="no">2</span><span class="rp"><img src="assets/products-photo/cleaning-cloth.jpg" alt=""></span><span class="rn"><b>Cleaning cloth</b><span>Cleaning</span></span><span class="pr">$2.80</span></li>
+            <li><span class="no">3</span><span class="rp"><img src="assets/products-photo/nail-clipper.jpg" alt=""></span><span class="rn"><b>Nail clipper</b><span>Personal care</span></span><span class="pr">$2.80</span></li>
+            <li><span class="no">4</span><span class="rp"><img src="assets/products-photo/oil-sprayer.jpg" alt=""></span><span class="rn"><b>Oil sprayer</b><span>Kitchen</span></span><span class="pr">$8.00</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- king kong icons -->
+  <section class="sec" style="padding-top:6px">
+    <div class="wrap">
+      <div class="icongrid">
+        <button class="ic" data-act="ic"><img src="assets/dept/kitchen.svg" alt=""><span>Kitchen</span></button>
+        <button class="ic" data-act="ic"><img src="assets/dept/cleaning.svg" alt=""><span>Cleaning</span></button>
+        <button class="ic" data-act="ic"><img src="assets/dept/storage.svg" alt=""><span>Storage</span></button>
+        <button class="ic" data-act="ic"><img src="assets/dept/pet.svg" alt=""><span>Pet</span></button>
+        <button class="ic" data-act="ic"><img src="assets/dept/tableware.svg" alt=""><span>Tableware</span></button>
+        <button class="ic" data-act="ic"><img src="assets/dept/textile.svg" alt=""><span>Textiles</span></button>
+        <button class="ic" data-act="ic"><img src="assets/dept/decor.svg" alt=""><span>Home decor</span></button>
+        <button class="ic" data-act="ic"><img src="assets/dept/office.svg" alt=""><span>Office</span></button>
+        <button class="ic" data-act="ic"><img src="assets/dept/personal.svg" alt=""><span>Personal care</span></button>
+        <button class="ic" data-act="ic"><img src="assets/dept/party.svg" alt=""><span>Party</span></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- flash + first order + coupon strip -->
+  <section class="sec" style="padding-top:0">
+    <div class="wrap">
+      <div class="flash">
+        <div class="ftop">
+          <h2>Flash price<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 4.5 13.5H11L9.5 22 19 9.5h-6.5z"/></svg></h2>
+          <span class="cd">Ends in <b>02:14:36</b></span>
+          <a class="lnk" href="#" data-act="viewall" style="margin-left:auto">View all deals</a>
+        </div>
+        <div class="frow">
+          <div class="fcard" data-act="pcard"><div class="fp"><img src="assets/products-photo/bath-sponge.jpg" alt="Bath sponge"></div><span class="nm">Bath sponge</span><span class="rt"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.3 6.8L12 17.2 6 20.6l1.3-6.8L2.2 9.1l6.9-.8z"/></svg>4.6 · 3.1k sold</span><span class="pr">$2.10 <span class="was">$3.00</span></span></div>
+          <div class="fcard" data-act="pcard"><div class="fp"><img src="assets/products-photo/cleaning-cloth.jpg" alt="Cleaning cloth"></div><span class="nm">Cleaning cloth</span><span class="rt"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.3 6.8L12 17.2 6 20.6l1.3-6.8L2.2 9.1l6.9-.8z"/></svg>4.7 · 5.2k sold</span><span class="pr">$2.80 <span class="was">$4.00</span></span></div>
+          <div class="fcard" data-act="pcard"><div class="fp"><img src="assets/products-photo/hair-clips.jpg" alt="Hair clips"></div><span class="nm">Hair clips</span><span class="rt"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.3 6.8L12 17.2 6 20.6l1.3-6.8L2.2 9.1l6.9-.8z"/></svg>4.5 · 1.8k sold</span><span class="pr">$2.80</span></div>
+          <div class="fcard" data-act="pcard"><div class="fp"><img src="assets/products-photo/nail-clipper.jpg" alt="Nail clipper"></div><span class="nm">Nail clipper</span><span class="rt"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.3 6.8L12 17.2 6 20.6l1.3-6.8L2.2 9.1l6.9-.8z"/></svg>4.6 · 2.4k sold</span><span class="pr">$2.80</span></div>
+          <div class="fcard" data-act="pcard"><div class="fp"><img src="assets/products-photo/sponge-refill.jpg" alt="Sponge refill"></div><span class="nm">Sponge refill</span><span class="rt"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.3 6.8L12 17.2 6 20.6l1.3-6.8L2.2 9.1l6.9-.8z"/></svg>4.4 · 1.2k sold</span><span class="pr">$5.00</span></div>
+          <div class="fcard" data-act="pcard"><div class="fp"><img src="assets/products-photo/pot-brush.jpg" alt="Pot brush"></div><span class="nm">Pot brush</span><span class="rt"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.3 6.8L12 17.2 6 20.6l1.3-6.8L2.2 9.1l6.9-.8z"/></svg>4.5 · 1.6k sold</span><span class="pr">$5.00</span></div>
+        </div>
+      </div>
+
+      <div class="firstrow">
+        <span class="fb">First order — one item at half price</span>
+        <span class="fs">Pick one item, get it at 50% off on your first paid order. The moment it's in your cart, the offer is yours.</span>
+        <span class="fmini" data-act="pcard"><span class="fp"><img src="assets/products-photo/oil-sprayer.jpg" alt="Oil sprayer"></span><b>$4.00 <span class="was">$8.00</span></b></span>
+        <span class="fmini" data-act="pcard"><span class="fp"><img src="assets/products-photo/folding-bowl.jpg" alt="Folding bowl"></span><b>$4.00 <span class="was">$8.00</span></b></span>
+        <span class="fmini" data-act="pcard"><span class="fp"><img src="assets/products-photo/pet-lint-roller.jpg" alt="Pet lint roller"></span><b>$3.50 <span class="was">$7.00</span></b></span>
+      </div>
+
+      <div class="couponstrip">
+        <b>Free shipping starts here</b>
+        <span class="it">Spend <b>$30</b> → <b>−$4</b></span>
+        <span class="it">Spend <b>$60</b> → <b>−$8</b></span>
+        <span class="it">Spend <b>$39</b> → <b>free shipping</b></span>
+        <button class="go" data-act="viewall">Browse to top up →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- best sellers -->
+  <section class="sec" id="picks">
+    <div class="wrap">
+      <div class="sechead">
+        <h2>Best sellers<span class="tag">Most re-ordered</span></h2>
+        <a class="lnk" href="#" data-act="viewall">View all →</a>
+      </div>
+      <div class="grid">
+        <article class="card" data-act="pcard">
+          <div class="pic"><img src="assets/products-photo/oil-sprayer.jpg" alt="Oil sprayer"><div class="badge-pos"><span class="badge badge-new">New</span></div></div>
+          <div class="body"><span class="nm">Oil sprayer</span><span class="rt"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.3 6.8L12 17.2 6 20.6l1.3-6.8L2.2 9.1l6.9-.8z"/></svg>4.7<span class="cnt">2.6k sold</span></span><span class="pr"><span class="now">$8.00</span></span></div>
+          <button class="add" data-act="add" data-price="8.00" aria-label="Add oil sprayer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg></button>
+        </article>
+        <article class="card" data-act="pcard">
+          <div class="pic"><img src="assets/products-photo/drain-rack.jpg" alt="Dish rack"></div>
+          <div class="body"><span class="nm">Dish rack</span><span class="rt"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.3 6.8L12 17.2 6 20.6l1.3-6.8L2.2 9.1l6.9-.8z"/></svg>4.6<span class="cnt">1.9k sold</span></span><span class="pr"><span class="now">$12.00</span></span></div>
+          <button class="add" data-act="add" data-price="12.00" aria-label="Add dish rack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg></button>
+        </article>
+        <article class="card" data-act="pcard">
+          <div class="pic"><img src="assets/products-photo/silicone-spatula.jpg" alt="Silicone spatula"></div>
+          <div class="body"><span class="nm">Silicone spatula</span><span class="rt"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.3 6.8L12 17.2 6 20.6l1.3-6.8L2.2 9.1l6.9-.8z"/></svg>4.8<span class="cnt">3.3k sold</span></span><span class="pr"><span class="now">$6.00</span></span></div>
+          <button class="add" data-act="add" data-price="6.00" aria-label="Add silicone spatula"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg></button>
+        </article>
+        <article class="card" data-act="pcard">
+          <div class="pic"><img src="assets/products-photo/seasoning-box.jpg" alt="Seasoning box"></div>
+          <div class="body"><span class="nm">Seasoning box</span><span class="rt"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.3 6.8L12 17.2 6 20.6l1.3-6.8L2.2 9.1l6.9-.8z"/></svg>4.5<span class="cnt">980 sold</span></span><span class="pr"><span class="now">$9.00</span></span></div>
+          <button class="add" data-act="add" data-price="9.00" aria-label="Add seasoning box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg></button>
+        </article>
+        <article class="card" data-act="pcard">
+          <div class="pic"><img src="assets/products-photo/measuring-spoons.jpg" alt="Measuring spoons"></div>
+          <div class="body"><span class="nm">Measuring spoons</span><span class="rt"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.3 6.8L12 17.2 6 20.6l1.3-6.8L2.2 9.1l6.9-.8z"/></svg>4.6<span class="cnt">1.4k sold</span></span><span class="pr"><span class="now">$5.00</span></span></div>
+          <button class="add" data-act="add" data-price="5.00" aria-label="Add measuring spoons"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg></button>
+        </article>
+        <article class="card" data-act="pcard">
+          <div class="pic"><img src="assets/products-photo/sink-strainer.jpg" alt="Sink strainer"></div>
+          <div class="body"><span class="nm">Sink strainer</span><span class="rt"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.3 6.8L12 17.2 6 20.6l1.3-6.8L2.2 9.1l6.9-.8z"/></svg>4.4<span class="cnt">2.1k sold</span></span><span class="pr"><span class="now">$4.00</span></span></div>
+          <button class="add" data-act="add" data-price="4.00" aria-label="Add sink strainer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg></button>
+        </article>
+        <article class="card" data-act="pcard">
+          <div class="pic"><img src="assets/products-photo/lint-roller.jpg" alt="Lint roller"></div>
+          <div class="body"><span class="nm">Lint roller</span><span class="rt"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.3 6.8L12 17.2 6 20.6l1.3-6.8L2.2 9.1l6.9-.8z"/></svg>4.5<span class="cnt">1.1k sold</span></span><span class="pr"><span class="now">$7.00</span></span></div>
+          <button class="add" data-act="add" data-price="7.00" aria-label="Add lint roller"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg></button>
+        </article>
+        <article class="card" data-act="pcard">
+          <div class="pic"><img src="assets/products-photo/gap-brush.jpg" alt="Gap brush"></div>
+          <div class="body"><span class="nm">Gap brush</span><span class="rt"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.3 6.8L12 17.2 6 20.6l1.3-6.8L2.2 9.1l6.9-.8z"/></svg>4.5<span class="cnt">760 sold</span></span><span class="pr"><span class="now">$6.00</span></span></div>
+          <button class="add" data-act="add" data-price="6.00" aria-label="Add gap brush"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg></button>
+        </article>
+        <article class="card" data-act="pcard">
+          <div class="pic"><img src="assets/products-photo/sponge-refill.jpg" alt="Sponge refill"></div>
+          <div class="body"><span class="nm">Sponge refill</span><span class="rt"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.3 6.8L12 17.2 6 20.6l1.3-6.8L2.2 9.1l6.9-.8z"/></svg>4.4<span class="cnt">1.2k sold</span></span><span class="pr"><span class="now">$5.00</span></span></div>
+          <button class="add" data-act="add" data-price="5.00" aria-label="Add sponge refill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg></button>
+        </article>
+        <article class="card" data-act="pcard">
+          <div class="pic"><img src="assets/products-photo/cleaning-cloth.jpg" alt="Cleaning cloth"><div class="badge-pos"><span class="badge badge-deal">Deal</span></div></div>
+          <div class="body"><span class="nm">Cleaning cloth</span><span class="rt"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.3 6.8L12 17.2 6 20.6l1.3-6.8L2.2 9.1l6.9-.8z"/></svg>4.7<span class="cnt">5.2k sold</span></span><span class="pr"><span class="now">$2.80</span><span class="was">$4.00</span></span></div>
+          <button class="add" data-act="add" data-price="2.80" aria-label="Add cleaning cloth"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg></button>
+        </article>
+        <article class="card" data-act="pcard">
+          <div class="pic"><img src="assets/products-photo/pot-brush.jpg" alt="Pot brush"></div>
+          <div class="body"><span class="nm">Pot brush</span><span class="rt"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.3 6.8L12 17.2 6 20.6l1.3-6.8L2.2 9.1l6.9-.8z"/></svg>4.5<span class="cnt">1.6k sold</span></span><span class="pr"><span class="now">$5.00</span></span></div>
+          <button class="add" data-act="add" data-price="5.00" aria-label="Add pot brush"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg></button>
+        </article>
+        <article class="card" data-act="pcard">
+          <div class="pic"><img src="assets/products-photo/dustpan-set.jpg" alt="Dustpan set"></div>
+          <div class="body"><span class="nm">Dustpan set</span><span class="rt"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.3 6.8L12 17.2 6 20.6l1.3-6.8L2.2 9.1l6.9-.8z"/></svg>4.3<span class="cnt">640 sold</span></span><span class="pr"><span class="now">$8.00</span></span></div>
+          <button class="add" data-act="add" data-price="8.00" aria-label="Add dustpan set"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg></button>
+        </article>
+        <article class="card" data-act="pcard">
+          <div class="pic"><img src="assets/products-photo/folding-bin.jpg" alt="Folding bin"></div>
+          <div class="body"><span class="nm">Folding bin</span><span class="rt"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.3 6.8L12 17.2 6 20.6l1.3-6.8L2.2 9.1l6.9-.8z"/></svg>4.6<span class="cnt">1.7k sold</span></span><span class="pr"><span class="now">$10.00</span></span></div>
+          <button class="add" data-act="add" data-price="10.00" aria-label="Add folding bin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg></button>
+        </article>
+        <article class="card" data-act="pcard">
+          <div class="pic"><img src="assets/products-photo/folding-bowl.jpg" alt="Folding pet bowl"></div>
+          <div class="body"><span class="nm">Folding pet bowl</span><span class="rt"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.3 6.8L12 17.2 6 20.6l1.3-6.8L2.2 9.1l6.9-.8z"/></svg>4.5<span class="cnt">1.3k sold</span></span><span class="pr"><span class="now">$8.00</span></span></div>
+          <button class="add" data-act="add" data-price="8.00" aria-label="Add folding pet bowl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg></button>
+        </article>
+        <article class="card" data-act="pcard">
+          <div class="pic"><img src="assets/products-photo/lick-mat.jpg" alt="Lick mat"></div>
+          <div class="body"><span class="nm">Lick mat</span><span class="rt"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.3 6.8L12 17.2 6 20.6l1.3-6.8L2.2 9.1l6.9-.8z"/></svg>4.4<span class="cnt">890 sold</span></span><span class="pr"><span class="now">$7.00</span></span></div>
+          <button class="add" data-act="add" data-price="7.00" aria-label="Add lick mat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg></button>
+        </article>
+        <article class="card" data-act="pcard">
+          <div class="pic"><img src="assets/products-photo/pet-lint-roller.jpg" alt="Pet lint roller"></div>
+          <div class="body"><span class="nm">Pet lint roller</span><span class="rt"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.3 6.8L12 17.2 6 20.6l1.3-6.8L2.2 9.1l6.9-.8z"/></svg>4.6<span class="cnt">1.1k sold</span></span><span class="pr"><span class="now">$7.00</span></span></div>
+          <button class="add" data-act="add" data-price="7.00" aria-label="Add pet lint roller"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg></button>
+        </article>
+        <article class="card" data-act="pcard">
+          <div class="pic"><img src="assets/products-photo/waste-bag-holder.jpg" alt="Waste bag holder"></div>
+          <div class="body"><span class="nm">Waste bag holder</span><span class="rt"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.3 6.8L12 17.2 6 20.6l1.3-6.8L2.2 9.1l6.9-.8z"/></svg>4.5<span class="cnt">720 sold</span></span><span class="pr"><span class="now">$6.00</span></span></div>
+          <button class="add" data-act="add" data-price="6.00" aria-label="Add waste bag holder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg></button>
+        </article>
+        <article class="card" data-act="pcard">
+          <div class="pic"><img src="assets/products-photo/bath-sponge.jpg" alt="Bath sponge"><div class="badge-pos"><span class="badge badge-deal">Deal</span></div></div>
+          <div class="body"><span class="nm">Bath sponge</span><span class="rt"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.3 6.8L12 17.2 6 20.6l1.3-6.8L2.2 9.1l6.9-.8z"/></svg>4.6<span class="cnt">3.1k sold</span></span><span class="pr"><span class="now">$2.10</span><span class="was">$3.00</span></span></div>
+          <button class="add" data-act="add" data-price="2.10" aria-label="Add bath sponge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg></button>
+        </article>
+        <article class="card" data-act="pcard">
+          <div class="pic"><img src="assets/products-photo/hair-clips.jpg" alt="Hair clips"></div>
+          <div class="body"><span class="nm">Hair clips</span><span class="rt"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.3 6.8L12 17.2 6 20.6l1.3-6.8L2.2 9.1l6.9-.8z"/></svg>4.5<span class="cnt">1.8k sold</span></span><span class="pr"><span class="now">$2.80</span></span></div>
+          <button class="add" data-act="add" data-price="2.80" aria-label="Add hair clips"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg></button>
+        </article>
+        <article class="card" data-act="pcard">
+          <div class="pic"><img src="assets/products-photo/nail-clipper.jpg" alt="Nail clipper"></div>
+          <div class="body"><span class="nm">Nail clipper</span><span class="rt"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.3 6.8L12 17.2 6 20.6l1.3-6.8L2.2 9.1l6.9-.8z"/></svg>4.6<span class="cnt">2.4k sold</span></span><span class="pr"><span class="now">$2.80</span></span></div>
+          <button class="add" data-act="add" data-price="2.80" aria-label="Add nail clipper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg></button>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="wrap">
+      <div class="trust">
+        <div class="t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8h13v9H3zM16 11h4l1.5 3v3h-5.5"/><circle cx="7" cy="18.5" r="1.6"/><circle cx="17" cy="18.5" r="1.6"/></svg><span><b>Free returns</b><span>30 days, no questions</span></span></div>
+        <div class="t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l8 3v6c0 4.5-3.2 7.6-8 9-4.8-1.4-8-4.5-8-9V6z"/><path d="M8.5 12l2.4 2.4 4.6-4.8"/></svg><span><b>Ships within 24h</b><span>from our partner warehouses</span></span></div>
+        <div class="t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4.5" y="10" width="15" height="10" rx="2"/><path d="M8 10V7.5a4 4 0 0 1 8 0V10"/></svg><span><b>Secure checkout</b><span>Card, PayPal or Apple Pay</span></span></div>
+        <div class="t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12.5h5"/></svg><span><b>Real humans</b><span>Answers within a day</span></span></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <div>
+        <div class="brand">Harbor</div>
+        <div class="brand-line">Small goods that make a house run — kitchen, cleaning, storage and pet essentials at prices you won't second-guess.</div>
+        <div class="pay"><span class="paychip">VISA</span><span class="paychip">Mastercard</span><span class="paychip">Amex</span><span class="paychip">PayPal</span><span class="paychip">Apple Pay</span></div>
+      </div>
+      <div class="cols">
+        <div><h4>Departments</h4><a href="#" data-act="nav">Kitchen</a><a href="#" data-act="nav">Cleaning</a><a href="#" data-act="nav">Storage</a><a href="#" data-act="nav">Pet</a><a href="#" data-act="nav">Tableware</a><a href="#" data-act="nav">All 16 departments</a></div>
+        <div><h4>Help</h4><a href="#" data-act="nav">Shipping & delivery</a><a href="#" data-act="nav">Returns & refunds</a><a href="#" data-act="nav">Contact us</a><a href="#" data-act="nav">Order status</a><a href="#" data-act="nav">Reward night</a></div>
+        <div><h4>About</h4><a href="#" data-act="nav">Our story</a><a href="#" data-act="nav">How we pick</a><a href="#" data-act="nav">Reviews</a><a href="#" data-act="nav">Careers</a></div>
+        <div><h4>Stay close</h4><a href="#" data-act="nav">Email updates</a><a href="#" data-act="nav">Refer a friend</a><a href="#" data-act="nav">Social</a></div>
+      </div>
+    </div>
+    <div class="bot">
+      <span>© 2026 Harbor</span><span>Prices in USD · Free shipping over $39 in the US</span><span>Concept UI — ratings/sold counts are demo values · thresholds follow live store settings</span>
+    </div>
+  </div>
+</footer>
+<nav class="tabbar" aria-label="Mobile navigation">
+  <button class="tb on" data-act="tabhome"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M4 11l8-6.5L20 11v8.5h-5.5V13h-5v6.5H4z"/></svg><span>Home</span></button>
+  <button class="tb" data-act="tabdepts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg><span>Departments</span></button>
+  <button class="tb" data-act="cart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M5.5 8.5h13l-1.1 11h-10.8z"/><path d="M8.5 8.5V7a3.5 3.5 0 0 1 7 0v1.5"/></svg><span>Cart</span><span class="badge" data-c="n2">0</span></button>
+  <button class="tb" data-act="account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.8 20a7.5 7.5 0 0 1 14.4 0"/></svg><span>Me</span></button>
+</nav>
+<div class="toast" id="toast" role="status"></div>
+<script>
+(function(){
+  var toast=document.getElementById('toast'), timer=null;
+  function say(msg){
+    toast.textContent=msg; toast.classList.add('show');
+    clearTimeout(timer); timer=setTimeout(function(){toast.classList.remove('show')},2200);
+  }
+  /* banner rotation */
+  var banner=document.getElementById('banner');
+  var slides=banner.querySelectorAll('.bslide');
+  var dots=banner.querySelector('[data-dots]');
+  var idx=0, tick=null;
+  (function buildDots(){
+    for(var i=0;i<slides.length;i++){
+      var b=document.createElement('button');
+      b.setAttribute('data-i',i);
+      if(i===0) b.className='on';
+      b.addEventListener('click',function(){ go(Number(this.getAttribute('data-i'))); });
+      dots.appendChild(b);
+    }
+  })();
+  function go(i){
+    idx=(i+slides.length)%slides.length;
+    for(var k=0;k<slides.length;k++){
+      slides[k].classList.toggle('on',k===idx);
+      dots.children[k].classList.toggle('on',k===idx);
+    }
+  }
+  function next(){ go(idx+1); }
+  function start(){ clearInterval(tick); tick=setInterval(next,5000); }
+  banner.addEventListener('mouseenter',function(){clearInterval(tick)});
+  banner.addEventListener('mouseleave',start);
+  start();
+
+  var n=0;
+  function paintBadge(){var els=document.querySelectorAll('[data-c]');for(var i=0;i<els.length;i++){var c=els[i].getAttribute('data-c');if(c&&c.charAt(0)==='n')els[i].textContent=n;}}
+  document.addEventListener('click',function(e){
+    var t=e.target.closest('[data-act]');
+    if(!t) return;
+    if(t.classList.contains('tb')){var tbs=document.querySelectorAll('.tb');for(var i=0;i<tbs.length;i++)tbs[i].classList.remove('on');t.classList.add('on');}
+    var act=t.getAttribute('data-act');
+    if(act==='cart'){ say('Cart — prototype only'); }
+    else if(act==='add'){ n++; paintBadge(); say('Added to cart · $'+t.getAttribute('data-price')); }
+    else if(act==='country'){ say('Country & currency — prototype only'); }
+    else if(act==='account'){ say('Account — prototype only'); }
+    else if(act==='searchbtn'){ say('Search — prototype only'); }
+    else if(act==='pcard'){ say('Product page — prototype only'); }
+    else if(act==='coupon'){ say('Code copied: HARBOR10'); }
+    else if(act==='depts'){ say('All departments — prototype only'); }
+    else if(act==='viewall'){ say('View all — prototype only'); }
+    else if(act==='ic'){ say('Department page — prototype only'); }
+    else if(act==='tabhome'||act==='tabdepts'){ say('Prototype navigation'); }
+    else if(act==='logo'||act==='nav'){ say('Prototype navigation'); }
+  });
+  var si=document.querySelector('[data-act="search"] input');
+  si.addEventListener('keydown',function(e){
+    if(e.key==='Enter'){ say('Search — prototype only'); }
+  });
+})();
+</script>
+</body>
+</html>

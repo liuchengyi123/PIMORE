@@ -1,0 +1,6 @@
+﻿<!doctype html><meta charset=utf-8>
+<script>
+localStorage.setItem("harbor-cookie","1");
+const q = new URLSearchParams(location.search).get("to") || "/categories?country=US";
+setTimeout(function(){ location.replace(q); }, 100);
+</script>

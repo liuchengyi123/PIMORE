@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% from "shot.html" import shot %}
+{% block body_class %} is-lp lp-ship{% endblock %}
+{% block head %}
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta name="harbor-lp" content="ship-v31">
+{% endblock %}
+{% block body %}
+<section class="lp" data-lp="ship">
+  <header class="lp-top">
+    <a class="lp-brand" href="{{ href('/', country) }}">Harbor<sup>flash</sup></a>
+    <div class="lp-top-actions">
+      {% if lp_ends %}
+      <span class="lp-top-cd"><span class="lp-top-cd-lab">Ends</span> <span class="cd cd-ms" data-ends="{{ lp_ends }}" data-cd="ms">--:--:--</span></span>
+      {% endif %}
+      <a class="lp-cart" href="{{ href('/cart', country) }}" aria-label="{{ t.cart }}">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 7h15l-1.6 8.2a2 2 0 0 1-2 1.6H9.2a2 2 0 0 1-2-1.6L5 4H3"/><circle cx="9" cy="20" r="1.3"/><circle cx="18" cy="20" r="1.3"/></svg>
+        {% if cart_count %}<span class="n">{{ cart_count }}</span>{% endif %}
+      </a>
+    </div>
+  </header>
+
+  <div class="lp-hero">
+    <div class="lp-hero-badges" aria-hidden="true">
+      <span class="lp-pill lp-pill-flash">FLASH SALE</span>
+      <span class="lp-pill lp-pill-hot">LIMITED TIME</span>
+    </div>
+    {% if lp_seg %}<p class="lp-seg-badge">Audience · {{ lp_seg }}</p>{% endif %}
+    <p class="lp-kicker">{% if lp_seg %}Picks for {{ lp_seg }} · ends soon{% else %}Ends soon — tap a deal to open{% endif %}</p>
+    <h1>Flash prices. <em>~10 minutes</em> left.</h1>
+    <p class="lp-sub">Grab a limited deal before it rolls back — tap any pick to open the product page.</p>
+    {% if lp_ends %}
+    <div class="lp-countdown" role="timer" aria-live="polite">
+      <span class="lp-countdown-lab">Ends in</span>
+      <strong class="cd cd-ms" data-ends="{{ lp_ends }}" data-cd="ms">--:--:--</strong>
+    </div>
+    {% endif %}
+    <div class="lp-hero-actions">
+      <a class="lp-cta" href="#lp-deals">Shop flash deals</a>
+    </div>
+  </div>
+
+  <div class="lp-ticker" aria-hidden="true">
+    <div class="lp-ticker-track">
+      <span>Flash prices · limited</span>
+      <span>Tap a card → product page</span>
+      <span>Limit 1 at flash price</span>
+      <span>Hot household picks</span>
+      <span>Flash prices · limited</span>
+      <span>Tap a card → product page</span>
+      <span>Limit 1 at flash price</span>
+      <span>Hot household picks</span>
+    </div>
+  </div>
+
+  {% set flash_items = lp_flash if lp_flash is defined else [] %}
+  {% set pack_items = lp_pack if lp_pack is defined else [] %}
+  {% if not flash_items and not pack_items and lp_items %}
+    {% set flash_items = lp_items[:6] %}
+    {% set pack_items = lp_items[6:10] %}
+  {% endif %}
+
+  <section class="lp-strip" id="lp-deals">
+    <div class="lp-strip-head">
+      <div>
+        <p class="lp-head-kicker">Limited flash</p>
+        <h2>Tap a deal to open</h2>
+      </div>
+      <div class="lp-strip-tools">
+        {% if lp_ends %}<span class="cd cd-ms lp-strip-cd" data-ends="{{ lp_ends }}" data-cd="ms">--:--:--</span>{% endif %}
+        <a class="lp-reshuffle" href="{{ href('/lp/ship?batch=' ~ (lp_next_batch|default(1)) ~ ('&seg=' ~ lp_seg if lp_seg else ''), country) }}#lp-deals">换一批</a>
+      </div>
+    </div>
+    {% if flash_items %}
+    <div class="lp-deals" role="list">
+      {% for item in flash_items %}
+      <a class="lp-deal is-flash" role="listitem" href="/api/ad/deal?sku={{ item.sku }}&amp;country={{ country }}{% if lp_seg %}&amp;seg={{ lp_seg }}{% endif %}">
+        <span class="lp-deal-shot">
+          <img src="{{ shot(item.image) }}" width="480" height="480" alt="" decoding="async" {% if loop.index <= 2 %}fetchpriority="high"{% else %}loading="lazy"{% endif %}>
+          <span class="lp-deal-badge">FLASH</span>
+          {% if item.limit_one %}<span class="lp-deal-limit">{{ t.limit_one }}</span>{% endif %}
+        </span>
+        <span class="lp-deal-copy">
+          <span class="lp-deal-name">{{ item.name }}</span>
+          <span class="lp-deal-price">
+            <span class="price">{{ item.price }}</span>
+            {% if item.original %}<span class="was{% if item.higher %} strike{% endif %}">{{ item.original }}</span>{% endif %}
+          </span>
+          <span class="lp-deal-go">View deal</span>
+        </span>
+      </a>
+      {% endfor %}
+    </div>
+    <div class="lp-reshuffle-row">
+      <a class="lp-reshuffle lp-reshuffle-lg" href="{{ href('/lp/ship?batch=' ~ (lp_next_batch|default(1)) ~ ('&seg=' ~ lp_seg if lp_seg else ''), country) }}#lp-deals">换一批 · more deals</a>
+    </div>
+    {% endif %}
+  </section>
+
+  {% if pack_items %}
+  <section class="lp-strip lp-strip-more">
+    <div class="lp-strip-head">
+      <div>
+        <p class="lp-head-kicker">More picks</p>
+        <h2>Also hot right now</h2>
+      </div>
+    </div>
+    <div class="lp-deals" role="list">
+      {% for item in pack_items %}
+      <a class="lp-deal is-pack" role="listitem" href="/api/ad/deal?sku={{ item.sku }}&amp;country={{ country }}{% if lp_seg %}&amp;seg={{ lp_seg }}{% endif %}">
+        <span class="lp-deal-shot">
+          <img src="{{ shot(item.image) }}" width="480" height="480" alt="" decoding="async" loading="lazy">
+          {% if item.campaign_kind == 'newcomer' %}
+          <span class="lp-deal-badge lp-deal-badge-new">{{ t.new_badge }}</span>
+          {% else %}
+          <span class="lp-deal-badge lp-deal-badge-deal">DEAL</span>
+          {% endif %}
+          {% if item.limit_one %}<span class="lp-deal-limit">{{ t.limit_one }}</span>{% endif %}
+        </span>
+        <span class="lp-deal-copy">
+          <span class="lp-deal-name">{{ item.name }}</span>
+          <span class="lp-deal-price">
+            <span class="price">{{ item.price }}</span>
+            {% if item.original %}<span class="was{% if item.higher %} strike{% endif %}">{{ item.original }}</span>{% endif %}
+          </span>
+          <span class="lp-deal-go">View deal</span>
+        </span>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% elif not flash_items %}
+  <p class="lp-empty">{{ t.sale_empty }} <a href="{{ href('/', country) }}">{{ t.back_shop }}</a></p>
+  {% endif %}
+
+  <p class="lp-footnote">Picks count toward sitewide free shipping at {{ free_ship_text }} cart — not per item.</p>
+
+  <footer class="lp-foot">
+    <a href="{{ href('/policies/shipping', country) }}">{{ t.shipping_policy }}</a>
+    <a href="{{ href('/policies/privacy', country) }}">{{ t.privacy }}</a>
+    <a href="{{ href('/', country) }}">{{ t.home }}</a>
+  </footer>
+</section>
+
+<aside class="lp-stick">
+  <div class="lp-stick-row">
+    <div class="lp-stick-copy">
+      <strong>{% if lp_ends %}Flash ends in <span class="cd cd-ms" data-ends="{{ lp_ends }}" data-cd="ms">--:--:--</span>{% else %}Flash deals live now{% endif %}</strong>
+      <span>Tap a deal → product page</span>
+    </div>
+    <a class="lp-stick-go" href="#lp-deals">Shop deals</a>
+  </div>
+</aside>
+{% endblock %}

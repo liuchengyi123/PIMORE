@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block body_attrs %}{% if order and order['status'] in ['paid', 'shipped'] %}data-paid="1" data-order="{{ order['id'] }}" data-order-value="{{ ((order['due_cents'] or 0) / 100)|round(2) }}" data-order-currency="{{ order['currency'] }}" data-ad-send="{{ ad_send_ok|default(1) }}" data-email="{{ order['email'] }}"{% endif %}{% endblock %}
+{% block body %}
+<div class="fn-order">
+  <div class="fn-order-main">
+    <h1 class="fn-acc-title">{{ t.order_number }} {{ order_id }}</h1>
+    {% if order %}
+    <div class="fn-track-card">
+      <div class="fn-track-steps">
+        <span class="{% if order['status'] in ['pending','paid','shipped'] %}on{% endif %}">{{ t.awaiting }}</span>
+        <span class="{% if order['status'] in ['paid','shipped'] %}on{% endif %}">{{ t.paid }}</span>
+        <span class="{% if order['status'] == 'shipped' %}on{% endif %}">{{ t.shipped }}</span>
+      </div>
+      <div class="fn-track-bar"><i style="width:{% if order['status'] == 'shipped' %}100%{% elif order['status'] == 'paid' %}66%{% elif order['status'] == 'pending' %}33%{% else %}0{% endif %}"></i></div>
+      <p class="tiny">{% if order['tracking'] %}{{ t.carrier }} {{ order['carrier'] }} · {{ order['tracking'] }} · {% endif %}{{ t.arrives }} {{ delivery_start }}–{{ delivery_end }} {{ t.days }}</p>
+    </div>
+
+    {# line items are not always passed; show due / status summary #}
+    <div class="fn-panel fn-order-item">
+      <div>
+        <div class="nm">{% if order['status'] == 'pending' %}{{ t.awaiting }}{% elif order['status'] == 'paid' %}{{ t.paid }}{% elif order['status'] == 'shipped' %}{{ t.shipped }}{% else %}{{ order['status'] }}{% endif %}</div>
+        <div class="price" style="margin-top:8px;font-size:18px" data-due-local="{{ order['due_local'] }}">{{ due_text }}</div>
+      </div>
+    </div>
+
+    {% if can_pay and pay_methods %}
+    <form class="fn-panel" method="post" action="/orders/{{ order['id'] }}/pay">
+      <fieldset class="pay-box">
+        <legend>{{ t.pay_method }}</legend>
+        {% for method in pay_methods %}
+        <label class="pay-choice">
+          <input type="radio" name="pay_method" value="{{ method }}" {% if method == order['pay_method'] or (order['pay_method'] == 'card' and method == 'stripe') or (order['pay_method'] not in pay_methods and order['pay_method'] != 'card' and loop.first) %}checked{% endif %}>
+          {% if method == 'paypal' %}<span>{{ t.paypal }}</span>
+          {% elif method == 'stripe' %}<span>{{ t.card }}</span>
+          {% else %}<span>连连</span>{% endif %}
+        </label>
+        {% endfor %}
+      </fieldset>
+      <button class="btn amber" type="submit">{{ t.pay_now or t.pay_method }}</button>
+    </form>
+    {% endif %}
+
+    {% if show_retain|default(false) %}
+    <section class="fn-panel">
+      <p>{{ t.order_retain_line }}</p>
+      <div class="fn-order-actions">
+        <a class="btn" href="{{ href('/check-in', country) }}">{{ t.checkin }}</a>
+        <a class="btn ghost" href="{{ href('/share', country) }}">{{ t.share }}</a>
+      </div>
+    </section>
+    {% endif %}
+
+    {% if can_set_password %}
+    <p><button class="btn ghost" type="button" id="pwd-open">{{ t.create_account }}</button></p>
+    {% endif %}
+    {% if can_cancel %}
+    <form method="post" action="/orders/{{ order['id'] }}/cancel"><button class="btn ghost" type="submit">{{ t.cancel }}</button></form>
+    {% endif %}
+    {% if can_review %}
+    {% for sku in review_skus %}
+    <form class="fn-panel" method="post" action="/p/{{ sku }}/review">
+      <label class="fn-field">{{ t.reviews }} <input name="rating" value="5"></label>
+      <label class="fn-field"><input name="body"></label>
+      <button class="btn" type="submit">{{ t.reviews }}</button>
+    </form>
+    {% endfor %}
+    {% endif %}
+    {% else %}
+    <p class="fn-empty">{{ t.no_orders }}</p>
+    {% endif %}
+  </div>
+
+  {% if order %}
+  <aside class="fn-order-sum">
+    <div class="fn-panel sticky-sum">
+      <h2>{{ t.summary }}</h2>
+      <div class="fn-sum-row"><span class="tiny">{{ t.merchandise }}</span><span>{{ merchandise_text }}</span></div>
+      <div class="fn-sum-row"><span class="tiny">{{ t.discount }}</span><span>{{ discount_text }}</span></div>
+      <div class="fn-sum-row"><span class="tiny">{{ t.coupon }}</span><span>{{ coupon_text }}</span></div>
+      <div class="fn-sum-row"><span class="tiny">{% if order['shipping_cents'] == 0 %}{{ t.free_shipping }}{% else %}{{ t.shipping_fee }}{% endif %}</span><span>{{ shipping_text }}</span></div>
+      <div class="fn-sum-row"><span class="tiny">{{ t.balance }}</span><span>{{ balance_text }}</span></div>
+      <div class="fn-sum-row total"><span>{{ t.due }}</span><span class="price">{{ due_text }}</span></div>
+      <a class="btn ghost" style="width:100%;margin-top:12px" href="{{ href('/orders/' ~ order['id'] ~ '/invoice', country) }}">{{ t.invoice }}</a>
+      {% if order['status'] in ['paid', 'shipped'] %}
+      <div class="fn-return-title" style="margin-top:14px;font-weight:700;color:#0F2744">{{ t.request_return }}</div>
+      <form method="post" action="/orders/{{ order['id'] }}/return" style="margin-top:8px">
+        <label class="fn-field">{{ t.reason }} <input name="reason" placeholder="Item damaged / not as described"></label>
+        <label class="fn-field">Details <textarea name="details" rows="3" style="width:100%;border:1px solid var(--fn-line,#E2E6EE);border-radius:10px;padding:10px;font:inherit"></textarea></label>
+        <button class="btn" style="width:100%" type="submit">{{ t.request_return }}</button>
+      </form>
+      {% for row in return_rows %}<p class="tiny">{{ row['status'] }} {{ row['reason'] }}</p>{% endfor %}
+      {% endif %}
+      <form method="post" action="/orders/{{ order['id'] }}/again" style="margin-top:8px">
+        <button class="btn" style="width:100%" type="submit">{{ t.buy_again }}</button>
+      </form>
+    </div>
+  </aside>
+  {% endif %}
+</div>
+{% endblock %}
+{% block overlay %}
+{% if can_set_password %}
+<div class="hmodal show" id="pwd-modal">
+  <button class="hmodal-scrim" type="button" data-x></button>
+  <div class="hmodal-box" role="dialog" aria-labelledby="pwd-title">
+    <button class="hmodal-x" type="button" data-x aria-label="{{ t.pop_close }}">×</button>
+    <b id="pwd-title">{{ t.create_account }}</b>
+    <p>{{ t.order_password.format(email=order['email']) }}</p>
+    <form method="post" action="/orders/{{ order['id'] }}/password">
+      <label class="field">{{ t.password }}
+        <input name="password" type="password" minlength="8" required autocomplete="new-password">
+      </label>
+      <p class="muted">{{ t.password_short }}</p>
+      <button class="btn" type="submit">{{ t.create_account }}</button>
+    </form>
+    <button class="quiet" type="button" data-x>{{ t.pwd_later|default('Not now') }}</button>
+  </div>
+</div>
+<script>
+document.getElementById("pwd-open") && document.getElementById("pwd-open").addEventListener("click", function () {
+  var box = document.getElementById("pwd-modal");
+  if (box) box.classList.add("show");
+});
+</script>
+{% endif %}
+{% endblock %}

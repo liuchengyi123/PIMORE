@@ -1,0 +1,264 @@
+{% extends "admin_base.html" %}
+{% block body %}
+<div data-figma="AD24">
+<section class="traffic">
+  <header class="page-head traffic-head" style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+    <div>
+      <h1>投放回传</h1>
+      <p class="muted">多广告账户独立配置 Pixel / CAPI / 扣量。创意链接带 <code>acct</code>，落地 cookie 记住账户；无 <code>acct</code> 时回退到该平台默认账户。</p>
+    </div>
+  </header>
+
+  {% if notice == "saved" %}<p class="ok">账户已保存。</p>{% endif %}
+  {% if notice == "created" %}<p class="ok">已添加广告账户。</p>{% endif %}
+  {% if notice == "deleted" %}<p class="ok">账户已删除。</p>{% endif %}
+  {% if notice == "renamed" %}<p class="ok">已重命名。</p>{% endif %}
+  {% if notice == "test_ok" %}<p class="ok">测试事件已发送（请到对应平台 Events / Debug 查看）。</p>{% endif %}
+  {% if notice == "test_fail" %}<p class="error">测试失败：检查该账户 Pixel / Token。</p>{% endif %}
+  {% if notice == "link_built" %}<p class="ok">链接已生成（含 acct），可复制到广告后台。</p>{% endif %}
+  {% if notice == "code_taken" %}<p class="error">账户代码已被占用，请换一个。</p>{% endif %}
+  {% if notice == "error" %}<p class="error">操作失败，请重试。</p>{% endif %}
+
+  <div class="card">
+    <div class="pad">
+      <div class="seg-control plat-tabs" role="tablist">
+        {% for p, label in platforms %}
+        <a class="plat-tab {% if platform == p %}on{% endif %}" href="/admin/traffic?platform={{ p }}{% if platform == p and active_acct %}&amp;acct={{ active_acct.code }}{% endif %}">{{ label }}</a>
+        {% endfor %}
+      </div>
+
+      {% set accounts = accounts_by_plat.get(platform, []) %}
+
+      <div class="acct-bar">
+        <div class="acct-tabs" role="tablist">
+          {% for a in accounts %}
+          <a class="acct-tab {% if active_acct and active_acct.id == a.id %}on{% endif %} {% if not a.enabled %}off{% endif %}"
+             href="/admin/traffic?platform={{ platform }}&amp;acct={{ a.code }}">
+            {{ a.name }}{% if a.is_default %} · 默认{% endif %}
+            <span class="dot {% if a.status.pixel %}on{% else %}off{% endif %}"></span>
+          </a>
+          {% else %}
+          <span class="muted small">该平台还没有广告账户</span>
+          {% endfor %}
+        </div>
+        {% if is_admin_role %}<form class="acct-add" method="post" action="/admin/traffic/account/create">
+          <input type="hidden" name="platform" value="{{ platform }}">
+          <input name="name" placeholder="新账户名称" required maxlength="80">
+          <input name="code" placeholder="代码 acct（可选）" maxlength="40" pattern="[A-Za-z0-9_]*">
+          <button class="btn sm" type="submit">＋ 添加账户</button>
+        </form>{% else %}<p class="muted small">账户与密钥仅管理员可改。</p>{% endif %}
+      </div>
+    </div>
+  </div>
+
+  {% if active_acct %}
+  <div class="card acct-panel">
+    <div class="acct-panel-head">
+      <div>
+        <h2>{{ active_acct.name }}</h2>
+        <p class="muted small">
+          {{ platform }} · <code>acct={{ active_acct.code }}</code>
+          {% if active_acct.is_default %}<span class="badge ok">默认</span>{% endif %}
+          {% if not active_acct.enabled %}<span class="badge danger">已停用</span>{% endif %}
+        </p>
+      </div>
+      <div class="acct-actions">
+        <form method="post" action="/admin/traffic/test" class="inline">
+          <input type="hidden" name="account_id" value="{{ active_acct.id }}">
+          <input type="hidden" name="platform" value="{{ platform }}">
+          <button class="btn ghost sm" type="submit">发送测试事件</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="pad" style="padding-top:0">
+      <div class="status-list rowish">
+        <span class="badge {% if active_acct.status.pixel %}ok{% else %}missing{% endif %}">
+          <span class="dot {% if active_acct.status.pixel %}on{% else %}off{% endif %}"></span>
+          Pixel {% if active_acct.status.pixel %}已配置{% else %}未配置{% endif %}
+        </span>
+        <span class="badge {% if active_acct.status.capi %}ok{% else %}missing{% endif %}">
+          <span class="dot {% if active_acct.status.capi %}on{% else %}off{% endif %}"></span>
+          服务端回传 {% if active_acct.status.capi %}就绪{% else %}缺密钥{% endif %}
+        </span>
+      </div>
+
+      {% if is_admin_role %}<form class="fields traffic-form" method="post" action="/admin/traffic/account/save">
+        <input type="hidden" name="account_id" value="{{ active_acct.id }}">
+        <input type="hidden" name="platform" value="{{ platform }}">
+        <fieldset class="wide">
+          <legend>账户</legend>
+          <div class="fields">
+            <label>显示名称 <input name="name" value="{{ active_acct.name }}" required></label>
+            <div class="stack">
+              <label class="check"><input type="checkbox" name="enabled" value="1" {% if active_acct.enabled %}checked{% endif %}> 启用</label>
+              <label class="check"><input type="checkbox" name="make_default" value="1" {% if active_acct.is_default %}checked{% endif %}> 设为该平台默认（无 acct 时回退）</label>
+            </div>
+          </div>
+          <p class="muted small" style="margin-top:10px">代码 <code>{{ active_acct.code }}</code> 创建后不可改，写入创意链接。</p>
+        </fieldset>
+        <fieldset class="wide">
+          <legend>Pixel / 回传凭证</legend>
+          <div class="fields">
+          {% for key, title, secret in platform_fields %}
+            {% if secret %}
+            <label>{{ title }}
+              <input name="{{ key }}" value="{% if active_acct.credentials.get(key) %}********{% endif %}"
+                     placeholder="{{ ad_masked.get(key) or '••••' }}" autocomplete="off">
+            </label>
+            {% else %}
+            <label>{{ title }}
+              <input name="{{ key }}" value="{{ active_acct.credentials.get(key) or '' }}" autocomplete="off">
+            </label>
+            {% endif %}
+          {% endfor %}
+          </div>
+        </fieldset>
+        <fieldset class="wide">
+          <legend>扣量</legend>
+          <div class="fields">
+            <label>回传比例 % <input name="send_ratio_pct" type="number" min="0" max="100" step="1" value="{{ active_acct.send_ratio_pct }}"></label>
+            <label>金额系数 <input name="value_multiplier" type="number" min="0" max="2" step="0.05" value="{{ active_acct.value_multiplier }}"></label>
+          </div>
+          <p class="muted small" style="margin-top:10px">仅作用于本账户服务端回传；浏览器 Purchase 跟随本账户。内部漏斗仍记全量。</p>
+        </fieldset>
+        <div class="wide actions">
+          <button class="btn" type="submit">保存此账户</button>
+        </div>
+      </form>
+    </div>
+
+    {% endif %}<div class="acct-danger">{% if is_admin_role %}
+      <form method="post" action="/admin/traffic/account/delete" onsubmit="return confirm('确定删除账户 {{ active_acct.name }}？');">
+        <input type="hidden" name="account_id" value="{{ active_acct.id }}">
+        <input type="hidden" name="platform" value="{{ platform }}">
+        <button class="btn danger sm" type="submit">删除账户</button>
+      </form>
+    {% endif %}</div>
+  </div>
+
+  <div class="card">
+    <h2>创意链接（本账户）</h2>
+    <div class="pad">
+      <p class="muted small">链接自动带 <code>acct={{ active_acct.code }}</code>。投放时一组多链换 seg 即可。</p>
+      <form class="fields traffic-form" method="post" action="/admin/traffic/link">
+        <input type="hidden" name="account_id" value="{{ active_acct.id }}">
+        <input type="hidden" name="platform" value="{{ platform }}">
+        <input type="hidden" name="acct" value="{{ active_acct.code }}">
+        <label>落地页路径 <input name="base" value="{{ (link_fields.base if link_fields is defined and link_fields else '/lp/ship') }}"></label>
+        <label>country <input name="country" value="{{ (link_fields.country if link_fields is defined and link_fields else 'US') }}"></label>
+        <label>seg
+          <select name="seg">
+            <option value="">（不指定）</option>
+            {% for code, label in seg_presets %}
+            <option value="{{ code }}" {% if link_fields is defined and link_fields and link_fields.seg == code %}selected{% endif %}>{{ code }} — {{ label }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>utm_source <input name="utm_source" value="{{ link_fields.utm_source if link_fields is defined and link_fields else platform }}"></label>
+        <label>utm_medium <input name="utm_medium" value="{{ link_fields.utm_medium if link_fields is defined and link_fields else 'paid' }}"></label>
+        <label>utm_campaign <input name="utm_campaign" value="{{ link_fields.utm_campaign if link_fields is defined and link_fields else active_acct.code }}"></label>
+        <label class="wide">utm_content <input name="utm_content" value="{{ link_fields.utm_content if link_fields is defined and link_fields else '' }}" placeholder="可与 seg 相同"></label>
+        <div class="wide actions"><button class="btn" type="submit">生成链接</button></div>
+      </form>
+      {% if link_preview %}
+      <div class="link-box">
+        <input id="traffic-link" readonly value="{{ link_preview }}">
+        <button class="btn ghost sm" type="button" data-copy="#traffic-link">复制</button>
+      </div>
+      {% endif %}
+      <div class="preset-links">
+        {% for code, label in seg_presets %}
+        <code>/lp/ship?country=US&amp;seg={{ code }}&amp;acct={{ active_acct.code }}&amp;utm_source={{ platform }}&amp;utm_medium=paid&amp;utm_campaign={{ active_acct.code }}&amp;utm_content={{ code }}</code>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <h2>投放漏斗</h2>
+    <div class="pad">
+      <p class="muted small">落地 / 点商品 / 成交（全量，不受扣量影响）。</p>
+      {% set f = ad_funnel if ad_funnel is defined else none %}
+      {% if f %}
+      <div class="traffic-map-card ad24-map" aria-hidden="true">
+        <div class="label">账户热力 · 落地 {{ f.totals.land }} · 成交 {{ f.totals.purchase }}</div>
+      </div>
+      <div class="funnel-totals">
+        <div><strong>{{ f.totals.land }}</strong><span>落地</span></div>
+        <div><strong>{{ f.totals.deal_click }}</strong><span>点商品</span></div>
+        <div><strong>{{ f.totals.purchase }}</strong><span>成交</span></div>
+        <div><strong>{% if f.totals.land %}{{ (100.0 * f.totals.purchase / f.totals.land)|round(1) }}%{% else %}—{% endif %}</strong><span>落地→成交</span></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>账户 acct</th><th>落地</th><th>点击</th><th>成交</th></tr></thead>
+          <tbody>
+          {% for row in f.by_acct %}
+            <tr><td><code>{{ row.acct }}</code></td><td>{{ row.land }}</td><td>{{ row.deal_click }}</td><td>{{ row.purchase }}</td></tr>
+          {% else %}
+            <tr><td class="empty" colspan="4">暂无按账户数据。</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <details class="help">
+        <summary>按 seg / 天</summary>
+        <div class="table-wrap" style="margin-top:10px">
+          <table>
+            <thead><tr><th>seg</th><th>落地</th><th>点击</th><th>成交</th><th>CVR</th></tr></thead>
+            <tbody>
+            {% for row in f.by_seg %}
+              <tr><td>{{ row.seg }}</td><td>{{ row.land }}</td><td>{{ row.deal_click }}</td><td>{{ row.purchase }}</td><td>{{ row.cvr }}%</td></tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </details>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>最近回传</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>时间</th><th>平台</th><th>事件</th><th>订单</th><th>event_id</th><th>结果</th><th>详情</th></tr></thead>
+        <tbody>
+        {% for row in ad_logs %}
+          <tr>
+            <td>{{ row.created_at }}</td>
+            <td>{{ row.platform }}</td>
+            <td>{{ row.event_name }}</td>
+            <td>{{ row.order_id }}</td>
+            <td class="mono">{{ row.event_id }}</td>
+            <td>{% if row.ok %}<span class="badge ok">OK</span>{% else %}<span class="badge warn">SKIP</span>{% endif %}</td>
+            <td class="mono">{{ row.detail }}</td>
+          </tr>
+        {% else %}
+          <tr><td class="empty" colspan="7">暂无回传记录。</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+<script>
+(function () {
+  document.querySelectorAll("[data-copy]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var node = document.querySelector(btn.getAttribute("data-copy"));
+      if (!node) return;
+      node.select();
+      try { navigator.clipboard.writeText(node.value); } catch (e) { document.execCommand("copy"); }
+      btn.textContent = "已复制";
+      setTimeout(function () { btn.textContent = "复制"; }, 1200);
+    });
+  });
+})();
+</script>
+</div>
+
+
+{% endblock %}

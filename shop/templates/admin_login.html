@@ -1,0 +1,20 @@
+{% extends "admin_base.html" %}
+{% block screen %}
+<div class="login-wrap">
+  <form class="login-card" method="post" action="/admin/login" data-figma="AD01">
+    <h1>Harbor 后台</h1>
+    <p class="lead">使用分配给你的账号和密码</p>
+    {% if error %}
+    <div class="login-error" role="alert">{{ error }}</div>
+    {% endif %}
+    <label>账号
+      <input name="username" autocomplete="username" placeholder="admin" autofocus>
+    </label>
+    <label>密码
+      <input name="password" type="password" autocomplete="current-password">
+    </label>
+    <button class="btn login-submit" type="submit">登录</button>
+    <p class="muted small login-foot">忘记密码请联系管理员，在「员工」页重置。</p>
+  </form>
+</div>
+{% endblock %}

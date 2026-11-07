@@ -1,0 +1,21 @@
+<div class="goal{% if inline %} goal-inline{% endif %}">
+  <div class="goal-top">
+    {% if nudge.ship_done %}<p class="goal-met">{{ t.gap_free }}</p>{% endif %}
+    <p class="goal-line">{{ nudge.text }}</p>
+    {% if nudge.kind == 'deal' and nudge.save_text %}<span class="goal-chip">−{{ nudge.save_text }}</span>{% endif %}
+    {% if inline and bundle_groups %}
+    <button class="bundle-link" id="open-bundle" data-desktop-gap type="button">{{ t.bundle }}</button>
+    {% endif %}
+  </div>
+  <div class="goal-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ nudge.progress }}">
+    <span class="goal-fill" style="width: {{ nudge.progress }}%" data-width="{{ nudge.progress }}%"></span>
+  </div>
+  {% if gap_pick %}
+  <form class="goal-add" method="post" action="/cart/add">
+    <input type="hidden" name="sku" value="{{ gap_pick.sku }}">
+    <input type="hidden" name="qty" value="1">
+    <input type="hidden" name="next" value="/cart">
+    <button class="btn" type="submit">{{ t.goal_add }} · {{ gap_pick.name }} · {{ gap_pick.price }}</button>
+  </form>
+  {% endif %}
+</div>

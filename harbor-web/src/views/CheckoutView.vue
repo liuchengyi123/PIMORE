@@ -1,0 +1,218 @@
+<template>
+  <div class="page" data-figma="M12">
+    <header class="head">
+      <button type="button" class="back" @click="$router.back()" aria-label="back"><ChevronLeft :size="22" :stroke-width="1.75" /></button>
+      <h1>Checkout</h1>
+    </header>
+
+    <div class="card ship">
+      <div class="row between">
+        <div class="sec">Ship to</div>
+        <button type="button" class="link" @click="focusShip">Change</button>
+      </div>
+      <div class="addr" v-if="form.name">
+        {{ form.name }}<br />
+        {{ form.address }}{{ form.city ? ', ' + form.city : '' }}{{ form.region ? ', ' + form.region : '' }} {{ form.postal }}<br />
+        {{ form.ship_country }}
+      </div>
+      <div class="addr muted" v-else>Add shipping address below</div>
+    </div>
+
+    <form class="form" @submit.prevent="place">
+      <label class="field"><span>Contact email</span><input v-model="form.email" type="email" required /></label>
+      <label class="field"><span>Name</span><input ref="nameEl" v-model="form.name" required /></label>
+      <label class="field"><span>Address</span><input v-model="form.address" required /></label>
+      <div class="split">
+        <label class="field"><span>City</span><input v-model="form.city" required /></label>
+        <label class="field"><span>Region</span><input v-model="form.region" /></label>
+      </div>
+      <div class="split">
+        <label class="field"><span>Postal</span><input v-model="form.postal" required /></label>
+        <label class="field"><span>Country</span>
+          <select v-model="form.ship_country">
+            <option value="US">US</option><option value="CN">CN</option><option value="TW">TW</option>
+            <option value="HK">HK</option><option value="GB">GB</option><option value="CA">CA</option>
+            <option value="DE">DE</option><option value="FR">FR</option><option value="ES">ES</option>
+            <option value="PT">PT</option><option value="BR">BR</option><option value="MX">MX</option>
+            <option value="JP">JP</option>
+          </select>
+        </label>
+      </div>
+      <label class="field"><span>Phone</span><input v-model="form.phone" /></label>
+
+      <div class="card">
+        <div class="row between">
+          <div class="sec">Coupon</div>
+          <span class="link">Select ›</span>
+        </div>
+        <div class="tiny" v-if="form.coupon_code">{{ form.coupon_code }}</div>
+        <input class="coupon-in" v-model="form.coupon_code" placeholder="Code" />
+      </div>
+
+      <div class="card">
+        <div class="row between">
+          <div class="sec">Use balance</div>
+          <button type="button" class="toggle" :class="{ on: form.use_balance }" @click="form.use_balance = !form.use_balance" aria-label="toggle balance">
+            <span class="knob" />
+          </button>
+        </div>
+        <div class="tiny">Applied at payment when available</div>
+      </div>
+
+      <div class="card">
+        <div class="sec" style="margin-bottom:10px">Pay with</div>
+        <label class="pay" :class="{ on: form.pay_method === 'paypal' }">
+          <input v-model="form.pay_method" type="radio" value="paypal" /> PayPal
+        </label>
+        <label class="pay" :class="{ on: form.pay_method === 'card' }">
+          <input v-model="form.pay_method" type="radio" value="card" /> Card · Visa / Mastercard / Amex (Stripe)
+        </label>
+        <label class="pay" :class="{ on: form.pay_method === 'lianlian' }">
+          <input v-model="form.pay_method" type="radio" value="lianlian" /> LianLian
+        </label>
+      </div>
+
+      <div class="card totals">
+        <div class="row between tiny-row"><span class="tiny">Items</span><span>{{ money(subtotal) }}</span></div>
+        <div class="row between tiny-row"><span class="tiny">Shipping</span><span>Tracked</span></div>
+        <div class="row between total-row"><span class="sec">Total</span><span class="price">{{ money(subtotal) }}</span></div>
+        <div class="tiny" style="margin-top:8px">Tracked shipping · Est. 7–12 days</div>
+      </div>
+
+      <p v-if="error" class="err">{{ error }}</p>
+      <p v-if="!lines.length" class="err">{{ t('checkout_empty') }}</p>
+    </form>
+
+    <div class="dock">
+      <div class="price">{{ money(subtotal) }}</div>
+      <button type="button" class="place" :disabled="!lines.length || busy" @click="place">{{ busy ? '…' : 'Place order' }}</button>
+    </div>
+  </div>
+</template>
+<script setup lang="ts">
+import { ChevronLeft } from 'lucide-vue-next'
+import { computed, onMounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { money } from '@/api/products'
+import { useCart } from '@/composables/cart'
+import { useI18n } from '@/composables/i18n'
+import { checkoutUrl, submitCheckoutForm } from '@/api/accountApi'
+
+const { t } = useI18n()
+const cart = useCart()
+const router = useRouter()
+const lines = computed(() => cart.lines.value)
+const subtotal = computed(() => cart.subtotal.value)
+const busy = ref(false)
+const error = ref('')
+const nameEl = ref<HTMLInputElement | null>(null)
+function focusShip() { nameEl.value?.focus() }
+const form = reactive({
+  email: '',
+  name: '',
+  address: '',
+  city: '',
+  region: '',
+  postal: '',
+  ship_country: 'US',
+  phone: '',
+  street_number: '',
+  district: '',
+  pay_method: 'paypal',
+  use_balance: true,
+  coupon_code: '',
+  gift: '',
+  buy: '',
+  submit_id: '',
+})
+
+onMounted(async () => {
+  form.submit_id = 'h5-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
+  try {
+    await cart.syncLocalToServer()
+  } catch {
+    try { await cart.refreshFromServer() } catch { /* */ }
+  }
+})
+
+function openHtml() {
+  window.location.href = checkoutUrl(false)
+}
+
+async function place() {
+  if (!lines.value.length || busy.value) return
+  busy.value = true
+  error.value = ''
+  try {
+    try { await cart.syncLocalToServer() } catch { /* continue */ }
+    const res = await submitCheckoutForm({ ...form })
+    if (res.ok && res.orderId) {
+      if (res.payUrl && /^https?:\/\//i.test(res.payUrl) && !/\/orders\//i.test(res.payUrl)) {
+        window.location.href = res.payUrl
+        return
+      }
+      router.replace({ path: '/order-success', query: { id: res.orderId } })
+      return
+    }
+    if (res.ok && res.payUrl) {
+      window.location.href = res.payUrl
+      return
+    }
+    error.value = '下单未通过校验，请检查地址/邮箱或改用店铺结算页'
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : String(e)
+  } finally {
+    busy.value = false
+  }
+}
+</script>
+<style lang="scss" scoped>
+@import '@/styles/theme.scss';
+.page { min-height: 100vh; background: $hb-paper; padding: 8px 16px 120px; padding-top: calc(8px + env(safe-area-inset-top)); }
+.head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.back { width: 36px; height: 36px; border: 0; border-radius: 12px; background: #fff; display: inline-flex; align-items: center; justify-content: center; color: $hb-ink; box-shadow: $hb-shadow-soft; }
+h1 { margin: 0; font-size: 18px; font-weight: 800; color: $hb-ink; }
+.card { background: #fff; border-radius: 14px; padding: 14px; margin-bottom: 10px; border: 1px solid $hb-line; }
+.sec { font-weight: 700; font-size: 14px; color: $hb-ink; }
+.row { display: flex; align-items: center; gap: 8px; }
+.between { justify-content: space-between; }
+.link { border: 0; background: transparent; color: $hb-deep; font-size: 12px; font-weight: 600; cursor: pointer; }
+.addr { margin-top: 8px; font-size: 13px; color: $hb-ink; line-height: 1.45; }
+.muted { color: $hb-muted; }
+.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; font-size: 11px; font-weight: 600; color: $hb-muted; }
+.field input, .field select, .coupon-in {
+  height: 42px; border-radius: 12px; border: 1px solid $hb-line; padding: 0 12px;
+  font-size: 14px; color: $hb-ink; background: #fff;
+}
+.split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tiny { font-size: 12px; color: $hb-muted; margin-top: 6px; }
+.toggle {
+  width: 40px; height: 24px; border-radius: 12px; border: 0; background: #E2E6EE; position: relative; cursor: pointer;
+}
+.toggle.on { background: $hb-ink; }
+.knob {
+  position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 9px; background: #fff; transition: left .15s;
+}
+.toggle.on .knob { left: 19px; }
+.pay {
+  display: block; padding: 12px; border: 1px solid $hb-line; border-radius: 12px; margin-bottom: 8px;
+  font-size: 13px; font-weight: 600; color: $hb-ink; cursor: pointer;
+}
+.pay.on { border-width: 2px; border-color: $hb-ink; }
+.pay input { margin-right: 8px; }
+.tiny-row { margin-bottom: 6px; font-size: 13px; color: $hb-ink; }
+.total-row { margin-top: 8px; padding-top: 8px; border-top: 1px solid $hb-line; }
+.price { font-size: 18px; font-weight: 800; color: $hb-price; }
+.err { color: #B91C1C; font-size: 13px; margin: 8px 0; }
+.dock {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+  background: #fff; border-top: 1px solid $hb-line; padding: 12px 16px;
+  display: flex; gap: 12px; align-items: center;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+}
+.place {
+  flex: 1; height: 48px; border: 0; border-radius: 14px; background: $hb-ink; color: #fff;
+  font-weight: 700; font-size: 15px; cursor: pointer;
+}
+.place:disabled { opacity: .5; }
+</style>

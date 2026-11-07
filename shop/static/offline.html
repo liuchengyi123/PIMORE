@@ -1,0 +1,85 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1E4D3B">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Harbor · Offline</title>
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      display: grid;
+      place-items: center;
+      padding: calc(24px + env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom));
+      font-family: "Schibsted Grotesk", system-ui, -apple-system, Segoe UI, sans-serif;
+      background: #1E4D3B;
+      color: #F7F3E9;
+      text-align: center;
+    }
+    main {
+      width: min(360px, 100%);
+      display: grid;
+      gap: 14px;
+      justify-items: center;
+    }
+    img {
+      width: 96px;
+      height: 96px;
+      border-radius: 22px;
+      box-shadow: 0 12px 28px rgba(0,0,0,.28);
+    }
+    h1 { margin: 8px 0 0; font-size: 28px; letter-spacing: -0.02em; }
+    p { margin: 0; line-height: 1.45; opacity: .9; }
+    a.btn {
+      margin-top: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 0 18px;
+      border-radius: 999px;
+      background: #F7F3E9;
+      color: #1E4D3B;
+      text-decoration: none;
+      font-weight: 700;
+    }
+  </style>
+
+  <style>
+    .fn-app-status{display:none}
+    body.fn-app .fn-app-status{display:flex;align-items:center;justify-content:space-between;position:fixed;top:0;left:0;right:0;height:48px;padding:18px 20px 8px;box-sizing:border-box;background:#1E4D3B;color:#F7F3E9;font:600 15px/1 system-ui,sans-serif;z-index:9;pointer-events:none}
+    body.fn-app{padding-top:48px}
+    .fn-app-home-ind{display:none}
+    body.fn-app .fn-app-home-ind{display:block;position:fixed;left:0;right:0;bottom:0;height:18px;pointer-events:none}
+    body.fn-app .fn-app-home-ind i{display:block;width:128px;height:4px;margin:8px auto 0;border-radius:999px;background:#F7F3E9;opacity:.35}
+  </style>
+</head>
+<body>
+  <div class="fn-app-status" aria-hidden="true"><span>9:41</span><span>●●● 5G</span></div>
+  <div class="fn-app-home-ind" aria-hidden="true"><i></i></div>
+  <main>
+    <img src="/static/harbor-icon-192.png" alt="Harbor">
+    <h1>You're offline</h1>
+    <p>Harbor will reload your cart and shop when the connection is back.</p>
+    <a class="btn" href="/">Try again</a>
+  </main>
+  <script>
+    window.addEventListener("online", function () { location.reload(); });
+  </script>
+
+  <script>
+  (function(){
+    try{
+      var q=new URLSearchParams(location.search);
+      var c=q.get('chrome')||(document.cookie.match(/(?:^|; )fn_chrome=([^;]*)/)||[])[1];
+      if(c==='app'){ document.body.classList.add('fn-app'); document.cookie='fn_chrome=app;path=/;max-age=604800;SameSite=Lax'; }
+    }catch(e){}
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,391 @@
+{% extends "base.html" %}
+{% block body_class %} fn-cart-page{% endblock %}
+{% from "shot.html" import shot %}
+{% block body %}
+<div class="fn-cart">
+<header class="fn-cart-mbar">
+  <a class="fn-list-back" href="{{ href('/', country) }}" aria-label="{{ t.back }}">←</a>
+  <h1 class="fn-list-mtitle">{{ t.cart }}{% if lines %} ({{ lines|length }}){% endif %}</h1>
+  <span class="fn-list-filter-spacer"></span>
+</header>
+<h1 class="fn-cart-desk-title">{{ t.cart }}{% if lines %} ({{ lines|length }}){% endif %}</h1>
+{% if lines %}
+<div class="cart-col">
+{% if cart_count and free_ship_policy %}
+<div class="fn-cart-ship freeprog {% if cart_ship_met %}met{% endif %}" role="group" aria-label="{{ t.ship_progress_label }}">
+  <div class="tt">{% if cart_ship_met %}{{ t.gap_free }}{% else %}{{ cart_gap or promise_line }}{% endif %}</div>
+  <div class="bar"><i style="width:{{ cart_ship_progress }}%"></i></div>
+</div>
+{% endif %}
+<ul class="lines">
+  {% for line in lines %}
+  <li class="cart-line">
+    <img src="{{ shot(line.image) }}" width="112" height="112" alt="">
+    <div>
+      <a href="{{ href('/p/' ~ (line.product_sku or line.sku), country) }}">{{ line.name }}</a>
+      {% if line.color %}<p class="muted">{{ line.color }}</p>{% endif %}
+      <p class="price">{{ line.line_price }}</p>
+      <div class="qty-row">
+      <form method="post" action="/cart/update">
+        <input type="hidden" name="sku" value="{{ line.sku }}">
+        <input type="hidden" name="country" value="{{ country }}">
+        <input type="hidden" name="qty" value="{{ line.qty - 1 }}">
+        <button class="btn quiet" type="submit">−</button>
+      </form>
+      <span class="qty-num" aria-label="{{ t.qty if t.qty is defined else 'Quantity' }}">{{ line.qty }}</span>
+      <form method="post" action="/cart/update">
+        <input type="hidden" name="sku" value="{{ line.sku }}">
+        <input type="hidden" name="country" value="{{ country }}">
+        <input type="hidden" name="qty" value="{{ line.qty + 1 }}">
+        <button class="btn quiet" type="submit">+</button>
+      </form>
+      <form method="post" action="/cart/update" data-confirm-remove>
+        <input type="hidden" name="sku" value="{{ line.sku }}">
+        <input type="hidden" name="country" value="{{ country }}">
+        <input type="hidden" name="qty" value="0">
+        <button class="btn quiet" type="submit">{{ t.remove }}</button>
+      </form>
+      <form method="post" action="/cart/save">
+        <input type="hidden" name="sku" value="{{ line.sku }}">
+        <input type="hidden" name="country" value="{{ country }}">
+        <button class="text-act" type="submit">{{ t.save_later }}</button>
+      </form>
+      </div>
+    </div>
+      <div class="cart-line-actions">
+      <form method="post" action="/cart/update" data-confirm-remove>
+        <input type="hidden" name="sku" value="{{ line.sku }}">
+        <input type="hidden" name="country" value="{{ country }}">
+        <input type="hidden" name="qty" value="0">
+        <button class="btn quiet" type="submit">{{ t.remove }}</button>
+      </form>
+      <form method="post" action="/cart/save">
+        <input type="hidden" name="sku" value="{{ line.sku }}">
+        <input type="hidden" name="country" value="{{ country }}">
+        <button class="text-act" type="submit">{{ t.save_later }}</button>
+      </form>
+    </div>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<div class="fn-cart-empty">
+  <div class="fn-cart-empty-ico" aria-hidden="true"><img src="/static/m01/tab-cart.svg" width="40" height="40" alt=""></div>
+  <h1 style="margin-top:12px">{{ t.cart_empty }}</h1>
+  <p class="tiny" style="margin-top:8px">Browse kitchen, storage, and cleaning essentials.</p>
+  <a class="btn" style="margin-top:20px;display:inline-flex" href="{{ href('/', country) }}">{{ t.keep_shopping }}</a>
+</div>
+{% endif %}
+{% if saved %}
+<h2>{{ t.saved }}</h2>
+<ul class="lines">
+  {% for line in saved %}
+  <li class="cart-line">
+    <img src="{{ shot(line.image) }}" width="112" height="112" alt="">
+    <div>
+      <a href="{{ href('/p/' ~ (line.product_sku or line.sku), country) }}">{{ line.name }}</a>
+      <form method="post" action="/cart/restore">
+        <input type="hidden" name="sku" value="{{ line.sku }}">
+        <input type="hidden" name="country" value="{{ country }}">
+        <button class="btn quiet" type="submit">{{ t.move_cart }}</button>
+      </form>
+    </div>
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% if picks %}
+<section class="shelf cart-picks">
+  <div class="shelf-head"><h2>{% if lines %}{{ t.you_may_like }}{% else %}{{ t.for_you }}{% endif %}</h2></div>
+  <div class="product-grid dense">
+    {% for item in picks %}{% include "card.html" %}{% endfor %}
+  </div>
+</section>
+{% endif %}
+{% if lines %}
+</div>
+<aside class="summary sticky-sum">
+  <h2>{{ t.summary }}</h2>
+  {% if cart_count and free_ship_policy %}
+  <div class="freeprog {% if cart_ship_met %}met{% endif %}" role="group" aria-label="{{ t.ship_progress_label }}">
+    <div class="tt">{% if cart_ship_met %}{{ t.gap_free }}{% else %}{{ cart_gap or promise_line }}{% endif %}</div>
+    <div class="bar"><i style="width:{{ cart_ship_progress }}%"></i></div>
+  </div>
+  {% endif %}
+  {% if bill %}
+  <p>{{ t.original_total }} <s class="was">{{ original_text }}</s></p>
+  <p class="pay-total">{{ t.pay_total }} <strong>{{ pay_text }}</strong></p>
+  {% if list_off_pct and list_save_text %}
+  <p class="cart-deal-banner">
+    <span class="off-badge">{{ t.off_badge.format(pct=list_off_pct) }}</span>
+    <span class="you-save">{{ t.you_save.format(amount=list_save_text) }}</span>
+  </p>
+  {% elif save_local %}
+  <p class="you-save">{{ t.you_save.format(amount=save_text) }}</p>
+  {% endif %}
+  {% if deal_met %}<p class="met">{{ t.discount }} {{ discount_text }} <span class="tick" aria-hidden="true">✓</span></p>{% endif %}
+  <p class="ship-row met" data-shipping-cents="0">
+    <span>{{ t.free_shipping }} <span class="tick" aria-hidden="true">✓</span></span>
+  </p>
+  {% endif %}
+  {% if nudge and nudge.kind == 'done' and nudge.ship_done %}
+  <p class="met">{{ nudge.text }}</p>
+  {% elif nudge and nudge.kind != 'done' %}
+  {% set inline = true %}
+  {% include "goal.html" %}
+  {% endif %}
+  {% if checkout_ok is defined and checkout_ok == false %}
+  <button class="btn cart-fill" type="button">{{ t.checkout }}</button>
+  {% if gap_modal_need_text %}<p class="muted small">{{ (t.gap_min|default('Add {amount}')).format(amount=gap_modal_need_text) }}</p>{% endif %}
+  {% else %}
+  <a class="btn" id="cart-checkout" href="{{ href('/checkout', country) }}">{{ t.checkout }}</a>
+  {% endif %}
+</aside>
+<div class="cart-paybar">
+  <div class="cart-paybar-sum">
+    <span>{{ t.pay_total }} <strong>{{ pay_text }}</strong></span>
+    {% if checkout_ok is defined and checkout_ok == false and gap_modal_need_text %}
+    <small>{{ (t.gap_min|default('Add {amount}')).format(amount=gap_modal_need_text) }}</small>
+    {% endif %}
+  </div>
+  {% if checkout_ok is defined and checkout_ok == false %}
+  <button class="btn cart-fill" type="button">{{ t.checkout }}</button>
+  {% else %}
+  <a class="btn" href="{{ href('/checkout', country) }}">{{ t.checkout }}</a>
+  {% endif %}
+</div>
+{% endif %}
+</div>
+{% endblock %}
+{% block overlay %}
+
+{% if lines and (show_gap_modal or bundle_groups) %}
+<div class="gap-modal" id="gap-modal" hidden>
+  <div class="gap-backdrop" data-gap-close></div>
+  <div class="gap-panel" role="dialog" aria-modal="true" aria-labelledby="gap-title">
+    <div class="gap-head">
+      <button class="gap-close" type="button" data-gap-close aria-label="{{ t.pop_close }}">×</button>
+      <h2 id="gap-title" class="gap-title">
+        {% if gap_modal_need_text %}
+        {% set need_html = ('<em class="m">'|safe) ~ gap_modal_need_text ~ ('</em>'|safe) %}
+        {% set target_html = ('<em class="m">'|safe) ~ gap_modal_target_text ~ ('</em>'|safe) %}
+        {% if gap_modal_kind == 'min' %}{{ t.gap_modal_min_title.format(need=need_html, target=target_html)|safe }}{% else %}{{ t.gap_modal_ship_title.format(need=need_html, target=target_html)|safe }}{% endif %}
+        {% else %}
+        {{ t.add_more }}
+        {% endif %}
+      </h2>
+      <p class="gap-copy">
+        {% if gap_modal_need_text %}
+        {% if gap_modal_kind == 'min' %}{{ t.gap_modal_min_body.format(target=gap_modal_target_text) }}{% else %}{{ t.gap_modal_ship_body.format(threshold=gap_modal_target_text) }}{% endif %}
+        {% else %}
+        {{ cart_gap or promise_line or '' }}
+        {% endif %}
+      </p>
+      <div class="freeprog {% if (gap_modal_progress|default(0)) >= 100 or cart_ship_met|default(false) %}met{% endif %}">
+        <div class="bar"><i style="width:{{ gap_modal_progress|default(cart_ship_progress|default(0)) }}%"></i></div>
+      </div>
+      <div class="atc-tools">
+        <form class="atc-search" id="gap-search">
+          <input type="text" name="q" data-preset="{{ gap_keyword|default('') }}" placeholder="{{ gap_keyword or t.search_placeholder }}" autocomplete="off" enterkeyhint="search">
+          <button type="submit" aria-label="{{ t.search }}">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          </button>
+        </form>
+        <div class="atc-tabs" role="tablist">
+          <button type="button" class="on" data-tab="recommended">{{ t.recommended }}</button>
+          {% for key in categories %}
+          <button type="button" data-tab="{{ key }}">{{ t.categories[key] }}</button>
+          {% endfor %}
+        </div>
+      </div>
+      <h3 class="gap-like">{{ t.you_may_like }}</h3>
+    </div>
+    <div class="atc-grid" id="gap-grid" data-gap-grid></div>
+    <div class="gap-foot">
+      {% if bill %}
+      <span class="gap-pay">
+        <span>{{ t.pay_total }} <strong>{{ pay_text }}</strong></span>
+        {% if list_save_text %}<span class="gap-saved">{{ t.you_save.format(amount=list_save_text) }}</span>
+        {% elif save_text %}<span class="gap-saved">{{ t.you_save.format(amount=save_text) }}</span>{% endif %}
+      </span>
+      {% endif %}
+      {% if checkout_ok is defined and checkout_ok == false %}
+      <button class="btn gap-disabled" type="button" disabled>{{ t.checkout_blocked }}</button>
+      {% else %}
+      <a class="btn" href="{{ href('/checkout', country) }}">{{ t.checkout }}</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+<script>
+(function () {
+  var modal = document.getElementById("gap-modal");
+  if (!modal) return;
+  var grid = document.getElementById("gap-grid");
+  function open() {
+    modal.hidden = false;
+    document.body.classList.add("gap-open");
+    /* harborOpenGap */
+    try { sessionStorage.setItem("harbor-interrupt", "1"); } catch (err) {}
+    load(false);
+  }
+  function close() { modal.hidden = true; document.body.classList.remove("gap-open"); }
+  modal.querySelectorAll("[data-gap-close]").forEach(function (n) { n.addEventListener("click", close); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
+  function country() {
+    var m = location.search.match(/[?&]country=([A-Za-z]{2})/);
+    return m ? m[1] : "";
+  }
+  function load(ignoreQuery) {
+    if (!grid) return;
+    var tabBtn = modal.querySelector(".atc-tabs .on");
+    var tab = tabBtn ? tabBtn.getAttribute("data-tab") : "recommended";
+    var input = modal.querySelector(".atc-search input");
+    var typed = input ? (input.value || "").trim() : "";
+    var preset = input ? (input.getAttribute("data-preset") || "") : "";
+    var q = ignoreQuery ? "" : (typed || preset);
+    var url = "/cart/picks?tab=" + encodeURIComponent(tab || "recommended") + "&q=" + encodeURIComponent(q) + "&stay=" + encodeURIComponent("/cart?gap=1");
+    var c = country();
+    if (c) url += "&country=" + encodeURIComponent(c);
+    fetch(url, { credentials: "same-origin", headers: { "Accept": "text/html" } })
+      .then(function (r) { return r.text(); })
+      .then(function (html) { grid.innerHTML = html; })
+      .catch(function () {});
+  }
+  var search = document.getElementById("gap-search");
+  if (search) search.addEventListener("submit", function (event) {
+    event.preventDefault();
+    load(false);
+  });
+  modal.querySelectorAll(".atc-tabs button").forEach(function (node) {
+    node.addEventListener("click", function () {
+      modal.querySelectorAll(".atc-tabs button").forEach(function (other) {
+        other.classList.toggle("on", other === node);
+      });
+      load(true);
+    });
+  });
+  window.harborOpenGap = open;
+  document.querySelectorAll(".cart-fill").forEach(function (node) {
+    node.addEventListener("click", function (event) {
+      event.preventDefault();
+      open();
+    });
+  });
+  if (new URLSearchParams(location.search).get("pay") === "1") open();
+})();
+</script>
+{% endif %}
+
+{% if bundle_groups %}
+<div class="sheet" id="bundle-sheet" hidden>
+  <div class="sheet-backdrop" data-close></div>
+  <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="bundle-title">
+    <div class="sheet-head">
+      <h2 id="bundle-title">{{ t.add_more }}</h2>
+      <button class="sheet-close" type="button" data-close aria-label="{{ t.cancel }}">×</button>
+    </div>
+    {% if nudge and nudge.kind != 'done' %}
+    {% set inline = false %}
+    {% include "goal.html" %}
+    {% endif %}
+    <div class="sheet-body">
+      <div class="sheet-cats">
+        {% for group in bundle_groups %}
+        <button class="sheet-cat{% if loop.first %} on{% endif %}" type="button" data-cat="{{ group.key }}">{{ t.categories[group.key] }}</button>
+        {% endfor %}
+      </div>
+      <div class="sheet-goods">
+        {% for group in bundle_groups %}
+        <div class="sheet-list" data-list="{{ group.key }}"{% if not loop.first %} hidden{% endif %}>
+          {% for item in group["items"] %}
+          <article class="sheet-item">
+            <img src="{{ shot(item.image) }}" width="72" height="72" alt="" loading="lazy" decoding="async">
+            <div>
+              <p class="name">{{ item.name }}</p>
+              <p class="price">{{ item.price }}</p>
+            </div>
+            {% if item.offers|length > 1 %}
+            <a class="btn" href="{{ href('/p/' ~ item.sku, country) }}">{{ t.choose }}</a>
+            {% else %}
+            <form method="post" action="/cart/add">
+              <input type="hidden" name="sku" value="{{ item.sku }}">
+              <input type="hidden" name="country" value="{{ country }}">
+              <input type="hidden" name="qty" value="1">
+              <input type="hidden" name="next" value="/cart?bundle=1">
+              {% if item.offers|length == 1 %}<input type="hidden" name="offer" value="{{ item.offers[0].id }}">{% endif %}
+              <button class="btn" type="submit">{{ t.add_on }}</button>
+            </form>
+            {% endif %}
+          </article>
+          {% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  (function () {
+    var sheet = document.getElementById("bundle-sheet");
+    var openBtn = document.getElementById("open-bundle");
+    if (!openBtn) return;
+    function isDesktop() { return window.matchMedia("(min-width: 981px)").matches; }
+    function openDesktopGap() {
+      if (typeof window.harborOpenGap === "function") { window.harborOpenGap(); return true; }
+      var modal = document.getElementById("gap-modal");
+      if (!modal) return false;
+      modal.hidden = false;
+      document.body.classList.add("gap-open");
+      return true;
+    }
+    openBtn.addEventListener("click", function (event) {
+      if (!isDesktop()) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      openDesktopGap();
+    }, true);
+    if (!sheet) return;
+    var cats = sheet.querySelectorAll(".sheet-cat");
+    var lists = sheet.querySelectorAll(".sheet-list");
+    function paintGoal() {
+      sheet.querySelectorAll(".goal-fill").forEach(function (fill) {
+        var width = fill.getAttribute("data-width") || "0%";
+        fill.style.width = "0%";
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () { fill.style.width = width; });
+        });
+      });
+    }
+    function openSheet() {
+      if (isDesktop()) {
+        openDesktopGap();
+        return;
+      }
+      sheet.hidden = false;
+      document.body.classList.add("sheet-open");
+      paintGoal();
+    }
+    function closeSheet() {
+      sheet.hidden = true;
+      document.body.classList.remove("sheet-open");
+    }
+    openBtn.addEventListener("click", openSheet);
+    sheet.querySelectorAll("[data-close]").forEach(function (node) {
+      node.addEventListener("click", closeSheet);
+    });
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") closeSheet();
+    });
+    cats.forEach(function (cat) {
+      cat.addEventListener("click", function () {
+        var key = cat.getAttribute("data-cat");
+        cats.forEach(function (other) { other.classList.toggle("on", other === cat); });
+        lists.forEach(function (list) { list.hidden = list.getAttribute("data-list") !== key; });
+      });
+    });
+    if (new URLSearchParams(location.search).get("bundle") === "1") openSheet();
+  })();
+</script>
+{% endif %}
+{% endblock %}

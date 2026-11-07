@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Free Shipping over $39 — Harbor Everyday Goods</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231E4D3B'/%3E%3Cpath d='M8 21 L16 9 L24 21 Z' fill='%23E0522E'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#FFFFFF; --surface:#FFFFFF; --ink:#16181D; --muted:#5F6368;
+  --green:#1E4D3B; --green-2:#2C6E52; --coral:#E0522E;
+  --line:#E8EAED; --r:8px; --shadow:0 1px 3px rgba(22,24,29,.10),0 4px 12px rgba(22,24,29,.06);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{font-family:"Karla","Avenir Next",Avenir,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+img{display:block;max-width:100%}
+button{font-family:inherit;cursor:pointer}
+a{color:inherit}
+
+/* topbar */
+.topbar{border-bottom:1px solid var(--line);background:#fff}
+.topbar-in{max-width:1120px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:800;font-size:16px}
+.brand svg{width:22px;height:22px}
+.topbar .rule{font-size:13.5px;font-weight:700;color:var(--green)}
+.topbar .rule b{color:var(--coral)}
+
+/* hero */
+.hero{background:linear-gradient(180deg,#F4F7F5,#FFF);border-bottom:1px solid var(--line)}
+.hero-in{max-width:1120px;margin:0 auto;padding:40px 16px 44px;text-align:center}
+.hero h1{font-size:34px;line-height:1.12;font-weight:800;letter-spacing:-.01em;max-width:22ch;margin:0 auto 12px}
+.hero h1 em{font-style:normal;color:var(--green)}
+.hero .sub{font-size:16px;color:var(--muted);max-width:60ch;margin:0 auto}
+.hero .sub b{color:var(--ink)}
+.cta-row{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:22px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:8px;background:var(--coral);color:#fff;border:0;border-radius:var(--r);padding:13px 26px;font-size:16px;font-weight:800;transition:background .12s}
+.btn:hover{background:#C8492A}
+.btn svg{width:16px;height:16px;stroke:#fff}
+
+/* rules card */
+.rules{max-width:1120px;margin:-10px auto 0;padding:0 16px}
+.rules-in{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);display:grid;grid-template-columns:1fr;overflow:hidden}
+.rule-row{display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:1px solid var(--line)}
+.rule-row:last-child{border-bottom:0}
+.rule-row .ic{flex:none;width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;background:#EEF4F0}
+.rule-row .ic svg{width:19px;height:19px;stroke:var(--green)}
+.rule-row .txt{flex:1;min-width:0}
+.rule-row .txt b{display:block;font-size:14.5px;font-weight:800}
+.rule-row .txt span{font-size:13px;color:var(--muted)}
+.rule-row .val{flex:none;font-size:15px;font-weight:800;color:var(--green)}
+
+/* sections */
+section{max-width:1120px;margin:0 auto;padding:38px 16px 0}
+.sec-head{margin-bottom:18px}
+.sec-head h2{font-size:24px;font-weight:800;letter-spacing:-.01em}
+.sec-head p{font-size:14px;color:var(--muted);margin-top:4px}
+
+/* deals grid */
+.deals-grid{display:grid;gap:14px;grid-template-columns:repeat(2,1fr)}
+.pcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;transition:box-shadow .15s}
+.pcard:hover{box-shadow:var(--shadow)}
+.pcard .ph{position:relative;aspect-ratio:1/1;background:#fff;display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--line)}
+.pcard .ph img{width:88%;aspect-ratio:1/1;object-fit:cover}
+.pcard .badge{position:absolute;top:10px;left:10px;font-size:11px;font-weight:800;padding:4px 9px;border-radius:14px;background:var(--coral);color:#fff}
+.pcard .body{padding:12px}
+.pcard .nm{font-size:14px;font-weight:700;line-height:1.3;min-height:2.6em}
+.pcard .pr{display:flex;align-items:baseline;gap:8px;margin-top:8px}
+.pcard .pr .now{font-size:20px;font-weight:800;color:var(--coral)}
+.pcard .pr s{font-size:13px;color:var(--muted)}
+.pcard .pr .was-txt{font-size:12px;color:var(--muted)}
+.pcard .add{margin-top:10px;width:100%;background:var(--green);color:#fff;border:0;border-radius:7px;padding:10px;font-size:14px;font-weight:800;transition:background .12s}
+.pcard .add:hover{background:var(--green-2)}
+.pcard .add.on{background:#C6CFC9;color:var(--green);cursor:default}
+
+/* faq */
+.faq{display:grid;gap:0;grid-template-columns:1fr;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
+.faq details{border-bottom:1px solid var(--line)}
+.faq details:last-child{border-bottom:0}
+.faq summary{padding:15px 18px;font-size:15px;font-weight:800;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";font-size:19px;color:var(--coral);font-weight:800}
+.faq details[open] summary::after{content:"–"}
+.faq .a{padding:0 18px 16px;font-size:14px;color:var(--muted);line-height:1.6}
+.faq .a b{color:var(--ink)}
+
+/* guarantee strip */
+.guarantee{display:grid;gap:12px;grid-template-columns:repeat(3,1fr);margin-top:4px}
+.guarantee .g{background:#F4F7F5;border-radius:var(--r);padding:16px;text-align:center}
+.guarantee .g svg{width:24px;height:24px;stroke:var(--green);margin:0 auto 8px}
+.guarantee .g b{display:block;font-size:14.5px;font-weight:800}
+.guarantee .g span{font-size:12.5px;color:var(--muted)}
+
+/* footer */
+footer{background:#1E4D3B;color:#DFE9E3;margin-top:44px;padding:24px 16px;text-align:center;font-size:13px}
+footer b{color:#fff}
+footer .lnk{margin-top:6px}
+footer .lnk a{color:#fff;text-decoration:underline;text-underline-offset:3px}
+
+/* toast & cartbar */
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:11px 18px;border-radius:9px;font-size:14px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:60;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.cartbar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;z-index:50;box-shadow:0 -4px 14px rgba(22,24,29,.08)}
+.cartbar .info{min-width:0}
+.cartbar .info .a{font-size:12px;color:var(--muted);font-weight:700}
+.cartbar .info .b{font-size:15px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cartbar .info .b b{color:var(--coral)}
+.cartbar .info .b b.free{color:var(--green)}
+.cartbar .mini{width:150px;flex:none}
+.cartbar .mini .bar{height:7px}
+.cartbar .go{flex:none;background:var(--coral);color:#fff;border:0;border-radius:8px;padding:11px 16px;font-size:14px;font-weight:800}
+.cartbar .go.ready{background:var(--green)}
+
+/* bar */
+.bar{height:12px;background:#EDEDED;border-radius:8px;overflow:hidden;position:relative}
+.bar i{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--green-2),var(--green));border-radius:8px;transition:width .5s ease}
+.bar .pin{position:absolute;left:0;top:-3px;width:2px;height:18px;background:var(--coral);border-radius:2px;transition:left .5s ease}
+.bar .pin::after{content:"";position:absolute;left:-3px;top:-2px;width:8px;height:8px;background:var(--coral);border-radius:50%}
+.bar-cap{position:absolute;right:-2px;top:-7px;font-size:11px;font-weight:800;color:var(--green)}
+
+/* progress inline */
+.prog{max-width:1120px;margin:0 auto;padding:26px 16px 0}
+.prog-in{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px}
+.prog .row{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.prog .row .t{font-size:16px;font-weight:800}
+.prog .row .t b{color:var(--green)}
+.prog .row .t b.free{color:var(--coral)}
+.prog .row .st{font-size:13px;color:var(--muted)}
+.prog .hint{font-size:13px;color:var(--muted);margin-top:10px}
+
+/* responsive */
+@media (min-width:768px){
+  .hero h1{font-size:46px}
+  .hero-in{padding:56px 24px 60px}
+  .rules-in{grid-template-columns:repeat(4,1fr)}
+  .rule-row{flex-direction:column;align-items:flex-start;text-align:left;border-bottom:0;border-right:1px solid var(--line)}
+  .rule-row:last-child{border-right:0}
+  .deals-grid{grid-template-columns:repeat(4,1fr)}
+  .faq{grid-template-columns:1fr 1fr}
+  .faq details{border-bottom:1px solid var(--line)}
+  .guarantee{grid-template-columns:repeat(3,1fr)}
+  .cartbar{display:none}
+  body{padding-bottom:0}
+}
+@media (max-width:767px){
+  .cartbar{display:flex}
+  body{padding-bottom:64px}
+  .rules-in{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#E0522E"/><path d="M8 21 L16 9 L24 21 Z" fill="#fff"/></svg>
+      Harbor
+    </div>
+    <div class="rule">FREE SHIPPING ON ORDERS OVER <b>$39</b> — EVERY ITEM COUNTS</div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-in">
+    <h1>Free shipping on your whole cart — <em>when it reaches $39</em></h1>
+    <p class="sub">Every product in the Harbor store counts toward the $39 free-shipping threshold. Prices start at <b>$2.10</b> — fill a cart with cheap finds and the shipping is on us.</p>
+    <div class="cta-row">
+      <button class="btn" onclick="addToCart('cleaning-cloth')">Shop items from $2.10 <svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+    </div>
+  </div>
+</section>
+
+<div class="rules">
+  <div class="rules-in">
+    <div class="rule-row"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="14" height="12" rx="2"/><path d="M15 8h4l3 4v4h-7z"/><circle cx="7" cy="19" r="2"/><circle cx="17" cy="19" r="2"/></svg></div><div class="txt"><b>Free shipping</b><span>Orders totaling $39 or more (US/CA)</span></div><div class="val">$0</div></div>
+    <div class="rule-row"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg></div><div class="txt"><b>Below $39</b><span>A flat $6 shipping fee applies</span></div><div class="val">$6</div></div>
+    <div class="rule-row"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V6H4v12h8"/><circle cx="17" cy="16" r="3"/><path d="M14 16h6M17 13v6"/></svg></div><div class="txt"><b>Order discounts</b><span>$4 off $30 · $8 off $60, auto-applied</span></div><div class="val">Save more</div></div>
+    <div class="rule-row"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div><div class="txt"><b>Whole store counts</b><span>No special pages — everything adds up</span></div><div class="val">All items</div></div>
+  </div>
+</div>
+
+<div class="prog">
+  <div class="prog-in">
+    <div class="row">
+      <div class="t" id="progText">Your cart: <b>$0.00</b> — add <b>$39.00</b> for FREE shipping</div>
+      <div class="st" id="progState">Add items to see your shipping cost drop</div>
+    </div>
+    <div class="bar" id="progBar"><i id="progFill"></i><span class="pin" id="progPin"></span><span class="bar-cap">$39</span></div>
+    <div class="hint">Add $2 items one by one — shipping stays $6 until your cart hits $39, then it drops to <b>$0</b>.</div>
+  </div>
+</div>
+
+<section>
+  <div class="sec-head"><h2>Popular picks</h2><p>Low prices, real goods, free shipping at $39.</p></div>
+  <div class="deals-grid" id="dealGrid"></div>
+</section>
+
+<section>
+  <div class="sec-head"><h2>Shipping &amp; ordering</h2><p>Straight answers.</p></div>
+  <div class="faq">
+    <details open><summary>How does free shipping work?</summary><div class="a">Add any products from anywhere in the store. When your cart total reaches <b>$39</b>, the entire order ships free to the US and Canada. Every item counts — no separate promo pages needed.</div></details>
+    <details><summary>What if my order is under $39?</summary><div class="a">A flat <b>$6</b> shipping fee applies to US/CA orders below $39. Cart discounts ($4 off $30, $8 off $60) still apply before shipping.</div></details>
+    <details><summary>What's the lowest price item?</summary><div class="a">Plenty of items start around <b>$2.10</b> — bath sponges, cleaning cloths, hair clips, nail clippers. Great for padding your cart toward free shipping.</div></details>
+    <details><summary>Are these real products?</summary><div class="a">Yes — everyday household goods shipped directly. Product images on this prototype show representative photos; final listing images are generated from your catalog.</div></details>
+  </div>
+</section>
+
+<section>
+  <div class="guarantee">
+    <div class="g"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/><path d="M9 12l2 2 4-4"/></svg><b>Prices from $2.10</b><span>Real low-price everyday goods</span></div>
+    <div class="g"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="14" height="12" rx="2"/><path d="M15 8h4l3 4v4h-7z"/><circle cx="7" cy="19" r="2"/><circle cx="17" cy="19" r="2"/></svg><b>Free at $39</b><span>Whole-cart total, US &amp; CA</span></div>
+    <div class="g"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><b>Every item counts</b><span>No special pages, no fine print</span></div>
+  </div>
+</section>
+
+<footer>
+  <div><b>Harbor</b> — everyday goods at everyday prices.</div>
+  <div class="lnk"><a href="harbor-ui-site.html#/home">Browse the full store</a></div>
+</footer>
+
+<div class="cartbar" id="cartbar">
+  <div class="info">
+    <div class="a">SHIPPING</div>
+    <div class="b" id="cartLine">Cart <b>$0.00</b> · <b>$6.00</b> shipping</div>
+  </div>
+  <div class="mini"><div class="bar"><i id="miniFill" style="width:0%"></i></div></div>
+  <button class="go" id="goBtn" onclick="goCart()">View cart</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var GOODS = [
+  {slug:"bath-sponge", nm:"Bath sponge with loop", pr:2.10, was:3.00, deal:true},
+  {slug:"cleaning-cloth", nm:"Microfiber cleaning cloths (set)", pr:2.80, was:4.00, deal:true},
+  {slug:"hair-clips", nm:"Pastel hair clips (5-pack)", pr:2.80, was:0, deal:true},
+  {slug:"nail-clipper", nm:"Stainless nail clipper", pr:2.80, was:0, deal:true},
+  {slug:"sponge-refill", nm:"Cellulose sponge refills", pr:5.00, was:0, deal:false},
+  {slug:"pot-brush", nm:"Wooden-handle pot brush", pr:5.00, was:0, deal:false},
+  {slug:"lint-roller", nm:"Lint roller with handle", pr:7.00, was:0, deal:false},
+  {slug:"lick-mat", nm:"Pet lick mat, silicone", pr:7.00, was:0, deal:false},
+  {slug:"oil-sprayer", nm:"Glass oil spray bottle", pr:8.00, was:0, deal:false},
+  {slug:"dustpan-set", nm:"Dustpan & brush set", pr:8.00, was:0, deal:false},
+  {slug:"folding-bowl", nm:"Collapsible pet bowl", pr:8.00, was:0, deal:false},
+  {slug:"folding-bin", nm:"Foldable storage bin", pr:10.00, was:0, deal:false}
+];
+var SHIP_FREE = 39, FLAT = 6;
+var cart = {}, total = 0;
+function money(n){return "$"+n.toFixed(2);}
+function shipFee(){return total>=SHIP_FREE?0:FLAT;}
+
+function renderGrid(){
+  var g = document.getElementById("dealGrid"), h = "";
+  GOODS.forEach(function(o){
+    h += '<div class="pcard"><div class="ph"><img src="assets/products-photo/'+o.slug+'.jpg" alt="'+o.nm+'" loading="lazy">'+
+      (o.deal?'<span class="badge">DEAL</span>':'')+'</div>'+
+      '<div class="body"><div class="nm">'+o.nm+'</div>'+
+      '<div class="pr"><span class="now">'+money(o.pr)+'</span>'+(o.was?'<s>'+money(o.was)+'</s>':'')+'</div>'+
+      '<button class="add" id="add-'+o.slug+'" onclick="addToCart(\''+o.slug+'\')">Add to cart</button>'+
+      '</div></div>';
+  });
+  g.innerHTML = h;
+}
+
+function addToCart(slug){
+  var o = GOODS.filter(function(x){return x.slug===slug;})[0];
+  if(!o||cart[slug]) return;
+  cart[slug]=1; total += o.pr;
+  var btn = document.getElementById("add-"+slug);
+  if(btn){btn.className="add on"; btn.textContent="In cart ✓";}
+  update();
+  toast(money(o.pr)+" added — shipping "+(total>=SHIP_FREE?"FREE":"$6.00"));
+}
+
+function update(){
+  var left = Math.max(0, SHIP_FREE-total);
+  var pct = Math.min(100, total/SHIP_FREE*100);
+  var fill = document.getElementById("progFill"), pin = document.getElementById("progPin");
+  fill.style.width = pct+"%";
+  pin.style.left = "calc("+pct+"% - 1px)";
+  document.getElementById("miniFill").style.width = Math.min(100,pct)+"%";
+  var tf = document.getElementById("progText"), st = document.getElementById("progState");
+  if(left<=0){
+    tf.innerHTML = 'Your cart: <b class="free">'+money(total)+'</b> — <b class="free">shipping $0.00</b>';
+    st.textContent = "Free shipping unlocked.";
+    document.getElementById("goBtn").className="go ready";
+    document.getElementById("goBtn").textContent="Checkout";
+  }else{
+    tf.innerHTML = 'Your cart: <b>'+money(total)+'</b> — add <b>'+money(left)+'</b> to reach FREE shipping';
+    st.textContent = "Shipping stays $6 until $39";
+    document.getElementById("goBtn").className="go";
+    document.getElementById("goBtn").textContent="View cart";
+  }
+  document.getElementById("cartLine").innerHTML = left<=0
+    ? 'Cart <b class="free">'+money(total)+'</b> · <b class="free">shipping FREE</b>'
+    : 'Cart <b>'+money(total)+'</b> · <b>'+money(shipFee())+'</b> shipping';
+}
+
+function toast(msg){
+  var t = document.getElementById("toast");
+  t.innerHTML = msg;
+  t.classList.add("show");
+  clearTimeout(t._h);
+  t._h = setTimeout(function(){t.classList.remove("show");}, 2200);
+}
+function goCart(){toast("Demo: cart view opens in the store prototype");}
+
+renderGrid();
+update();
+</script>
+</body>
+</html>

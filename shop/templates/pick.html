@@ -1,0 +1,22 @@
+{% from "shot.html" import shot %}
+<article class="pick">
+  <a class="card" href="{{ href('/p/' ~ item.sku, country) }}">
+    <img src="{{ shot(item.image) }}" width="480" height="480" alt="{{ item.name }}">
+    {% if item.sponsored %}<span class="sponsored">{{ t.sponsored }}</span>{% endif %}
+    <span class="name">{{ item.name }}</span>
+    <span class="price">{{ item.price }}</span>
+  </a>
+  {% if item.offers|length > 1 %}
+  <a class="btn quiet" href="{{ href('/p/' ~ item.sku, country) }}">{{ t.choose }}</a>
+  {% else %}
+  <form method="post" action="/cart/add">
+    <input type="hidden" name="sku" value="{{ item.sku }}">
+    <input type="hidden" name="country" value="{{ country }}">
+    <input type="hidden" name="qty" value="1">
+    <input type="hidden" name="next" value="{{ addon_next|default('/cart') }}">
+    {% if item.offers|length == 1 %}<input type="hidden" name="offer" value="{{ item.offers[0].id }}">{% endif %}
+    {% if buy %}<input type="hidden" name="buy" value="1">{% endif %}
+    <button class="btn quiet" type="submit">{{ t.add_on }}</button>
+  </form>
+  {% endif %}
+</article>

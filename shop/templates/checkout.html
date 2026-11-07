@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+{% block body_class %} fn-checkout-page{% endblock %}
+{% block body %}
+<div class="fn-checkout">
+<h1>{{ t.checkout }}</h1>
+{% if code or errors or stock_sku %}
+<div class="checkout-alert" id="checkout-alert">
+  {% if code == 'min' %}<p>{{ t.checkout_blocked }}。{{ min_gap_text }}</p>{% endif %}
+  {% if code == 'empty' %}<p>{{ t.cart_empty }}</p>{% endif %}
+  {% if code == 'rate' %}<p>{{ t.no_rate }}</p>{% endif %}
+  {% if code == 'coupon' %}<p>{{ t.checkout_coupon }}</p>{% endif %}
+  {% if code == 'stock' or stock_sku %}<p>{{ t.checkout_stock }}</p>{% endif %}
+  {% if errors %}<p>{{ t.checkout_need }}</p>{% endif %}
+</div>
+{% endif %}
+{% if bill %}
+<p class="due-banner">{{ t.due }} <strong class="price" data-due-local="{{ bill.due_local }}">{{ due_text }}</strong></p>
+{% else %}
+<p class="due-banner">{{ t.due }} <strong class="price">{{ due_text }}</strong></p>
+{% endif %}
+<p class="ship-line">{{ promise_line }}</p>
+{% if nudge and nudge.kind != 'done' %}
+{% set inline = false %}
+{% include "goal.html" %}
+{% endif %}
+<form class="checkout" method="post" action="{{ href('/checkout', country) }}">
+  <input type="hidden" name="fbp" id="ad-fbp" value="">
+  <input type="hidden" name="ttp" id="ad-ttp" value="">
+  <input type="hidden" name="fbc" id="ad-fbc" value="">
+  <script>(function(){try{var c=document.cookie||"";function g(n){var m=c.match(new RegExp("(?:^|; )"+n+"=([^;]*)"));return m?decodeURIComponent(m[1]):"";}var fbp=g("_fbp"),ttp=g("_ttp");var ad=g("harbor_ad");var fbc="";try{fbc=(JSON.parse(ad||"{}").fbc)||""}catch(e){}var a=document.getElementById("ad-fbp");if(a)a.value=fbp;a=document.getElementById("ad-ttp");if(a)a.value=ttp;a=document.getElementById("ad-fbc");if(a)a.value=fbc;}catch(e){}})();</script>
+
+  <input type="hidden" name="submit_id" value="{{ submit_id }}">
+  <input type="hidden" name="buy" value="{{ 1 if buy else 0 }}">
+  <div class="checkout-main">
+  <fieldset class="address-box">
+    <legend>{{ t.address }}</legend>
+    {% if addresses %}
+    <div class="addr-book">
+      {% for row in addresses %}
+      <label class="addr-pick">
+        <input type="radio" name="addr_pick" value="{{ loop.index0 }}" {% if address_picked == loop.index0 %}checked{% endif %}>
+        <span><b>{{ row.name }}</b>{% if row.phone %} {{ row.phone }}{% endif %}<br>{{ row.address }}{% if row.city %} · {{ row.city }}{% endif %}{% if row.region %} {{ row.region }}{% endif %}{% if row.postal %} {{ row.postal }}{% endif %}</span>
+      </label>
+      {% endfor %}
+      <label class="addr-pick">
+        <input type="radio" name="addr_pick" value="new" {% if address_picked < 0 %}checked{% endif %}>
+        <span>{{ t.new_address or '添加新地址' }}</span>
+      </label>
+    </div>
+    <script type="application/json" id="addr-book">{{ addresses | tojson }}</script>
+    {% endif %}
+    <label {% if 'email' in errors %}class="field-error" data-field="email"{% endif %}>{{ t.email }} <input name="email" type="email" value="{{ values.email }}" autocomplete="email">{% if 'email' in errors %}<span class="need">{{ t.required }}</span>{% endif %}</label>
+    <label {% if 'name' in errors %}class="field-error" data-field="name"{% endif %}>{{ t.full_name }} <input name="name" value="{{ values.name }}" autocomplete="name">{% if 'name' in errors %}<span class="need">{{ t.required }}</span>{% endif %}</label>
+    {% include "address_fields.html" %}
+    <label {% if 'phone' in errors %}class="field-error" data-field="phone"{% endif %}>{{ t.phone }} <input name="phone" value="{{ values.phone }}" autocomplete="tel">{% if 'phone' in errors %}<span class="need">{{ t.required }}</span>{% endif %}</label>
+  </fieldset>
+  {% if coupons %}
+  <fieldset>
+    <legend>{{ t.coupon }}</legend>
+    <p class="muted">{{ t.coupon_best }}</p>
+    <label><input type="radio" name="coupon_id" value="" {% if not best_id %}checked{% endif %}> {{ t.coupon_none }}</label>
+    {% for coupon in coupons %}
+    <label><input type="radio" name="coupon_id" value="{{ coupon.id }}" {% if best_id == coupon.id %}checked{% endif %}> {{ coupon.name }} · {{ coupon.amount }} · {{ t.coupon_rule.format(over=coupon.threshold) }}</label>
+    {% endfor %}
+  </fieldset>
+  {% endif %}
+  <label>{{ t.gift }} <input name="gift" value=""></label>
+  <label><input type="checkbox" name="use_balance" value="1"> {{ t.balance }}</label>
+  {% if balance_note %}<p class="muted">{{ balance_note }}</p>{% endif %}
+  </div>
+  <aside class="summary checkout-pay">
+    <fieldset class="pay-box">
+      <legend>{{ t.pay_method }}</legend>
+      {% for method in pay_methods %}
+      <label class="pay-choice">
+        <input type="radio" name="pay_method" value="{{ method }}" {% if loop.first %}checked{% endif %}>
+        {% if method == 'paypal' %}
+        <span class="paypal-logo" aria-hidden="true"><b>Pay</b><b>Pal</b></span>
+        <span>{{ t.paypal }}</span>
+        {% elif method == 'stripe' %}
+        <span class="card-logos" aria-hidden="true">
+          <span class="card-mark visa">VISA</span>
+          <span class="card-mark mc">MC</span>
+          <span class="card-mark ax">AMEX</span>
+        </span>
+        <span>{{ t.card }}</span>
+        {% else %}
+        <span>连连</span>
+        {% endif %}
+      </label>
+      {% endfor %}
+      {% if not pay_methods %}<p class="muted">暂时不能在线支付</p>{% endif %}
+      <p class="muted">{{ t.pay_later_note }}</p>
+    </fieldset>
+    <h2>{{ t.summary }}</h2>
+    <div class="checkout-thumbs">
+      {% for line in lines %}
+      <img src="{{ line.image }}" alt="{{ line.name }}" width="64" height="64" {% if line.sku == stock_sku %}data-stock="{{ line.sku }}"{% endif %}>
+      {% endfor %}
+    </div>
+    <p>{{ t.merchandise }} {{ merchandise_text }}</p>
+    <p>{{ t.discount }} {{ discount_text }}</p>
+    {% if coupon_text %}<p>{{ t.coupon }} {{ coupon_text }}</p>{% endif %}
+    <p class="met">{{ t.free_shipping }}</p>
+    {% if checkout_ok is defined and checkout_ok == false %}
+    <div class="checkout-alert"><p>{{ t.checkout_blocked }}。{{ min_gap_text }}</p></div>
+    {% endif %}
+    {% if promise_line %}<p class="muted">{{ promise_line }}</p>{% endif %}
+    {% if balance_text %}<p>{{ t.balance }} {{ balance_text }}</p>{% endif %}
+    <p class="due">{{ t.due }} {{ due_text }}</p>
+    {% if code == 'empty' or code == 'rate' or code == 'coupon' or code == 'stock' or stock_sku or errors %}
+    <div class="checkout-alert">
+      {% if code == 'empty' %}<p>{{ t.cart_empty }}</p>{% endif %}
+      {% if code == 'rate' %}<p>{{ t.no_rate }}</p>{% endif %}
+      {% if code == 'coupon' %}<p>{{ t.checkout_coupon }}</p>{% endif %}
+      {% if code == 'stock' or stock_sku %}<p>{{ t.checkout_stock }}</p>{% endif %}
+      {% if errors %}<p>{{ t.checkout_need }}</p>{% endif %}
+    </div>
+    {% endif %}
+    <div class="fn-checkout-paybar">
+  <div class="fn-checkout-due">{{ t.due }} <strong class="price">{{ due_text }}</strong></div>
+  {% if checkout_ok is defined and checkout_ok == false %}
+  <button class="btn place-order" type="button" disabled>{{ t.checkout_blocked }}</button>
+  {% else %}
+  <button class="btn place-order" type="submit">{{ t.place_order }}</button>
+  {% endif %}
+</div>
+    <div class="checkout-trust">
+      <p><b>{{ t.trust_secure_pay }}</b> — {{ t.trust_secure_pay_line }}</p>
+      <p><b>{{ t.trust_late_credit }}</b> — {% if late_credit_text %}{{ t.trust_late_credit_line.format(amount=late_credit_text) }}{% else %}{{ t.trust_late_credit_line.format(amount='$5.00') }}{% endif %}</p>
+      <p>{{ t.returns_window }}</p>
+      <p>{{ t.trust_track_line }}</p>
+      {% if promise_line %}<p class="met">{{ promise_line }}</p>{% endif %}
+      {% if free_ship_policy and not cart_ship_met and cart_gap %}<p class="ship-gap">{{ cart_gap }}</p>{% endif %}
+    </div>
+  </aside>
+</form>
+{% if addons %}
+<section class="shelf">
+  <div class="shelf-head"><h2>{{ t.add_more }}</h2></div>
+  <div class="product-grid">
+    {% set addon_next = '/checkout' %}
+    {% for item in addons %}{% include "pick.html" %}{% endfor %}
+  </div>
+</section>
+{% endif %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    var form = document.querySelector("form.checkout");
+    var need = {{ t.required | tojson }};
+    var fill = {{ t.checkout_need | tojson }};
+    var names = ["email", "name", "phone", "region", "city", "postal", "address"];
+    function labelOf(input) {
+      return input.closest("label");
+    }
+    function mark(input, bad) {
+      var label = labelOf(input);
+      if (!label) return;
+      label.classList.toggle("field-error", bad);
+      var hint = label.querySelector(".need");
+      if (bad && !hint) {
+        hint = document.createElement("span");
+        hint.className = "need";
+        hint.textContent = need;
+        label.appendChild(hint);
+      }
+      if (!bad && hint) hint.remove();
+    }
+    function firstProblem() {
+      return document.querySelector(".field-error, .checkout-alert, img[data-stock]");
+    }
+    if (form) {
+      form.addEventListener("submit", function (event) {
+        var missing = [];
+        names.forEach(function (name) {
+          var input = form.querySelector('[name="' + name + '"]');
+          if (!input) return;
+          var label = labelOf(input);
+          if (label && label.hidden) return;
+          var value = String(input.value || "").trim();
+          var bad = !value || (name === "email" && value.indexOf("@") < 0);
+          mark(input, bad);
+          if (bad) missing.push(label || input);
+        });
+        if (!missing.length) return;
+        event.preventDefault();
+        var banner = document.getElementById("checkout-alert");
+        if (!banner) {
+          banner = document.createElement("div");
+          banner.id = "checkout-alert";
+          banner.className = "checkout-alert";
+          banner.textContent = fill;
+          var pay = form.querySelector(".place-order");
+          if (pay && pay.parentNode) pay.parentNode.insertBefore(banner, pay);
+          else form.insertBefore(banner, form.firstChild);
+        }
+        missing[0].scrollIntoView({ block: "center" });
+      });
+    }
+    var target = firstProblem();
+    if (target) target.scrollIntoView({ block: "center" });
+  });
+</script>
+</div>
+{% endblock %}

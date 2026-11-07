@@ -1,0 +1,28 @@
+const { contextBridge, ipcRenderer } = require('electron');
+
+contextBridge.exposeInMainWorld('csDesk', {
+  getConfig: () => ipcRenderer.invoke('get-config'),
+  setBaseUrl: (url) => ipcRenderer.invoke('set-base-url', url),
+  login: (payload) => ipcRenderer.invoke('login', payload),
+  logout: () => ipcRenderer.invoke('logout'),
+  inbox: (opts) => ipcRenderer.invoke('inbox', opts || {}),
+  pollInbox: (opts) => ipcRenderer.invoke('poll-inbox', opts || {}),
+  getRoom: (roomId) => ipcRenderer.invoke('get-room', roomId),
+  pollRoom: (opts) => ipcRenderer.invoke('poll-room', opts || {}),
+  reply: (opts) => ipcRenderer.invoke('reply', opts || {}),
+  closeRoom: (roomId) => ipcRenderer.invoke('close-room', roomId),
+  notify: (opts) => ipcRenderer.invoke('notify', opts || {}),
+  getMe: () => ipcRenderer.invoke('get-me'),
+  setStatus: (opts) => ipcRenderer.invoke('set-status', opts || {}),
+  getOrders: (opts) => ipcRenderer.invoke('get-orders', opts || {}),
+  getOrder: (orderId) => ipcRenderer.invoke('get-order', orderId),
+  getProduct: (sku) => ipcRenderer.invoke('get-product', sku),
+  searchProducts: (q) => ipcRenderer.invoke('search-products', q),
+  catalog: () => ipcRenderer.invoke('catalog'),
+  getAgents: () => ipcRenderer.invoke('get-agents'),
+  transferRoom: (payload) => ipcRenderer.invoke('transfer-room', payload),
+  toAi: (opts) => ipcRenderer.invoke('to-ai', opts || {}),
+  getStickers: () => ipcRenderer.invoke('get-stickers'),
+  uploadImage: (payload) => ipcRenderer.invoke('upload-image', payload || {}),
+  setTyping: (opts) => ipcRenderer.invoke('set-typing', opts || {}),
+});

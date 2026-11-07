@@ -1,0 +1,39 @@
+﻿{# In-page auth modal — D45/D46/D47/D48. Deep-link /login /register pages remain. #}
+<div id="hb-auth-modal" class="hb-auth" hidden data-mode="login" role="dialog" aria-modal="true" aria-labelledby="hb-auth-title">
+  <div class="hb-auth-dim" data-auth-close tabindex="-1"></div>
+  <div class="hb-auth-card">
+    <button type="button" class="hb-auth-x" data-auth-close aria-label="Close">×</button>
+    <p id="hb-auth-error" class="hb-auth-error" hidden></p>
+
+    <div data-auth-pane="login">
+      <h2 id="hb-auth-title">{{ t.login }}</h2>
+      <p class="hb-auth-sub">Stay on this page after signing in</p>
+      <form data-auth-form="login" action="{{ href('/login', country) }}" method="post">
+        <label class="hb-auth-field">{{ t.email }}
+          <input name="email" type="email" autocomplete="email" required placeholder="you@email.com">
+        </label>
+        <label class="hb-auth-field">{{ t.password }}
+          <input name="password" type="password" autocomplete="current-password" required>
+        </label>
+        <p class="hb-auth-links"><a href="{{ href('/reset-password', country) }}">{{ t.reset_password }}</a></p>
+        <button class="btn hb-auth-primary" type="submit">{{ t.login }}</button>
+        <button class="btn ghost hb-auth-secondary" type="button" data-auth-switch="register">{{ t.create_account }}</button>
+      </form>
+    </div>
+
+    <div data-auth-pane="register" hidden>
+      <h2>{{ t.register }}</h2>
+      <p class="hb-auth-sub">Create an account · stay on this page</p>
+      <form data-auth-form="register" action="{{ href('/register', country) }}" method="post">
+        <label class="hb-auth-field">{{ t.email }}
+          <input name="email" type="email" autocomplete="email" required placeholder="you@email.com">
+        </label>
+        <label class="hb-auth-field">{{ t.password }}
+          <input name="password" type="password" autocomplete="new-password" required minlength="8">
+        </label>
+        <button class="btn hb-auth-primary" type="submit">{{ t.register_go }}</button>
+        <button class="btn ghost hb-auth-secondary" type="button" data-auth-switch="login">{{ t.have_account }}</button>
+      </form>
+    </div>
+  </div>
+</div>

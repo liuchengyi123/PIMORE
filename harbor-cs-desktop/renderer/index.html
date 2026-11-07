@@ -1,0 +1,212 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' http: https: data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' http://127.0.0.1:* http://localhost:*" />
+  <title>Harbor 客服台</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="loginView" class="login-view">
+    <form id="loginForm" class="login-card">
+      <div class="brand"><span class="mark">H</span><div><strong>Harbor 客服台</strong><small>独立桌面端 · Desktop</small></div></div>
+      <label>店铺地址<input id="baseUrl" name="base" value="http://127.0.0.1:8787" /></label>
+      <label>账号<input id="username" name="username" autocomplete="username" autofocus /></label>
+      <label>密码<input id="password" name="password" type="password" autocomplete="current-password" /></label>
+      <button class="btn primary" type="submit">登录</button>
+      <p id="loginError" class="error" hidden></p>
+      <p class="hint">本地默认：账号 admin，密码 harbor-local。需店铺服务已启动。</p>
+    </form>
+  </div>
+
+  <div id="appView" class="app-view" hidden>
+    <header class="topbar">
+      <div class="brand mini"><span class="mark">H</span><strong>Harbor 客服台</strong></div>
+      <div class="top-stats">
+        <span id="statOpen">进行中 0</span>
+        <span id="statUnread" class="badge-pill">未读 0</span>
+      </div>
+      <div class="agent-box">
+        <div class="agent-who">
+          <strong id="agentName">客服</strong>
+          <small id="agentTitle" class="muted"></small>
+        </div>
+        <select id="agentStatus" title="工作状态">
+          <option value="online">在线</option>
+          <option value="away">离开</option>
+          <option value="busy">挂起</option>
+          <option value="offline">离线</option>
+        </select>
+        <span id="statusHint" class="status-hint muted small" hidden data-figma="S07">离开/挂起时新会话不会优先分配给你</span>
+      </div>
+      <button id="btnSettings" class="btn ghost" type="button" title="设置">设置</button>
+      <div class="top-actions">
+        <span id="baseLabel" class="muted"></span>
+        <button id="btnRefresh" class="btn ghost" type="button">刷新</button>
+        <button id="btnLogout" class="btn ghost" type="button">退出</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <aside class="inbox">
+        <div class="inbox-tools">
+          <div class="tabs">
+            <button type="button" data-status="open" class="tab active">进行中</button>
+            <button type="button" data-status="closed" class="tab">已关闭</button>
+          </div>
+          <input id="searchQ" type="search" placeholder="搜索访客 / 商品 / 邮箱" />
+          <div id="inboxChips" class="inbox-chips" role="tablist" aria-label="会话筛选">
+            <button type="button" data-chip="all" class="on">全部</button>
+            <button type="button" data-chip="mine">我的</button>
+            <button type="button" data-chip="unassigned">未分配</button>
+            <button type="button" data-chip="hung">挂起</button>
+          </div>
+        </div>
+        <div id="roomList" class="room-list"></div>
+        <div id="closedEmpty" class="empty empty-closed" hidden data-figma="S10">
+          <strong>没有匹配的已关闭会话</strong>
+          <p class="muted small">试试邮箱、商品名或订单号；清空搜索可查看最近关闭会话。</p>
+        </div>
+      </aside>
+
+      <section class="chat">
+        <div id="chatEmpty" class="empty empty-selection" data-figma="S03">
+          <div class="empty-ico">💬</div>
+          <strong>选择左侧会话开始回复</strong>
+          <p class="muted small">进行中会话、未分配与挂起可在上方筛选。关闭的会话在「已关闭」。</p>
+        </div>
+        <div id="inboxEmpty" class="empty empty-inbox" hidden data-figma="S09">
+          <div class="empty-ico">📭</div>
+          <strong>暂无进行中会话</strong>
+          <p class="muted small">新访客进线后会出现在这里。可切换到「已关闭」查看历史，或调整筛选芯片。</p>
+        </div>
+        <div id="chatPanel" hidden>
+          <div id="aiBanner" class="ai-banner" hidden data-figma="S06">
+            <span class="ai-pill">AI 接待中</span>
+            <span class="muted small">[ops] 仅客服台可见 · 用户端无 AI 角标 · 手动回复将接回人工</span>
+          </div>
+          <div class="chat-head">
+            <div>
+              <strong id="chatTitle">会话</strong>
+              <div id="chatMeta" class="muted small"></div>
+              <div id="chatAssignee" class="assignee-line muted small"></div>
+            </div>
+            <div class="chat-head-actions">
+              <select id="transferSelect" class="transfer-select" title="转交给其他在线客服">
+                <option value="">转交给…</option>
+              </select>
+              <button id="btnTransfer" class="btn ghost" type="button">转交</button>
+              <button id="btnToAi" class="btn ghost" type="button" title="转给 AI 自动接待">转给 AI</button>
+              <button id="btnCloseRoom" class="btn danger ghost" type="button">结束会话</button>
+            </div>
+          </div>
+          <div id="msgList" class="msg-list"></div>
+          <form id="replyForm" class="composer">
+            <div id="emojiBar" class="emoji-bar" hidden></div>
+            <div class="composer-row">
+              <button id="emojiToggle" class="btn ghost emoji-toggle" type="button" title="表情">😊</button>
+              <button id="imageToggle" class="btn ghost image-toggle" type="button" title="发送图片">📎</button>
+              <input type="file" id="imagePick" accept="image/*" hidden />
+              <textarea id="replyBody" rows="3" placeholder="输入回复，Enter 发送，Shift+Enter 换行"></textarea>
+              <button class="btn primary" type="submit">发送</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <aside class="context">
+        <h3>访客信息</h3>
+        <div id="visitorInfo" class="info-card"><div class="muted small">选择会话后显示</div></div>
+        <h3>当前商品</h3>
+        <div id="currentProduct" class="product-card empty-card">暂无</div>
+        <h3>发送其他商品</h3>
+        <div class="sku-search-box">
+          <input id="skuSearch" type="search" placeholder="搜索 SKU / 商品名" />
+          <div id="skuSearchResults" class="sku-search-results"></div>
+        </div>
+        <h3>订单 / 物流</h3>
+        <div id="ordersList" class="orders-list"><div class="muted small">暂无</div></div>
+        <h3>浏览足迹</h3>
+        <div id="historyList" class="history-list"><div class="muted small">暂无</div></div>
+      </aside>
+    <!-- Transfer modal S05 -->
+    <div id="transferModal" class="sku-modal transfer-modal-wrap" hidden data-figma="S05">
+      <div class="sku-modal-card">
+        <div class="sku-modal-head">
+          <strong>转交给同事</strong>
+          <button type="button" id="transferModalClose" class="btn ghost">关闭</button>
+        </div>
+        <p class="muted small">接手客服可见完整历史 · 顶栏显示「接待」与「此前」花名</p>
+        <label class="transfer-label">选择在线客服
+          <select id="transferModalSelect"></select>
+        </label>
+        <label class="transfer-label">备注（可选）
+          <input id="transferNote" type="text" placeholder="例如：退款诉求，已核对订单" />
+        </label>
+        <div class="sku-modal-head" style="margin-top:12px">
+          <span></span>
+          <button type="button" id="transferModalConfirm" class="btn primary">确认转交</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings panel S11-S14 -->
+    <div id="settingsPanel" class="settings-overlay" hidden data-figma="S11">
+      <div class="settings-panel">
+        <div class="sku-modal-head">
+          <strong>客服台设置</strong>
+          <button type="button" id="settingsClose" class="btn ghost">关闭</button>
+        </div>
+        <div class="settings-tabs">
+          <button type="button" class="on" data-stab="profile">资料</button>
+          <button type="button" data-stab="canned">快捷回复</button>
+          <button type="button" data-stab="notify">通知</button>
+          <button type="button" data-stab="desk">工作台</button>
+        </div>
+        <div id="stab-profile" class="stab-body">
+          <label>花名<input id="setNick" type="text" placeholder="小林" /></label>
+          <label>班次标题<input id="setTitle" type="text" placeholder="晚班客服" /></label>
+          <p class="muted small">显示在顶栏，访客不可见班次说明。</p>
+        </div>
+        <div id="stab-canned" class="stab-body" hidden>
+          <textarea id="setCanned" rows="6" placeholder="每行一条快捷回复"></textarea>
+        </div>
+        <div id="stab-notify" class="stab-body" hidden>
+          <label class="chk"><input id="setSound" type="checkbox" checked /> 新消息提示音</label>
+          <label class="chk"><input id="setDesktop" type="checkbox" checked /> 桌面通知</label>
+        </div>
+        <div id="stab-desk" class="stab-body" hidden>
+          <div class="admin-cs-link" style="margin:8px 0 12px;padding:10px;border:1px solid #E2E6EE;border-radius:8px;background:#F7F4EF">
+            <strong style="display:block;margin-bottom:4px;color:#0F2744">翻译 / IP / 话术 / 档案</strong>
+            <p class="muted small" style="margin:0 0 8px">全局客服设置在后台 /admin/cs 维护，此处仅本地工作台偏好。</p>
+            <a class="btn teal sm" href="/admin/cs" target="_blank" rel="noopener">打开后台客服设置</a>
+          </div>
+
+          <label class="chk"><input id="setCompact" type="checkbox" /> 紧凑会话列表</label>
+          <label class="chk"><input id="setShowOps" type="checkbox" checked /> 显示 [ops] 系统提示</label>
+        </div>
+        <button type="button" id="settingsSave" class="btn primary" style="margin-top:12px;width:100%">保存</button>
+      </div>
+    </div>
+
+    <!-- SKU picker modal -->
+    <div id="skuPickerModal" class="sku-modal" hidden>
+      <div class="sku-modal-card">
+        <div class="sku-modal-head">
+          <strong id="skuPickerTitle">选择规格后发送</strong>
+          <button type="button" id="skuPickerClose" class="btn ghost">关闭</button>
+        </div>
+        <p class="muted small sku-picker-hint" data-figma="S08">选择规格后再发送商品卡给访客</p>
+        <div id="skuPickerBody" class="sku-modal-body"></div>
+      </div>
+    </div>
+    </main>
+  </div>
+
+  <audio id="pingSound" preload="auto">
+    <source src="ping.wav" type="audio/wav" />
+  </audio>
+  <script src="app.js"></script>
+</body>
+</html>
+

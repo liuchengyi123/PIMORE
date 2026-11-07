@@ -1,0 +1,9 @@
+﻿{% extends "base.html" %}
+{% block body %}
+<div class="fn-empty-block">
+  <div style="font-size:40px" aria-hidden="true">☁</div>
+  <h1 style="margin-top:12px">{{ t.offline if t.offline is defined else "You're offline" }}</h1>
+  <p class="tiny" style="margin-top:8px">{{ t.offline_hint if t.offline_hint is defined else 'Check your connection, then retry.' }}</p>
+  <button class="btn" style="margin-top:20px" type="button" onclick="location.reload()">{{ t.retry if t.retry is defined else 'Retry' }}</button>
+</div>
+{% endblock %}

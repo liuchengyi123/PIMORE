@@ -1,0 +1,9 @@
+{% macro shot(url) -%}
+{%- set name = (url or '').rsplit('/', 1)[-1] -%}
+{%- set stem = name[:-4] if name.endswith('.svg') else '' -%}
+{%- if stem in ['bath-sponge','cleaning-cloth','drain-rack','dustpan-set','folding-bin','folding-bowl','gap-brush','hair-clips','lick-mat','lint-roller','measuring-spoons','nail-clipper','oil-sprayer','pet-lint-roller','pot-brush','seasoning-box','silicone-spatula','sink-strainer','sponge-refill','waste-bag-holder'] -%}
+/static/products/{{ stem }}.jpg
+{%- else -%}
+{{ url }}
+{%- endif -%}
+{%- endmacro %}

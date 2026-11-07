@@ -1,0 +1,206 @@
+{% set spec = address_formats[values.ship_country] if values.ship_country in address_formats else address_formats['US'] %}
+<button class="btn quiet" id="use-here" type="button">{{ t.locate }}</button>
+<p class="note">{{ t.locate_note }}</p>
+<input type="hidden" name="ship_country" id="ship-country" value="{{ values.ship_country }}">
+<p class="locked-country">{{ t.country }} <strong>{% for code, label in ship_countries %}{% if code == values.ship_country %}{{ label }}{% endif %}{% endfor %}</strong></p>
+<div class="addr-fields" id="addr-fields">
+  <label class="addr-field{% if 'region' in errors %} field-error{% endif %}" data-part="region"{% if 'region' in errors %} data-field="region"{% endif %}>
+    <span class="caption">{{ spec.labels.region }}</span>
+    <select name="region" id="ship-region" autocomplete="address-level1" data-current="{{ values.region }}">
+      <option value="">{{ t.pick_region }}</option>
+    </select>
+    {% if 'region' in errors %}<span class="need">{{ t.required }}</span>{% endif %}
+  </label>
+  <label class="addr-field{% if 'city' in errors %} field-error{% endif %}" data-part="city"{% if 'city' in errors %} data-field="city"{% endif %}>
+    <span class="caption">{{ spec.labels.city }}</span>
+    <select name="city" id="ship-city" autocomplete="address-level2" data-current="{{ values.city }}">
+      <option value="">{{ t.pick_city }}</option>
+    </select>
+    {% if 'city' in errors %}<span class="need">{{ t.required }}</span>{% endif %}
+  </label>
+  <label class="addr-field{% if 'postal' in errors %} field-error{% endif %}" data-part="postal"{% if 'postal' in errors %} data-field="postal"{% endif %}>
+    <span class="caption">{{ spec.labels.postal }}</span>
+    <input name="postal" value="{{ values.postal }}" autocomplete="postal-code">
+    {% if 'postal' in errors %}<span class="need">{{ t.required }}</span>{% endif %}
+  </label>
+  <label class="addr-field{% if 'address' in errors %} field-error{% endif %}" data-part="line"{% if 'address' in errors %} data-field="address"{% endif %}>
+    <span class="caption">{{ spec.labels.line }}</span>
+    <input name="address" value="{{ values.address }}" autocomplete="address-line1">
+    {% if 'address' in errors %}<span class="need">{{ t.required }}</span>{% endif %}
+  </label>
+  <label class="addr-field" data-part="number" hidden>
+    <span class="caption">{{ spec.labels.number }}</span>
+    <input name="street_number" value="{{ values.street_number }}" inputmode="numeric" autocomplete="off">
+  </label>
+  <label class="addr-field" data-part="district" hidden>
+    <span class="caption">{{ spec.labels.district }}</span>
+    <input name="district" value="{{ values.district }}" autocomplete="address-level3">
+  </label>
+</div>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    var formats = {{ address_formats | tojson }};
+    var ship = document.getElementById("ship-country");
+    var region = document.getElementById("ship-region");
+    var city = document.getElementById("ship-city");
+    var postal = document.querySelector('[name="postal"]');
+    var line = document.querySelector('[name="address"]');
+    var button = document.getElementById("use-here");
+    if (!ship || !region || !city) return;
+    var pickRegion = {{ t.pick_region | tojson }};
+    var pickCity = {{ t.pick_city | tojson }};
+
+    function specFor() {
+      return formats[ship.value] || formats.US;
+    }
+
+    function applyFormat() {
+      var spec = specFor();
+      var labels = (spec.regions && spec.regions[region.value]) || spec.labels;
+      document.querySelectorAll(".addr-field").forEach(function (node) {
+        var part = node.getAttribute("data-part");
+        var index = spec.order.indexOf(part);
+        node.hidden = index < 0;
+        node.style.order = index < 0 ? "0" : String(index);
+        var caption = node.querySelector(".caption");
+        if (caption && labels[part]) caption.textContent = labels[part];
+      });
+    }
+
+    function blank(select, text) {
+      select.innerHTML = "";
+      var option = document.createElement("option");
+      option.value = "";
+      option.textContent = text;
+      select.appendChild(option);
+    }
+
+    function choose(select, value) {
+      if (!value) return;
+      var wanted = String(value).toLowerCase();
+      for (var i = 0; i < select.options.length; i++) {
+        var option = select.options[i];
+        if (option.value === value || option.textContent === value || option.textContent.toLowerCase() === wanted) {
+          select.selectedIndex = i;
+          return;
+        }
+      }
+      var extra = document.createElement("option");
+      extra.value = value;
+      extra.textContent = value;
+      select.appendChild(extra);
+      select.value = value;
+    }
+
+    function loadCities(cityValue) {
+      var code = region.value;
+      blank(city, pickCity);
+      if (!code) return Promise.resolve();
+      return fetch("/lookup/cities?country=" + encodeURIComponent(ship.value) + "&region=" + encodeURIComponent(code))
+        .then(function (response) { return response.json(); })
+        .then(function (data) {
+          (data.cities || []).forEach(function (name) {
+            var option = document.createElement("option");
+            option.value = name;
+            option.textContent = name;
+            city.appendChild(option);
+          });
+          choose(city, cityValue || "");
+        })
+        .catch(function () {});
+    }
+
+    function loadRegions(regionValue, cityValue) {
+      var spec = specFor();
+      blank(region, pickRegion);
+      blank(city, pickCity);
+      return fetch("/lookup/regions?country=" + encodeURIComponent(ship.value))
+        .then(function (response) { return response.json(); })
+        .then(function (data) {
+          (data.regions || []).forEach(function (item) {
+            var option = document.createElement("option");
+            option.value = item.code;
+            option.textContent = item.name;
+            region.appendChild(option);
+          });
+          if (spec.order.indexOf("region") < 0 && region.options.length > 1) {
+            region.selectedIndex = 1;
+          } else {
+            choose(region, regionValue || "");
+          }
+          return loadCities(cityValue || "");
+        })
+        .catch(function () {});
+    }
+
+    function fill(data) {
+      if (!data) return;
+      applyFormat();
+      if (data.postal && postal && !postal.value) postal.value = data.postal;
+      if (data.line && line && !line.value) line.value = data.line;
+      var spec = specFor();
+      var regionValue = spec.order.indexOf("region") < 0 ? "" : (data.region || "");
+      loadRegions(regionValue, data.city || "");
+    }
+
+    ship.addEventListener("change", function () {
+      region.setAttribute("data-current", "");
+      city.setAttribute("data-current", "");
+      applyFormat();
+      loadRegions("", "");
+    });
+    region.addEventListener("change", function () {
+      applyFormat();
+      loadCities("");
+    });
+    if (postal) {
+      postal.addEventListener("change", function () {
+        fetch("/lookup/postal?country=" + encodeURIComponent(ship.value) + "&code=" + encodeURIComponent(postal.value))
+          .then(function (response) { return response.json(); })
+          .then(fill)
+          .catch(function () {});
+      });
+    }
+    if (button && navigator.geolocation) {
+      button.addEventListener("click", function () {
+        navigator.geolocation.getCurrentPosition(function (pos) {
+          fetch("/lookup/here?lat=" + pos.coords.latitude + "&lon=" + pos.coords.longitude)
+            .then(function (response) { return response.json(); })
+            .then(fill)
+            .catch(function () {});
+        });
+      });
+    }
+    applyFormat();
+    loadRegions(region.getAttribute("data-current"), city.getAttribute("data-current"));
+
+    var bookNode = document.getElementById("addr-book");
+    var book = [];
+    if (bookNode) {
+      try { book = JSON.parse(bookNode.textContent || "[]"); } catch (e) { book = []; }
+    }
+    function applyBook(row) {
+      var name = document.querySelector('[name="name"]');
+      var phone = document.querySelector('[name="phone"]');
+      if (row) {
+        if (name) name.value = row.name || "";
+        if (phone) phone.value = row.phone || "";
+        if (line) line.value = row.address || "";
+        if (postal) postal.value = row.postal || "";
+        loadRegions(row.region || "", row.city || "");
+        return;
+      }
+      if (line) line.value = "";
+      if (postal) postal.value = "";
+      if (phone) phone.value = "";
+      loadRegions("", "");
+    }
+    document.querySelectorAll('[name="addr_pick"]').forEach(function (input) {
+      input.addEventListener("change", function () {
+        if (!input.checked) return;
+        if (input.value === "new") applyBook(null);
+        else applyBook(book[Number(input.value)] || null);
+      });
+    });
+  });
+</script>

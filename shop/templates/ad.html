@@ -1,0 +1,7 @@
+<a class="ad-slot" data-ad="{{ slot }}" href="{{ creative['href'] or href('/', country) }}">
+  {% if creative['image_url'] %}
+  <img src="{{ creative['image_url'] }}" width="{{ width }}" height="{{ height }}" alt="" loading="lazy" decoding="async">
+  {% elif creative['body'] %}
+  <span>{{ creative['body'] }}</span>
+  {% endif %}
+</a>

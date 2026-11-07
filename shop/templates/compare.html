@@ -1,0 +1,21 @@
+﻿{% extends "base.html" %}
+{% from "shot.html" import shot %}
+{% block body %}
+<div class="fn-compare">
+  <h1 class="fn-acc-title">{{ t.compare }}</h1>
+  {% if items %}
+  <div class="fn-compare-grid">
+    {% for item in items %}
+    <a class="fn-panel fn-cmp-card" href="{{ href('/p/' ~ item.sku, country) }}">
+      {% if item.image %}<img src="{{ shot(item.image) }}" alt="" width="240" height="180">{% endif %}
+      <div class="nm" style="margin-top:12px">{{ item.name }}</div>
+      <div class="price" style="margin-top:6px">{{ item.price }}</div>
+      <div class="tiny" style="margin-top:8px">{% if item.specs %}{{ item.specs.material }} · {{ item.specs.size }} · {{ item.specs.weight }}{% endif %}</div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="fn-empty">{{ t.empty }}</p>
+  {% endif %}
+</div>
+{% endblock %}

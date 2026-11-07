@@ -1,0 +1,189 @@
+{% extends "admin_base.html" %}
+{% block body %}
+<div class="fn-support-shell">
+<header class="page-head">
+  <div>
+    <h1>网页客服台</h1>
+    <p class="muted">/admin/support 精简台；完整能力见 Electron 桌面台 30/31。未读 {{ unread_n }} · 进行中 {{ open_n }}</p>
+  </div>
+</header>
+<p class="warn-banner"><span class="pill">说明</span> 转交/AI/SKU 发送以桌面台为准。</p>
+
+<div class="cs-layout">
+  <aside class="cs-inbox">
+    <div class="pad" style="padding:10px">
+      <div class="status-tabs">
+        <a class="{% if (support_status or 'open') == 'open' %}on{% endif %}" href="/admin/support?status=open">进行中</a>
+        <a class="{% if support_status == 'closed' %}on{% endif %}" href="/admin/support?status=closed">已关闭</a>
+      </div>
+      <form method="get" action="/admin/support" style="margin:0">
+        <input type="hidden" name="status" value="{{ support_status or 'open' }}">
+        <input type="search" name="q" value="{{ support_q or '' }}" placeholder="搜索" style="width:100%;height:30px;border:1px solid #E2E6EE;border-radius:8px;padding:0 10px;font-size:12px">
+      </form>
+    </div>
+    <div class="cs-list" id="cs-inbox" style="padding:0 10px 10px">
+      {% for r in rooms %}
+      <a class="cs-item {% if room and room.id == r.id %}on{% endif %}" href="/admin/support/{{ r.id }}" data-updated="{{ r.updated_at }}">
+        <div class="cs-item-top">
+          <b>{{ r.current.name or r.email or r.visitor_id[:8] }}</b>
+          {% if r.unread_staff %}<span class="nav-badge">{{ r.unread_staff }}</span>{% endif %}
+        </div>
+        <div class="cs-item-sub">{{ r.current.sku or '无商品' }} · {{ r.updated_at }}</div>
+      </a>
+      {% else %}
+      <p class="muted pad">暂无会话。用户从 App 商品页点「客服」后会出现在这里。</p>
+      {% endfor %}
+    </div>
+  </aside>
+
+  <section class="cs-thread card">
+    {% if room %}
+    <div class="cs-thread-head">
+      <div>
+        <h2>{{ room.current.name or '会话' }}</h2>
+        <p class="muted">#{{ room.id[:10] }} · {{ room.email or room.visitor_id }} · {{ room.status }}</p>
+      </div>
+      <form method="post" action="/admin/support/{{ room.id }}/close">
+        <button class="btn ghost sm" type="submit">关闭会话</button>
+      </form>
+    </div>
+
+    <div class="cs-context">
+      <div class="cs-product">
+        {% if room.current.image %}
+        <img src="{{ room.current.image }}" alt="">
+        {% endif %}
+        <div>
+          <b>{{ room.current.name or '未附商品' }}</b>
+          <div class="muted">{{ room.current.sku }} {% if room.current.price %}· {{ room.current.price }}{% endif %}</div>
+          {% if room.current.sku %}
+          <a class="btn ghost sm" href="/admin/products/{{ room.current.sku }}" target="_blank">后台商品</a>
+          <a class="btn ghost sm" href="/p/{{ room.current.sku }}" target="_blank">前台详情</a>
+          {% endif %}
+        </div>
+      </div>
+      <div class="cs-history">
+        <h3>浏览足迹</h3>
+        <ul>
+          {% for h in room.history %}
+          <li>
+            <a href="/p/{{ h.sku }}" target="_blank">{{ h.name or h.sku }}</a>
+            <span class="muted">{{ h.sku }}</span>
+          </li>
+          {% else %}
+          <li class="muted">暂无足迹</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <div class="cs-msgs" id="cs-msgs" data-room="{{ room.id }}">
+      {% for m in messages %}
+      <div class="cs-msg {{ m.role }}">
+        <div class="cs-msg-meta">
+          {% if m.role == 'user' %}用户{% elif m.role == 'staff' %}客服 {{ m.staff_user }}{% else %}系统{% endif %}
+          · {{ m.created_at }}
+        </div>
+        <div class="cs-msg-body">{{ m.body }}</div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <form class="cs-composer" class="cs-compose" method="post" action="/admin/support/{{ room.id }}/reply" id="cs-reply-form">
+      <textarea name="body" rows="3" placeholder="输入回复，回车发送…" required></textarea>
+      <button class="btn" type="submit">发送</button>
+    </form>
+    {% else %}
+    <div class="pad">
+      <h2>选择左侧会话</h2>
+      <p class="muted">打开后右侧会显示当前商品卡片与浏览历史，可实时回复。</p>
+    </div>
+    {% endif %}
+  </section>
+</div>
+
+<style>
+.cs-layout{display:grid;grid-template-columns:320px 1fr;gap:16px;align-items:start}
+@media(max-width:960px){.cs-layout{grid-template-columns:1fr}}
+.cs-inbox h2,.cs-thread-head h2{margin:0;padding:14px 16px 8px;font-size:16px}
+.cs-list{max-height:70vh;overflow:auto}
+.cs-item{display:block;padding:12px 16px;border-top:1px solid #e8e9e5;color:inherit;text-decoration:none}
+.cs-item:hover,.cs-item.on{background:#E8F1EC}
+.cs-item-top{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.cs-item-sub{font-size:12px;color:#6B746E;margin-top:4px}
+.cs-thread-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding:14px 16px;border-bottom:1px solid #e8e9e5}
+.cs-context{display:grid;grid-template-columns:1.2fr .8fr;gap:12px;padding:12px 16px;background:#F7F6F3;border-bottom:1px solid #e8e9e5}
+@media(max-width:960px){.cs-context{grid-template-columns:1fr}}
+.cs-product{display:flex;gap:12px;align-items:flex-start;background:#fff;border-radius:14px;padding:12px}
+.cs-product img{width:64px;height:64px;object-fit:cover;border-radius:10px;background:#eee}
+.cs-history{background:#fff;border-radius:14px;padding:12px}
+.cs-history h3{margin:0 0 8px;font-size:13px}
+.cs-history ul{margin:0;padding-left:16px;font-size:13px}
+.cs-msgs{padding:16px;min-height:280px;max-height:48vh;overflow:auto;display:flex;flex-direction:column;gap:10px;background:#fff}
+.cs-msg{max-width:78%;padding:10px 12px;border-radius:14px;background:#F7F6F3}
+.cs-msg.user{align-self:flex-start;background:#E8F1EC}
+.cs-msg.staff{align-self:flex-end;background:#FFF1EC}
+.cs-msg.system{align-self:center;background:transparent;color:#6B746E;font-size:12px}
+.cs-msg-meta{font-size:11px;color:#6B746E;margin-bottom:4px}
+.cs-msg-body{white-space:pre-wrap;line-height:1.45;font-size:14px}
+.cs-compose{display:flex;gap:10px;padding:12px 16px;border-top:1px solid #e8e9e5;background:#fff}
+.cs-compose textarea{flex:1;border:1px solid #e8e9e5;border-radius:12px;padding:10px;font:inherit;resize:vertical}
+</style>
+
+<script>
+(function(){
+  var box = document.getElementById('cs-msgs');
+  if (box) box.scrollTop = box.scrollHeight;
+  var latest = '';
+  var items = document.querySelectorAll('#cs-inbox .cs-item');
+  items.forEach(function(el){ if (el.dataset.updated && el.dataset.updated > latest) latest = el.dataset.updated; });
+  function pollInbox(){
+    fetch('/admin/support/poll?timeout=20&after=' + encodeURIComponent(latest||''), {headers:{Accept:'application/json'}})
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        if (data && data.latest && data.latest !== latest) {
+          // soft refresh list when new activity
+          if (!box) location.reload();
+          else {
+            latest = data.latest;
+            // if viewing a room, refresh messages
+            var rid = box.getAttribute('data-room');
+            return fetch('/api/cs/messages?room_id=' + encodeURIComponent(rid) + '&after=0', {headers:{Accept:'application/json'}, credentials:'same-origin'})
+              .then(function(r){ return r.json(); })
+              .then(function(payload){
+                if (!payload || !payload.messages) return;
+                var html = payload.messages.map(function(m){
+                  var who = m.role==='user'?'用户':(m.role==='staff'?('客服 '+(m.staff_user||'')):'系统');
+                  return '<div class="cs-msg '+m.role+'"><div class="cs-msg-meta">'+who+' · '+m.created_at+'</div><div class="cs-msg-body"></div></div>';
+                }).join('');
+                box.innerHTML = html;
+                Array.prototype.forEach.call(box.querySelectorAll('.cs-msg'), function(node, i){
+                  node.querySelector('.cs-msg-body').textContent = payload.messages[i].body;
+                });
+                box.scrollTop = box.scrollHeight;
+              });
+          }
+        }
+      })
+      .catch(function(){})
+      .finally(function(){ setTimeout(pollInbox, 800); });
+  }
+  pollInbox();
+})();
+</script>
+
+  <aside class="cs-context-pane">
+    <p class="muted" style="font-size:11px;margin:0 0 8px">当前商品</p>
+    {% if room and room.current %}
+    <div style="display:flex;gap:8px;align-items:center">
+      {% if room.current.image %}<img src="{{ room.current.image }}" alt="" style="width:32px;height:32px;border-radius:7px;object-fit:cover">{% else %}<div style="width:32px;height:32px;border-radius:7px;background:linear-gradient(145deg,#bae6fd,#0369a1)"></div>{% endif %}
+      <b style="font-size:14px">{{ room.current.name or '—' }}</b>
+    </div>
+    <p class="muted" style="font-size:11px;margin-top:8px">浏览足迹 {{ room.current.sku or '' }}</p>
+    {% else %}
+    <p class="muted" style="font-size:11px">选择会话后显示商品。</p>
+    {% endif %}
+  </aside>
+
+</div>
+{% endblock %}

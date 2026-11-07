@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Harbor 后台</title>
+  <link rel="stylesheet" href="/static/admin.css?v=44">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+</head>
+<body>
+{% block screen %}
+{% set upload_job = upload_job if upload_job is defined else {"running": false, "phase": "", "label": "", "done": 0, "total": 0, "workers": 0, "result": {}} %}
+{% set translate_job = translate_job if translate_job is defined else {"running": false, "phase": "", "label": "", "done": 0, "total": 0, "workers": 0, "result": {}} %}
+{% set catalog_job = catalog_job if catalog_job is defined else {"running": false, "phase": "", "label": "", "done": 0, "total": 0, "workers": 0, "kind": "", "result": {}, "error": ""} %}
+
+<div class="shell">
+  <aside class="side">
+    <div class="brand">
+      <span class="brand-mark">H</span>
+      <div class="brand-text">
+        <strong>Harbor 后台</strong>
+        <em>Ops</em>
+      </div>
+    </div>
+    <nav class="side-nav">
+      <p class="side-label">概览</p>
+      <a class="{% if request.url.path.startswith('/admin/stats') %}on{% endif %}" href="/admin/stats"><i></i>数据</a>
+
+      <p class="side-label">交易</p>
+      <a class="{% if request.url.path.startswith('/admin/orders') %}on{% endif %}" href="/admin/orders"><i></i>订单{% if nav_badges and nav_badges.ship %}<span class="nav-badge">{{ nav_badges.ship }}</span>{% endif %}</a>
+
+      <p class="side-label">商品</p>
+      <a class="{% if request.url.path.startswith('/admin/products') %}on{% endif %}" href="/admin/products"><i></i>商品</a>
+      <a class="{% if request.url.path.startswith('/admin/images') %}on{% endif %}" href="/admin/images"><i></i>图片</a>
+      <a class="{% if request.url.path.startswith('/admin/purchasing') %}on{% endif %}" href="/admin/purchasing"><i></i>采购</a>
+
+      <p class="side-label">增长</p>
+      <a class="{% if request.url.path.startswith('/admin/coupons') %}on{% endif %}" href="/admin/coupons"><i></i>优惠券</a>
+      <a class="{% if request.url.path.startswith('/admin/promos') %}on{% endif %}" href="/admin/promos"><i></i>满减运费</a>
+      <a class="{% if request.url.path.startswith('/admin/campaigns') %}on{% endif %}" href="/admin/campaigns"><i></i>活动</a>
+      <a class="{% if request.url.path.startswith('/admin/ads') %}on{% endif %}" href="/admin/ads"><i></i>站点广告</a>
+      <a class="{% if request.url.path.startswith('/admin/traffic') %}on{% endif %}" href="/admin/traffic"><i></i>投放回传</a>
+
+      {% if is_admin_role %}
+      <p class="side-label">系统</p>
+      <a class="{% if request.url.path.startswith('/admin/payments') %}on{% endif %}" href="/admin/payments"><i></i>支付</a>
+      <a class="{% if request.url.path.startswith('/admin/withdrawals') %}on{% endif %}" href="/admin/withdrawals"><i></i>提现{% if nav_badges and nav_badges.payout %}<span class="nav-badge">{{ nav_badges.payout }}</span>{% endif %}</a>
+      <a class="{% if request.url.path.startswith('/admin/staff') %}on{% endif %}" href="/admin/staff"><i></i>员工</a>
+      <a class="{% if request.url.path.startswith('/admin/coefficients') %}on{% endif %}" href="/admin/coefficients"><i></i>国家系数</a>
+      <a class="{% if request.url.path.startswith('/admin/cs') %}on{% endif %}" href="/admin/cs"><i></i>客服设置</a>
+      <a class="{% if request.url.path.startswith('/admin/support') %}on{% endif %}" href="/admin/support"><i></i>客服聊天{% if nav_badges and nav_badges.cs %}<span class="nav-badge">{{ nav_badges.cs }}</span>{% endif %}</a>
+      {% else %}
+      <p class="side-label">客服</p>
+      <a class="{% if request.url.path.startswith('/admin/support') %}on{% endif %}" href="/admin/support"><i></i>客服聊天{% if nav_badges and nav_badges.cs %}<span class="nav-badge">{{ nav_badges.cs }}</span>{% endif %}</a>
+      <a class="{% if request.url.path.startswith('/admin/withdrawals') %}on{% endif %}" href="/admin/withdrawals"><i></i>提现{% if nav_badges and nav_badges.payout %}<span class="nav-badge">{{ nav_badges.payout }}</span>{% endif %}</a>
+      {% endif %}
+
+      <p class="side-label">账号</p>
+      <a href="/admin/logout"><i></i>退出</a>
+    </nav>
+  </aside>
+  <div class="work">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button type="button" class="nav-toggle" id="nav-toggle" aria-label="菜单">☰</button>
+        <div class="page-title">
+          <span class="topbar-meta" style="margin-right:10px">Harbor Admin · 简体中文</span>
+          <strong>
+            {% if request.url.path.startswith('/admin/stats') %}数据
+            {% elif request.url.path.startswith('/admin/orders/') %}订单详情
+            {% elif request.url.path.startswith('/admin/support') %}客服聊天
+            {% elif request.url.path.startswith('/admin/orders') %}订单
+            {% elif request.url.path.startswith('/admin/purchasing') %}采购
+            {% elif request.url.path.startswith('/admin/images') %}图片
+            {% elif '/admin/products/' in request.url.path %}编辑商品
+            {% elif request.url.path.startswith('/admin/products') %}商品
+            {% elif request.url.path.startswith('/admin/coupons') %}优惠券
+            {% elif request.url.path.startswith('/admin/campaigns') %}活动
+            {% elif request.url.path.startswith('/admin/promos') %}满减运费
+            {% elif request.url.path.startswith('/admin/withdrawals') %}提现
+            {% elif request.url.path.startswith('/admin/traffic') %}投放回传
+            {% elif request.url.path.startswith('/admin/ads') %}站点广告位
+            {% elif request.url.path.startswith('/admin/coefficients') %}国家系数
+            {% elif request.url.path.startswith('/admin/staff') %}员工
+            {% else %}后台{% endif %}
+          </strong>
+          <span class="page-crumb">Harbor Admin</span>
+        </div>
+      </div>
+      <div class="who">
+        <div class="who-chip">
+          <span class="who-avatar">{{ (request.state.staff.username or 'A')[:1]|upper }}</span>
+          <span class="who-meta">
+            <b>{{ request.state.staff.username }}</b>
+            <small>{% if request.state.staff.role == 'admin' %}管理员{% else %}员工{% endif %}</small>
+          </span>
+        </div>
+        <form method="post" action="/admin/logout"><button class="btn ghost sm" type="submit">退出</button></form>
+      </div>
+    </header>
+    <div class="content">
+      {% if flash %}
+      <div id="admin-flash" class="flash-banner" data-flash="{{ flash }}">
+        {% if flash in ["shipped","refunded","purchased","coupon_saved","coupon_enabled","promos_saved","ads_saved","payout_ok","staff_added","staff_reset","staff_enabled","staff_disabled"] %}
+          <span class="ok">操作成功。</span>
+        {% elif flash == "refund_need_reason" %}<span class="error">退款必须填写原因（至少 3 个字）。</span>
+        {% elif flash == "refund_not_allowed" %}<span class="error">仅已支付/已发货订单可退款。</span>
+        {% elif flash == "payout_need_note" %}<span class="error">请填写打款备注/流水号。</span>
+        {% elif flash == "ship_fail" %}<span class="error">发货失败：需承运商和运单号，且订单为已支付。</span>
+        {% elif flash == "coupon_bad" %}<span class="error">请检查金额（美元）。</span>
+        {% elif flash == "staff_self" %}<span class="error">不能停用当前登录账号。</span>
+        {% elif flash == "staff_pwd" %}<span class="error">新密码至少 8 位。</span>
+        {% else %}<span class="ok">已保存。</span>
+        {% endif %}
+      </div>
+      {% endif %}
+      <div id="upload-job-card" class="card job-card" {% if not upload_job.running %}hidden{% endif %}>
+        <div class="pad">
+          <h2 id="upload-job-phase">{{ upload_job.phase or '正在上传' }}</h2>
+          <p id="upload-job-label" class="note">{{ upload_job.label }}</p>
+          <div class="bar" aria-hidden="true"><span id="upload-job-fill" style="width: {% if upload_job.total %}{{ (upload_job.done * 100 // upload_job.total) }}{% else %}0{% endif %}%"></span></div>
+          <p id="upload-job-count" class="muted">{% if upload_job.total %}第 {{ upload_job.done }} 个，共 {{ upload_job.total }} 个{% endif %}</p>
+        </div>
+      </div>
+      <div id="translate-job-card" class="card job-card" {% if not translate_job.running %}hidden{% endif %}>
+        <div class="pad">
+          <h2 id="translate-job-phase">{{ translate_job.phase or '正在翻译' }}</h2>
+          <p id="translate-job-label" class="note">{{ translate_job.label }}</p>
+          <div class="bar" aria-hidden="true"><span id="translate-job-fill" style="width: {% if translate_job.total %}{{ (translate_job.done * 100 // translate_job.total) }}{% else %}0{% endif %}%"></span></div>
+          <p id="translate-job-count" class="muted">{% if translate_job.total %}第 {{ translate_job.done }} 个，共 {{ translate_job.total }} 个{% endif %}{% if translate_job.workers %}，{{ translate_job.workers }} 个同时在翻译{% endif %}</p>
+        </div>
+      </div>
+      {% block body %}{% endblock %}
+    </div>
+    <script>
+    (function () {
+      var toggle = document.getElementById("nav-toggle");
+      if (toggle) {
+        toggle.addEventListener("click", function () {
+          document.body.classList.toggle("nav-open");
+        });
+      }
+      function bindJob(cardId, kind, storageKey) {
+        var card = document.getElementById(cardId);
+        if (!card) return null;
+        return {card: card, kind: kind, storageKey: storageKey, phase: kind + "-job-phase", label: kind + "-job-label", fill: kind + "-job-fill", count: kind + "-job-count"};
+      }
+      var tracks = [
+        bindJob("upload-job-card", "upload", "harbor-upload-job"),
+        bindJob("translate-job-card", "translate", "harbor-translate-job")
+      ].filter(Boolean);
+      if (!tracks.length) return;
+      function paint(track, job, forceShow) {
+        if (!job) return;
+        var running = !!job.running;
+        var watching = sessionStorage.getItem(track.storageKey) || "";
+        if (running || forceShow) track.card.hidden = false;
+        document.getElementById(track.phase).textContent = job.phase || (track.kind === "translate" ? "正在翻译" : "正在上传");
+        document.getElementById(track.label).textContent = job.label || "";
+        var total = job.total || 0;
+        var done = job.done || 0;
+        document.getElementById(track.fill).style.width = (total ? Math.round(done * 100 / total) : (running ? 0 : 100)) + "%";
+        var count = total ? ("第 " + done + " 个，共 " + total + " 个") : "";
+        if (job.workers) count += (count ? "，" : "") + job.workers + " 个同时在翻译";
+        document.getElementById(track.count).textContent = count;
+        return watching;
+      }
+      function finishPaint(track, job) {
+        var result = (job && job.result) || {};
+        if (track.kind === "upload" && (result.imported || result.skipped || result.price_held || result.images_filled)) {
+          track.card.hidden = false;
+          document.getElementById(track.phase).textContent = "上传完成：" + (result.imported || 0) + " 件";
+          document.getElementById(track.label).textContent =
+            (result.held ? ("待翻译 " + result.held + " 件") : "") +
+            (result.price_held ? ((result.held ? "，" : "") + "定价拦截 " + result.price_held + " 件") : "") +
+            (result.images_filled ? (((result.held || result.price_held) ? "，" : "") + "补图 " + result.images_filled + " 件") : "") +
+            (result.skipped ? (((result.held || result.price_held || result.images_filled) ? "，" : "") + "跳过 " + result.skipped + " 件") : "");
+          document.getElementById(track.fill).style.width = "100%";
+          document.getElementById(track.count).textContent = job.total ? ("第 " + job.done + " 个，共 " + job.total + " 个") : "";
+          return true;
+        }
+        if (track.kind === "translate" && (result.published || result.failed)) {
+          track.card.hidden = false;
+          document.getElementById(track.phase).textContent = "翻译完成：" + (result.published || 0) + " 件";
+          document.getElementById(track.label).textContent = result.failed ? (result.failed + " 件未译成") : "";
+          document.getElementById(track.fill).style.width = "100%";
+          document.getElementById(track.count).textContent = job.total ? ("第 " + job.done + " 个，共 " + job.total + " 个") : "";
+          return true;
+        }
+        return false;
+      }
+      function tick() {
+        fetch("/admin/catalog/progress", {headers: {Accept: "application/json"}})
+          .then(function (response) { return response.json(); })
+          .then(function (payload) {
+            var map = {
+              upload: (payload && payload.upload) || (payload && payload.jobs && payload.jobs.upload) || (payload && payload.kind === "upload" ? payload : null),
+              translate: (payload && payload.translate) || (payload && payload.jobs && payload.jobs.translate) || (payload && payload.kind === "translate" ? payload : null)
+            };
+            // legacy single-job payload fallback
+            if (!map.upload && !map.translate && payload) {
+              if (payload.kind === "translate") map.translate = payload;
+              else map.upload = payload;
+            }
+            var anyRunning = false;
+            var reloadTo = "";
+            tracks.forEach(function (track) {
+              var job = map[track.kind] || {running: false, result: {}};
+              var watching = sessionStorage.getItem(track.storageKey) || "";
+              if (job.running) {
+                anyRunning = true;
+                sessionStorage.setItem(track.storageKey, "running");
+                paint(track, job, true);
+                return;
+              }
+              if (watching === "running") {
+                var target = job.url || (location.pathname + location.search);
+                sessionStorage.setItem(track.storageKey, "done:" + target);
+                reloadTo = target;
+                finishPaint(track, job);
+                return;
+              }
+              if (String(watching).indexOf("done:") === 0) {
+                if (!finishPaint(track, job)) track.card.hidden = true;
+                return;
+              }
+              track.card.hidden = true;
+            });
+            if (reloadTo) {
+              location.replace(reloadTo);
+              return;
+            }
+            if (anyRunning || (payload && payload.any_running)) {
+              window.__harborJobIdlePolls = 0;
+              setTimeout(tick, 700);
+              return;
+            }
+            var shouldWatch = tracks.some(function (track) {
+              var st = sessionStorage.getItem(track.storageKey) || "";
+              return st === "running" || String(st).indexOf("done:") === 0;
+            });
+            if (shouldWatch) {
+              setTimeout(tick, 1000);
+              return;
+            }
+            // After refresh, poll briefly so an in-flight server job reconnects, then stop.
+            window.__harborJobIdlePolls = (window.__harborJobIdlePolls || 0) + 1;
+            if (window.__harborJobIdlePolls < 8) setTimeout(tick, 1200);
+
+          })
+          .catch(function () { setTimeout(tick, 1000); });
+      }
+      // Always poll once on load so a refresh reconnects to in-flight server jobs.
+      tick();
+    })();
+    </script>
+  </div>
+</div>
+{% endblock %}
+</body>
+</html>

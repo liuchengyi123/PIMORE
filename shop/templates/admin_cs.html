@@ -1,0 +1,124 @@
+{% extends "admin_base.html" %}
+{% block body %}
+<header class="page-head">
+  <div>
+    <h1>客服设置</h1>
+    <p class="muted">翻译、IP 归属、订单侧栏、客服档案与话术。员工账号仍在「员工」里开通。</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn ghost sm" href="/admin/support">客服聊天</a>
+    <a class="btn ghost sm" href="/admin/staff">员工账号</a>
+  </div>
+</header>
+
+{% if request.query_params.get('flash') == 'saved' %}<p class="ok">设置已保存。</p>{% endif %}
+{% if request.query_params.get('flash') == 'forbidden' %}<p class="error">需要管理员权限。</p>{% endif %}
+{% if request.query_params.get('flash') == 'agent_saved' %}<p class="ok">客服档案已更新。</p>{% endif %}
+{% if request.query_params.get('flash') == 'canned_added' %}<p class="ok">话术已添加。</p>{% endif %}
+
+<form class="cs-settings-form" method="post" action="/admin/cs/settings">
+<div class="card" data-figma="S11">
+  <h2>功能开关</h2>
+  <div class="pad fields">
+    <label class="check"><input type="checkbox" name="translate_enabled" value="1" {% if settings.get('translate_enabled','1')=='1' %}checked{% endif %}> 自动翻译（客服写中文 → 按用户语种显示；用户原文译成中文给客服）</label>
+    <label class="check"><input type="checkbox" name="show_ip_geo" value="1" {% if settings.get('show_ip_geo','1')=='1' %}checked{% endif %}> 记录并显示访客 IP 与归属地</label>
+    <label class="check"><input type="checkbox" name="show_orders" value="1" {% if settings.get('show_orders','1')=='1' %}checked{% endif %}> 会话侧栏显示订单 / 物流</label>
+    <label class="check"><input type="checkbox" name="require_cs_account" value="1" {% if settings.get('require_cs_account','1')=='1' %}checked{% endif %}> 仅「可接待客服」的员工可进桌面客服台</label>
+    <label class="check"><input type="checkbox" name="assign_only_mine" value="1" {% if settings.get('assign_only_mine','1')=='1' %}checked{% endif %}> 会话可见性：只看自己负责的 + 未分配（管理员仍看全部）</label>
+    <label class="check"><input type="checkbox" name="auto_reassign_when_away" value="1" {% if settings.get('auto_reassign_when_away','1')=='1' %}checked{% endif %}> 接待人离开/挂起/离线时，用户再发消息自动转给其他在线客服</label>
+    <p class="muted">转交后由接手客服查看完整聊天记录；会话顶栏显示「接待」与「此前」花名。</p>
+  </div>
+</div>
+<div class="card" data-figma="S12">
+  <h2>AI 自动接待</h2>
+  <div class="pad fields">
+    <label class="check"><input type="checkbox" name="ai_enabled" value="1" {% if settings.get('ai_enabled','1')=='1' %}checked{% endif %}> 开启 AI 自动回复（结合当前商品与足迹，口语+emoji）</label>
+    <label class="check"><input type="checkbox" name="ai_only_when_offline" value="1" {% if settings.get('ai_only_when_offline','0')=='1' %}checked{% endif %}> 仅当无人在线时才 AI 回复</label>
+    <label>AI 显示名（仅机器人气泡，不是人工客服姓名）<input name="ai_name" value="{{ settings.get('ai_name','Harbor') }}" maxlength="40"></label>
+    <label>人设 / 语气<textarea name="ai_persona" rows="5">{{ settings.get('ai_persona','') }}</textarea></label>
+    <label>转人工关键词（逗号分隔）<input name="ai_handoff_keywords" value="{{ settings.get('ai_handoff_keywords','人工,转人工,客服,agent,human,refund,退款,投诉') }}"></label>
+    <p class="muted">翻译与 AI 共用店铺后台 AI Key（可用 Qwen / DeepSeek 等兼容接口）。未配置时会用本地暖场话术。</p>
+
+    {% if is_admin_role %}
+    <div><button class="btn" type="submit">保存设置</button></div>
+    {% else %}
+    <p class="muted">仅管理员可改设置。</p>
+    {% endif %}
+  </div>
+</div>
+</form>
+
+<div class="card" data-figma="S13">
+  <h2>客服档案与状态</h2>
+  <p class="muted pad">状态由桌面端实时切换；这里配置花名、职位、是否可接待。</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>账号</th><th>花名</th><th>职位</th><th>当前状态</th><th>可接待</th><th>账号启用</th><th></th></tr></thead>
+    <tbody>
+    {% for a in agents %}
+    <tr>
+      <td class="mono">{{ a.username }}</td>
+      <td colspan="5">
+        <form class="row-form" method="post" action="/admin/cs/agents/{{ a.username }}">
+          <input name="display_name" value="{{ a.display_name }}" placeholder="花名">
+          <input name="title" value="{{ a.title }}" placeholder="职位/分组">
+          <span class="badge">{{ a.status_label }}</span>
+          <label class="check"><input type="checkbox" name="can_cs" value="1" {% if a.can_cs %}checked{% endif %}> 可接待</label>
+          {% if a.enabled %}<span class="badge ok">账号启用</span>{% else %}<span class="badge warn">账号停用</span>{% endif %}
+          {% if is_admin_role %}<button class="btn sm" type="submit">保存</button>{% endif %}
+        </form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td class="empty" colspan="7">请先在「员工」添加账号。</td></tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+
+<div class="card" data-figma="S14">
+  <h2>快捷话术</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>分类</th><th>标题</th><th>中文内容</th><th>状态</th><th></th></tr></thead>
+    <tbody>
+    {% for c in canned %}
+    <tr>
+      <td>{{ c.category }}</td>
+      <td>{{ c.title }}</td>
+      <td class="small">{{ c.body_zh }}</td>
+      <td>{% if c.enabled %}<span class="badge ok">启用</span>{% else %}<span class="badge">停用</span>{% endif %}</td>
+      <td>
+        {% if is_admin_role %}
+        <form method="post" action="/admin/cs/canned/{{ c.id }}/toggle">
+          <button class="btn ghost sm" type="submit">{% if c.enabled %}停用{% else %}启用{% endif %}</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% else %}
+    <tr><td class="empty" colspan="5">暂无话术。</td></tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% if is_admin_role %}
+  <form class="pad fields" method="post" action="/admin/cs/canned">
+    <label>分类 <input name="category" value="通用"></label>
+    <label>标题 <input name="title" required></label>
+    <label class="wide">中文内容 <textarea name="body_zh" rows="3" required></textarea></label>
+    <div><button class="btn" type="submit">添加话术</button></div>
+  </form>
+  {% endif %}
+</div>
+
+<div class="card" data-figma="S14">
+  <h2>常用表情</h2>
+  <p class="muted pad">访客端与客服台可点选发送。当前为 emoji 表情包；图片贴纸可后续再加。</p>
+  <div class="pad" style="display:flex;flex-wrap:wrap;gap:8px;font-size:22px;line-height:1.4">
+    {% for s in stickers %}
+      <span title="{{ s.label }}">{{ s.emoji }}</span>
+    {% else %}
+      <span class="muted">暂无</span>
+    {% endfor %}
+  </div>
+</div>
+
+{% endblock %}

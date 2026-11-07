@@ -1,0 +1,8 @@
+<!doctype html><meta name=viewport content="width=device-width,initial-scale=1">
+<body style="margin:0;background:#fff">
+<div id="b" style="position:fixed;left:0;top:0;height:40px;background:red"></div>
+<script>
+document.getElementById("b").style.width = window.innerWidth + "px";
+document.title = "W="+window.innerWidth+" D="+window.devicePixelRatio;
+document.body.insertAdjacentHTML("beforeend", "<p style=\"font:24px sans-serif;margin:60px 8px\">"+document.title+"</p>");
+</script>

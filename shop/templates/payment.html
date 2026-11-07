@@ -1,0 +1,26 @@
+﻿{% extends "base.html" %}
+{% block body %}
+<div class="fn-pay-status">
+  {% set sk = status_key|default('') %}
+  {% if sk in ['paid', 'payment_ok', 'success'] or (status is defined and status == 'paid') %}
+  <div class="fn-status-ico ok">✓</div>
+  <h1>{{ t.payment_ok if t.payment_ok is defined else 'Payment successful' }}</h1>
+  {% elif sk in ['failed', 'payment_failed'] or (status is defined and status == 'failed') %}
+  <div class="fn-status-ico bad">!</div>
+  <h1>{{ t.payment_failed if t.payment_failed is defined else 'Payment failed' }}</h1>
+  {% else %}
+  <h1>{{ t.payment_status }}</h1>
+  {% endif %}
+  <p class="tiny">{{ t.order_number }} {{ order_number }}{% if due_text is defined %} · <span class="price">{{ due_text }}</span>{% endif %}</p>
+  {% if sk %}<p class="tiny">{% if sk in t %}{{ t[sk] }}{% else %}{{ sk }}{% endif %}</p>{% endif %}
+  <div class="fn-order-actions" style="justify-content:center;margin-top:20px">
+    <a class="btn" href="{{ href('/orders/' ~ order_number, country) }}">{{ t.view_order }}</a>
+    <a class="btn ghost" href="{{ href('/', country) }}">{{ t.keep_shopping }}</a>
+  </div>
+  {% if suggestions %}
+  <section class="product-grid dense" style="margin-top:28px;grid-template-columns:repeat(4,minmax(0,1fr))">
+    {% for item in suggestions %}{% include "card.html" %}{% endfor %}
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

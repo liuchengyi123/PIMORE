@@ -1,0 +1,699 @@
+{
+  "src": "D:\\1010\\docs\\ui-redesign\\harbor-ad-tt.html",
+  "url": "file:///D:/1010/docs/ui-redesign/harbor-ad-tt.html",
+  "outdir": "D:\\1010\\docs\\ui-redesign\\_shots",
+  "include": [
+    "lint",
+    "screenshots",
+    "structure"
+  ],
+  "shots": {
+    "desktop": {
+      "screenshot": "D:\\1010\\docs\\ui-redesign\\_shots\\harbor-ad-tt_desktop.jpg",
+      "screenshotBytes": 128943,
+      "truncated": false,
+      "structure": {
+        "title": "Harbor — Everything's cheap, shipping's free at $39",
+        "firstH1": "",
+        "viewport": {
+          "w": 1440,
+          "h": 900
+        },
+        "fullpage": {
+          "w": 1440,
+          "h": 2138
+        },
+        "counts": {
+          "section": 2,
+          "h1": 0,
+          "h2": 1,
+          "img": 15,
+          "canvas": 0,
+          "svg": 2,
+          "links": 1,
+          "buttons": 14
+        }
+      },
+      "consoleErrors": [],
+      "consoleWarnings": [],
+      "horizontalOverflow": [],
+      "resourceErrors": [],
+      "duplicateImagesWarning": [
+        {
+          "count": 2,
+          "contentImageTotal": 15,
+          "sameRenderedSize": false,
+          "distinctAlts": 2,
+          "sizes": [
+            "160x160",
+            "231x231"
+          ],
+          "alts": [
+            "Bath sponge",
+            "Bath sponge with loo"
+          ],
+          "src": "file:///D:/1010/docs/ui-redesign/assets/products-photo/bath-sponge.jpg"
+        },
+        {
+          "count": 2,
+          "contentImageTotal": 15,
+          "sameRenderedSize": false,
+          "distinctAlts": 2,
+          "sizes": [
+            "160x160",
+            "231x231"
+          ],
+          "alts": [
+            "Hair clips",
+            "Pastel hair clips (5"
+          ],
+          "src": "file:///D:/1010/docs/ui-redesign/assets/products-photo/hair-clips.jpg"
+        },
+        {
+          "count": 2,
+          "contentImageTotal": 15,
+          "sameRenderedSize": false,
+          "distinctAlts": 2,
+          "sizes": [
+            "160x160",
+            "231x231"
+          ],
+          "alts": [
+            "Nail clipper",
+            "Stainless nail clipp"
+          ],
+          "src": "file:///D:/1010/docs/ui-redesign/assets/products-photo/nail-clipper.jpg"
+        }
+      ],
+      "duplicateImagesHint": "info · 同一图片资源在多处使用；count 是次数，contentImageTotal 是内容图总数。尺寸和 alt 差异仅供参考，不代表使用错误；总览、局部探索和详情可以复用同图。本项不要求换图、减少展示数量或修改布局。",
+      "reportSource": "cdp"
+    },
+    "mobile": {
+      "screenshot": "D:\\1010\\docs\\ui-redesign\\_shots\\harbor-ad-tt_mobile.jpg",
+      "screenshotBytes": 149574,
+      "truncated": false,
+      "structure": {
+        "title": "Harbor — Everything's cheap, shipping's free at $39",
+        "firstH1": "",
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "fullpage": {
+          "w": 390,
+          "h": 2724
+        },
+        "counts": {
+          "section": 2,
+          "h1": 0,
+          "h2": 1,
+          "img": 15,
+          "canvas": 0,
+          "svg": 2,
+          "links": 1,
+          "buttons": 14
+        }
+      },
+      "consoleErrors": [],
+      "consoleWarnings": [],
+      "horizontalOverflow": [],
+      "resourceErrors": [],
+      "reportSource": "cdp"
+    }
+  },
+  "engine": "chrome_cli",
+  "chromiumExec": "C:\\Users\\Administrator/AppData/Local/ms-playwright\\chromium_headless_shell-1223\\chrome-headless-shell-win64\\chrome-headless-shell.exe",
+  "engineDegraded": true,
+  "engineDegradedReason": "playwright 未装",
+  "publishBrokenAssets": [
+    {
+      "file": "assets\\dept\\appliance.svg",
+      "reason": "unreferenced-file",
+      "severity": "warning",
+      "loadedAtRuntime": false,
+      "onDisk": true
+    },
+    {
+      "file": "assets\\dept\\beauty.svg",
+      "reason": "unreferenced-file",
+      "severity": "warning",
+      "loadedAtRuntime": false,
+      "onDisk": true
+    },
+    {
+      "file": "assets\\dept\\cleaning.svg",
+      "reason": "unreferenced-file",
+      "severity": "warning",
+      "loadedAtRuntime": false,
+      "onDisk": true
+    },
+    {
+      "file": "assets\\dept\\daily.svg",
+      "reason": "unreferenced-file",
+      "severity": "warning",
+      "loadedAtRuntime": false,
+      "onDisk": true
+    },
+    {
+      "file": "assets\\dept\\decor.svg",
+      "reason": "unreferenced-file",
+      "severity": "warning",
+      "loadedAtRuntime": false,
+      "onDisk": true
+    },
+    {
+      "file": "assets\\dept\\hardware.svg",
+      "reason": "unreferenced-file",
+      "severity": "warning",
+      "loadedAtRuntime": false,
+      "onDisk": true
+    },
+    {
+      "file": "assets\\dept\\kitchen.svg",
+      "reason": "unreferenced-file",
+      "severity": "warning",
+      "loadedAtRuntime": false,
+      "onDisk": true
+    },
+    {
+      "file": "assets\\dept\\makeup.svg",
+      "reason": "unreferenced-file",
+      "severity": "warning",
+      "loadedAtRuntime": false,
+      "onDisk": true
+    },
+    {
+      "file": "assets\\dept\\office.svg",
+      "reason": "unreferenced-file",
+      "severity": "warning",
+      "loadedAtRuntime": false,
+      "onDisk": true
+    },
+    {
+      "file": "assets\\dept\\paper.svg",
+      "reason": "unreferenced-file",
+      "severity": "warning",
+      "loadedAtRuntime": false,
+      "onDisk": true
+    },
+    {
+      "file": "assets\\dept\\party.svg",
+      "reason": "unreferenced-file",
+      "severity": "warning",
+      "loadedAtRuntime": false,
+      "onDisk": true
+    },
+    {
+      "file": "assets\\dept\\personal.svg",
+      "reason": "unreferenced-file",
+      "severity": "warning",
+      "loadedAtRuntime": false,
+      "onDisk": true
+    },
+    {
+      "file": "assets\\dept\\pet.svg",
+      "reason": "unreferenced-file",
+      "severity": "warning",
+      "loadedAtRuntime": false,
+      "onDisk": true
+    },
+    {
+      "file": "assets\\dept\\storage.svg",
+      "reason": "unreferenced-file",
+      "severity": "warning",
+      "loadedAtRuntime": false,
+      "onDisk": true
+    },
+    {
+      "file": "assets\\dept\\tableware.svg",
+      "reason": "unreferenced-file",
+      "severity": "warning",
+      "loadedAtRuntime": false,
+      "onDisk": true
+    },
+    {
+      "file": "assets\\dept\\textile.svg",
+      "reason": "unreferenced-file",
+      "severity": "warning",
+      "loadedAtRuntime": false,
+      "onDisk": true
+    },
+    {
+      "file": "assets\\products-photo\\cleaning-cloth.jpg",
+      "reason": "unreferenced-file",
+      "severity": "warning",
+      "loadedAtRuntime": false,
+      "onDisk": true
+    },
+    {
+      "file": "assets\\products-photo\\drain-rack.jpg",
+      "reason": "unreferenced-file",
+      "severity": "warning",
+      "loadedAtRuntime": false,
+      "onDisk": true
+    },
+    {
+      "file": "assets\\products-photo\\dustpan-set.jpg",
+      "reason": "unreferenced-file",
+      "severity": "warning",
+      "loadedAtRuntime": false,
+      "onDisk": true
+    },
+    {
+      "file": "assets\\products-photo\\folding-bin.jpg",
+      "reason": "unreferenced-file",
+      "severity": "warning",
+      "loadedAtRuntime": false,
+      "onDisk": true
+    }
+  ],
+  "publishBrokenAssetsHint": "含义：发布链路靠静态扫描 HTML 源码决定上传哪些图片文件，**只认 `src` 属性和 CSS `url()` 两个位置**（线上实测）。写在别处的路径不会被上传，发布后 404 裂图。本地打开和自检截图都看不出来——文件真实存在，浏览器照样加载。 | severity=error 的逐条改，改法都是同一个：把路径挪到 `<img src=\"assets/x.png\">` 或 CSS `url('assets/x.png')`。reason=js-literal 路径写在 JS 字符串里（`const g=['assets/x.png']` 这种常量数组也算，照样裂）；reason=js-concat 路径由 JS 拼接（`'assets/img'+i+'.png'`）；reason=non-src-attr 路径写在 `data-src`、`srcset`、`poster` 等非 `src` 属性上——**这类即便静态写在 HTML 属性里也会裂**，懒加载写法要在 `src` 上放真实路径。 | severity=warning（reason=unreferenced-file）是提醒不是错误：`assets/` 里有这个文件，但源码和运行时都没引用到它。可能是没用上的多余素材（删掉即可），也可能是路径拼接且当前视口没渲染到的图（那就是会裂的，按 error 处理）。**这一条只在本地电脑（macOS / Windows）检测**——云电脑图片走 `lark-cli drive +html-image-upload`，HTML 引用外链、`assets/` 里的原图本就该保留且不被引用，在那儿报是纯误报，所以直接不报；**别因为这条去删云电脑上的原图**。自行判断，别的规则不受它影响。",
+  "elapsedSec": 7.15,
+  "schemaVersion": 2,
+  "status": "fail",
+  "engineInfo": {
+    "name": "chrome_cli",
+    "degraded": true,
+    "degradedReasons": [
+      "playwright 未装"
+    ]
+  },
+  "input": {
+    "original": "D:\\1010\\docs\\ui-redesign\\harbor-ad-tt.html",
+    "resolvedPath": "D:\\1010\\docs\\ui-redesign\\harbor-ad-tt.html",
+    "baseUrl": "file:///D:/1010/docs/ui-redesign/harbor-ad-tt.html",
+    "protocol": "file",
+    "cwd": "C:\\Users\\Administrator\\Doubao\\chats\\2026-11-04\\new-chat",
+    "mediaMode": {
+      "reducedMotion": true
+    }
+  },
+  "artifacts": {
+    "screenshots": [
+      {
+        "viewport": "desktop",
+        "path": "D:\\1010\\docs\\ui-redesign\\_shots\\harbor-ad-tt_desktop.jpg",
+        "size": 128943,
+        "visualCoverage": {
+          "complete": true,
+          "reason": null
+        }
+      },
+      {
+        "viewport": "mobile",
+        "path": "D:\\1010\\docs\\ui-redesign\\_shots\\harbor-ad-tt_mobile.jpg",
+        "size": 149574,
+        "visualCoverage": {
+          "complete": true,
+          "reason": null
+        }
+      }
+    ]
+  },
+  "summary": {
+    "blocker": 0,
+    "error": 20,
+    "warning": 0,
+    "info": 3
+  },
+  "findings": [
+    {
+      "ruleId": "duplicateImagesWarning",
+      "severity": "info",
+      "kind": "content",
+      "viewport": "desktop",
+      "selector": null,
+      "evidence": {
+        "count": 2,
+        "contentImageTotal": 15,
+        "sameRenderedSize": false,
+        "distinctAlts": 2,
+        "sizes": [
+          "160x160",
+          "231x231"
+        ],
+        "alts": [
+          "Bath sponge",
+          "Bath sponge with loo"
+        ],
+        "src": "file:///D:/1010/docs/ui-redesign/assets/products-photo/bath-sponge.jpg"
+      },
+      "dedupeKey": "duplicateImagesWarning|desktop||0"
+    },
+    {
+      "ruleId": "duplicateImagesWarning",
+      "severity": "info",
+      "kind": "content",
+      "viewport": "desktop",
+      "selector": null,
+      "evidence": {
+        "count": 2,
+        "contentImageTotal": 15,
+        "sameRenderedSize": false,
+        "distinctAlts": 2,
+        "sizes": [
+          "160x160",
+          "231x231"
+        ],
+        "alts": [
+          "Hair clips",
+          "Pastel hair clips (5"
+        ],
+        "src": "file:///D:/1010/docs/ui-redesign/assets/products-photo/hair-clips.jpg"
+      },
+      "dedupeKey": "duplicateImagesWarning|desktop||1"
+    },
+    {
+      "ruleId": "duplicateImagesWarning",
+      "severity": "info",
+      "kind": "content",
+      "viewport": "desktop",
+      "selector": null,
+      "evidence": {
+        "count": 2,
+        "contentImageTotal": 15,
+        "sameRenderedSize": false,
+        "distinctAlts": 2,
+        "sizes": [
+          "160x160",
+          "231x231"
+        ],
+        "alts": [
+          "Nail clipper",
+          "Stainless nail clipp"
+        ],
+        "src": "file:///D:/1010/docs/ui-redesign/assets/products-photo/nail-clipper.jpg"
+      },
+      "dedupeKey": "duplicateImagesWarning|desktop||2"
+    },
+    {
+      "ruleId": "publishBrokenAssets",
+      "severity": "error",
+      "kind": "publish",
+      "viewport": null,
+      "selector": null,
+      "evidence": {
+        "file": "assets\\dept\\appliance.svg",
+        "reason": "unreferenced-file",
+        "severity": "warning",
+        "loadedAtRuntime": false,
+        "onDisk": true
+      },
+      "dedupeKey": "publishBrokenAssets|top||0"
+    },
+    {
+      "ruleId": "publishBrokenAssets",
+      "severity": "error",
+      "kind": "publish",
+      "viewport": null,
+      "selector": null,
+      "evidence": {
+        "file": "assets\\dept\\beauty.svg",
+        "reason": "unreferenced-file",
+        "severity": "warning",
+        "loadedAtRuntime": false,
+        "onDisk": true
+      },
+      "dedupeKey": "publishBrokenAssets|top||1"
+    },
+    {
+      "ruleId": "publishBrokenAssets",
+      "severity": "error",
+      "kind": "publish",
+      "viewport": null,
+      "selector": null,
+      "evidence": {
+        "file": "assets\\dept\\cleaning.svg",
+        "reason": "unreferenced-file",
+        "severity": "warning",
+        "loadedAtRuntime": false,
+        "onDisk": true
+      },
+      "dedupeKey": "publishBrokenAssets|top||2"
+    },
+    {
+      "ruleId": "publishBrokenAssets",
+      "severity": "error",
+      "kind": "publish",
+      "viewport": null,
+      "selector": null,
+      "evidence": {
+        "file": "assets\\dept\\daily.svg",
+        "reason": "unreferenced-file",
+        "severity": "warning",
+        "loadedAtRuntime": false,
+        "onDisk": true
+      },
+      "dedupeKey": "publishBrokenAssets|top||3"
+    },
+    {
+      "ruleId": "publishBrokenAssets",
+      "severity": "error",
+      "kind": "publish",
+      "viewport": null,
+      "selector": null,
+      "evidence": {
+        "file": "assets\\dept\\decor.svg",
+        "reason": "unreferenced-file",
+        "severity": "warning",
+        "loadedAtRuntime": false,
+        "onDisk": true
+      },
+      "dedupeKey": "publishBrokenAssets|top||4"
+    },
+    {
+      "ruleId": "publishBrokenAssets",
+      "severity": "error",
+      "kind": "publish",
+      "viewport": null,
+      "selector": null,
+      "evidence": {
+        "file": "assets\\dept\\hardware.svg",
+        "reason": "unreferenced-file",
+        "severity": "warning",
+        "loadedAtRuntime": false,
+        "onDisk": true
+      },
+      "dedupeKey": "publishBrokenAssets|top||5"
+    },
+    {
+      "ruleId": "publishBrokenAssets",
+      "severity": "error",
+      "kind": "publish",
+      "viewport": null,
+      "selector": null,
+      "evidence": {
+        "file": "assets\\dept\\kitchen.svg",
+        "reason": "unreferenced-file",
+        "severity": "warning",
+        "loadedAtRuntime": false,
+        "onDisk": true
+      },
+      "dedupeKey": "publishBrokenAssets|top||6"
+    },
+    {
+      "ruleId": "publishBrokenAssets",
+      "severity": "error",
+      "kind": "publish",
+      "viewport": null,
+      "selector": null,
+      "evidence": {
+        "file": "assets\\dept\\makeup.svg",
+        "reason": "unreferenced-file",
+        "severity": "warning",
+        "loadedAtRuntime": false,
+        "onDisk": true
+      },
+      "dedupeKey": "publishBrokenAssets|top||7"
+    },
+    {
+      "ruleId": "publishBrokenAssets",
+      "severity": "error",
+      "kind": "publish",
+      "viewport": null,
+      "selector": null,
+      "evidence": {
+        "file": "assets\\dept\\office.svg",
+        "reason": "unreferenced-file",
+        "severity": "warning",
+        "loadedAtRuntime": false,
+        "onDisk": true
+      },
+      "dedupeKey": "publishBrokenAssets|top||8"
+    },
+    {
+      "ruleId": "publishBrokenAssets",
+      "severity": "error",
+      "kind": "publish",
+      "viewport": null,
+      "selector": null,
+      "evidence": {
+        "file": "assets\\dept\\paper.svg",
+        "reason": "unreferenced-file",
+        "severity": "warning",
+        "loadedAtRuntime": false,
+        "onDisk": true
+      },
+      "dedupeKey": "publishBrokenAssets|top||9"
+    },
+    {
+      "ruleId": "publishBrokenAssets",
+      "severity": "error",
+      "kind": "publish",
+      "viewport": null,
+      "selector": null,
+      "evidence": {
+        "file": "assets\\dept\\party.svg",
+        "reason": "unreferenced-file",
+        "severity": "warning",
+        "loadedAtRuntime": false,
+        "onDisk": true
+      },
+      "dedupeKey": "publishBrokenAssets|top||10"
+    },
+    {
+      "ruleId": "publishBrokenAssets",
+      "severity": "error",
+      "kind": "publish",
+      "viewport": null,
+      "selector": null,
+      "evidence": {
+        "file": "assets\\dept\\personal.svg",
+        "reason": "unreferenced-file",
+        "severity": "warning",
+        "loadedAtRuntime": false,
+        "onDisk": true
+      },
+      "dedupeKey": "publishBrokenAssets|top||11"
+    },
+    {
+      "ruleId": "publishBrokenAssets",
+      "severity": "error",
+      "kind": "publish",
+      "viewport": null,
+      "selector": null,
+      "evidence": {
+        "file": "assets\\dept\\pet.svg",
+        "reason": "unreferenced-file",
+        "severity": "warning",
+        "loadedAtRuntime": false,
+        "onDisk": true
+      },
+      "dedupeKey": "publishBrokenAssets|top||12"
+    },
+    {
+      "ruleId": "publishBrokenAssets",
+      "severity": "error",
+      "kind": "publish",
+      "viewport": null,
+      "selector": null,
+      "evidence": {
+        "file": "assets\\dept\\storage.svg",
+        "reason": "unreferenced-file",
+        "severity": "warning",
+        "loadedAtRuntime": false,
+        "onDisk": true
+      },
+      "dedupeKey": "publishBrokenAssets|top||13"
+    },
+    {
+      "ruleId": "publishBrokenAssets",
+      "severity": "error",
+      "kind": "publish",
+      "viewport": null,
+      "selector": null,
+      "evidence": {
+        "file": "assets\\dept\\tableware.svg",
+        "reason": "unreferenced-file",
+        "severity": "warning",
+        "loadedAtRuntime": false,
+        "onDisk": true
+      },
+      "dedupeKey": "publishBrokenAssets|top||14"
+    },
+    {
+      "ruleId": "publishBrokenAssets",
+      "severity": "error",
+      "kind": "publish",
+      "viewport": null,
+      "selector": null,
+      "evidence": {
+        "file": "assets\\dept\\textile.svg",
+        "reason": "unreferenced-file",
+        "severity": "warning",
+        "loadedAtRuntime": false,
+        "onDisk": true
+      },
+      "dedupeKey": "publishBrokenAssets|top||15"
+    },
+    {
+      "ruleId": "publishBrokenAssets",
+      "severity": "error",
+      "kind": "publish",
+      "viewport": null,
+      "selector": null,
+      "evidence": {
+        "file": "assets\\products-photo\\cleaning-cloth.jpg",
+        "reason": "unreferenced-file",
+        "severity": "warning",
+        "loadedAtRuntime": false,
+        "onDisk": true
+      },
+      "dedupeKey": "publishBrokenAssets|top||16"
+    },
+    {
+      "ruleId": "publishBrokenAssets",
+      "severity": "error",
+      "kind": "publish",
+      "viewport": null,
+      "selector": null,
+      "evidence": {
+        "file": "assets\\products-photo\\drain-rack.jpg",
+        "reason": "unreferenced-file",
+        "severity": "warning",
+        "loadedAtRuntime": false,
+        "onDisk": true
+      },
+      "dedupeKey": "publishBrokenAssets|top||17"
+    },
+    {
+      "ruleId": "publishBrokenAssets",
+      "severity": "error",
+      "kind": "publish",
+      "viewport": null,
+      "selector": null,
+      "evidence": {
+        "file": "assets\\products-photo\\dustpan-set.jpg",
+        "reason": "unreferenced-file",
+        "severity": "warning",
+        "loadedAtRuntime": false,
+        "onDisk": true
+      },
+      "dedupeKey": "publishBrokenAssets|top||18"
+    },
+    {
+      "ruleId": "publishBrokenAssets",
+      "severity": "error",
+      "kind": "publish",
+      "viewport": null,
+      "selector": null,
+      "evidence": {
+        "file": "assets\\products-photo\\folding-bin.jpg",
+        "reason": "unreferenced-file",
+        "severity": "warning",
+        "loadedAtRuntime": false,
+        "onDisk": true
+      },
+      "dedupeKey": "publishBrokenAssets|top||19"
+    }
+  ],
+  "prioritizedActions": [
+    {
+      "ruleId": "publishBrokenAssets",
+      "severity": "error",
+      "viewport": null,
+      "selector": null
+    }
+  ],
+  "reportPath": "D:\\1010\\docs\\ui-redesign\\_shots\\report.json"
+}

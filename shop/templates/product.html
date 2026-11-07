@@ -1,0 +1,550 @@
+{% extends "base.html" %}
+{% from "shot.html" import shot %}
+{% block body_class %} fn-pdp-page{% endblock %}
+{% block head %}
+{% if item.image_phone %}
+<link rel="preload" as="image" href="{{ item.image_phone }}" fetchpriority="high">
+{% endif %}
+{% endblock %}
+{% block body_attrs %}data-cs-sku="{{ item.sku }}" data-cs-name="{{ item.name }}" data-cs-price="{{ item.price }}" data-cs-image="{{ item.image_phone or item.image or '' }}"{% endblock %}
+{% block body %}
+<div class="fn-pdp pdp-split">
+<div class="detail-pane">
+<nav class="crumbs">
+  <a href="{{ href('/', country) }}">{{ t.home }}</a>
+  <a href="{{ href('/c/' ~ item.category, country) }}">{{ t.categories[item.category] }}</a>
+  <span>{{ item.name }}</span>
+</nav>
+<div class="stage">
+
+  <div class="fn-pdp-overlay">
+    <a class="fn-pdp-ov fn-pdp-back" href="{{ href('/c/' ~ item.category, country) }}" aria-label="{{ t.back }}"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></a>
+    <div class="fn-pdp-ov-right">
+      <button class="fn-pdp-ov" type="submit" form="wish-form" aria-label="{{ t.wishlist }}"><svg class="fn-wish-ico" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></button>
+      <button class="fn-pdp-ov" type="button" id="fn-pdp-share" aria-label="Share">↗</button>
+    </div>
+  </div>
+  <figure class="gallery">
+    <div class="gallery-strip" id="gallery">
+      {% if item.images %}
+        {% for picture in item.images %}
+        {% if loop.first and item.image_phone and item.image_phone != picture %}
+        <img src="{{ shot(picture) }}" srcset="{{ shot(item.image_phone) }} 960w, {{ shot(picture) }} 1600w" sizes="(max-width: 900px) 100vw, 480px" width="480" height="480" alt="{{ item.name }}" decoding="async" fetchpriority="high">
+        {% else %}
+        <img src="{{ shot(picture) }}" width="480" height="480" alt="{{ item.name }}" decoding="async" {% if loop.first %}fetchpriority="high"{% else %}loading="lazy"{% endif %}>
+        {% endif %}
+        {% endfor %}
+      {% else %}
+      <img src="{{ shot(item.image) }}" width="480" height="480" alt="{{ item.name }}">
+      {% endif %}
+    </div>
+    {% if item.images|length > 1 %}<span class="gallery-count" id="gallery-count">1/{{ item.images|length }}</span>{% endif %}
+    {% if item.offers and item.offers[0].label %}
+    <p class="sku-tag" id="sku-tag">{{ item.offers[0].label }}</p>
+    {% elif item.offers %}
+    <p class="sku-tag" id="sku-tag" hidden></p>
+    {% endif %}
+  </figure>
+  {% if item.images|length > 1 %}
+  <div class="thumb-row">
+    {% for picture in item.images %}
+    <button class="thumb" type="button" data-src="{{ shot(picture) }}"><img src="{{ shot(picture) }}" alt="" loading="lazy" decoding="async"></button>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+<div class="detail-rest">
+<section>
+  <h2>{{ t.advantages }}</h2>
+  <ul class="advantages">
+    {% for line in advantages %}
+    <li class="advantage">{{ line }}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% if item.detail_images or (item.description and item.description != item.name) %}
+<section>
+  <h2>{{ t.description }}</h2>
+  {% if item.description and item.description != item.name %}<p>{{ item.description }}</p>{% endif %}
+  {% if item.detail_images %}
+  <div class="detail-sheet">
+    {% for picture in item.detail_images %}<img src="{{ picture }}" alt="" loading="lazy" decoding="async">{% endfor %}
+  </div>
+  {% endif %}
+</section>
+{% endif %}
+<section>
+  <h2>{{ t.specs }}</h2>
+  <table class="specs">
+    <tr><th>{{ t.material }}</th><td>{{ item.specs.material }}</td></tr>
+    <tr><th>{{ t.size }}</th><td>{{ item.specs.size }}</td></tr>
+    <tr><th>{{ t.weight }}</th><td>{{ item.specs.weight }}</td></tr>
+  </table>
+</section>
+{% set mid = ads.get('pdp-mid') %}
+{% if mid %}
+{% set creative = mid %}
+{% set slot = 'pdp-mid' %}
+{% set width = 970 %}
+{% set height = 250 %}
+{% include "ad.html" %}
+{% endif %}
+{% if picks %}
+<section class="shelf">
+  <div class="shelf-head"><h2>{{ t.also_like }}</h2></div>
+  <div class="product-grid feed">
+    {% for item in picks %}{% include "card.html" %}{% endfor %}
+  </div>
+</section>
+{% endif %}
+<section>
+  <h2>{{ t.questions }}</h2>
+  {% if questions %}
+  {% for question in questions %}
+  <p>{{ question['body'] }}{% if question['answer'] %} — {{ question['answer'] }}{% endif %}</p>
+  {% endfor %}
+  {% else %}
+  <p>{{ t.no_questions }}</p>
+  {% endif %}
+  <form method="post" action="/p/{{ item.sku }}/question">
+    <label>{{ t.ask }} <input name="body"></label>
+    <button class="btn" type="submit">{{ t.send }}</button>
+  </form>
+</section>
+<form id="wish-form" method="post" action="/wishlist">
+  <input type="hidden" name="sku" value="{{ item.sku }}">
+  <input type="hidden" name="country" value="{{ country|default('US') }}">
+  <input type="hidden" name="next" value="/p/{{ item.sku }}">
+  <button class="btn quiet" type="submit">{{ t.wishlist }}</button>
+</form>
+<form id="cmp-form" method="post" action="/compare">
+  <input type="hidden" name="sku" value="{{ item.sku }}">
+  <input type="hidden" name="country" value="{{ country|default('US') }}">
+  <button class="btn quiet" type="submit">{{ t.add_compare }}</button>
+</form>
+<!-- reviews hidden per t163u -->
+
+{% if related %}
+<section class="shelf">
+  <div class="shelf-head"><h2>{{ t.shop_picks }}</h2></div>
+  <div class="product-grid feed">
+    {% for item in related %}{% include "card.html" %}{% endfor %}
+  </div>
+</section>
+{% endif %}
+</div>
+</div>
+{% if item.stock > 0 %}
+<div class="fn-pdp-buy">
+<form id="buy-form" class="sku-pane" method="post" action="/cart/add" data-rail-atc>
+  <input type="hidden" name="sku" value="{{ item.sku }}">
+  <input type="hidden" name="country" value="{{ country|default('US') }}">
+  <input type="hidden" name="next" value="/p/{{ item.sku }}">
+  {% if item.offers|length == 1 %}
+  <input type="hidden" name="offer" value="{{ item.offers[0].id }}">
+  {% endif %}
+  <div class="sku-summary">
+    <div class="price-row">
+      <p class="price" id="sku-price">{{ item.price }}</p>
+      <p class="was{% if item.higher %} strike{% endif %}" id="sku-was">{% if item.original %}{{ item.original }}{% endif %}</p>
+      {% if item.off_pct %}<span class="off-badge" id="sku-off">{{ t.off_badge.format(pct=item.off_pct) }}</span>{% endif %}
+    </div>
+    {% if item.save_amount %}<p class="you-save" id="sku-save">{{ t.you_save.format(amount=item.save_amount) }}</p>{% endif %}
+    {% if item.limit_one %}<p class="limit-one">{{ t.limit_one_note }}</p>{% endif %}
+    {% if cart_gap %}<p class="nudge">{{ cart_gap }}</p>{% endif %}
+    <h1>{{ item.name }}</h1>
+  {% if t.interest_count %}<p class="interest-count" id="interest-count" hidden data-tpl="{{ t.interest_count }}"></p>{% endif %}
+    <div class="fn-pdp-pills" aria-label="{{ t.shipping_policy }}">
+      <span class="fn-pill fn-pill-ship">{{ t.tracked_shipping if t.tracked_shipping is defined else (t.free_ship_badge if free_ship_policy else t.free_shipping) }}</span>
+      <span class="fn-pill fn-pill-eta">{{ t.arrives }} {{ delivery_start }}–{{ delivery_end }} {{ t.days }}</span>
+      <span class="fn-pill fn-pill-stock">{% if item.stock > 0 %}{{ t.in_stock if t.in_stock is defined else 'In stock' }}{% else %}{{ t.out_of_stock }}{% endif %}</span>
+    </div>
+    {% if item.offers|length == 1 %}<p class="stock tiny">{{ item.offers[0].label }}</p>{% endif %}
+  </div>
+  {% if item.offers|length > 1 %}
+  <button class="sku-row" id="sku-open" type="button">
+    <span>{{ t.choose }}</span>
+    <strong class="sku-chosen" id="sku-summary"></strong>
+  </button>
+  {% endif %}
+<div class="sku-sheet {% if item.offers|length > 1 %}has-multi{% else %}fn-sheet-mobile-only{% endif %}" id="sku-sheet">
+    <button class="sku-backdrop" type="button" data-sku-close tabindex="-1"></button>
+    <div class="sku-panel" role="dialog" aria-modal="true" aria-labelledby="sku-pick-label">
+      <button class="sheet-close" type="button" data-sku-close>×</button>
+      <div class="sku-head">
+        <img id="sku-sheet-img" src="{{ (item.offers[0].image if item.offers else none) or item.image_phone or item.image }}" alt="">
+        <div>
+          <p class="price" id="sku-sheet-price">{{ item.price }}</p>
+          <p id="sku-picked"></p>
+        </div>
+      </div>
+      <section class="sku-pick">
+        <div class="sku-pick-head">
+          <span id="sku-pick-label">{{ t.choose }}</span>
+          <strong class="sku-chosen"></strong>
+        </div>
+        <div class="sku-grid sku-grid-inline" role="radiogroup" aria-labelledby="sku-pick-label">
+          {% for offer in item.offers %}
+          <label class="sku-chip">
+            <input class="sku-input" type="radio" name="offer" value="{{ offer.id }}" data-price="{{ offer.price }}" data-original="{{ offer.original }}" data-save="{{ offer.save|default('') }}" data-off-pct="{{ offer.off_pct|default('') }}" data-image="{{ offer.image }}" data-label="{{ offer.label }}" {% if loop.first %}checked required{% endif %}>
+            {% if offer.image %}<span class="shot"><img src="{{ offer.image }}" alt="" loading="lazy" decoding="async"></span>{% endif %}
+            <span class="chip-name">{{ offer.label }}</span>
+          </label>
+          {% endfor %}
+        </div>
+      </section>
+      
+      {% if item.offers|length <= 1 and colors %}
+      <section class="sku-pick">
+        <div class="sku-pick-head"><span>{{ t.color }}</span></div>
+        <div class="sku-grid sku-grid-inline" role="radiogroup">
+          {% for color in colors %}
+          <label class="sku-chip">
+            <input class="sku-input" type="radio" name="color" value="{{ color }}" {% if loop.first %}checked{% endif %}>
+            <span class="chip-name">{{ color }}</span>
+          </label>
+          {% endfor %}
+        </div>
+      </section>
+      {% elif item.offers|length <= 1 %}
+      <input type="hidden" name="color" value="">
+      {% endif %}
+
+      <div class="stepper sku-qty">
+        <span>{{ t.qty }}</span>
+        <button type="button" data-qty="-1" aria-label="-">-</button>
+        <input name="qty" value="1" inputmode="numeric">
+        <button type="button" data-qty="1" aria-label="+">+</button>
+      </div>
+      <button class="sku-go" id="sku-confirm" type="button">{{ t.add_cart }}</button>
+    </div>
+  </div>
+  
+  {% if not item.has_skus and colors %}
+  <div class="fn-color-pick" role="radiogroup" aria-label="{{ t.color }}">
+    <div class="fn-color-label">{{ t.color }}</div>
+    <div class="fn-color-chips">
+      {% for color in colors %}
+      <label class="fn-color-chip">
+        <input type="radio" name="color" value="{{ color }}" {% if loop.first %}checked{% endif %}>
+        <span>{{ color }}</span>
+      </label>
+      {% endfor %}
+    </div>
+  </div>
+  {% elif not item.has_skus %}
+  <input type="hidden" name="color" value="">
+  {% endif %}
+  <div class="sku-foot">
+    {% if item.offers|length <= 1 %}
+    <div class="stepper sku-qty">
+      <span>{{ t.qty }}</span>
+      <button type="button" data-qty="-1" aria-label="-">-</button>
+      <input name="qty" value="1" inputmode="numeric">
+      <button type="button" data-qty="1" aria-label="+">+</button>
+    </div>
+    {% endif %}
+
+    <div class="buy-actions">
+      <button class="fn-pdp-save fn-pdp-save-desk" type="submit" form="wish-form" aria-label="{{ t.wishlist }}">
+        <span class="fn-pdp-save-ico" aria-hidden="true">♡</span>
+        <span>{{ t.save if t.save is defined else 'Save' }}</span>
+      </button>
+      <a class="fn-pdp-cs-slot" href="{% if h5_origin %}{{ h5_origin }}/chat{% else %}/chat{% endif %}?sku={{ item.sku|urlencode }}&name={{ item.name|urlencode }}&price={{ item.price|urlencode }}{% if item.image_phone or item.image %}&image={{ (item.image_phone or item.image)|urlencode }}{% endif %}" aria-label="{{ t.support }}">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 0 1 8-8h0a8 8 0 0 1 8 8"/><path d="M4 12v3.5A2.5 2.5 0 0 0 6.5 18H8"/><path d="M20 12v3.5a2.5 2.5 0 0 1-2.5 2.5H15"/><path d="M15 18v1a2 2 0 0 1-2 2h-1"/></svg>
+        <span>{{ t.support if t.support is defined else 'CS' }}</span>
+      </a>
+      <button class="btn fn-pdp-atc" type="submit">{{ t.add_cart }}</button>
+      <button class="btn fn-pdp-buy-now" type="submit" formaction="/buy" data-cart="/checkout" data-buy-now="1">{{ t.buy_now }}</button>
+    </div>
+    <a class="fn-pdp-cs-fab fn-pdp-cs-desk-only" href="{% if h5_origin %}{{ h5_origin }}/chat{% else %}/chat{% endif %}?sku={{ item.sku|urlencode }}&name={{ item.name|urlencode }}&price={{ item.price|urlencode }}{% if item.image_phone or item.image %}&image={{ (item.image_phone or item.image)|urlencode }}{% endif %}" aria-label="{{ t.support }}">CS</a>
+  </div>
+</form>
+      <div class="fn-pdp-links">
+        <button class="btn quiet" form="wish-form" type="submit">{{ t.wishlist }}</button>
+        <button class="btn quiet" form="cmp-form" type="submit">{{ t.add_compare }}</button>
+        <a href="{% if h5_origin %}{{ h5_origin }}/chat{% else %}/chat{% endif %}?sku={{ item.sku|urlencode }}&name={{ item.name|urlencode }}&price={{ item.price|urlencode }}{% if item.image_phone or item.image %}&image={{ (item.image_phone or item.image)|urlencode }}{% endif %}">{{ t.support }}</a>
+      </div>
+      <div class="fn-pdp-ship">
+        <div style="font-size:13px;font-weight:700;color:#0F2744">{{ t.sold_by }}</div>
+        <div class="tiny" style="margin-top:6px;line-height:1.5">{{ promise_line }} · {{ t.arrives }} {{ delivery_start }}–{{ delivery_end }} {{ t.days }}{% if free_ship_policy %} · {{ t.free_ship_badge }}{% endif %}</div>
+      </div>
+</div>
+{% else %}
+<div class="buy">
+  <p class="price" style="color:#9CA3AF">{{ item.price }}</p>
+  <h1>{{ item.name }}</h1>
+  <p class="interest" id="interest-count" hidden data-tpl="{{ t.interest_count }}"></p>
+  <span class="fn-pill" style="margin-top:12px;background:#FEE2E2;color:#B91C1C">{{ t.out_of_stock }}</span>
+  {% if request.query_params.get("notify") == "1" %}<p class="note" style="color:#047857;font-weight:600">We'll email you when this is back.</p>{% elif request.query_params.get("notify") == "0" %}<p class="note" style="color:#B91C1C">Could not save — check your email.</p>{% endif %}
+  <div class="fn-oos-box">This option is unavailable. Choose another size or browse similar items.</div>
+  <div class="fn-oos-actions">
+    <button class="btn is-disabled" type="button" disabled style="flex:1">{{ t.out_of_stock }}</button>
+    <form class="fn-notify-form" method="post" action="/notify-me" style="flex:1;display:flex;gap:8px;flex-wrap:wrap">
+      <input type="hidden" name="sku" value="{{ product.sku }}">
+      <input type="hidden" name="offer" value="">
+      <input type="hidden" name="country" value="{{ country|default('US') }}">
+      <input type="hidden" name="next" value="{{ request.url.path }}">
+      <input name="email" type="email" required placeholder="you@email.com" style="flex:1;min-width:140px;height:42px;border-radius:12px;border:1px solid #E2E6EE;padding:0 12px">
+      <button class="btn ghost" type="submit" style="flex:0 0 auto">Notify me</button>
+    </form>
+  </div>
+  <div class="fn-pdp-ship" style="margin-top:16px">
+    <div style="font-size:13px;font-weight:700;color:#0F2744">{{ t.sold_by }}</div>
+    <div class="tiny" style="margin-top:6px;line-height:1.5">{{ promise_line }}</div>
+  </div>
+</div>
+{% endif %}
+</div>
+<script>
+  (function () {
+
+    var shareBtn = document.getElementById("fn-pdp-share");
+    if (shareBtn) {
+      shareBtn.addEventListener("click", function () {
+        var url = location.href;
+        if (navigator.share) {
+          navigator.share({ title: document.title, url: url }).catch(function () {});
+        } else if (navigator.clipboard) {
+          navigator.clipboard.writeText(url).catch(function () {});
+        }
+      });
+    }
+
+    var interestEl = document.getElementById("interest-count");
+    if (interestEl) {
+      var interestSku = {{ item.sku|tojson }};
+      var interestTpl = interestEl.getAttribute("data-tpl") || "{n}";
+      fetch("/api/catalog/interest/" + encodeURIComponent(interestSku), { credentials: "include" })
+        .then(function (res) { return res.ok ? res.json() : null; })
+        .then(function (data) {
+          var n = data && Number(data.count);
+          if (n > 0) {
+            interestEl.textContent = interestTpl.replace(/\{n\}/g, String(Math.floor(n)));
+            interestEl.removeAttribute("hidden");
+          }
+        })
+        .catch(function () {});
+    }
+
+    var strip = document.getElementById("gallery");
+    var count = document.getElementById("gallery-count");
+    if (strip && count) {
+      var frames = strip.querySelectorAll("img");
+      strip.addEventListener("scroll", function () {
+        var index = Math.round(strip.scrollLeft / Math.max(strip.clientWidth, 1)) + 1;
+        count.textContent = Math.min(frames.length, Math.max(1, index)) + "/" + frames.length;
+      }, { passive: true });
+    }
+    function showPicture(src) {
+      if (!src || !strip) return;
+      var frames = strip.querySelectorAll("img");
+      Array.prototype.forEach.call(frames, function (img) {
+        if (img.getAttribute("data-gallery-src") === src) {
+          img.src = src;
+          var set = img.getAttribute("data-gallery-srcset");
+          if (set) img.setAttribute("srcset", set);
+        }
+      });
+      var match = Array.prototype.find.call(frames, function (img) { return img.getAttribute("src") === src; });
+      if (!match && frames.length) {
+        var hero = frames[0];
+        if (!hero.getAttribute("data-gallery-src")) {
+          hero.setAttribute("data-gallery-src", hero.getAttribute("src") || "");
+          hero.setAttribute("data-gallery-srcset", hero.getAttribute("srcset") || "");
+        }
+        hero.removeAttribute("srcset");
+        hero.src = src;
+        match = hero;
+      }
+      if (match) strip.scrollTo({ left: match.offsetLeft - strip.offsetLeft, behavior: "smooth" });
+      document.querySelectorAll(".thumb").forEach(function (thumb) {
+        thumb.classList.toggle("on", thumb.getAttribute("data-src") === src);
+      });
+    }
+    document.querySelectorAll(".thumb").forEach(function (thumb) {
+      thumb.addEventListener("click", function () { showPicture(thumb.getAttribute("data-src")); });
+    });
+    var summary = document.getElementById("sku-summary");
+    var pagePrice = document.querySelector(".sku-summary .price");
+    var pageWas = document.querySelector(".sku-summary .was");
+    var nextField = document.querySelector("#buy-form input[name=next]");
+    var stayPath = nextField ? nextField.value : "";
+    function setNext(path) {
+      if (nextField) nextField.value = path;
+    }
+    function paint(input, scroll) {
+      if (!input) return;
+      var nextPrice = input.getAttribute("data-price") || "";
+      if (pagePrice && nextPrice) pagePrice.textContent = nextPrice;
+      var original = input.getAttribute("data-original") || "";
+      var wasText = original ? {{ t.original|tojson }} + " " + original : "";
+      if (pageWas) {
+        pageWas.textContent = wasText;
+        pageWas.classList.toggle("strike", !!original);
+      }
+      var offPct = input.getAttribute("data-off-pct") || "";
+      var offEl = document.getElementById("sku-off");
+      if (offEl) {
+        if (offPct) {
+          offEl.hidden = false;
+          offEl.textContent = {{ t.off_badge|tojson }}.replace("{pct}", offPct);
+        } else {
+          offEl.hidden = true;
+          offEl.textContent = "";
+        }
+      }
+      var saveAmt = input.getAttribute("data-save") || "";
+      var saveEl = document.getElementById("sku-save");
+      if (saveEl) {
+        if (saveAmt) {
+          saveEl.hidden = false;
+          saveEl.textContent = {{ t.you_save|tojson }}.replace("{amount}", saveAmt);
+        } else {
+          saveEl.hidden = true;
+          saveEl.textContent = "";
+        }
+      }
+      var label = input.getAttribute("data-label") || "";
+      document.querySelectorAll(".sku-chosen").forEach(function (node) { node.textContent = label; });
+      var picked = document.getElementById("sku-picked");
+      if (picked) picked.textContent = label;
+      var sheetPrice = document.getElementById("sku-sheet-price");
+      if (sheetPrice && nextPrice) sheetPrice.textContent = nextPrice;
+      var tag = document.getElementById("sku-tag");
+      if (tag) {
+        tag.textContent = label;
+        tag.hidden = !label;
+      }
+      var image = input.getAttribute("data-image");
+      var sheetImg = document.getElementById("sku-sheet-img");
+      if (sheetImg && image) sheetImg.src = image;
+      if (scroll) showPicture(image);
+    }
+    document.querySelectorAll("[data-cart]").forEach(function (node) {
+      node.addEventListener("click", function () {
+        setNext(node.getAttribute("data-cart") || "/cart");
+      });
+    });
+    document.querySelectorAll("#buy-form [data-qty]").forEach(function (node) {
+      node.addEventListener("click", function () {
+        var input = document.querySelector("#buy-form input[name=qty]");
+        if (!input) return;
+        var next = (parseInt(input.value, 10) || 1) + parseInt(node.getAttribute("data-qty"), 10);
+        input.value = String(Math.max(1, next));
+      });
+    });
+    var inputs = document.querySelectorAll(".sku-input");
+    inputs.forEach(function (input) {
+      input.addEventListener("change", function () { paint(input, true); });
+      input.addEventListener("click", function () { paint(input, true); });
+      if (input.checked) paint(input, false);
+    });
+    if (inputs.length && !document.querySelector(".sku-input:checked")) {
+      inputs[0].checked = true;
+      paint(inputs[0], false);
+    }
+    var sheet = document.getElementById("sku-sheet");
+    var phoneQuery = window.matchMedia("(max-width: 980px)");
+    function closeSheet() {
+      if (!sheet) return;
+      sheet.classList.remove("is-open");
+      document.body.classList.remove("sku-open");
+    }
+    function openSheet(mode) {
+      if (!sheet || !phoneQuery.matches) return false; /* mobile half-sheet */
+      var confirmBtn = document.getElementById("sku-confirm");
+      if (confirmBtn) {
+        var buy = mode === "buy";
+        confirmBtn.textContent = buy ? {{ t.buy_now|tojson }} : {{ t.add_cart|tojson }};
+        confirmBtn.classList.toggle("is-buy", buy);
+        confirmBtn.setAttribute("data-mode", buy ? "buy" : "add");
+      }
+      sheet.classList.add("is-open");
+      document.body.classList.add("sku-open");
+      return true;
+    }
+    
+    // t163u: only one color/qty control set submits
+    function syncSkuControls() {
+      var mobile = phoneQuery.matches;
+      document.querySelectorAll(".fn-color-pick .fn-color-chip input, .fn-color-pick input[name=color]").forEach(function (el) {
+        el.disabled = !!mobile;
+      });
+      document.querySelectorAll(".fn-sheet-mobile-only input[name=color], .fn-sheet-mobile-only input[name=qty], .fn-sheet-mobile-only .sku-input").forEach(function (el) {
+        el.disabled = !mobile;
+      });
+      document.querySelectorAll(".sku-foot > .stepper.sku-qty input[name=qty]").forEach(function (el) {
+        el.disabled = !!mobile;
+      });
+      // multi-offer sheet is also used on desktop (inlined) — never disable those
+      document.querySelectorAll(".sku-sheet.has-multi .sku-input, .sku-sheet.has-multi input[name=qty]").forEach(function (el) {
+        el.disabled = false;
+      });
+    }
+    syncSkuControls();
+    if (phoneQuery.addEventListener) phoneQuery.addEventListener("change", syncSkuControls);
+    else if (phoneQuery.addListener) phoneQuery.addListener(syncSkuControls);
+
+    var buyForm = document.getElementById("buy-form");
+    if (buyForm) {
+      buyForm.addEventListener("click", function (event) {
+        var button = event.target.closest(".buy-actions button, .fn-pdp-buy-now, .fn-pdp-atc");
+        if (!button) return;
+        var isBuy = button.classList.contains("fn-pdp-buy-now") || button.getAttribute("data-buy-now") === "1" || button.hasAttribute("data-cart");
+        // Desktop buy-now: go to /buy (checkout), do not toast-ATC
+        if (isBuy && !phoneQuery.matches) {
+          var next = buyForm.querySelector("input[name=next]");
+          if (next) next.value = "/checkout";
+          var hid = buyForm.querySelector("input[name=buy]");
+          if (!hid) {
+            hid = document.createElement("input");
+            hid.type = "hidden"; hid.name = "buy";
+            buyForm.appendChild(hid);
+          }
+          hid.value = "1";
+          buyForm.setAttribute("action", "/buy");
+          return; // allow native submit to /buy
+        }
+        // ATC on desktop: ensure buy flag cleared
+        if (!isBuy && !phoneQuery.matches) {
+          var clearBuy = buyForm.querySelector("input[name=buy]");
+          if (clearBuy) clearBuy.remove();
+          buyForm.setAttribute("action", "/cart/add");
+        }
+        // Mobile: always open half-sheet for ATC / Buy now
+        if (!phoneQuery.matches) return;
+        if (!sheet) return;
+        event.preventDefault();
+        event.stopPropagation();
+        openSheet(isBuy ? "buy" : "add");
+      }, true);
+      var opener = document.getElementById("sku-open");
+      if (opener) opener.addEventListener("click", function () { openSheet("add"); });
+      sheet.querySelectorAll("[data-sku-close]").forEach(function (node) {
+        node.addEventListener("click", closeSheet);
+      });
+      var confirmBtn = document.getElementById("sku-confirm");
+      if (confirmBtn) {
+        confirmBtn.addEventListener("click", function () {
+          var buy = confirmBtn.getAttribute("data-mode") === "buy";
+          setNext(buy ? "/checkout" : stayPath);
+          if (buy) {
+            buyForm.setAttribute("action", "/buy");
+            var b = buyForm.querySelector("input[name=buy]");
+            if (!b) {
+              b = document.createElement("input");
+              b.type = "hidden"; b.name = "buy"; b.value = "1";
+              buyForm.appendChild(b);
+            } else { b.value = "1"; }
+          } else {
+            buyForm.setAttribute("action", "/cart/add");
+          }
+          if (buyForm.requestSubmit) buyForm.requestSubmit();
+          else buyForm.submit();
+        });
+      }
+    }
+  })();
+</script>
+{% endblock %}

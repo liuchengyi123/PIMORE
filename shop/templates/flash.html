@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block body_class %} fn-event-page{% endblock %}
+{% from "shot.html" import shot %}
+{% block body %}
+<div class="fn-event">
+  <header class="fn-event-mbar">
+    <a class="fn-list-back" href="{{ href('/', country) }}" aria-label="{{ t.back }}">‹</a>
+    <h1 class="fn-list-mtitle">{{ t.flash_title if t.flash_title is defined else 'Flash picks' }}</h1>
+    <span class="fn-list-filter-spacer"></span>
+  </header>
+  <div class="fn-hero fn-hero-flash">
+    <div class="kicker">FLASH PICKS</div>
+    <h1>{{ t.flash_title if t.flash_title is defined else (t.sale_title or 'Flash picks for household essentials') }}</h1>
+    {% if sale and sale.ends_at %}<p class="poster-clock tiny" data-ends="{{ sale.ends_at }}">--:--:--</p>{% endif %}
+    <p class="tiny" style="opacity:.85;margin-top:6px">{{ t.flash_sub if t.flash_sub is defined else 'Activity pool · visitor salt' }}</p>
+  </div>
+  <div class="fn-tabs" style="margin-top:16px">
+    <a class="chip on" href="{{ href('/flash', country) }}">{{ t.all if t.all is defined else 'All' }}</a>
+    {% for key in categories %}
+    <a class="chip" href="{{ href('/c/' ~ key, country) }}">{{ t.categories[key] }}</a>
+    {% endfor %}
+  </div>
+  {% if sale and sale.items %}
+  <div class="product-grid dense fn-deal-grid fn-flash-grid">
+    {% for item in sale["items"] %}
+    <a class="card fn-deal" href="{{ href('/p/' ~ item.sku, country) }}">
+      <img src="{{ shot(item.image) }}" alt="{{ item.name }}" width="480" height="480">
+      <div class="fn-deal-body">
+        <div class="nm">{{ item.name }}</div>
+        <div class="price">{{ item.price }}</div>
+        {% if item.original %}<div class="tiny was">{{ item.original }}</div>{% elif item.off %}<div class="tiny">-{{ item.off }}%</div>{% else %}<div class="tiny">{{ t.sale_badge if t.sale_badge is defined else 'Deal' }}</div>{% endif %}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="fn-empty-block">
+    <h2>{{ t.sale_empty }}</h2>
+    <a class="btn" href="{{ href('/', country) }}">{{ t.keep_shopping }}</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

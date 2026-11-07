@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+{% block body_class %} fn-acc-page{% if panel == 'home' %} fn-me-home{% else %} fn-acc-sub{% endif %}{% endblock %}
+{% from "shot.html" import shot %}
+{% block body %}
+<div class="fn-me fn-acc">
+{% include "account_chrome.html" %}
+<div class="fn-acc-main">
+
+{% if panel == 'home' %}
+  <div class="fn-acc-hero">
+    <div class="fn-acc-hero-row">
+      <div class="fn-acc-avatar" aria-hidden="true">{% if email %}{% set _n = email.split('@')[0] %}{{ (_n[:2]|upper) if _n|length >= 2 else email[0]|upper }}{% else %}?{% endif %}</div>
+      <div class="fn-acc-hero-text">
+        <h1 class="fn-acc-hi">{% if email %}{{ email.split('@')[0]|title }}{% else %}{{ t.guest }}{% endif %}</h1>
+        <p class="fn-acc-sub">{% if email %}{{ email }}{% else %}Guest checkout available{% endif %}</p>
+      </div>
+      <span class="fn-acc-geo">{{ country }} · {{ currency }}</span>
+    </div>
+    <div class="fn-asset-grid fn-asset-in-hero">
+      <a class="fn-asset" href="{{ href('/account/balance', country) }}"><b class="price">{{ balance_text }}</b><span class="tiny">{{ t.balance }}</span></a>
+      <a class="fn-asset" href="{{ href('/account/coupons', country) }}"><b>{{ offers|length }}</b><span class="tiny">{{ t.my_coupons if t.my_coupons is defined else 'Coupons' }}</span></a>
+      <a class="fn-asset" href="{{ href('/account/wishlist', country) }}"><b>{{ wish_count }}</b><span class="tiny">{{ t.wishlist }}</span></a>
+      <a class="fn-asset" href="{{ href('/check-in', country) }}"><b>{% if checked_today %}✓{% else %}–{% endif %}</b><span class="tiny">{{ t.checkin }}</span></a>
+    </div>
+  </div>
+  {% if not email %}
+  <div class="fn-acc-welcome">
+    <h2 class="fn-acc-welcome-title">Welcome to Harbor</h2>
+    <p class="fn-acc-sub">Guest checkout available · sign in to sync orders &amp; wishlist</p>
+  </div>
+  <p class="fn-acc-guest"><a class="btn" href="{{ href('/login', country) }}">{{ t.login }}</a>
+    <a class="btn ghost" href="{{ href('/register', country) }}">{{ t.create_account }}</a></p>
+  {% endif %}
+
+  <section class="fn-orders-card">
+    <div class="fn-orders-card-head">
+      <h2>{{ t.my_orders }}</h2>
+      <a href="{{ href('/account/orders', country) }}">{{ t.all if t.all is defined else 'All' }} ›</a>
+    </div>
+    <div class="fn-stat-grid">
+      <a class="fn-stat" href="{{ href('/account/orders?status=pending', country) }}"><i class="fn-ico fn-ico-await" aria-hidden="true"></i><span>{{ t.awaiting }} <b>{{ counts.pending }}</b></span></a>
+      <a class="fn-stat" href="{{ href('/account/orders?status=paid', country) }}"><i class="fn-ico fn-ico-paid" aria-hidden="true"></i><span>{{ t.paid }} <b>{{ counts.paid }}</b></span></a>
+      <a class="fn-stat" href="{{ href('/account/orders?status=shipped', country) }}"><i class="fn-ico fn-ico-ship" aria-hidden="true"></i><span>{{ t.shipped }} <b>{{ counts.shipped }}</b></span></a>
+      <a class="fn-stat" href="{{ href('/account/orders?status=returns', country) }}"><i class="fn-ico fn-ico-return" aria-hidden="true"></i><span>{{ t.request_return if t.request_return is defined else 'Returns' }} <b>{{ counts.returns|default(0) }}</b></span></a>
+    </div>
+  </section>
+
+
+  {# Mobile-only Me menu (M16). Desktop uses account_chrome rail. #}
+  <nav class="fn-me-mobile-nav" aria-label="{{ t.account }}">
+    <a href="{{ href('/account/addresses', country) }}">{{ t.addresses }}</a>
+    <a href="{{ href('/account/payments', country) }}">{{ t.payments }}</a>
+    <a href="{{ href('/account/wishlist', country) }}">{{ t.wishlist }}</a>
+    <a href="{{ href('/account/history', country) }}">{{ t.history }}</a>
+    <a href="{{ href('/account/coupons', country) }}">{{ t.my_coupons }} · {{ t.checkin }} · {{ t.my_balance }}</a>
+    <a href="{{ href('/share', country) }}">{{ t.share }}</a>
+    <a href="{{ href('/', country) }}?country={{ country }}">{{ country }} · {{ currency }}</a>
+    <a href="{{ href('/help', country) }}">{{ t.help }} · {{ t.contact }}</a>
+  </nav>
+
+  {% if recent_orders is defined and recent_orders %}
+  <div class="fn-sec-head">
+    <h2>{{ t.my_orders }}</h2>
+    <a class="fn-link" href="{{ href('/account/orders', country) }}">{{ t.view_more if t.view_more is defined else 'View all' }} ›</a>
+  </div>
+  {% for order in recent_orders[:3] %}
+  <div class="fn-order-row">
+    <div class="fn-order-thumbs">
+      {% for item in order.items[:2] %}
+      {% if item.image %}<img src="{{ item.image }}" alt="" width="56" height="56">{% endif %}
+      {% endfor %}
+      <div>
+        <div class="fn-order-id">{{ order.id }}</div>
+        <div class="tiny">{% if order.status == 'pending' %}{{ t.awaiting }}{% elif order.status == 'paid' %}{{ t.paid }}{% elif order.status == 'shipped' %}{{ t.shipped }}{% else %}{{ order.status }}{% endif %} · {{ order.due }}{% if order.items %} · {{ order.items|length }} {% endif %}</div>
+      </div>
+    </div>
+    <div class="fn-order-actions">
+      {% if order.status == 'pending' %}
+      <a class="btn amber" href="{{ href('/orders/' ~ order.id, country) }}">{{ t.pay_now if t.pay_now is defined else t.pay_method }}</a>
+      {% elif order.status == 'shipped' %}
+      <a class="btn ghost" href="{{ href('/orders/' ~ order.id, country) }}">{{ t.tracking if t.tracking is defined else 'Track' }}</a>
+      <a class="btn ghost" href="{{ href('/orders/' ~ order.id, country) }}">{{ t.details if t.details is defined else 'Details' }}</a>
+      {% else %}
+      <a class="btn ghost" href="{{ href('/orders/' ~ order.id, country) }}">{{ t.details if t.details is defined else 'Details' }}</a>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  {% if recent %}
+  <div class="fn-sec-head" style="margin-top:24px">
+    <h2>{{ t.you_may_like if t.you_may_like is defined else t.for_you }}</h2>
+  </div>
+  <div class="product-grid dense fn-like-grid">
+    {% for item in recent[:5] %}{% include "card.html" %}{% endfor %}
+  </div>
+  {% endif %}
+
+  <a class="fn-me-cs-fab" href="{% if h5_origin %}{{ h5_origin }}/chat{% else %}/chat{% endif %}" aria-label="{{ t.support }}">CS</a>
+
+{% elif panel == 'orders' %}
+  <header class="fn-acc-mbar"><a class="fn-list-back" href="{{ href('/account', country) }}">‹</a><h1 class="fn-list-mtitle">{{ t.my_orders }}</h1><span class="fn-list-filter-spacer"></span></header>
+  {% set st = request.query_params.get('status', '') %}
+  <div class="fn-tabs fn-order-tabs">
+    <a class="chip{% if not st %} on{% endif %}" href="{{ href('/account/orders', country) }}">{% if lang.startswith('zh') %}全部{% else %}All{% endif %}</a>
+    <a class="chip{% if st == 'pending' %} on{% endif %}" href="{{ href('/account/orders?status=pending', country) }}">{% if lang.startswith('zh') %}待付{% else %}To pay{% endif %}</a>
+    <a class="chip{% if st == 'paid' %} on{% endif %}" href="{{ href('/account/orders?status=paid', country) }}">{% if lang.startswith('zh') %}已付{% else %}Paid{% endif %}</a>
+    <a class="chip{% if st == 'shipped' %} on{% endif %}" href="{{ href('/account/orders?status=shipped', country) }}">{% if lang.startswith('zh') %}发货{% else %}Shipped{% endif %}</a>
+    <a class="chip fn-chip-returns{% if st == 'returns' %} on{% endif %}" href="{{ href('/account/orders?status=returns', country) }}">{% if lang.startswith('zh') %}退货{% else %}Returns{% endif %}</a>
+  </div>
+
+  {% if orders %}
+  {% for order in orders %}
+  <div class="fn-order-card">
+    <div class="fn-order-card-top">
+      <span class="tiny">{{ order.id }}{% if order.created %} · {{ order.created }}{% elif order.date %} · {{ order.date }}{% endif %}</span>
+      <span class="fn-pill {% if order.status == 'shipped' %}ok{% elif order.status == 'pending' %}warn{% else %}info{% endif %}">
+        {% if order.status == 'pending' %}{{ t.awaiting }}{% elif order.status == 'paid' %}{{ t.paid }}{% elif order.status == 'shipped' %}{{ t.shipped }}{% else %}{{ order.status }}{% endif %}
+      </span>
+    </div>
+    <div class="fn-order-card-body">
+      <div class="fn-order-thumbs">
+        {% for item in order.items[:2] %}
+        {% if item.image %}<img src="{{ item.image }}" alt="" width="64" height="64">{% endif %}
+        {% endfor %}
+        <div>
+          <div class="nm">{% if order.items|length == 1 %}{{ order.items[0].name }}{% else %}{{ order.items|length }} items{% endif %}</div>
+          {% if order.items|length > 1 %}<div class="tiny">{% for item in order.items[:2] %}{{ item.name }}{% if not loop.last %} + {% endif %}{% endfor %}</div>{% endif %}
+          {% if order.tracking %}<div class="tiny">{{ order.tracking }}</div>{% endif %}
+        </div>
+      </div>
+      <div class="fn-order-side">
+        <div class="price">{{ order.due }}</div>
+        <div class="fn-order-actions">
+          {% if order.status == 'pending' %}
+          <a class="btn amber" href="{{ href('/orders/' ~ order.id, country) }}">{{ t.pay_now if t.pay_now is defined else t.pay_method }}</a>
+          {% else %}
+          {% if order.status == 'shipped' %}<a class="btn ghost" href="{{ href('/orders/' ~ order.id, country) }}">{{ t.tracking if t.tracking is defined else 'Track' }}</a>
+          {% else %}<a class="btn ghost" href="{{ href('/account/orders', country) }}">{{ t.buy_again if t.buy_again is defined else 'Buy again' }}</a>{% endif %}
+          <a class="btn" href="{{ href('/orders/' ~ order.id, country) }}">{{ t.details if t.details is defined else 'Details' }}</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+  {% else %}
+  <p class="fn-empty">{{ t.no_orders }}</p>
+  <a class="btn ghost" href="{{ href('/', country) }}">{{ t.keep_shopping }}</a>
+  {% endif %}
+
+  {% if recent %}
+  <div class="fn-sec-head" style="margin-top:22px"><h2>{{ t.buy_again if t.buy_again is defined else t.shop_picks }}</h2></div>
+  <div class="product-grid dense" style="grid-template-columns:repeat(4,minmax(0,1fr))">
+    {% for item in recent[:4] %}{% include "card.html" %}{% endfor %}
+  </div>
+  {% endif %}
+
+{% elif panel == 'coupons' %}
+  <header class="fn-acc-mbar"><a class="fn-list-back" href="{{ href('/', country) }}">‹</a><h1 class="fn-list-mtitle">{{ t.my_coupons }}</h1><span class="fn-list-filter-spacer"></span></header>
+  {% for offer in offers %}
+  <article class="fn-coupon-row">
+    <div class="fn-coupon-amt">{{ offer.amount }}</div>
+    <div class="fn-coupon-body">
+      <div class="nm">{{ offer.name }}</div>
+      <div class="tiny" style="margin-top:6px">{{ t.coupon_rule.format(over=offer.threshold) }}</div>
+      <span class="fn-pill {% if offer.owned %}ok{% endif %}" style="margin-top:8px">{{ offer.status }}</span>
+    </div>
+  </article>
+  {% else %}
+  <p class="fn-empty">{{ t.rebate_note }}</p>
+  {% endfor %}
+
+{% elif panel == 'balance' %}
+  <header class="fn-acc-mbar"><a class="fn-list-back" href="{{ href('/', country) }}">‹</a><h1 class="fn-list-mtitle">{{ t.balance }}</h1><span class="fn-list-filter-spacer"></span></header>
+  <div class="fn-bal-hero">
+    <div class="fn-bal-label">Available balance</div>
+    <div class="amt">{{ balance_text }}</div>
+    <div class="fn-bal-actions">
+      <a class="btn fn-bal-withdraw" href="{{ href('/account/withdraw', country) }}">{{ t.withdraw }}</a>
+      <a class="btn fn-bal-rewards" href="{{ href('/check-in', country) }}">{{ t.checkin if t.checkin is defined else 'Rewards' }}</a>
+    </div>
+  </div>
+  <h2 class="fn-bal-activity-title">Recent activity</h2>
+  {% if ledger %}
+  <div class="fn-bal-activity">
+    {% for row in ledger[:8] %}
+    <article class="fn-bal-row">
+      <div>
+        <div class="nm">{{ row.label|default(row.kind) }}</div>
+        <div class="tiny">{{ row.date|default('') }}</div>
+      </div>
+      <div class="fn-bal-amt {% if row.amount_raw is defined and row.amount_raw < 0 %}neg{% else %}pos{% endif %}">{{ row.amount|default(row.delta) }}</div>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="tiny fn-bal-note">{{ t.rebate_note }}</p>
+  {% endif %}
+
+{% elif panel == 'withdraw' %}
+  <header class="fn-acc-mbar"><a class="fn-list-back" href="{{ href('/account/balance', country) }}">‹</a><h1 class="fn-list-mtitle">{{ t.withdraw }}</h1><span class="fn-list-filter-spacer"></span></header>
+  <p class="tiny">{{ t.balance }} {{ balance_text }}</p>
+  <div class="fn-panel fn-wide-form">
+    {% if email %}
+    <form method="post" action="/account/withdraw">
+      <label class="fn-field">{{ t.amount }} (USD) <input name="amount_cents" inputmode="decimal" placeholder="{{ balance_text }}"></label>
+      <label class="fn-field">{{ t.payout_account }} <input name="payout" autocomplete="email" placeholder="PayPal · you@email.com"></label>
+      <button class="btn" type="submit">{{ t.withdraw }}</button>
+    </form>
+    {% else %}
+    <a class="btn" href="{{ href('/login?next=/account/withdraw', country) }}">{{ t.login }}</a>
+    {% endif %}
+  </div>
+
+{% elif panel == 'wishlist' %}
+  <header class="fn-acc-mbar"><a class="fn-list-back" href="{{ href('/account', country) }}">‹</a><h1 class="fn-list-mtitle">{{ t.wishlist }}</h1><span class="fn-list-filter-spacer"></span></header>
+  {% if items %}
+  <div class="product-grid dense fn-wish-grid">{% for item in items %}{% include "card.html" %}{% endfor %}</div>
+  {% else %}
+  <p class="fn-empty">{{ t.wishlist }}</p>
+  {% if suggestions %}<div class="product-grid dense fn-wish-grid">{% for item in suggestions %}{% include "card.html" %}{% endfor %}</div>{% endif %}
+  {% endif %}
+
+{% elif panel == 'history' %}
+  <header class="fn-acc-mbar"><a class="fn-list-back" href="{{ href('/account', country) }}">‹</a><h1 class="fn-list-mtitle">{{ t.history if t.history is defined else 'History' }}</h1><span class="fn-list-filter-spacer"></span></header>
+  {% if items %}
+  <div class="product-grid dense fn-wish-grid">{% for item in items %}{% include "card.html" %}{% endfor %}</div>
+  {% else %}
+  <p class="fn-empty">{{ t.history }}</p>
+  {% if suggestions %}<div class="product-grid dense fn-wish-grid">{% for item in suggestions %}{% include "card.html" %}{% endfor %}</div>{% endif %}
+  {% endif %}
+
+{% elif panel == 'addresses' %}
+  <div class="fn-sec-head" style="margin-top:0"><h1 class="fn-acc-title">{{ t.addresses }}</h1></div>
+  {% for row in addresses|default([]) %}
+  <div class="fn-panel" style="{% if loop.first %}border:2px solid #0F2744{% endif %}">
+    {% if loop.first %}<span class="fn-pill info">Default</span>{% endif %}
+    <div style="margin-top:8px"><b>{{ row.name }}</b>{% if row.phone %} · {{ row.phone }}{% endif %}<br>
+    <span class="tiny">{{ row.address }}{% if row.city %} · {{ row.city }}{% endif %}{% if row.region %} {{ row.region }}{% endif %}{% if row.postal %} {{ row.postal }}{% endif %}</span></div>
+  </div>
+  {% else %}
+  <p class="fn-empty">{{ t.addresses }}</p>
+  {% endfor %}
+  {% if email %}
+  <form class="fn-panel" method="post" action="/account/addresses">
+    {% include "address_fields.html" %}
+    <button class="btn" type="submit">{{ t.save if t.save is defined else 'Save' }}</button>
+  </form>
+  {% else %}
+  <a class="btn" href="{{ href('/login?next=/account/addresses', country) }}">{{ t.login }}</a>
+  {% endif %}
+
+{% elif panel == 'payments' %}
+  <h1 class="fn-acc-title">{{ t.payments }}</h1>
+  {% for row in methods|default([]) %}
+  <div class="fn-panel" style="display:flex;justify-content:space-between;align-items:center">
+    <div><strong>{{ row.brand }}{% if row.last4 %} · Visa ••{{ row.last4 }}{% endif %}</strong>
+      <div class="tiny" style="margin-top:6px">{% if row.brand == 'PayPal' %}{{ row.email|default('') }}{% else %}via Stripe{% endif %}</div>
+    </div>
+    {% if loop.first %}<span class="fn-pill info">Preferred</span>{% endif %}
+  </div>
+  {% else %}
+  <div class="fn-panel"><strong>PayPal</strong><div class="tiny" style="margin-top:6px">Shown when enabled</div></div>
+  <div class="fn-panel"><strong>Card · Stripe</strong><div class="tiny" style="margin-top:6px">Shown when enabled</div></div>
+  <div class="fn-panel"><strong>LianLian</strong><div class="tiny" style="margin-top:6px">Shown when enabled</div></div>
+  {% endfor %}
+
+{% else %}
+  <h1 class="fn-acc-title">{{ t.account }}</h1>
+{% endif %}
+
+</div>
+</div>
+{% endblock %}

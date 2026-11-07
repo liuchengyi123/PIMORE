@@ -1,0 +1,82 @@
+﻿# Python
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+*.pyo
+*.egg-info/
+
+# Node
+node_modules/
+dist/
+.DS_Store
+*.local
+
+# Local / secrets / data
+.tools/
+.cursor/
+data/
+liveroom_data/
+shop/.env
+shop/**/*.sqlite
+shop/**/*.sqlite-*
+shop/data.sqlite
+**/*.db
+**/.env
+**/.env.*
+!**/.env.example
+
+# Huge local media (keep small static assets)
+shop/static/catalog/
+shop/static/products/
+shop/static/dept/
+shop/static/m01/
+shop/static/cs/
+
+# Nested / separate repos & non-Harbor
+harbor-android/
+app/
+liveroom/
+m01-patch/
+_dump_tmp/
+_ui_audit/
+
+# Backups & local dumps
+*.bak
+shop/app.py.*.bak
+_dump_tmp/
+desk-composer-after.png
+
+# Root scratch / agent dumps (not part of the product)
+/_*.py
+/_*.txt
+/_*.json
+/_*.html
+/_*.js
+/_*.ps1
+/_*.css
+/*.txt
+!requirements.txt
+/dump_*
+/accountApi_snip.txt
+/apis_me.txt
+/api_lang.txt
+/app_now.txt
+/card_dump.txt
+/cart_body.txt
+/home_*.txt
+/i18n_scan.txt
+/me_*.txt
+/more_print.txt
+/present_snip.txt
+/prod_api_out.txt
+/scan_more.txt
+/strings_out.txt
+/tab_snip.txt
+/start.bat
+
+shop/_restore/
+shop/_tmp_*
+shop/_ex_*.py
+shop/_schema.py
+

@@ -1,0 +1,21 @@
+/* Harbor Function mobile tokens — visual rebuild */
+:root {
+  --fn-ink: #0F2744;
+  --fn-teal: #0E7490;
+  --fn-amber: #B45309;
+  --fn-sand: #F7F4EF;
+  --fn-line: #E8E4DC;
+  --fn-muted: #6B7280;
+  --fn-surface: #FFFFFF;
+}
+.fn-page {
+  --ink: var(--fn-ink);
+  --teal: var(--fn-teal);
+  --amber: var(--fn-amber);
+  --sand: var(--fn-sand);
+  background: var(--fn-sand);
+  color: var(--fn-ink);
+  min-height: 100%;
+  box-sizing: border-box;
+}
+.fn-page *, .fn-page *::before, .fn-page *::after { box-sizing: border-box; }

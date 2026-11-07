@@ -1,0 +1,63 @@
+﻿{% extends "base.html" %}
+{% block body_class %}{% if panel == 'help' %} fn-help-page{% elif panel in ['shipping','privacy','terms'] %} fn-policy-page{% endif %}{% endblock %}
+{% block body %}
+{% set fees = promos.shipping if promos is defined and promos and promos.shipping else {} %}
+<div class="fn-policy">
+{% if panel == 'shipping' or panel == 'privacy' or panel == 'terms' %}
+  <div class="fn-tabs" style="margin-bottom:16px">
+    <a class="chip{% if panel == 'shipping' %} on{% endif %}" href="{{ href('/policies/shipping', country) }}">{{ t.shipping_policy }}</a>
+    <a class="chip{% if panel == 'privacy' %} on{% endif %}" href="{{ href('/policies/privacy', country) }}">{{ t.privacy }}</a>
+    <a class="chip{% if panel == 'terms' %} on{% endif %}" href="{{ href('/policies/terms', country) }}">{{ t.terms if t.terms is defined else 'Terms of Service' }}</a>
+  </div>
+  <h1 class="fn-acc-title">{% if panel == 'shipping' %}{{ t.shipping_policy }}{% elif panel == 'terms' %}{{ t.terms if t.terms is defined else 'Terms of Service' }}{% else %}{{ t.privacy }}{% endif %}</h1>
+  {% if panel == 'shipping' %}
+  <div class="fn-panel"><b>{{ t.free_shipping }}</b><p class="tiny" style="margin-top:8px">{{ promise_line }}</p></div>
+  <div class="fn-panel"><b>{{ t.shipping_fee }}</b>
+    <table class="specs" style="margin-top:10px;width:100%">
+      <tbody>
+        <tr><th>US / CA</th><td>{% if fees.USCA is defined %}${{ '%.2f'|format(fees.USCA / 100) }}{% endif %}</td></tr>
+        <tr><th>EU</th><td>{% if fees.EU is defined %}${{ '%.2f'|format(fees.EU / 100) }}{% endif %}</td></tr>
+        <tr><th>JP</th><td>{% if fees.JP is defined %}${{ '%.2f'|format(fees.JP / 100) }}{% endif %}</td></tr>
+        <tr><th>MX / BR</th><td>{% if fees.MXBR is defined %}${{ '%.2f'|format(fees.MXBR / 100) }}{% endif %}</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="fn-panel" id="returns"><b>{{ t.returns_window }}</b>
+    {% if deal_line %}<p class="tiny" style="margin-top:8px">{{ deal_line }}</p>{% endif %}
+    {% if deal_more %}<p class="tiny">{{ deal_more }}</p>{% endif %}
+  </div>
+  {% elif panel == 'terms' %}
+  {% include 'includes/terms_body.html' %}
+  {% else %}
+  {% include 'includes/privacy_body.html' %}
+  {% endif %}
+{% elif panel == 'help' %}
+  <header class="fn-acc-mbar"><a class="fn-list-back" href="{{ href('/account', country) }}">‹</a><h1 class="fn-list-mtitle">{{ t.help if t.help is defined else 'Help center' }}</h1><span class="fn-list-filter-spacer"></span></header>
+  <div class="fn-help-list">
+    <a class="fn-help-row" href="{{ href('/policies/shipping', country) }}"><div class="nm">Shipping &amp; delivery</div><div class="tiny">Windows, tracking, free-ship threshold</div></a>
+    <a class="fn-help-row" href="{{ href('/policies/shipping', country) }}#returns"><div class="nm">Returns &amp; refunds</div><div class="tiny">How to request a return</div></a>
+    <a class="fn-help-row" href="{{ href('/policies/privacy', country) }}"><div class="nm">{{ t.privacy }}</div><div class="tiny">What we collect and how we use it</div></a>
+    <a class="fn-help-row" href="{{ href('/policies/terms', country) }}"><div class="nm">{{ t.terms if t.terms is defined else 'Terms of Service' }}</div><div class="tiny">Rules for using Pimo</div></a>
+    <a class="fn-help-row" href="{{ href('/account/payments', country) }}"><div class="nm">Payments</div><div class="tiny">PayPal, Stripe card, LianLian</div></a>
+    <a class="fn-help-row" href="{{ href('/account', country) }}"><div class="nm">Account &amp; guest checkout</div><div class="tiny">Orders without signing up</div></a>
+    <a class="fn-help-row" id="account-deletion" href="{{ href('/contact', country) }}"><div class="nm">Delete account</div><div class="tiny">Request deletion via chat or support@linkiip.com</div></a>
+  </div>
+  <a class="btn fn-help-chat" href="{% if h5_origin %}{{ h5_origin }}/chat{% else %}/chat{% endif %}">{{ t.support if t.support is defined else 'Contact / Chat' }}</a>
+{% elif panel == 'contact' %}
+  <h1 class="fn-acc-title">{{ t.contact }}</h1>
+  <div class="fn-panel"><p class="tiny" style="line-height:1.6">Online chat is fastest for order questions. Or send a message below.</p>
+    <a class="btn" style="margin-top:12px" href="{% if h5_origin %}{{ h5_origin }}/chat{% else %}/chat{% endif %}">{{ t.support }}</a>
+  </div>
+  <form class="fn-panel" method="post" action="/contact" style="max-width:640px">
+    <label class="fn-field">{{ t.email }} <input name="email" type="email" autocomplete="email" required></label>
+    <label class="fn-field">{{ t.message if t.message is defined else 'Message' }}
+      <textarea name="body" rows="4" required style="width:100%;margin-top:6px;border:1px solid var(--fn-line,#E2E6EE);border-radius:10px;padding:10px 12px;font:inherit"></textarea>
+    </label>
+    <button class="btn" type="submit">{{ t.send if t.send is defined else 'Send message' }}</button>
+  </form>
+{% else %}
+  <h1 class="fn-acc-title">{{ t.help }}</h1>
+  <div class="fn-panel"><p class="tiny">{{ panel }}</p></div>
+{% endif %}
+</div>
+{% endblock %}

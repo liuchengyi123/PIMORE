@@ -1,0 +1,2 @@
+{% from "shot.html" import shot %}
+{% for item in products %}{% set eager = loop.first %}{% include "card.html" %}{% endfor %}

@@ -1,0 +1,160 @@
+{% extends "admin_base.html" %}
+{% block body %}
+<header class="page-head">
+  <div>
+    <h1>{% if board.pages == 0 and board.products == 0 %}数据 · 空态{% else %}数据{% endif %}</h1>
+    <p class="muted">{% if board.pages == 0 and board.products == 0 %}今日暂无流量时的空态示意。{% else %}访问、商品点击、加购、下单从这次上线开始记。累计购买用全部历史订单。金额是美元。{% endif %}</p>
+  </div>
+</header>
+<nav class="ranges" aria-label="日期范围">
+  <a class="{% if board.days == 1 %}on{% endif %}" href="/admin/stats?days=1">今日</a>
+  <a class="{% if board.days == 7 %}on{% endif %}" href="/admin/stats?days=7">近7天</a>
+  <a class="{% if board.days == 30 %}on{% endif %}" href="/admin/stats?days=30">近30天</a>
+</nav>
+
+<div class="kpi-grid" data-figma="AD02">
+  <div class="kpi-card">
+    <span class="kpi-label">访问</span>
+    <b class="kpi-val">{{ board.pages }}</b>
+    <span class="kpi-sub">独立访客 {{ board.visitors }}</span>
+  </div>
+  <div class="kpi-card">
+    <span class="kpi-label">商品点击</span>
+    <b class="kpi-val">{{ board.products }}</b>
+    <span class="kpi-sub">加购 {{ board.carts }}</span>
+  </div>
+  <div class="kpi-card">
+    <span class="kpi-label">下单</span>
+    <b class="kpi-val">{{ board.orders }}</b>
+    <span class="kpi-sub">支付单 {{ board.paid_orders }}</span>
+  </div>
+  <div class="kpi-card">
+    <span class="kpi-label">支付金额</span>
+    <b class="kpi-val">{{ format_money(board.paid_cents, 'USD') }}</b>
+    <span class="kpi-sub">访问到支付 {{ board.rate }}</span>
+  </div>
+  <div class="kpi-card compact">
+    <span class="kpi-label">累计订单</span>
+    <b class="kpi-val">{{ board.life_orders }}</b>
+  </div>
+  <div class="kpi-card compact">
+    <span class="kpi-label">累计已付</span>
+    <b class="kpi-val">{{ board.life_paid }}</b>
+  </div>
+  <div class="kpi-card compact">
+    <span class="kpi-label">累计已付金额</span>
+    <b class="kpi-val">{{ format_money(board.life_cents, 'USD') }}</b>
+  </div>
+  <div class="kpi-card compact">
+    <span class="kpi-label">已退款</span>
+    <b class="kpi-val">{{ board.life_refunded }}</b>
+    <span class="kpi-sub">{{ format_money(board.life_refunded_cents, 'USD') }}</span>
+  </div>
+</div>
+
+{% if board.pages == 0 and board.products == 0 %}
+<div class="card empty-board">
+  <p class="empty-center">这段还没有访问。</p>
+</div>
+<div class="card empty-board">
+  <p class="empty-center">这段还没有商品点击。</p>
+</div>
+{% else %}
+<div class="split">
+  <div class="card">
+    <h2>每天访问</h2>
+    <div class="pad meters">
+      {% for row in board.trend %}
+      <div><span>{{ row.label }}</span><i style="width: {{ row.width }}%"></i><b>{{ row.n }}</b></div>
+      {% else %}
+      <p class="muted">这段还没有访问。</p>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="card">
+    <h2>语种占比</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>语言</th><th>访问</th><th>占比</th></tr></thead>
+        <tbody>
+        {% for row in board.langs %}
+        <tr><td>{{ row.name }}</td><td>{{ row.n }}</td><td>{{ row.share }}</td></tr>
+        {% else %}
+        <tr><td class="empty" colspan="3">这段还没有访问。</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <h2>国家</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>国家</th><th>访问</th></tr></thead>
+        <tbody>
+        {% for row in board.countries %}
+        <tr><td>{{ row.code }}</td><td>{{ row.n }}</td></tr>
+        {% else %}
+        <tr><td class="empty" colspan="2">这段还没有访问。</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="note">{{ push_line }}</p>
+    <p class="note">{{ hot_line }}</p>
+  </div>
+</div>
+
+<div class="split">
+  <div class="card">
+    <h2>这段商品点击</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>商品</th><th>点击</th><th>加购</th><th>支付件数</th><th>支付金额</th></tr></thead>
+        <tbody>
+        {% for row in board["items"] %}
+        <tr>
+          <td><div class="title">{{ row.name }}</div><div class="sku">{{ row.sku }}</div></td>
+          <td>{{ row.views }}</td>
+          <td>{{ row.carts }}</td>
+          <td>{{ row.sold }}</td>
+          <td>{{ format_money(row.cents, 'USD') }}</td>
+        </tr>
+        {% else %}
+        <tr><td class="empty" colspan="5">这段还没有商品点击。</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card funnel-card">
+    <h2>投放漏斗摘要</h2>
+    <div class="funnel-kpis">
+      <div class="funnel-kpi"><span>落地</span><b>{{ board.pages }}</b></div>
+      <div class="funnel-kpi"><span>点商品</span><b>{{ board.products }}</b></div>
+      <div class="funnel-kpi"><span>成交</span><b>{{ board.paid_orders }}</b></div>
+    </div>
+    <p class="note">广告回传与账户配置请到投放回传。</p>
+    <p><a class="btn ghost sm" href="/admin/traffic">打开投放回传</a></p>
+  </div>
+</div>
+
+<div class="card">
+  <h2>累计卖出</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>商品</th><th>件数</th><th>金额</th></tr></thead>
+      <tbody>
+      {% for row in board.sold %}
+      <tr>
+        <td><div class="title">{{ row.name }}</div><div class="sku">{{ row.sku }}</div></td>
+        <td>{{ row.qty }}</td>
+        <td>{{ format_money(row.cents, 'USD') }}</td>
+      </tr>
+      {% else %}
+      <tr><td class="empty" colspan="3">还没有已支付的商品。</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

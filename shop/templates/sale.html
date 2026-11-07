@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block body_class %} fn-event-page{% endblock %}
+{% from "shot.html" import shot %}
+{% block body %}
+<div class="fn-event">
+  <header class="fn-event-mbar">
+    <a class="fn-list-back" href="{{ href('/', country) }}" aria-label="{{ t.back }}">‹</a>
+    <h1 class="fn-list-mtitle">{{ t.sale_kicker or 'Sale' }}</h1>
+    <span class="fn-list-filter-spacer"></span>
+  </header>
+  <div class="fn-hero fn-hero-sale">
+    <div class="kicker">{{ t.sale_kicker or 'SALE' }}</div>
+    <h1>{{ t.sale_title }}</h1>
+    {% if sale and sale.ends_at %}<p class="poster-clock tiny" data-ends="{{ sale.ends_at }}">--:--:--</p>{% endif %}
+    {% if sale and sale.rules %}<p class="tiny">{{ sale.rules }}</p>{% endif %}
+  </div>
+  {% if sale and sale.items %}
+  <div class="product-grid dense fn-deal-grid">
+    {% for item in sale["items"] %}
+    <a class="card fn-deal" href="{{ href('/p/' ~ item.sku, country) }}">
+      <img src="{{ shot(item.image) }}" alt="{{ item.name }}" width="480" height="480">
+      <div class="fn-deal-body">
+        <div class="nm">{{ item.name }}</div>
+        <div class="price">{{ item.price }}</div>
+        {% if item.original %}<div class="tiny was">{{ item.original }}</div>{% endif %}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="fn-empty-block">
+    <h2>{{ t.sale_empty }}</h2>
+    <a class="btn" href="{{ href('/', country) }}">{{ t.back_shop or t.keep_shopping }}</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

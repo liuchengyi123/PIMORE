@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>规格定价与拦截</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1c1b19;
+      --muted: #5c5852;
+      --line: #c8c2b8;
+      --paper: #f4f1eb;
+      --card: #fffcf7;
+      --stop: #8c2f2f;
+      --stop-bg: #f8e8e4;
+      --go: #1f5c3a;
+      --go-bg: #e5f2ea;
+      --check: #8a5a12;
+      --check-bg: #f8f0dc;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      line-height: 1.45;
+    }
+    main {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 36px 20px 64px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      font-weight: 650;
+      letter-spacing: -0.02em;
+    }
+    .lead {
+      margin: 0 0 28px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+    .flow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .box {
+      width: min(280px, 100%);
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 12px 14px;
+      text-align: center;
+    }
+    .box strong { display: block; font-size: 15px; }
+    .box span { display: block; margin-top: 2px; color: var(--muted); font-size: 13px; }
+    .check {
+      background: var(--check-bg);
+      border-color: #e0c98a;
+    }
+    .check strong { color: var(--check); }
+    .stop {
+      background: var(--stop-bg);
+      border-color: #e4b2aa;
+    }
+    .stop strong { color: var(--stop); }
+    .go {
+      background: var(--go-bg);
+      border-color: #b7d4c2;
+    }
+    .go strong { color: var(--go); }
+    .arrow {
+      width: 1px;
+      height: 22px;
+      background: #8a847a;
+      position: relative;
+    }
+    .arrow::after {
+      content: "";
+      position: absolute;
+      left: -4px;
+      bottom: -1px;
+      border-left: 4.5px solid transparent;
+      border-right: 4.5px solid transparent;
+      border-top: 7px solid #8a847a;
+    }
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      width: min(620px, 100%);
+    }
+    .col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .join {
+      width: min(620px, 100%);
+      height: 28px;
+      position: relative;
+    }
+    .join svg { width: 100%; height: 28px; display: block; }
+    .tag {
+      margin: 4px 0 8px;
+      font-size: 13px;
+      font-weight: 650;
+    }
+    .tag.yes { color: var(--stop); }
+    .tag.no { color: var(--go); }
+    h2 {
+      margin: 36px 0 12px;
+      font-size: 18px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+      font-size: 14px;
+    }
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--line);
+    }
+    th { font-size: 12px; color: var(--muted); font-weight: 650; }
+    tr:last-child td { border-bottom: 0; }
+    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .note {
+      margin-top: 16px;
+      padding: 12px 14px;
+      border: 1px solid #e0c98a;
+      background: var(--check-bg);
+      border-radius: 10px;
+      font-size: 14px;
+    }
+    .note strong { color: var(--check); }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>规格定价与拦截</h1>
+    <p class="lead">每个规格单独算价。重量售价达到成本售价的 1.2 倍，整件拦住。供货价本身不改。图上的 20%、30 克和倍率是当前默认，后台「定价规则」可以改。</p>
+
+    <div class="flow">
+      <div class="box">
+        <strong>上传一件商品</strong>
+        <span>供货价原样保留</span>
+      </div>
+      <div class="arrow"></div>
+      <div class="box">
+        <strong>逐个规格计算</strong>
+        <span>不按整件取最低价</span>
+      </div>
+      <div class="arrow"></div>
+      <div class="split">
+        <div class="box">
+          <strong>成本售价</strong>
+          <span>供货价 × 售价倍率</span>
+        </div>
+        <div class="box">
+          <strong>重量售价</strong>
+          <span>克数 ÷ 30 × $1</span>
+        </div>
+      </div>
+      <div class="join" aria-hidden="true">
+        <svg viewBox="0 0 620 28" preserveAspectRatio="none">
+          <path d="M155 0 V14 H465 V0 M310 14 V28" fill="none" stroke="#8a847a" stroke-width="1.5"/>
+          <path d="M305 22 L310 28 L315 22" fill="none" stroke="#8a847a" stroke-width="1.5"/>
+        </svg>
+      </div>
+      <div class="box check">
+        <strong>重量价高出 20%？</strong>
+        <span>和这一规格的成本售价比</span>
+      </div>
+      <div class="join" aria-hidden="true">
+        <svg viewBox="0 0 620 28" preserveAspectRatio="none">
+          <path d="M310 0 V14 H155 V28 M310 14 H465 V28" fill="none" stroke="#8a847a" stroke-width="1.5"/>
+          <path d="M150 22 L155 28 L160 22" fill="none" stroke="#8a847a" stroke-width="1.5"/>
+          <path d="M460 22 L465 28 L470 22" fill="none" stroke="#8a847a" stroke-width="1.5"/>
+        </svg>
+      </div>
+      <div class="split">
+        <div class="col">
+          <div class="tag yes">是</div>
+          <div class="box stop">
+            <strong>整件拦截</strong>
+            <span>不上架，也不翻译</span>
+          </div>
+        </div>
+        <div class="col">
+          <div class="tag no">否</div>
+          <div class="box">
+            <strong>规格售价</strong>
+            <span>两个价里取更高</span>
+          </div>
+          <div class="arrow"></div>
+          <div class="box">
+            <strong>规格原价</strong>
+            <span>倍率原价，且不低于售价</span>
+          </div>
+          <div class="arrow"></div>
+          <div class="box go">
+            <strong>可以上架</strong>
+            <span>每个规格都没触发</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2>三笔对照</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>例子</th>
+          <th class="num">成本售价</th>
+          <th class="num">重量售价</th>
+          <th>结果</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>20 克，供货 $1 × 1.1</td>
+          <td class="num">$1.10</td>
+          <td class="num">$0.67</td>
+          <td>卖 $1.10</td>
+        </tr>
+        <tr>
+          <td>约 330 克，成本售价 $10</td>
+          <td class="num">$10.00</td>
+          <td class="num">$11.00</td>
+          <td>卖 $11.00</td>
+        </tr>
+        <tr>
+          <td>50 克，成本售价 $1</td>
+          <td class="num">$1.00</td>
+          <td class="num">$1.67</td>
+          <td>整件拦截</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="note">
+      <strong>一个规格触发，整件都不上架。</strong>
+      刚好高出两成也拦。当前货盘售价倍率是 1.1。50 克的重量价是 $1.67，20 克是 $0.67。
+    </div>
+  </main>
+</body>
+</html>

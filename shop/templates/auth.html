@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="fn-auth">
+  <div class="fn-auth-brand">HARBOR</div>
+{% if mode == 'login' %}
+  <h1>{{ t.login }}</h1>
+  <form class="fn-auth-form" method="post" action="{{ href('/login', country) }}">
+    <input type="hidden" name="next" value="{{ request.query_params.get('next', '') }}">
+    <label class="fn-field">{{ t.email }} <input name="email" type="email" autocomplete="email"></label>
+    <label class="fn-field">{{ t.password }} <input name="password" type="password" autocomplete="current-password"></label>
+    <button class="btn" type="submit" style="width:100%">{{ t.login }}</button>
+  </form>
+  <p class="fn-auth-links"><a href="{{ href('/register?next=' ~ request.query_params.get('next', ''), country) }}">{{ t.create_account }}</a>
+    · <a href="{{ href('/reset-password', country) }}">{{ t.reset_password }}</a></p>
+{% elif mode == 'register' %}
+  <h1>{{ t.register }}</h1>
+  {% if code|default('') == 'taken' %}<p class="fn-err">{{ t.email_taken }}</p>{% endif %}
+  {% if code|default('') == 'short' %}<p class="fn-err">{{ t.password_short }}</p>{% endif %}
+  {% if code|default('') == 'email' %}<p class="fn-err">{{ t.bad_email }}</p>{% endif %}
+  <form class="fn-auth-form" method="post" action="{{ href('/register', country) }}">
+    <input type="hidden" name="next" value="{{ request.query_params.get('next', '') }}">
+    <label class="fn-field">{{ t.email }} <input name="email" type="email" required value="{{ form_email|default('') }}" autocomplete="email"></label>
+    <label class="fn-field">{{ t.password }} <input name="password" type="password" required autocomplete="new-password"></label>
+    <button class="btn" type="submit" style="width:100%">{{ t.register_go }}</button>
+  </form>
+  <p class="fn-auth-links"><a href="{{ href('/login?next=' ~ request.query_params.get('next', ''), country) }}">{{ t.have_account }}</a></p>
+{% elif mode == 'set' %}
+  {% if has_password %}
+  <h1>{{ t.reset_password }}</h1>
+  {% if request.query_params.get('saved') %}<p>{{ t.password_saved }}</p>{% endif %}
+  {% if request.query_params.get('sent') %}<p>{{ t.reset_sent }}</p>{% endif %}
+  <p class="tiny">{{ t.reset_mail_only }}</p>
+  <form class="fn-auth-form" method="post" action="{{ href('/account/password', country) }}">
+    <button class="btn" type="submit" style="width:100%">{{ t.send_reset }}</button>
+  </form>
+  {% else %}
+  <h1>{{ t.set_password }}</h1>
+  {% if request.query_params.get('saved') %}<p>{{ t.password_saved }}</p>{% endif %}
+  {% if code|default('') == 'short' %}<p class="fn-err">{{ t.password_short }}</p>{% endif %}
+  <form class="fn-auth-form" method="post" action="{{ href('/account/password', country) }}">
+    <label class="fn-field">{{ t.password }} <input name="password" type="password" minlength="8" autocomplete="new-password"></label>
+    <button class="btn" type="submit" style="width:100%">{{ t.set_password }}</button>
+  </form>
+  {% endif %}
+{% else %}
+  <h1>{{ t.reset_password }}</h1>
+  {% if code|default('') == 'sent' %}<p>{{ t.reset_sent }}</p>{% endif %}
+  {% if code|default('') == 'bad' %}<p class="fn-err">{{ t.password_short }}</p>{% endif %}
+  <form class="fn-auth-form" method="post" action="/reset-password">
+    {% if request.query_params.get('token') %}
+    <input type="hidden" name="token" value="{{ request.query_params.get('token') }}">
+    <label class="fn-field">{{ t.password }} <input name="password" type="password" minlength="8" autocomplete="new-password"></label>
+    <button class="btn" type="submit" style="width:100%">{{ t.set_password }}</button>
+    {% else %}
+    <label class="fn-field">{{ t.email }} <input name="email" type="email" required autocomplete="email"></label>
+    <button class="btn" type="submit" style="width:100%">{{ t.send_reset }}</button>
+    {% endif %}
+  </form>
+{% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,19 @@
+{# Function D05 account left rail #}
+<aside class="fn-acc-rail" aria-label="{{ t.account }}">
+  <div class="fn-acc-rail-title">{{ t.account }}</div>
+  <nav class="fn-acc-nav">
+    <a class="{% if panel == 'home' %}on{% endif %}" href="{{ href('/account', country) }}">{{ t.account }}</a>
+    <a class="{% if panel == 'orders' %}on{% endif %}" href="{{ href('/account/orders', country) }}">{{ t.my_orders }}</a>
+    <a class="{% if panel == 'addresses' %}on{% endif %}" href="{{ href('/account/addresses', country) }}">{{ t.addresses }}</a>
+    <a class="{% if panel == 'payments' %}on{% endif %}" href="{{ href('/account/payments', country) }}">{{ t.payments }}</a>
+    <a class="{% if panel == 'wishlist' %}on{% endif %}" href="{{ href('/account/wishlist', country) }}">{{ t.wishlist }}</a>
+    <a class="{% if panel == 'history' %}on{% endif %}" href="{{ href('/account/history', country) }}">{{ t.history }}</a>
+    <a class="{% if panel == 'coupons' %}on{% endif %}" href="{{ href('/account/coupons', country) }}">{{ t.my_coupons }}</a>
+    <a class="{% if panel == 'balance' or panel == 'withdraw' %}on{% endif %}" href="{{ href('/account/balance', country) }}">{{ t.balance }} / {{ t.withdraw }}</a>
+    <a href="{{ href('/check-in', country) }}">{{ t.checkin }} / {{ t.my_balance }}</a>
+    <a href="{{ href('/share', country) }}">{{ t.share }}</a>
+    <a href="{{ href('/', country) }}?country={{ country }}">{{ country }} · {{ currency }}</a>
+    <a href="{{ href('/help', country) }}">{{ t.help }} · {{ t.contact }}</a>
+    <a href="{% if h5_origin %}{{ h5_origin }}/chat{% else %}/chat{% endif %}">{{ t.support }}</a>
+  </nav>
+</aside>

@@ -1,0 +1,311 @@
+{
+  "pages": [
+    { "path": "pages/return/index", "style": { "navigationBarTitleText": "Return", "navigationBarBackgroundColor": "#F7F4EF", "navigationBarTextStyle": "black" } },
+    { "path": "pages/offline/index", "style": { "navigationBarTitleText": "Offline", "navigationBarBackgroundColor": "#F7F4EF", "navigationBarTextStyle": "black" } },
+    {
+      "path": "pages/home/index",
+      "style": {
+        "navigationBarTitleText": "Harbor",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/browse/index",
+      "style": {
+        "navigationBarTitleText": "Browse",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/cart/index",
+      "style": {
+        "navigationBarTitleText": "Cart",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/me/index",
+      "style": {
+        "navigationBarTitleText": "Me",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/login/index",
+      "style": {
+        "navigationBarTitleText": "Sign in",
+        "navigationStyle": "custom",
+        "navigationBarBackgroundColor": "#F7F4EF"
+      }
+    },
+    {
+      "path": "pages/register/index",
+      "style": {
+        "navigationBarTitleText": "Register",
+        "navigationStyle": "custom",
+        "navigationBarBackgroundColor": "#F7F4EF"
+      }
+    },
+    {
+      "path": "pages/search/index",
+      "style": {
+        "navigationBarTitleText": "Search",
+        "navigationBarBackgroundColor": "#F7F6F3",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "path": "pages/categories/index",
+      "style": {
+        "navigationBarTitleText": "Categories",
+        "navigationBarBackgroundColor": "#F7F6F3",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "path": "pages/category/index",
+      "style": {
+        "navigationBarTitleText": "Category",
+        "navigationBarBackgroundColor": "#F7F6F3",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "path": "pages/sale/index",
+      "style": {
+        "navigationBarTitleText": "Sale",
+        "navigationBarBackgroundColor": "#F7F6F3",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "path": "pages/new/index",
+      "style": {
+        "navigationBarTitleText": "New",
+        "navigationBarBackgroundColor": "#F7F6F3",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "path": "pages/ship-lp/index",
+      "style": {
+        "navigationBarTitleText": "Flash",
+        "navigationBarBackgroundColor": "#F7F6F3",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "path": "pages/compare/index",
+      "style": {
+        "navigationBarTitleText": "Compare",
+        "navigationBarBackgroundColor": "#F7F6F3",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "path": "pages/pdp/index",
+      "style": {
+        "navigationBarTitleText": "Product",
+        "navigationBarBackgroundColor": "#F7F6F3",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "path": "pages/checkout/index",
+      "style": {
+        "navigationBarTitleText": "Checkout",
+        "navigationBarBackgroundColor": "#F7F6F3",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "path": "pages/orders/index",
+      "style": {
+        "navigationBarTitleText": "Orders",
+        "navigationBarBackgroundColor": "#F7F6F3",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "path": "pages/order-detail/index",
+      "style": {
+        "navigationBarTitleText": "Order",
+        "navigationBarBackgroundColor": "#F7F6F3",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "path": "pages/invoice/index",
+      "style": {
+        "navigationBarTitleText": "Invoice",
+        "navigationBarBackgroundColor": "#F7F6F3",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "path": "pages/coupons/index",
+      "style": {
+        "navigationBarTitleText": "Coupons",
+        "navigationBarBackgroundColor": "#F7F6F3",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "path": "pages/balance/index",
+      "style": {
+        "navigationBarTitleText": "Balance",
+        "navigationBarBackgroundColor": "#F7F6F3",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "path": "pages/withdraw/index",
+      "style": {
+        "navigationBarTitleText": "Withdraw",
+        "navigationBarBackgroundColor": "#F7F6F3",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "path": "pages/wishlist/index",
+      "style": {
+        "navigationBarTitleText": "Wishlist",
+        "navigationBarBackgroundColor": "#F7F6F3",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "path": "pages/history/index",
+      "style": {
+        "navigationBarTitleText": "History",
+        "navigationBarBackgroundColor": "#F7F6F3",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "path": "pages/addresses/index",
+      "style": {
+        "navigationBarTitleText": "Addresses",
+        "navigationBarBackgroundColor": "#F7F6F3",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "path": "pages/payments/index",
+      "style": {
+        "navigationBarTitleText": "Payments",
+        "navigationBarBackgroundColor": "#F7F6F3",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "path": "pages/checkin/index",
+      "style": {
+        "navigationBarTitleText": "Check-in",
+        "navigationBarBackgroundColor": "#F7F6F3",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "path": "pages/invite/index",
+      "style": {
+        "navigationBarTitleText": "Invite",
+        "navigationBarBackgroundColor": "#F7F6F3",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "path": "pages/referral/index",
+      "style": {
+        "navigationBarTitleText": "Referral",
+        "navigationBarBackgroundColor": "#F7F6F3",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "path": "pages/rewards/index",
+      "style": {
+        "navigationBarTitleText": "Rewards",
+        "navigationBarBackgroundColor": "#F7F6F3",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "path": "pages/install/index",
+      "style": {
+        "navigationBarTitleText": "Install",
+        "navigationBarBackgroundColor": "#F7F6F3",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "path": "pages/help/index",
+      "style": {
+        "navigationBarTitleText": "Help",
+        "navigationBarBackgroundColor": "#F7F6F3",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "path": "pages/contact/index",
+      "style": {
+        "navigationBarTitleText": "Contact",
+        "navigationBarBackgroundColor": "#F7F6F3",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "path": "pages/chat/index",
+      "style": {
+        "navigationBarTitleText": "Support",
+        "navigationBarBackgroundColor": "#F7F6F3",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "path": "pages/policy/index",
+      "style": {
+        "navigationBarTitleText": "Policy",
+        "navigationBarBackgroundColor": "#F7F6F3",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "path": "pages/locale/index",
+      "style": {
+        "navigationBarTitleText": "Locale",
+        "navigationBarBackgroundColor": "#F7F6F3",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "path": "pages/webview/index",
+      "style": {
+        "navigationBarTitleText": "Harbor",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/order-success/index",
+      "style": {
+        "navigationBarTitleText": "Order",
+        "navigationBarBackgroundColor": "#F7F6F3",
+        "navigationBarTextStyle": "black"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "Harbor",
+    "navigationBarBackgroundColor": "#F7F6F3",
+    "backgroundColor": "#F7F6F3",
+    "backgroundColorTop": "#F7F6F3",
+    "backgroundColorBottom": "#F7F6F3"
+  },
+  "easycom": {
+    "autoscan": true,
+    "custom": {
+      "^Hb(.*)": "@/components/Hb$1.vue"
+    }
+  }
+}

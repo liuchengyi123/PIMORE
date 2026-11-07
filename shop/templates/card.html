@@ -1,0 +1,22 @@
+{% from "shot.html" import shot %}
+<a class="card" href="{{ href('/p/' ~ item.sku, country) }}">
+  <span class="pic">
+    <img src="{{ shot(item.image) }}" width="480" height="480" alt="{{ item.name }}" decoding="async" {% if eager %}fetchpriority="high"{% else %}loading="lazy"{% endif %}>
+    <span class="pic-cap">{{ item.name.split(' ')[:2]|join(' ') }}</span>
+    {% if item.sponsored %}<span class="sponsored">{{ t.sponsored }}</span>{% endif %}
+    {% if item.hot %}<span class="hot-badge">{{ t.hot_badge }}</span>{% endif %}
+    {% if item.only_left %}<span class="only-left">{{ t.only_left.format(n=item.only_left) }}</span>{% endif %}
+  </span>
+  <span class="body">
+    <span class="name">{{ item.name }}</span>
+    {% if item.limit_one %}<span class="limit-one">{{ t.limit_one }}</span>{% endif %}
+    <span class="pr"><span class="price">{{ item.price }}</span>{% if item.original %}<span class="was{% if item.higher %} strike{% endif %}">{{ item.original }}</span>{% endif %}{% if item.off_pct %}<span class="off-badge">{{ t.off_badge.format(pct=item.off_pct) }}</span>{% endif %}</span>
+    {% if item.flash_ends and item.extra_off %}
+    <span class="flash-bar">{{ t.extra_off.format(amount=item.extra_off) }} <span class="flash-ends" data-ends="{{ item.flash_ends }}"></span></span>
+    {% elif item.flash_ends %}
+    <span class="flash-bar">{{ t.flash_ends_label }} <span class="flash-ends" data-ends="{{ item.flash_ends }}"></span></span>
+    {% endif %}
+    {% if free_ship_policy or item.free_shipping %}<span class="ship-badge">{{ t.free_ship_badge }}</span>{% endif %}
+    <span class="m01-heat">{% if (item.heat|default(0)) >= 10 %}有人对这个有兴趣{% else %}有人在看{% endif %} · {{ item.heat|default(0) }}</span>
+  </span>
+</a>

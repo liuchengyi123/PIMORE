@@ -1,0 +1,306 @@
+{% extends "base.html" %}
+{% from "shot.html" import shot %}
+{% block body_class %} fn-home-page{% endblock %}
+{% block body %}
+{% set dept_keys = ['kitchen', 'cleaning', 'storage', 'pet', 'tableware', 'textile', 'decor', 'office', 'personal', 'paper'] %}
+{% set icon_bg = { 'kitchen':'#EFEAE2','cleaning':'#EFEAE2','storage':'#EFEAE2','pet':'#EFEAE2','tableware':'#EFEAE2','textile':'#EFEAE2','decor':'#EFEAE2','office':'#EFEAE2','personal':'#EFEAE2','paper':'#EFEAE2' } %}
+
+{# Mobile / narrow still uses compact trust; desktop trust lives in header announce #}
+<section class="trust-strip fn-mobile-trust" aria-label="{{ t.trust_strip_label }}">
+  <div><span class="tx"><b>{{ t.free_shipping }}</b><span>{% if promise_line %}{{ promise_line }}{% else %}{{ t.free_ship_badge }}{% endif %}</span></span></div>
+  <div><span class="tx"><b>{{ t.trust_returns }}</b><span>{{ t.returns_window }}</span></span></div>
+  <div><span class="tx"><b>{{ t.trust_late_credit }}</b><span>{% if late_credit_text %}{{ t.trust_late_credit_line.format(amount=late_credit_text) }}{% endif %}</span></span></div>
+</section>
+
+<div class="fn-home fn-home-desk">
+  <aside class="fn-left" aria-label="{{ t.departments }}">
+    <h5>{{ t.departments }}</h5>
+    {% for key in dept_keys %}
+    <a href="{{ href('/c/' ~ key, country) }}">{{ t.categories[key] }}</a>
+    {% endfor %}
+  </aside>
+
+  <div class="fn-center">
+    <div class="fn-hero-row">
+      <a class="fn-hero fn-hero1" href="{{ href('/sale', country) }}">
+        <div class="kicker">{{ t.sale_kicker }}</div>
+        <h2>{{ t.sale_title }}</h2>
+        <span class="cta">{{ t.sale_open }}</span>
+      </a>
+      <a class="fn-hero fn-hero2" href="{{ href('/new', country) }}">
+        <div class="kicker">{{ t.new_strip }}</div>
+        <h2>{{ t.new_title }}</h2>
+        <span class="cta">{{ t.new_open }}</span>
+      </a>
+    </div>
+
+    {% set pick_strip = shop_picks if shop_picks is defined and shop_picks else products %}
+    {% if pick_strip %}
+    <div class="fn-sec">
+      <h3>{{ t.shop_picks }}</h3>
+      <div class="tiny">{{ t.recommended if t.recommended is defined else t.featured }}</div>
+    </div>
+    <div class="fn-feat">
+      {% for item in pick_strip[:5] %}
+      <a class="card" href="{{ href('/p/' ~ item.sku, country) }}">
+        <span class="pic"><img src="{{ shot(item.image) }}" alt="" loading="lazy" decoding="async"></span>
+        <span class="body">
+          <span class="name">{{ item.name }}</span>
+          <span class="pr"><span class="price">{{ item.price }}</span></span>
+          <span class="ship-badge">{{ t.free_ship_badge if free_ship_policy else (t.in_stock if t.in_stock is defined else '') }}</span>
+        </span>
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <nav class="fn-icons" aria-label="{{ t.departments }}">
+      {% for key in dept_keys[:8] %}
+      <a class="fn-icon" href="{{ href('/c/' ~ key, country) }}">
+        <div class="b" style="background:{{ icon_bg.get(key, '#E0F2FE') }}">
+          <img src="/static/dept/{{ key }}.svg" width="28" height="28" alt="">
+        </div>
+        {{ t.categories[key] }}
+      </a>
+      {% endfor %}
+    </nav>
+
+    {% if products or home_tabs is defined %}
+    <div class="fn-sec">
+      <div class="fn-tabs home-tabs" id="home-tabs" data-home-tabs>
+        <h3 style="margin-right:4px">{{ t.home_feed if t.home_feed is defined else t.for_you }}</h3>
+        {% set tabs = home_tabs if home_tabs is defined else ['recommended'] %}
+        {% set cur = home_tab if home_tab is defined else 'recommended' %}
+        {% for key in tabs %}
+        <button type="button" class="home-tab chip{% if key == cur %} on{% endif %}" data-home-tab="{{ key }}" {% if key == cur %}aria-current="true"{% endif %}>
+          {% if key == 'recommended' %}{{ t.recommended if t.recommended is defined else t.featured }}{% else %}{{ t.categories[key] }}{% endif %}
+        </button>
+        {% endfor %}
+      </div>
+      <div class="tiny">{{ t.for_you }}</div>
+    </div>
+    <div class="product-grid feed dense fn-grid" id="home-feed-grid" data-home-grid>
+      {% for item in products %}{% set eager = loop.first %}{% include "card.html" %}{% endfor %}
+    </div>
+    <div class="home-more-wrap">
+      <button type="button" class="btn ghost home-more" id="home-more" data-home-more data-page="{{ home_page|default(1) }}" data-tab="{{ home_tab|default('recommended') }}" {% if home_has_more is defined and not home_has_more %}hidden{% endif %}>{{ t.view_more if t.view_more is defined else 'View more' }}</button>
+    </div>
+    {% endif %}
+
+    {% if recent %}
+    <div class="fn-sec">
+      <h3>{{ t.recent }}</h3>
+      <div class="tiny">{{ t.recent_views if t.recent_views is defined else t.recent }}</div>
+    </div>
+    <div class="product-grid fn-rail">
+      {% for item in recent[:6] %}{% include "card.html" %}{% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <aside class="fn-right">
+    <div class="fn-widget">
+      <h4>{{ t.new_kicker }}</h4>
+      <div class="tiny">{{ t.new_line }}</div>
+      <a class="get" href="{{ href('/new', country) }}">{{ t.new_open }}</a>
+    </div>
+    <div class="fn-widget">
+      <h4>{{ t.free_shipping }}</h4>
+      <div class="tiny">{% if promise_line %}{{ promise_line }}{% endif %}{% if deal_line %} · {{ deal_line }}{% endif %}</div>
+      {% set free_cents = promos.free_shipping_cents if promos is defined and promos and promos.free_shipping_cents else 0 %}
+      {% set spent = cart_cents|default(0) %}
+      {% if free_cents %}
+      <div class="bar"><i style="width:{{ [100, (spent * 100 / free_cents)|int]|min }}%"></i></div>
+      {% endif %}
+      {% if cart_gap %}<div class="tiny">{{ cart_gap }}</div>{% endif %}
+    </div>
+    <div class="fn-widget">
+      <h4>{{ t.checkin }}</h4>
+      <div class="tiny">{{ t.checkin }}</div>
+      <a class="get ghost" href="{{ href('/check-in', country) }}">{{ t.checkin }}</a>
+    </div>
+    <div class="fn-widget">
+      <h4>{{ t.my_balance }}</h4>
+      <div class="price" style="font-size:22px;margin-top:6px">{{ balance_text|default('') }}</div>
+      <div class="tiny">{{ t.share }}</div>
+      <a class="get ghost" href="{{ href('/rewards', country) }}">{{ t.my_balance }}</a>
+    </div>
+    {% set rank_list = featured_rank if featured_rank is defined and featured_rank else products %}
+    {% if rank_list %}
+    <div class="fn-widget">
+      <h4>{{ t.featured }}</h4>
+      {% for item in rank_list[:5] %}
+      <a class="fn-rank" href="{{ href('/p/' ~ item.sku, country) }}">
+        <span class="n">{{ loop.index }}</span>
+        <img src="{{ shot(item.image) }}" alt="" width="36" height="36" loading="lazy">
+        <span style="flex:1;min-width:0">
+          <div class="nm">{{ item.name }}</div>
+          <div class="price">{{ item.price }}</div>
+        </span>
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% if recent %}
+    <div class="fn-widget">
+      <h4>{{ t.recent }}</h4>
+      <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+        {% for item in recent[:4] %}
+        <a href="{{ href('/p/' ~ item.sku, country) }}" title="{{ item.name }}">
+          <img src="{{ shot(item.image) }}" alt="" width="48" height="48" style="border-radius:8px;object-fit:cover;display:block;background:#E2E6EE" loading="lazy">
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </aside>
+</div>
+
+<div class="fn-home-mob">
+  <header class="m01-top">
+    <a class="m01-brand" href="{{ href('/', country) }}">
+      <span class="m01-brand-row"><b>Harbor</b><span>small goods</span></span>
+      <small>Cross-border household</small>
+    </a>
+    <form method="get" action="{{ request.url.path }}">
+      <label class="m01-loc">{{ country }} · {{ currency }}
+        <select name="country" aria-label="{{ t.locale }}" onchange="this.form.submit()">
+          {% for row in ship_countries %}
+          <option value="{{ row[0] }}" {% if country == row[0] %}selected{% endif %}>{{ row[0] }} · {{ row[1] }}</option>
+          {% endfor %}
+        </select>
+      </label>
+    </form>
+  </header>
+  <form class="m01-search" action="{{ href('/search', country) }}" method="get">
+    <input type="hidden" name="country" value="{{ country }}">
+    <img src="/static/m01/search.svg" width="24" height="24" alt="">
+    <input type="search" name="q" value="{{ q|default('') }}" placeholder="Search kitchen, storage, cleaning…" aria-label="{{ t.search }}">
+  </form>
+  <a class="m01-hero" href="{{ href('/sale', country) }}">
+    <span class="m01-hero-copy">
+      <span class="kicker">THIS WEEK</span>
+      <strong>Kitchen refresh · up to 30% off</strong>
+    </span>
+    <span class="m01-cta">Shop →</span>
+  </a>
+  <nav class="m01-cuts" aria-label="{{ t.departments }}">
+    <a href="{{ href('/sale', country) }}"><i><img src="/static/m01/sale.svg" width="24" height="24" alt=""></i>Sale</a>
+    <a href="{{ href('/new', country) }}"><i><img src="/static/m01/sparkles.svg" width="24" height="24" alt=""></i>New</a>
+    <a href="{{ href('/flash', country) }}"><i><img src="/static/m01/zap.svg" width="24" height="24" alt=""></i>Flash</a>
+    <a href="{{ href('/account/coupons', country) }}"><i><img src="/static/m01/ticket.svg" width="24" height="24" alt=""></i>Coupons</a>
+    <a href="{{ href('/check-in', country) }}"><i><img src="/static/m01/calendar.svg" width="24" height="24" alt=""></i>Check-in</a>
+    <a href="{{ href('/account/balance', country) }}"><i><img src="/static/m01/wallet.svg" width="24" height="24" alt=""></i>Balance</a>
+    <a href="{{ href('/share', country) }}"><i><img src="/static/m01/gift.svg" width="24" height="24" alt=""></i>Invite</a>
+    <a href="{{ href('/account/wishlist', country) }}"><i><img src="/static/m01/heart.svg" width="24" height="24" alt=""></i>Wishlist</a>
+    <a href="{{ href('/account/orders', country) }}"><i><img src="/static/m01/package.svg" width="24" height="24" alt=""></i>Orders</a>
+    <a href="{{ href('/help', country) }}"><i><img src="/static/m01/help.svg" width="24" height="24" alt=""></i>Help</a>
+  </nav>
+  <div class="m01-chips" data-home-tabs>
+    <button type="button" class="on" data-home-tab="recommended">For you</button>
+    <button type="button" data-home-tab="kitchen">Kitchen</button>
+    <button type="button" data-home-tab="cleaning">Cleaning</button>
+    <button type="button" data-home-tab="storage">Storage</button>
+    <button type="button" data-home-tab="pet">Pet</button>
+    <button type="button" data-home-tab="personal">Bath</button>
+  </div>
+  <div class="m01-sec">
+    <h3>In the shop</h3>
+    <span>一次 10 个 · 可继续下滑</span>
+  </div>
+  <div class="m01-grid" data-home-grid>
+    {% for item in products[:10] %}{% include "card.html" %}{% endfor %}
+  </div>
+  <div class="m01-more-wrap">
+    <div class="m01-more" id="m01-more" data-home-more data-page="{{ home_page|default(1) }}" data-tab="{{ home_tab|default('recommended') }}" {% if home_has_more is defined and not home_has_more %}hidden{% endif %}>
+      <img src="/static/m01/spinner.svg" width="14" height="14" alt="">
+      <span>上拉加载更多</span>
+    </div>
+    <p>建议新增 · 一次加载 10 个；滑到底再往上拉/继续下滑，再加载 10 个；可一直加载</p>
+  </div>
+</div>
+
+{% if stale %}<p class="stale">{{ t.stale }}</p>{% endif %}
+
+<script>
+(function () {
+  var grids = document.querySelectorAll("[data-home-grid]");
+  var mores = Array.prototype.slice.call(document.querySelectorAll("[data-home-more]"));
+  if (!grids.length) return;
+  var busy = false;
+  function country() {
+    var m = location.search.match(/[?&]country=([A-Za-z]{2})/);
+    return m ? m[1] : "";
+  }
+  function setMores(tab, page, has, disable) {
+    mores.forEach(function (node) {
+      node.setAttribute("data-tab", tab);
+      node.setAttribute("data-page", String(page));
+      node.hidden = !has;
+      if ("disabled" in node) node.disabled = !!disable;
+    });
+  }
+  function load(tab, page, append) {
+    if (busy) return;
+    busy = true;
+    setMores(tab, page, true, true);
+    var q = "/home/feed?partial=1&tab=" + encodeURIComponent(tab) + "&page=" + page;
+    var c = country();
+    if (c) q += "&country=" + encodeURIComponent(c);
+    fetch(q, { credentials: "same-origin", headers: { "Accept": "text/html" } })
+      .then(function (r) {
+        var has = r.headers.get("X-Harbor-Has-More") === "1";
+        return r.text().then(function (html) { return { html: html, has: has }; });
+      })
+      .then(function (pack) {
+        grids.forEach(function (node) {
+          if (append) node.insertAdjacentHTML("beforeend", pack.html);
+          else node.innerHTML = pack.html;
+        });
+        setMores(tab, page, pack.has, false);
+        busy = false;
+      })
+      .catch(function () { setMores(tab, page, true, false); busy = false; });
+  }
+  document.querySelectorAll("[data-home-tabs]").forEach(function (bar) {
+    bar.addEventListener("click", function (ev) {
+      var btn = ev.target.closest("[data-home-tab]");
+      if (!btn) return;
+      var tab = btn.getAttribute("data-home-tab");
+      document.querySelectorAll("[data-home-tab]").forEach(function (node) {
+        var on = node.getAttribute("data-home-tab") === tab;
+        node.classList.toggle("on", on);
+        if (on) node.setAttribute("aria-current", "true");
+        else node.removeAttribute("aria-current");
+      });
+      load(tab, 1, false);
+    });
+  });
+  function loadNext() {
+    var more = mores[0];
+    if (!more || more.hidden || busy) return;
+    var tab = more.getAttribute("data-tab") || "recommended";
+    var page = (parseInt(more.getAttribute("data-page"), 10) || 1) + 1;
+    load(tab, page, true);
+  }
+  mores.forEach(function (more) {
+    more.addEventListener("click", loadNext);
+  });
+  if ("IntersectionObserver" in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) loadNext();
+      });
+    }, { rootMargin: "320px" });
+    mores.forEach(function (more) {
+      var sentinel = document.createElement("div");
+      sentinel.className = "home-sentinel";
+      sentinel.setAttribute("aria-hidden", "true");
+      if (more.parentNode) more.parentNode.appendChild(sentinel);
+      io.observe(sentinel);
+    });
+  }
+})();
+</script>
+
+{% endblock %}

@@ -1,0 +1,1691 @@
+﻿<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0F2744">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Harbor">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="Harbor">
+  <title>{{ seo_title }}</title>
+  {% if seo_description %}<meta name="description" content="{{ seo_description }}">{% endif %}
+  <meta name="robots" content="{{ seo_robots }}">
+  <link rel="canonical" href="{{ seo_canonical }}">
+  {% for code, url in seo_hreflang %}
+  <link rel="alternate" hreflang="{{ code }}" href="{{ url }}">
+  {% endfor %}
+  <meta property="og:title" content="{{ seo_title }}">
+  {% if seo_description %}<meta property="og:description" content="{{ seo_description }}">{% endif %}
+  <meta property="og:url" content="{{ seo_canonical }}">
+  {% if seo_image %}<meta property="og:image" content="{{ seo_image }}">{% endif %}
+  {% for block in seo_jsonld %}
+  <script type="application/ld+json">{{ block|tojson }}</script>
+  {% endfor %}
+  <link rel="stylesheet" href="/static/shop.css?v=97">
+  <link rel="stylesheet" href="/static/harbor-ui.css?v=70">
+  <link rel="stylesheet" href="/static/fn-desktop.css?v=33">
+  <link rel="stylesheet" href="/static/fn-mobile.css?v=52">
+  {% block head %}{% endblock %}
+
+  {% if ad_pixels is defined and (ad_pixels.meta_ok or ad_pixels.google_ok or ad_pixels.tiktok_ok) %}
+  <script>
+  window.__harborAd = {
+    pixels: {{ ad_pixels|tojson }},
+    attrs: {{ (ad_attrs if ad_attrs is defined else {})|tojson }},
+    path: {{ request.url.path|tojson }},
+    currency: {{ (currency if currency is defined else "USD")|tojson }}
+  };
+  </script>
+  {% if ad_pixels.meta_ok %}
+  <script>
+  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+  n.push=n;n.loaded=!0;n.version="2.0";n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,"script",
+  "https://connect.facebook.net/en_US/fbevents.js");
+  fbq("init", {{ ad_pixels.meta_pixel_id|tojson }});
+  fbq("track", "PageView");
+  </script>
+  {% endif %}
+  {% if ad_pixels.google_ok %}
+  <script async src="https://www.googletagmanager.com/gtag/js?id={{ ad_pixels.google_measurement_id or ad_pixels.google_aw_id }}"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag("js", new Date());
+  {% if ad_pixels.google_measurement_id %}gtag("config", {{ ad_pixels.google_measurement_id|tojson }});{% endif %}
+  {% if ad_pixels.google_aw_id %}gtag("config", {{ ad_pixels.google_aw_id|tojson }});{% endif %}
+  </script>
+  {% endif %}
+  {% if ad_pixels.tiktok_ok %}
+  <script>
+  !function(w,d,t){w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript",o.async=!0,o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};
+  ttq.load({{ ad_pixels.tiktok_pixel_id|tojson }});
+  ttq.page();
+  }(window,document,"ttq");
+  </script>
+  {% endif %}
+  {% endif %}
+  {% if lang == 'zh' or lang == 'zh-Hant' %}
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Noto+Sans+SC:wght@400;600;700&amp;display=swap" media="print" onload="this.media='all'">
+  {% elif lang == 'ja' %}
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Noto+Sans+JP:wght@400;600;700&amp;display=swap" media="print" onload="this.media='all'">
+  {% else %}
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" media="print" onload="this.media='all'">
+  {% endif %}
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="/static/harbor-icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/static/harbor-icon-512.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/harbor-apple-touch-180.png">
+
+  <script>
+  (function(){
+    try {
+      var q = new URLSearchParams(location.search);
+      var c = q.get("chrome");
+      if (c === "app") {
+        document.cookie = "fn_chrome=app;path=/;max-age=604800;SameSite=Lax";
+      } else if (c === "h5" || c === "off") {
+        document.cookie = "fn_chrome=;path=/;max-age=0;SameSite=Lax";
+      }
+    } catch (e) {}
+  })();
+  </script>
+</head>
+{% set _fn_chrome = request.query_params.get('chrome') or request.cookies.get('fn_chrome') %}
+<body class="{% if request.url.path == '/checkout' or request.url.path == '/payment' %}is-checkout{% elif request.url.path == '/cart' %}is-cart{% elif request.url.path.startswith('/orders/') %}is-order{% endif %}{% if cart_count %} has-cart{% endif %}{% block body_class %}{% endblock %}{% if _fn_chrome == 'app' %} fn-app{% endif %}" data-signed="{% if signed_in %}1{% else %}0{% endif %}" data-checked="{% if checked_today %}1{% else %}0{% endif %}" data-cart="{{ cart_count }}" {% block body_attrs %}{% endblock %}>
+  {% if _fn_chrome == 'app' %}
+  <div class="fn-app-status" aria-hidden="true"><span class="fn-app-time">9:41</span><span class="fn-app-sig">●●● 5G</span></div>
+  {% endif %}
+
+  {% if request.url.path != '/checkout' and request.url.path != '/payment' %}
+  {% set note = ads.get('announcement') %}
+  {% if note and note['body'] %}
+  <p data-ad="announcement">{{ note['body'] }}</p>
+  {% endif %}
+  {% endif %}
+  <div class="announce" data-gap-role="ship"><span class="role-ship">{{ promise_line }}</span>{% if deal_line %} <span class="sep">·</span> <span class="role-spend">{{ deal_line }}</span>{% endif %}{% if deal_more %} <span class="sep">·</span> <span class="role-spend">{{ deal_more }}</span>{% endif %}</div>
+  <header class="top header">
+  <div class="wrap">
+  <div class="top-inner row1">
+    <div class="brand">
+      {% if request.url.path != '/' %}
+      <a class="back" href="{{ href('/', country) }}" aria-label="{{ t.back }}" onclick="if (window.history.length > 1) { event.preventDefault(); history.back(); }">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg>
+      </a>
+      {% endif %}
+      <a class="logo" href="{{ href('/', country) }}">Harbor<sup>small goods</sup></a>
+    </div>
+    <form class="search" action="{{ href('/search', country) }}" method="get">
+      <input type="search" name="q" value="{{ q|default('') }}" placeholder="{{ t.search_placeholder }}" aria-label="{{ t.search }}">
+      <input type="hidden" name="country" value="{{ country }}">
+      <button class="btn" type="submit">{{ t.search }}</button>
+    </form>
+    <nav class="tools headtools">
+            <div class="fn-country ht" style="position:relative">
+        <form method="get" action="{{ request.url.path }}">
+          <label class="fn-country" style="position:relative;display:inline-flex;align-items:center;gap:6px;cursor:pointer">
+            <span>{{ country }} · {{ currency }}</span>
+            <select name="country" aria-label="{{ t.locale }}" onchange="this.form.submit()" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%">
+              {% for row in ship_countries %}
+              <option value="{{ row[0] }}" {% if country == row[0] %}selected{% endif %}>{{ row[0] }} · {{ row[1] }}</option>
+              {% endfor %}
+            </select>
+          </label>
+        </form>
+      </div>
+      <div class="acct-wrap">
+        <a class="tool ht tool-account" href="{{ href('/account' if signed_in else '/login', country) }}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.8 20a7.5 7.5 0 0 1 14.4 0"/></svg>
+          <span class="ht-label">{{ t.account }}</span>
+        </a>
+        <div class="acct-panel" role="menu">
+          {% if recent_views %}
+          <div class="acct-recent">
+            <div class="acct-h">{{ t.recent_views }}</div>
+            <div class="acct-recent-row">
+              {% for item in recent_views[:6] %}
+              <a class="acct-thumb" href="{{ href('/p/' ~ item.sku, country) }}" title="{{ item.name }}">
+                <img src="{{ item.image }}" alt="" width="56" height="56" loading="lazy">
+              </a>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+          <a href="{{ href('/account/orders', country) }}">{{ t.my_orders }}</a>
+          <a href="{{ href('/account/coupons', country) }}">{{ t.my_coupons }}</a>
+          <a href="{{ href('/rewards', country) }}">{{ t.my_balance }}</a>
+          <a href="{{ href('/account/addresses', country) }}">{{ t.addresses }}</a>
+          {% if signed_in %}
+          <a href="{{ href('/account', country) }}">{{ t.account }}</a>
+          {% else %}
+          <a class="acct-signin" href="{{ href('/login', country) }}">{{ t.login }}</a>
+          {% endif %}
+        </div>
+      </div>
+      <div class="cart-wrap">
+        <a class="tool ht cartbtn" href="{{ href('/cart', country) }}" data-cart-flyout>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5.5 8.5h13l-1.1 11h-10.8z"/><path d="M8.5 8.5V7a3.5 3.5 0 0 1 7 0v1.5"/></svg>
+          <span class="ht-label">{{ t.cart }}{% if cart_count %} ({{ cart_count }}){% endif %}</span>
+          {% if cart_count %}<span class="n cart-count">{{ cart_count }}</span>{% endif %}
+        </a>
+        <div class="cart-flyout" role="menu" hidden>
+          {% if cart_rail %}
+          <div class="cart-flyout-list">
+            {% for line in cart_rail[:6] %}
+            <a class="cart-flyout-line" href="{{ href('/p/' ~ line.product_sku, country) }}">
+              <img src="{{ line.image }}" width="48" height="48" alt="" loading="lazy">
+              <span><em>{{ line.name }}</em><b>{{ line.price }}</b><i>×{{ line.qty }}</i></span>
+            </a>
+            {% endfor %}
+          </div>
+          <div class="cart-flyout-ft">
+            <a class="btn ghost" href="{{ href('/cart', country) }}">{{ t.cart_rail_go }}</a>
+            <a class="btn" href="{{ href('/checkout', country) }}">{{ t.cart_rail_checkout }}</a>
+          </div>
+          {% else %}
+          <p class="cart-flyout-empty">{{ t.cart_empty }}</p>
+          <a class="btn" href="{{ href('/', country) }}">{{ t.keep_shopping }}</a>
+          {% endif %}
+        </div>
+      </div>
+    </nav>
+  </div>
+  <nav class="depts navrow" aria-label="{{ t.departments }}">
+    <div class="mega-wrap">
+      <a class="mega-trigger" href="{{ href('/categories', country) }}">{{ t.cats_mega }}</a>
+      <div class="mega-panel" role="menu">
+        <div class="mega-cols">
+          {% for key in ['kitchen', 'cleaning', 'storage', 'tableware', 'pet', 'office', 'textile', 'decor', 'personal'] %}
+          <div class="mega-col">
+            <a class="mega-parent" href="{{ href('/c/' ~ key, country) }}">{{ t.categories[key] }}{% if hot_cats and key in hot_cats %}<span class="hot-badge">{{ t.hot_badge }}</span>{% endif %}</a>
+            {% if child_map and child_map.get(key) %}
+            <div class="mega-kids">
+              {% for child in child_map.get(key) %}
+              <a href="{{ href('/c/' ~ key ~ '/' ~ child, country) }}">{{ (child_labels.get(child) if child_labels else none) or child }}</a>
+              {% endfor %}
+            </div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <a class="{% if request.url.path == '/' %}on{% endif %}" href="{{ href('/', country) }}">{{ t.home }}</a>
+    {% for key in ['kitchen', 'cleaning', 'storage', 'tableware', 'pet', 'office', 'textile', 'decor', 'personal'] %}
+    <a class="{% if request.url.path == '/c/' ~ key %}on{% endif %}" href="{{ href('/c/' ~ key, country) }}">{{ t.categories[key] }}</a>
+    {% endfor %}
+    <a class="{% if request.url.path == '/sale' %}on{% endif %}" href="{{ href('/sale', country) }}">{{ t.sale_kicker }}</a>
+    <a class="{% if request.url.path == '/new' %}on{% endif %}" href="{{ href('/new', country) }}">{{ t.new_kicker }}</a>
+    <a class="{% if request.url.path == '/check-in' %}on{% endif %}" href="{{ href('/check-in', country) }}">{{ t.checkin }}</a>
+    <a class="{% if request.url.path == '/rewards' %}on{% endif %}" href="{{ href('/rewards', country) }}">{{ t.my_balance }}</a>
+    <a class="{% if request.url.path == '/share' %}on{% endif %}" href="{{ href('/share', country) }}">{{ t.share }}</a>
+  </nav>
+  </div>
+  </header>
+  {% if request.url.path != '/checkout' and request.url.path != '/payment' %}
+  <aside class="pwa-promo" id="pwa-promo" hidden>
+    <button class="pwa-promo-hit" type="button" data-pwa-add>
+      <span class="pwa-promo-badge" aria-hidden="true">APP</span>
+      <span class="pwa-promo-copy">
+        <strong>{{ t.act_pwa_promo }}</strong>
+        <span>{{ t.act_pwa_promo_sub }}</span>
+      </span>
+      <span class="pwa-promo-cta">
+        {{ t.act_pwa_btn }}
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+      </span>
+    </button>
+    <button class="pwa-promo-x" type="button" data-pwa-promo-dismiss aria-label="{{ t.act_pwa_later }}">×</button>
+  </aside>
+  {% endif %}
+  <main>
+    {% block body %}{% endblock %}
+  </main>
+  <footer class="foot">
+    <div class="footgrid">
+      <div class="brand">Harbor</div>
+      <div class="cols">
+        <div>
+          <h4>{{ t.departments }}</h4>
+          <a href="{{ href('/categories', country) }}">{{ t.all_depts }}</a>
+          <a href="{{ href('/c/kitchen', country) }}">{{ t.categories.kitchen }}</a>
+          <a href="{{ href('/c/cleaning', country) }}">{{ t.categories.cleaning }}</a>
+          <a href="{{ href('/c/pet', country) }}">{{ t.categories.pet }}</a>
+          <a href="{{ href('/sale', country) }}">{{ t.sale_kicker }}</a>
+          <a href="{{ href('/check-in', country) }}">{{ t.checkin }}</a>
+        </div>
+        <div>
+          <h4>{{ t.help }}</h4>
+          <a href="{{ href('/policies/shipping', country) }}">{{ t.shipping_policy }}</a>
+          <a href="{{ href('/policies/privacy', country) }}">{{ t.privacy }}</a>
+          <a href="{{ href('/contact', country) }}">{{ t.contact }}</a>
+          <a href="{{ href('/account/orders', country) }}">{{ t.my_orders }}</a>
+        </div>
+        <div>
+          <h4>{{ t.account }}</h4>
+          <a href="{{ href('/account', country) }}">{{ t.account }}</a>
+          <a href="{{ href('/rewards', country) }}">{{ t.my_balance }}</a>
+          <a href="{{ href('/share', country) }}">{{ t.share }}</a>
+          <a href="{{ href('/account/coupons', country) }}">{{ t.my_coupons }}</a>
+          <a href="{{ href('/login', country) }}">{{ t.login }}</a>
+        </div>
+        <div>
+          <h4>{{ t.act_pwa_title }}</h4>
+          <a href="{{ href('/install', country) }}">{{ t.act_pwa_btn }}</a>
+          <a href="{{ href('/share', country) }}">{{ t.share }}</a>
+        </div>
+      </div>
+    </div>
+    <p class="foot-geo"><a href="https://db-ip.com/" rel="noopener">IP Geolocation by DB-IP</a></p>
+  </footer>
+  {% include '_auth_modal.html' %}
+  <script src="/static/auth-modal.js?v=1" defer></script>
+  <nav class="tabbar fn-tabbar-mob" {% set _path = request.url.path %}{% if _path.startswith('/p/') or _path == '/cart' or _path == '/checkout' or _path == '/payment' or _path.startswith('/orders') %}style="" hidden{% else %}style="flex-direction:row !important;align-items:stretch !important;justify-content:flex-start !important;position:fixed !important;left:12px !important;right:auto !important;{% if _fn_chrome == 'app' %}bottom:22px !important{% else %}bottom:10px !important{% endif %};width:366px !important;max-width:366px !important;min-width:366px !important;height:54px !important;box-sizing:border-box !important;padding:0 8px !important;gap:0 !important;overflow:hidden !important;background:#ffffff !important;border-radius:18px !important;box-shadow:0 4px 16px rgba(15,26,41,.12) !important;z-index:40 !important"{% endif %}>
+    <a style="flex:1 1 0% !important;width:0 !important;min-width:0 !important;display:flex !important;flex-direction:column !important;align-items:center !important;justify-content:center !important;gap:4px !important;padding:8px 0 6px !important;background:transparent !important;background-image:none !important;border:0 !important;box-shadow:none !important;text-decoration:none !important;box-sizing:border-box !important;overflow:hidden !important" class="{% if request.url.path == '/' %}on{% endif %}" href="{{ href('/', country) }}">
+      <svg class="tab-ico" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5.5v-6h-5v6H4a1 1 0 0 1-1-1V10.5z"/></svg>
+      <span>{{ t.home }}</span>
+    </a>
+    <a style="flex:1 1 0% !important;width:0 !important;min-width:0 !important;display:flex !important;flex-direction:column !important;align-items:center !important;justify-content:center !important;gap:4px !important;padding:8px 0 6px !important;background:transparent !important;background-image:none !important;border:0 !important;box-shadow:none !important;text-decoration:none !important;box-sizing:border-box !important;overflow:hidden !important" class="{% if request.url.path == '/categories' or request.url.path.startswith('/c/') %}on{% endif %}" href="{{ href('/categories', country) }}">
+      <svg class="tab-ico" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>
+      <span>{% if t.browse is defined %}{{ t.browse }}{% elif lang.startswith('en') %}Browse{% else %}{{ t.departments }}{% endif %}</span>
+    </a>
+    <a style="flex:1 1 0% !important;width:0 !important;min-width:0 !important;display:flex !important;flex-direction:column !important;align-items:center !important;justify-content:center !important;gap:4px !important;padding:8px 0 6px !important;background:transparent !important;background-image:none !important;border:0 !important;box-shadow:none !important;text-decoration:none !important;box-sizing:border-box !important;overflow:hidden !important" class="{% if request.url.path == '/cart' %}on{% endif %}" href="{{ href('/cart', country) }}">
+      <svg class="tab-ico" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 5h2l1.2 9.2a1.5 1.5 0 0 0 1.5 1.3h8.6a1.5 1.5 0 0 0 1.5-1.3L19.5 8H7"/><circle cx="9.5" cy="19.5" r="1.4"/><circle cx="16.5" cy="19.5" r="1.4"/></svg>
+      {% if cart_count %}<span class="n">{{ cart_count }}</span>{% endif %}
+      <span>{{ t.cart }}</span>
+    </a>
+    <a style="flex:1 1 0% !important;width:0 !important;min-width:0 !important;display:flex !important;flex-direction:column !important;align-items:center !important;justify-content:center !important;gap:4px !important;padding:8px 0 6px !important;background:transparent !important;background-image:none !important;border:0 !important;box-shadow:none !important;text-decoration:none !important;box-sizing:border-box !important;overflow:hidden !important" class="{% if request.url.path == '/login' or request.url.path.startswith('/account') %}on{% endif %}" href="{{ href('/account', country) }}">
+      <svg class="tab-ico" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.25"/><path d="M5.5 19.5c0-3.2 2.9-5.5 6.5-5.5s6.5 2.3 6.5 5.5"/></svg>
+      <span>{{ t.me if t.me is defined else 'Me' }}</span>
+    </a>
+  </nav>
+  {% if _fn_chrome == 'app' %}
+  <div class="fn-app-home-ind" aria-hidden="true"><i></i></div>
+  {% endif %}
+
+  {% if request.url.path != '/checkout' and request.url.path != '/payment' %}
+  <aside class="pwa-guide" id="pwa-guide" hidden>
+    <strong>{{ t.act_pwa_title }}</strong>
+    <p>{{ t.act_pwa_guide }}</p>
+    <p class="pwa-steps" hidden>{{ t.act_pwa_android }} {{ t.act_pwa_ios }}</p>
+    <div class="pwa-actions">
+      <button class="btn" type="button" data-pwa-add>{{ t.act_pwa_btn }}</button>
+      <button class="btn quiet" type="button" data-pwa-later>{{ t.act_pwa_later }}</button>
+    </div>
+  </aside>
+  <p class="pwa-login" id="pwa-login" hidden><a href="{{ href('/login?next=/', country) }}">{{ t.act_pwa_need_login }}</a></p>
+  <div class="pwa-ios" id="pwa-ios" hidden>
+    <div class="pwa-ios-card">
+      <strong>{{ t.act_pwa_ios_title }}</strong>
+      <ol data-ios-steps>
+        <li>{{ t.act_pwa_ios_1 }}</li>
+        <li>{{ t.act_pwa_ios_2 }}</li>
+        <li>{{ t.act_pwa_ios_3 }}</li>
+      </ol>
+      <p data-ios-other hidden>{{ t.act_pwa_ios_other }}</p>
+      <button class="btn" type="button" data-ios-close>{{ t.act_pwa_ios_ok }}</button>
+    </div>
+    <div class="pwa-ios-arrow" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M6 10h12v9a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1z"/></svg>
+      <span>{{ t.act_pwa_share }}</span>
+    </div>
+  </div>
+  {% if leave_offer %}
+  <div class="pop-hold" id="pop-hold" hidden data-sku="{{ leave_offer.sku }}" data-leave="1">
+    <div class="pop-hold-sheet cv-sheet" role="dialog" aria-modal="true" aria-labelledby="hold-title">
+      <button class="pop-x cv-x" type="button" data-hold-x aria-label="{{ t.pop_close }}">×</button>
+      <div class="cv-media">
+        <img id="hold-image" src="{{ leave_offer.image }}" alt="" width="220" height="220">
+        {% if not leave_offer.kept %}<span class="cv-badge" aria-hidden="true">½</span>{% endif %}
+      </div>
+      <div class="cv-body">
+        <p class="pop-kicker cv-kicker">{{ t.pop_hold_kicker }}</p>
+        <h2 id="hold-title" class="cv-title">{{ leave_offer.name }}</h2>
+        <p class="pop-hold-price cv-price">
+          <span id="hold-price" class="cv-now">{{ leave_offer.price }}</span>
+          <s id="hold-original" class="cv-was">{{ leave_offer.original }}</s>
+        </p>
+        <p class="cv-benefit">{% if leave_offer.kept %}{{ t.pop_hold_keep }}{% else %}{{ t.pop_hold_half }}{% endif %}</p>
+        <p id="hold-clock" class="pop-hold-clock cv-clock" data-ends="" hidden></p>
+        {% if leave_offer.stock <= 12 %}<p class="pop-hold-stock cv-stock">{{ t.pop_hold_stock.format(n=leave_offer.stock) }}</p>{% endif %}
+      </div>
+      <form method="post" action="/cart/add" id="hold-form" class="cv-form">
+        <input type="hidden" name="sku" id="hold-sku" value="{{ leave_offer.sku }}">
+        <input type="hidden" name="country" value="{{ country }}">
+        <input type="hidden" name="qty" value="1">
+        <input type="hidden" name="next" value="/cart">
+        <button class="btn cv-cta" type="submit">{{ t.pop_hold_add }}</button>
+      </form>
+      <button class="pop-text cv-dismiss" type="button" data-hold-x>{{ t.pop_hold_leave }}</button>
+    </div>
+  </div>
+  {% endif %}
+  {% if gift_offer %}
+  <div class="pop-ship" id="pop-ship" hidden>
+    <div class="pop-ship-slip cv-sheet" role="dialog" aria-modal="true" aria-labelledby="gift-title">
+      <button class="pop-x cv-x" type="button" data-ship-close aria-label="{{ t.pop_close }}">×</button>
+      <div class="cv-media">
+        <img src="{{ gift_offer.image }}" alt="" width="220" height="220">
+        <span class="cv-badge cv-badge-soft" aria-hidden="true">+</span>
+      </div>
+      <div class="cv-body">
+        <p class="pop-kicker cv-kicker">{{ t.pop_gift_kicker }}</p>
+        <h2 id="gift-title" class="cv-title">{{ gift_offer.name }}</h2>
+        <p class="pop-gift-price cv-price">
+          <strong class="cv-now">{{ t.pop_gift_free }}</strong>
+          <s class="cv-was">{{ gift_offer.price }}</s>
+        </p>
+      </div>
+      <form method="post" action="/cart/add" class="cv-form">
+        <input type="hidden" name="sku" value="{{ gift_offer.sku }}">
+        <input type="hidden" name="gift" value="1">
+        <input type="hidden" name="country" value="{{ country }}">
+        <input type="hidden" name="qty" value="1">
+        <input type="hidden" name="next" value="/cart">
+        <button class="btn cv-cta" type="submit">{{ t.pop_gift_add }}</button>
+      </form>
+      <button class="pop-text cv-dismiss" type="button" data-ship-close>{{ t.pop_close }}</button>
+    </div>
+  </div>
+  {% endif %}
+  <div class="pop-desk" id="pop-desk" hidden>
+    <div class="pop-desk-card cv-sheet" role="dialog" aria-modal="true" aria-labelledby="desk-title">
+      <button class="pop-x cv-x" type="button" data-desk-close aria-label="{{ t.pop_close }}">×</button>
+      <div class="phone" aria-hidden="true">
+        <img src="/static/harbor-icon-192.png" alt="">
+        <i></i><i></i><i></i>
+      </div>
+      <div class="cv-body">
+        <p class="pop-kicker cv-kicker" data-desk-leave>{{ t.pop_desk_kicker }}</p>
+        <p class="pop-kicker cv-kicker" data-desk-paid hidden>{{ t.pop_paid_kicker }}</p>
+        <h2 id="desk-title" class="cv-title" data-desk-leave>{{ t.pop_desk_title }}</h2>
+        <h2 id="desk-paid-title" class="cv-title" data-desk-paid hidden>{{ t.pop_paid_title }}</h2>
+        <p class="pop-note cv-benefit" data-desk-leave>{{ t.pop_desk_line }}</p>
+        <p class="pop-note cv-benefit" data-desk-paid hidden data-email-line="{{ t.pop_paid_line }}"></p>
+      </div>
+      <button class="btn cv-cta" type="button" data-pwa-add>{{ t.pop_desk_add }}</button>
+      <button class="pop-text cv-dismiss" type="button" data-desk-close>{{ t.pop_desk_later }}</button>
+    </div>
+  </div>
+  <div class="act-pop checkin" id="pop-checkin" hidden>
+    <div class="act-pop-card cv-sheet">
+      <p class="cv-kicker">{{ t.act_check_name }}</p>
+      <strong class="cv-title">{{ t.act_check_line }}</strong>
+      <a class="btn cv-cta" href="{{ href('/check-in', country) }}">{{ t.act_stamp }}</a>
+      <button class="quiet cv-dismiss" type="button" data-pop-later="checkin">{{ t.act_pwa_later }}</button>
+    </div>
+  </div>
+  <div class="act-pop share" id="pop-share" hidden>
+    <div class="act-pop-card cv-sheet">
+      <p class="cv-kicker">{{ t.act_invite }}</p>
+      <strong class="cv-title">{{ t.act_later_line }}</strong>
+      <a class="btn cv-cta" href="{{ href('/share', country) }}">{{ t.act_share_name }}</a>
+      <button class="quiet cv-dismiss" type="button" data-pop-later="share">{{ t.act_pwa_later }}</button>
+    </div>
+  </div>
+  {% endif %}
+  {% block overlay %}{% endblock %}
+  <div class="hmodal" id="cur-modal">
+    <button class="hmodal-scrim" type="button" data-x></button>
+    <div class="hmodal-box" role="dialog" aria-labelledby="cur-title">
+      <button class="hmodal-x" type="button" data-x aria-label="{{ t.pop_close }}">×</button>
+      <b id="cur-title">{{ t.locale }}</b>
+      <div class="cur-picks">
+        {% for code, label in [('en', 'English'), ('zh', '简体中文'), ('zh-Hant', '繁體中文'), ('ja', '日本語'), ('de', 'Deutsch'), ('fr', 'Français'), ('es', 'Español'), ('pt', 'Português')] %}
+        <button type="button" data-cur="{{ code }}" class="{% if lang == code %}on{% endif %}"><b>{{ label }}</b></button>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  <div class="hmodal" id="del-modal">
+    <button class="hmodal-scrim" type="button" data-x></button>
+    <div class="hmodal-box" role="dialog" aria-labelledby="del-title">
+      <button class="hmodal-x" type="button" data-x aria-label="{{ t.pop_close }}">×</button>
+      <b id="del-title">{{ t.remove }}</b>
+      <p id="del-name"></p>
+      <div class="hmodal-row">
+        <button class="cta ghost" type="button" data-x>{{ t.keep_shopping }}</button>
+        <button class="cta" type="button" id="del-go">{{ t.remove }}</button>
+      </div>
+    </div>
+  </div>
+  <div class="scrim" id="scrim" hidden></div>
+
+  {% set _rail_path = request.url.path %}
+  {% set hide_rail = _rail_path in ['/cart', '/checkout', '/payment'] or _rail_path.startswith('/orders/') %}
+  {% if not hide_rail %}
+  <aside class="cart-rail{% if cart_count %} has-items collapsed{% else %} is-empty{% endif %}" id="cart-rail" aria-label="{{ t.cart }}">
+    <button class="cart-rail-tab" type="button" data-rail-toggle aria-expanded="false" aria-controls="cart-rail-panel">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5.5 8.5h13l-1.1 11h-10.8z"/><path d="M8.5 8.5V7a3.5 3.5 0 0 1 7 0v1.5"/></svg>
+      {% if cart_count %}<span class="n">{{ cart_count }}</span>{% endif %}
+    </button>
+    <div class="cart-rail-panel" id="cart-rail-panel">
+      <div class="cart-rail-hd">
+        <div class="cart-rail-total-row">
+          <b>{{ t.cart_rail_total }}</b>
+          <strong class="cart-rail-sum">{{ cart_subtotal_text|default('—') }}</strong>
+        </div>
+        {% if cart_off_pct and cart_save_text %}
+        <div class="cart-rail-urgency" data-rail-urgency>
+          <span class="urg-pct">{{ t.rail_off_pct.format(pct=cart_off_pct) }}</span>
+          <span class="urg-dot">·</span>
+          <span class="urg-last">{{ t.rail_last_day }}</span>
+          {% if cart_deal_ends %}<span class="urg-cd" data-ends="{{ cart_deal_ends }}">--:--:--</span>{% endif %}
+          <span class="urg-save">{{ t.rail_saved.format(amount=cart_save_text) }}</span>
+        </div>
+        {% endif %}
+        {% if cart_ship_met %}
+        <p class="cart-rail-ship met">{{ t.gap_free }}</p>
+        {% elif free_ship_policy %}
+        <p class="cart-rail-ship">{{ cart_gap or promise_line }}</p>
+        {% endif %}
+      </div>
+      {% if free_ship_policy and cart_count %}
+      <div class="freeprog {% if cart_ship_met %}met{% endif %}" role="group" aria-label="{{ t.ship_progress_label }}">
+        <div class="bar"><i style="width:{{ cart_ship_progress|default(0) }}%"></i></div>
+      </div>
+      {% endif %}
+      <div class="cart-rail-items">
+        {% for line in cart_rail|default([]) %}
+        <a class="cart-rail-line" href="{{ href('/p/' ~ line.product_sku, country) }}">
+          <img src="{{ line.image }}" width="48" height="48" alt="" loading="lazy" decoding="async">
+          <span>
+            <em class="name">{{ line.name }}</em>
+            <b>{{ line.price }}</b>
+            <i>×{{ line.qty }}</i>
+          </span>
+        </a>
+        {% else %}
+        <p class="muted">{{ t.cart_empty }}</p>
+        {% endfor %}
+      </div>
+      <div class="cart-rail-ft">
+        <a class="btn cart-rail-go" href="{{ href('/cart', country) }}">{{ t.cart_rail_go }}</a>
+        {% if cart_count and not cart_ship_met %}
+        <a class="btn" href="{{ href('/cart?pay=1', country) }}">{{ t.cart_rail_checkout }}</a>
+        {% else %}
+        <a class="btn" href="{{ href('/checkout', country) }}">{{ t.cart_rail_checkout }}</a>
+        {% endif %}
+      </div>
+    </div>
+  </aside>
+  {% endif %}
+
+    <aside class="drawer" id="cart-drawer" hidden aria-label="{{ t.cart }}">
+    <div class="hd"><b>{{ t.cart }}</b><button class="x" type="button" data-drawer-x aria-label="{{ t.pop_close }}">×</button></div>
+    <div class="bd">
+      {% if cart_count and free_ship_policy %}
+      <div class="freeprog {% if cart_ship_met %}met{% endif %}">
+        <div class="tt">{% if cart_ship_met %}{{ t.gap_free }}{% else %}{{ cart_gap|default('') or promise_line|default('') }}{% endif %}</div>
+        <div class="bar"><i style="width:{{ cart_ship_progress|default(0) }}%"></i></div>
+      </div>
+      {% elif not cart_count %}
+      <p>{{ t.cart_empty }}</p>
+      {% endif %}
+      {% for line in cart_rail|default([]) %}
+      <a class="cart-rail-line drawer-line" href="{{ href('/p/' ~ line.product_sku, country) }}">
+        <img src="{{ line.image }}" width="48" height="48" alt="" loading="lazy">
+        <span><em class="name">{{ line.name }}</em><b>{{ line.price }}</b><i>×{{ line.qty }}</i></span>
+      </a>
+      {% endfor %}
+    </div>
+    <div class="ft">
+      <a class="btn ghost" href="{{ href('/cart', country) }}">{{ t.cart_rail_go }}</a>
+      {% if cart_count and not cart_ship_met %}
+      <a class="btn" href="{{ href('/cart?pay=1', country) }}">{{ t.cart_rail_checkout }}</a>
+      {% else %}
+      <a class="btn" href="{{ href('/checkout', country) }}">{{ t.cart_rail_checkout }}</a>
+      {% endif %}
+    </div>
+  </aside>
+  <div class="cookiebar" id="cookiebar" hidden><span>{{ t.privacy_note }}</span><button type="button" data-cookie-ok>OK</button></div>
+  <div class="atc-toast" id="atc-toast" hidden role="status">
+    <span class="atc-check" aria-hidden="true">✓</span>
+    <img alt="" width="40" height="40" hidden>
+    <span><b data-atc-msg></b><em data-atc-name></em></span>
+  </div>
+  <div class="atc-gap" id="atc-gap" hidden data-keyword="{{ gap_keyword|default('') }}">
+    <div class="atc-gap-back" data-atc-close></div>
+    <div class="atc-gap-panel" role="dialog" aria-modal="true" aria-labelledby="atc-gap-title">
+      <button class="atc-x" type="button" data-atc-close aria-label="{{ t.pop_close }}">×</button>
+      <div class="atc-added">
+        <span class="atc-check" aria-hidden="true">✓</span>
+        <img alt="" width="44" height="44" hidden>
+        <span><b></b><em></em></span>
+      </div>
+      <h2 id="atc-gap-title" data-atc-title></h2>
+      <p class="atc-copy" data-atc-copy></p>
+      <div class="freeprog"><div class="bar"><i style="width:0%"></i></div></div>
+      <div class="atc-tools">
+        <form class="atc-search" id="atc-search">
+          <input type="text" name="q" data-preset="{{ gap_keyword|default('') }}" placeholder="{{ gap_keyword or t.search_placeholder }}" autocomplete="off" enterkeyhint="search">
+          <button type="submit" aria-label="{{ t.search }}">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          </button>
+        </form>
+        <div class="atc-tabs" role="tablist">
+          <button type="button" class="on" data-tab="recommended">{{ t.recommended }}</button>
+          {% for key in categories %}
+          <button type="button" data-tab="{{ key }}">{{ t.categories[key] }}</button>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="atc-grid" data-atc-grid></div>
+      <div class="atc-foot">
+        <span class="gap-pay">
+          <span>{{ t.cart_rail_total }} <strong data-atc-sum></strong></span>
+          <span class="gap-saved" data-atc-save data-save-fmt="{{ t.you_save }}" hidden></span>
+        </span>
+        <a class="btn" href="{{ href('/cart', country) }}">{{ t.cart_rail_go }}</a>
+      </div>
+    </div>
+  </div>
+  <div class="peek" id="peek" hidden>
+    <div class="peek-backdrop" data-peek-close></div>
+    <div class="peek-panel" role="dialog" aria-modal="true">
+      <button class="peek-x" type="button" data-peek-close aria-label="{{ t.pop_close }}">×</button>
+      <div class="peek-slot" id="peek-slot"></div>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status" hidden data-notice="{{ harbor_notice|default('') }}" data-promo-limit="{{ t.promo_limit_toast|e }}"></div>
+  <button class="to-top" type="button" hidden aria-label="{{ t.back_to_top }}">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 14l6-6 6 6"/></svg>
+  </button>
+  <script>
+    (function () {
+      var rail = document.getElementById("cart-rail");
+      var homeRight = document.querySelector(".fn-home-desk .fn-right");
+      if (rail && homeRight) {
+        homeRight.insertBefore(rail, homeRight.firstChild);
+        rail.classList.add("fn-docked");
+      }
+      var cartBtn = document.querySelector(".headtools .cartbtn");
+      if (cartBtn && homeRight) {
+        cartBtn.addEventListener("click", function (event) {
+          if (!window.matchMedia("(min-width: 1100px)").matches) return;
+          event.preventDefault();
+          var open = document.body.classList.toggle("home-cart-open");
+          if (rail) rail.classList.toggle("collapsed", !open);
+        });
+      }
+      if (rail && !homeRight) {
+        // Default collapsed so PC layout never starts crushed; expand only if user chose so.
+        var collapsed = localStorage.getItem("harbor-rail") !== "1";
+        function syncRail() {
+          rail.classList.toggle("collapsed", collapsed);
+          var open = !collapsed && rail.classList.contains("has-items");
+          document.body.classList.toggle("rail-collapsed", collapsed || !rail.classList.contains("has-items"));
+          document.body.classList.toggle("rail-open", open);
+          var btn = rail.querySelector("[data-rail-toggle]");
+          if (btn) btn.setAttribute("aria-expanded", collapsed ? "false" : "true");
+        }
+        syncRail();
+        rail.querySelectorAll("[data-rail-toggle]").forEach(function (node) {
+          node.addEventListener("click", function () {
+            collapsed = !collapsed;
+            localStorage.setItem("harbor-rail", collapsed ? "0" : "1");
+            syncRail();
+          });
+        });
+      }
+      var drawer = document.getElementById("cart-drawer");
+      var scrim = document.getElementById("scrim");
+      function shut() { if (drawer) drawer.hidden = true; if (scrim) scrim.hidden = true; }
+      document.querySelectorAll("[data-open-drawer]").forEach(function (node) {
+        node.addEventListener("click", function (event) {
+          if (!drawer) return;
+          event.preventDefault();
+          drawer.hidden = false;
+          if (scrim) scrim.hidden = false;
+        });
+      });
+      
+      (function () {
+        var wrap = document.querySelector(".cart-wrap");
+        var fly = document.querySelector(".cart-flyout");
+        var btn = document.querySelector("[data-cart-flyout]");
+        if (!wrap || !fly || !btn) return;
+        function isDesk() { return window.matchMedia("(min-width: 981px)").matches; }
+        function openFly(ev) {
+          if (!isDesk()) return; // mobile goes to /cart via link
+          ev.preventDefault();
+          fly.hidden = false;
+          wrap.classList.add("is-open");
+        }
+        function closeFly() {
+          fly.hidden = true;
+          wrap.classList.remove("is-open");
+        }
+        btn.addEventListener("click", openFly);
+        wrap.addEventListener("mouseenter", function () {
+          if (isDesk()) { fly.hidden = false; wrap.classList.add("is-open"); }
+        });
+        wrap.addEventListener("mouseleave", closeFly);
+        document.addEventListener("click", function (ev) {
+          if (!wrap.contains(ev.target)) closeFly();
+        });
+      })();
+
+      var closer = document.querySelector("[data-drawer-x]");
+      if (closer) closer.addEventListener("click", shut);
+      if (scrim) scrim.addEventListener("click", shut);
+      var bar = document.getElementById("cookiebar");
+      if (bar && localStorage.getItem("harbor-cookie") !== "1") bar.hidden = false;
+      var ok = document.querySelector("[data-cookie-ok]");
+      if (ok) ok.addEventListener("click", function () {
+        localStorage.setItem("harbor-cookie", "1");
+        if (bar) bar.hidden = true;
+      });
+    })();
+    (function () {
+      var toast = document.getElementById("toast");
+      if (!toast) return;
+      function showToast(msg) {
+        if (!msg) return;
+        toast.textContent = msg;
+        toast.hidden = false;
+        toast.classList.add("show");
+        window.setTimeout(function () {
+          toast.classList.remove("show");
+          toast.hidden = true;
+        }, 4200);
+      }
+      var notice = toast.getAttribute("data-notice") || "";
+      if (notice === "promo_limit") {
+        showToast(toast.getAttribute("data-promo-limit") || "");
+        document.cookie = "harbor_notice=; Max-Age=0; path=/; SameSite=Lax";
+      }
+      window.harborToast = showToast;
+    })();
+    (function () {
+      var crossed = {};
+      function paint(node) {
+        var end = Date.parse(node.getAttribute("data-ends") || "");
+        if (!end) return;
+        var msMode = node.getAttribute("data-cd") === "ms";
+        var left = end - Date.now();
+        var key = node.getAttribute("data-ends") + (msMode ? ":ms" : "");
+        if (left <= 0) {
+          node.textContent = "00:00:00";
+          if (crossed[key] && !node.classList.contains("urg-cd")) location.reload();
+          return;
+        }
+        crossed[key] = true;
+        if (msMode) {
+          var total = Math.floor(left);
+          var m = Math.floor(total / 60000);
+          var sec = Math.floor((total % 60000) / 1000);
+          var ms = Math.floor((total % 1000) / 10);
+          node.textContent = String(m).padStart(2, "0") + ":" + String(sec).padStart(2, "0") + ":" + String(ms).padStart(2, "0");
+        } else {
+          var s = Math.floor(left / 1000);
+          var h = Math.floor(s / 3600);
+          var mm = Math.floor((s % 3600) / 60);
+          var sec2 = s % 60;
+          node.textContent = String(h).padStart(2, "0") + ":" + String(mm).padStart(2, "0") + ":" + String(sec2).padStart(2, "0");
+        }
+      }
+      function tickAll() {
+        document.querySelectorAll("[data-ends]").forEach(paint);
+      }
+      tickAll();
+      setInterval(tickAll, 250);
+    })();
+    var toTop = document.querySelector(".to-top");
+    function placeTop() {
+      toTop.hidden = window.scrollY < 480;
+    }
+    window.addEventListener("scroll", placeTop, { passive: true });
+    toTop.addEventListener("click", function () {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+    placeTop();
+    (function () {
+      var standalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true || window.matchMedia("(display-mode: minimal-ui)").matches;
+      var guide = document.getElementById("pwa-guide");
+      var loginNote = document.getElementById("pwa-login");
+      var deferred = null;
+      function pwaInstalledFlag() {
+        try { return localStorage.getItem("harbor-pwa-installed") === "1"; } catch (err) { return false; }
+      }
+      function markPwaInstalled() {
+        try { localStorage.setItem("harbor-pwa-installed", "1"); } catch (err) {}
+        try { localStorage.setItem("harbor-pwa-hide", "1"); } catch (err) {}
+        document.body.classList.remove("can-install");
+        document.body.classList.remove("show-pwa-install");
+        if (guide) guide.hidden = true;
+        var promo = document.getElementById("pwa-promo");
+        if (promo) promo.hidden = true;
+        var desk = document.getElementById("pop-desk");
+        if (desk) desk.hidden = true;
+        sessionStorage.setItem("harbor-desk", "1");
+      }
+      if (standalone) {
+        document.documentElement.classList.add("is-pwa");
+        document.body.classList.add("is-pwa");
+        markPwaInstalled();
+      } else if (pwaInstalledFlag()) {
+        markPwaInstalled();
+      }
+      window.matchMedia("(display-mode: standalone)").addEventListener("change", function (event) {
+        document.documentElement.classList.toggle("is-pwa", event.matches);
+        document.body.classList.toggle("is-pwa", event.matches);
+        if (event.matches) markPwaInstalled();
+      });
+      window.addEventListener("beforeinstallprompt", function (event) {
+        event.preventDefault();
+        deferred = event;
+        if (!standalone && !pwaInstalledFlag()) {
+          document.body.classList.add("can-install");
+          document.body.classList.remove("show-pwa-install");
+        }
+        if (guide && localStorage.getItem("harbor-pwa-hide") !== "1" && !standalone) {
+          // keep intentional: only reveal guide after dwell / paid / install page
+        }
+      });
+      window.addEventListener("appinstalled", function () {
+        deferred = null;
+        markPwaInstalled();
+      });
+      function steps(on) {
+        document.querySelectorAll(".pwa-steps").forEach(function (node) { node.hidden = !on; });
+      }
+      function iosDevice() {
+        return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+      }
+      function iosSafari() {
+        var ua = navigator.userAgent;
+        return iosDevice() && /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS|MicroMessenger|FBAN|Instagram|Line\//.test(ua);
+      }
+      function pwaDismissedFlag() {
+        try { return localStorage.getItem("harbor-pwa-hide") === "1"; } catch (err) { return false; }
+      }
+      function refreshHeaderInstall() {
+        var promo = document.getElementById("pwa-promo");
+        if (standalone || pwaInstalledFlag() || document.body.classList.contains("is-pwa")) {
+          document.body.classList.remove("can-install");
+          document.body.classList.remove("show-pwa-install");
+          if (promo) promo.hidden = true;
+          return;
+        }
+        if (deferred) {
+          document.body.classList.add("can-install");
+          document.body.classList.remove("show-pwa-install");
+        } else if (iosDevice()) {
+          document.body.classList.add("show-pwa-install");
+        }
+        if (promo) {
+          var canShow = (document.body.classList.contains("can-install") || document.body.classList.contains("show-pwa-install")) && !pwaDismissedFlag();
+          promo.hidden = !canShow;
+        }
+      }
+      if (navigator.getInstalledRelatedApps) {
+        try {
+          navigator.getInstalledRelatedApps().then(function (apps) {
+            if (apps && apps.length) markPwaInstalled();
+            else refreshHeaderInstall();
+          }).catch(function () { refreshHeaderInstall(); });
+        } catch (err) {
+          refreshHeaderInstall();
+        }
+      } else {
+        refreshHeaderInstall();
+      }
+      function openIos() {
+        var sheet = document.getElementById("pwa-ios");
+        if (!sheet) return;
+        var safari = iosSafari();
+        var list = sheet.querySelector("[data-ios-steps]");
+        var other = sheet.querySelector("[data-ios-other]");
+        var arrow = sheet.querySelector(".pwa-ios-arrow");
+        if (list) list.hidden = !safari;
+        if (other) other.hidden = safari;
+        if (arrow) arrow.hidden = !safari;
+        sheet.hidden = false;
+        if (guide) guide.hidden = true;
+      }
+      var sheet = document.getElementById("pwa-ios");
+      function offerActs() {
+        var path = location.pathname;
+        if (path !== "/" && path !== "/account") return;
+        if (document.body.getAttribute("data-signed") !== "1") return;
+        var blocking = ["pop-hold", "pop-ship", "pop-desk"].some(function (id) {
+          var node = document.getElementById(id);
+          return node && !node.hidden;
+        });
+        if (blocking || interruptTaken() || (guide && !guide.hidden) || (sheet && !sheet.hidden)) return;
+        var day = new Date().toISOString().slice(0, 10);
+        var checked = document.body.getAttribute("data-checked") === "1";
+        var checkin = document.getElementById("pop-checkin");
+        var sharePop = document.getElementById("pop-share");
+        var skipCheck = checked || localStorage.getItem("harbor-checkin-day") === day;
+        var skipShare = localStorage.getItem("harbor-share-hide") === "1";
+        if (!skipCheck && checkin) checkin.hidden = false;
+        else if (!skipShare && sharePop) sharePop.hidden = false;
+      }
+      document.querySelectorAll("[data-pop-later]").forEach(function (button) {
+        button.addEventListener("click", function () {
+          var kind = button.getAttribute("data-pop-later");
+          var day = new Date().toISOString().slice(0, 10);
+          if (kind === "checkin") {
+            localStorage.setItem("harbor-checkin-day", day);
+            var checkin = document.getElementById("pop-checkin");
+            if (checkin) checkin.hidden = true;
+            var sharePop = document.getElementById("pop-share");
+            if (sharePop && localStorage.getItem("harbor-share-hide") !== "1") sharePop.hidden = false;
+            return;
+          }
+          localStorage.setItem("harbor-share-hide", "1");
+          var sharePop = document.getElementById("pop-share");
+          if (sharePop) sharePop.hidden = true;
+        });
+      });
+      if (sheet) {
+        var closeIos = sheet.querySelector("[data-ios-close]");
+        if (closeIos) closeIos.addEventListener("click", function () {
+          sheet.hidden = true;
+          localStorage.setItem("harbor-pwa-hide", "1");
+          var promoHide = document.getElementById("pwa-promo");
+          if (promoHide) promoHide.hidden = true;
+          offerActs();
+        });
+      }
+      function installNow() {
+        if (!deferred) return false;
+        var pending = deferred;
+        deferred = null;
+        pending.prompt();
+        pending.userChoice.then(function (choice) {
+          if (choice.outcome === "accepted") {
+            markPwaInstalled();
+          } else {
+            refreshHeaderInstall();
+          }
+        });
+        return true;
+      }
+      document.querySelectorAll("[data-pwa-add]").forEach(function (button) {
+        button.addEventListener("click", function () {
+          if (iosDevice()) {
+            openIos();
+            return;
+          }
+          if (!installNow()) {
+            steps(true);
+            if (guide) guide.hidden = false;
+          }
+        });
+      });
+      var later = document.querySelector("[data-pwa-later]");
+      if (later && guide) {
+        later.addEventListener("click", function () {
+          localStorage.setItem("harbor-pwa-hide", "1");
+          guide.hidden = true;
+          var promoHide = document.getElementById("pwa-promo");
+          if (promoHide) promoHide.hidden = true;
+          offerActs();
+        });
+      }
+      document.querySelectorAll("[data-pwa-promo-dismiss]").forEach(function (button) {
+        button.addEventListener("click", function (event) {
+          event.preventDefault();
+          event.stopPropagation();
+          try { localStorage.setItem("harbor-pwa-hide", "1"); } catch (err) {}
+          var promoHide = document.getElementById("pwa-promo");
+          if (promoHide) promoHide.hidden = true;
+          if (guide) guide.hidden = true;
+        });
+      });
+      if (standalone) {
+        if (guide) guide.hidden = true;
+        fetch("/pwa/open", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: "standalone=1"
+        }).then(function (res) { return res.json(); }).then(function (data) {
+          if (data && data.need_login && loginNote) loginNote.hidden = false;
+        }).catch(function () {});
+        offerActs();
+        return;
+      }
+      var dwell = false;
+      var mouseWasInside = false;
+      var scrolledOk = false;
+      var pageEnteredAt = Date.now();
+      var dwellHomeMs = 30000;
+      var dwellAbandonMs = 8000;
+      document.addEventListener("mouseover", function () { mouseWasInside = true; }, { passive: true });
+      document.addEventListener("scroll", function () { scrolledOk = true; }, { passive: true, once: true });
+      function popupOpen() {
+        return ["pop-hold", "pop-ship", "pop-desk"].some(function (id) {
+          var node = document.getElementById(id);
+          return node && !node.hidden;
+        });
+      }
+      function pathBare() {
+        return location.pathname || "/";
+      }
+      function isPdpPath() {
+        return /\/p\//.test(pathBare());
+      }
+      function isAbandonPath() {
+        var p = pathBare();
+        return p.indexOf("/cart") === 0 || p.indexOf("/checkout") === 0;
+      }
+      function isLpPath() {
+        return document.body.classList.contains("is-lp") || pathBare().indexOf("/lp/") === 0;
+      }
+      window.setTimeout(function () { dwell = true; }, isAbandonPath() ? dwellAbandonMs : dwellHomeMs);
+      function leaveDayKey() {
+        try {
+          return new Date().toISOString().slice(0, 10);
+        } catch (err) {
+          return "day";
+        }
+      }
+      function leaveBlocked() {
+        try {
+          if (sessionStorage.getItem("harbor-leave") === "1") return true;
+          if (localStorage.getItem("harbor-leave-day") === leaveDayKey()) return true;
+        } catch (err) {}
+        return false;
+      }
+      function markLeaveShown() {
+        try {
+          sessionStorage.setItem("harbor-leave", "1");
+          localStorage.setItem("harbor-leave-day", leaveDayKey());
+        } catch (err) {}
+      }
+      function showDesk(paid) {
+        var desk = document.getElementById("pop-desk");
+        if (!desk || popupOpen() || interruptTaken()) return;
+        if (!paid && sessionStorage.getItem("harbor-desk") === "1") return;
+        desk.classList.toggle("is-paid", paid);
+        desk.querySelectorAll("[data-desk-paid]").forEach(function (node) { node.hidden = !paid; });
+        desk.querySelectorAll("[data-desk-leave]").forEach(function (node) { node.hidden = paid; });
+        if (paid) {
+          var line = desk.querySelector("[data-email-line]");
+          var email = document.body.getAttribute("data-email") || "";
+          if (line) line.textContent = (line.getAttribute("data-email-line") || "").replace("{email}", email);
+        }
+        desk.hidden = false;
+      }
+      function bindHoldClock(ends) {
+        var clock = document.getElementById("hold-clock");
+        if (!clock || !ends) return;
+        var end = Date.parse(ends);
+        if (!end) return;
+        // Only show short honest urgency (<= 20 min). Drop fake multi-hour clocks.
+        if (end - Date.now() > 20 * 60 * 1000) {
+          clock.hidden = true;
+          clock.removeAttribute("data-ends");
+          return;
+        }
+        clock.hidden = false;
+        clock.setAttribute("data-ends", ends);
+        function tick() {
+          var left = end - Date.now();
+          if (left <= 0) {
+            clock.textContent = "00:00";
+            return;
+          }
+          var s = Math.floor(left / 1000);
+          var m = Math.floor(s / 60);
+          var sec = s % 60;
+          clock.textContent = String(m).padStart(2, "0") + ":" + String(sec).padStart(2, "0");
+        }
+        tick();
+        setInterval(tick, 1000);
+      }
+      function syncHoldOffer(data) {
+        if (!data || !data.sku) return;
+        var hold = document.getElementById("pop-hold");
+        if (hold) hold.setAttribute("data-sku", data.sku);
+        var skuInput = document.getElementById("hold-sku");
+        if (skuInput) skuInput.value = data.sku;
+        if (data.name) {
+          var title = document.getElementById("hold-title");
+          if (title) title.textContent = data.name;
+        }
+        if (data.image) {
+          var img = document.getElementById("hold-image");
+          if (img) img.setAttribute("src", data.image);
+        }
+      }
+            function interruptTaken() {
+        try { return sessionStorage.getItem("harbor-interrupt") === "1"; } catch (err) { return false; }
+      }
+      function showLeave(reason) {
+        if (!dwell || popupOpen() || interruptTaken() || document.body.getAttribute("data-paid") === "1") return;
+        if (document.body.classList.contains("gap-open") || document.body.classList.contains("atc-open") || document.body.classList.contains("sheet-open")) return;
+        if (leaveBlocked()) return;
+        if (isLpPath()) return;
+        // Never interrupt PDP browsing — abandon paths or desktop exit-intent off-PDP only.
+        if (isPdpPath()) return;
+        if (reason === "exit") {
+          // Ignore load-time / synthetic mouseouts until the pointer was inside the page.
+          if (!mouseWasInside) return;
+          // Storefront: require scroll or full home dwell (no instant pop on enter).
+          if (!isAbandonPath() && !scrolledOk && (Date.now() - pageEnteredAt) < dwellHomeMs) return;
+        }
+        if (reason === "back" && !isAbandonPath()) return;
+        if (reason === "hide" && !isAbandonPath()) return;
+var hold = document.getElementById("pop-hold");
+        if (!hold) return;
+        markLeaveShown();
+        try { sessionStorage.setItem("harbor-interrupt", "1"); } catch (err) {}
+        hold.hidden = false;
+        var body = "sku=" + encodeURIComponent(hold.getAttribute("data-sku") || "");
+        fetch("/hold", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: body
+        }).then(function (res) { return res.json(); }).then(function (data) {
+          if (!data || !data.ok) return;
+          syncHoldOffer(data);
+          bindHoldClock(data.ends);
+        }).catch(function () {});
+      }
+      function dismissHold() {
+        var hold = document.getElementById("pop-hold");
+        if (hold) hold.hidden = true;
+        markLeaveShown();
+      }
+      document.querySelectorAll("[data-hold-x]").forEach(function (btn) {
+        btn.addEventListener("click", dismissHold);
+      });
+      document.querySelectorAll("[data-ship-close]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var ship = document.getElementById("pop-ship");
+          if (ship) ship.hidden = true;
+        });
+      });
+      document.querySelectorAll("[data-desk-close]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var desk = document.getElementById("pop-desk");
+          if (desk) desk.hidden = true;
+          sessionStorage.setItem("harbor-desk", "1");
+        });
+      });
+      // Desktop exit-intent only (pointer fine). Never on PDP / LP / coarse pointers / first paint.
+      document.addEventListener("mouseout", function (event) {
+        if (!dwell || !mouseWasInside) return;
+        if (isPdpPath() || isLpPath()) return;
+        if (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) return;
+        if (event.relatedTarget) return;
+        if (typeof event.clientY === "number" && event.clientY > 8) return;
+        showLeave("exit");
+      });
+      // Mobile/desktop back trap ONLY on cart/checkout abandon — not while browsing PDP.
+      if (isAbandonPath() && document.getElementById("pop-hold") && document.body.getAttribute("data-paid") !== "1") {
+        window.setTimeout(function () {
+          if (document.body.getAttribute("data-paid") === "1") return;
+          if (leaveBlocked()) return;
+          history.pushState({ harborLeave: 1 }, "", location.href);
+          window.addEventListener("popstate", function () {
+            if (leaveBlocked()) return;
+            history.pushState({ harborLeave: 1 }, "", location.href);
+            showLeave("back");
+          });
+        }, dwellAbandonMs);
+      }
+      // Careful mobile leave signal on abandon pages only (quick tab-switch cancelled).
+      if (isAbandonPath() && document.getElementById("pop-hold")) {
+        var hideTimer = 0;
+        document.addEventListener("visibilitychange", function () {
+          if (document.visibilityState !== "hidden") {
+            if (hideTimer) {
+              window.clearTimeout(hideTimer);
+              hideTimer = 0;
+            }
+            return;
+          }
+          if (!dwell || leaveBlocked() || popupOpen()) return;
+          hideTimer = window.setTimeout(function () {
+            hideTimer = 0;
+            // Still hidden after grace → treat as leave intent on cart/checkout.
+            if (document.visibilityState === "hidden") showLeave("hide");
+          }, 1200);
+        });
+      }
+      if (document.body.getAttribute("data-paid") === "1") {
+        var orderId = document.body.getAttribute("data-order") || "";
+        if (orderId && localStorage.getItem("harbor-desk-order") !== orderId) {
+          localStorage.setItem("harbor-desk-order", orderId);
+          window.setTimeout(function () { showDesk(true); }, 400);
+        }
+      }
+
+    (function () {
+      var cfg = window.__harborAd || {};
+      var pixels = cfg.pixels || {};
+      function eid(prefix, id) {
+        return prefix + "_" + String(id || Date.now());
+      }
+      function money(cents) {
+        var n = Number(cents || 0);
+        return Math.round(n) / 100;
+      }
+      function track(name, payload, eventId) {
+        payload = payload || {};
+        try {
+          if (pixels.meta_ok && typeof fbq === "function") {
+            var metaPayload = Object.assign({}, payload);
+            if (eventId) fbq("track", name, metaPayload, {eventID: eventId});
+            else fbq("track", name, metaPayload);
+          }
+        } catch (e) {}
+        try {
+          if (pixels.google_ok && typeof gtag === "function") {
+            var gName = name === "Purchase" ? "purchase" : (name === "AddToCart" ? "add_to_cart" : (name === "InitiateCheckout" ? "begin_checkout" : (name === "ViewContent" ? "view_item" : name)));
+            gtag("event", gName, Object.assign({}, payload, eventId ? {event_id: eventId} : {}));
+          }
+        } catch (e) {}
+        try {
+          if (pixels.tiktok_ok && window.ttq && typeof ttq.track === "function") {
+            var tName = name === "Purchase" ? "CompletePayment" : (name === "AddToCart" ? "AddToCart" : (name === "InitiateCheckout" ? "InitiateCheckout" : (name === "ViewContent" ? "ViewContent" : name)));
+            ttq.track(tName, payload, eventId ? {event_id: eventId} : undefined);
+          }
+        } catch (e) {}
+      }
+      window.harborTrack = track;
+      // Persist fbp/ttp into harbor_ad cookie for CAPI.
+      try {
+        var raw = document.cookie || "";
+        var fbp = (raw.match(/(?:^|; )_fbp=([^;]*)/) || [])[1];
+        var ttp = (raw.match(/(?:^|; )_ttp=([^;]*)/) || [])[1];
+        if (fbp || ttp) {
+          var cur = {};
+          try { cur = JSON.parse(decodeURIComponent((raw.match(/(?:^|; )harbor_ad=([^;]*)/) || [])[1] || "%7B%7D")); } catch (e) { cur = {}; }
+          if (fbp) cur.fbp = decodeURIComponent(fbp);
+          if (ttp) cur.ttp = decodeURIComponent(ttp);
+          document.cookie = "harbor_ad=" + encodeURIComponent(JSON.stringify(cur)) + ";path=/;max-age=" + (90*86400) + ";SameSite=Lax";
+        }
+      } catch (e) {}
+      var path = location.pathname || "";
+      if (/\/p\//.test(path)) {
+        var sku = (path.split("/p/")[1] || "").split(/[/?#]/)[0];
+        if (sku) track("ViewContent", {content_ids: [sku], content_type: "product", currency: cfg.currency || "USD"}, eid("vc", sku));
+      }
+      if (path.indexOf("/checkout") === 0) {
+        track("InitiateCheckout", {currency: cfg.currency || "USD"}, eid("ic", Date.now()));
+      }
+      if (path.indexOf("/cart") === 0 && /added=1|cart_add=1/.test(location.search)) {
+        track("AddToCart", {currency: cfg.currency || "USD"}, eid("atc", Date.now()));
+      }
+      var paid = document.body.getAttribute("data-paid");
+      var orderId = document.body.getAttribute("data-order") || "";
+      if (paid === "1" && orderId) {
+        var value = Number(document.body.getAttribute("data-order-value") || "0");
+        var currency = document.body.getAttribute("data-order-currency") || cfg.currency || "USD";
+        var sendFlag = document.body.getAttribute("data-ad-send");
+        var mult = Number((pixels && pixels.value_multiplier != null) ? pixels.value_multiplier : 1);
+        if (sendFlag === "0") {
+          /* 扣量：与服务端一致，跳过浏览器 Purchase */
+        } else {
+          if (mult !== 1 && isFinite(mult)) value = Math.round(value * mult * 100) / 100;
+          track("Purchase", {value: value, currency: currency, content_type: "product"}, "purchase_" + orderId);
+        }
+      }
+    })();
+
+      offerActs();
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("/sw.js", { scope: "/" }).then(function (reg) {
+          if (reg.waiting) {
+            reg.waiting.postMessage({ type: "SKIP_WAITING" });
+          }
+          reg.addEventListener("updatefound", function () {
+            var worker = reg.installing;
+            if (!worker) return;
+            worker.addEventListener("statechange", function () {
+              if (worker.state === "installed" && navigator.serviceWorker.controller) {
+                worker.postMessage({ type: "SKIP_WAITING" });
+              }
+            });
+          });
+        }).catch(function () {});
+        var refreshing = false;
+        navigator.serviceWorker.addEventListener("controllerchange", function () {
+          if (refreshing) return;
+          refreshing = true;
+          // soft refresh once so shell picks up new SW without killing checkout mid-flow
+          if (location.pathname.indexOf("/checkout") === 0 || location.pathname.indexOf("/payment") === 0) return;
+        });
+      }
+    })();
+  </script>
+  <script>
+    (function () {
+      var pending = null;
+      document.addEventListener("click", function (event) {
+        var open = event.target.closest(".cur-open");
+        if (open) {
+          event.preventDefault();
+          var box = document.getElementById("cur-modal");
+          if (box) box.classList.add("show");
+          return;
+        }
+        var pick = event.target.closest("[data-cur]");
+        if (pick) {
+          var form = document.querySelector("form.locale");
+          var select = form && form.querySelector("select[name=lang]");
+          if (select) {
+            select.value = pick.getAttribute("data-cur");
+            form.submit();
+          }
+          return;
+        }
+        var closer = event.target.closest("[data-x]");
+        if (closer) {
+          var modal = closer.closest(".hmodal");
+          if (modal) modal.classList.remove("show");
+        }
+      });
+      document.addEventListener("submit", function (event) {
+        var form = event.target;
+        if (!form || !form.hasAttribute || !form.hasAttribute("data-confirm-remove")) return;
+        if (form.getAttribute("data-go") === "1") return;
+        event.preventDefault();
+        pending = form;
+        var name = "";
+        var line = form.closest(".cart-line");
+        var link = line && line.querySelector("a");
+        if (link) name = link.textContent.trim();
+        var slot = document.getElementById("del-name");
+        if (slot) slot.textContent = name;
+        var modal = document.getElementById("del-modal");
+        if (modal) modal.classList.add("show");
+      });
+      var go = document.getElementById("del-go");
+      if (go) go.addEventListener("click", function () {
+        if (!pending) return;
+        pending.setAttribute("data-go", "1");
+        pending.submit();
+      });
+    })();
+  </script>
+
+<script>
+(function(){
+  function tick(){
+    var nodes = document.querySelectorAll(".flash-ends[data-ends]");
+    var now = Date.now();
+    nodes.forEach(function(node){
+      var ends = Date.parse(node.getAttribute("data-ends") || "");
+      if (!ends) { node.textContent = ""; return; }
+      var ms = ends - now;
+      if (ms <= 0) { node.textContent = "00:00:00"; return; }
+      var s = Math.floor(ms/1000);
+      var h = Math.floor(s/3600); s %= 3600;
+      var m = Math.floor(s/60); s %= 60;
+      function z(n){ return (n<10?"0":"")+n; }
+      node.textContent = z(h)+":"+z(m)+":"+z(s);
+    });
+  }
+  tick();
+  setInterval(tick, 1000);
+})();
+</script>
+
+<!-- harbor-rail-atc -->
+
+<script>
+/* harbor-rail-atc */
+(function () {
+  function expandRail() {
+    var rail = document.getElementById("cart-rail");
+    if (!rail) return;
+    rail.classList.add("has-items");
+    rail.classList.remove("is-empty");
+    rail.classList.remove("collapsed");
+    try { localStorage.setItem("harbor-rail", "1"); } catch (e) {}
+    document.body.classList.add("rail-open");
+    document.body.classList.remove("rail-collapsed");
+    var btn = rail.querySelector("[data-rail-toggle]");
+    if (btn) btn.setAttribute("aria-expanded", "true");
+  }
+  function paintRail(data) {
+    var rail = document.getElementById("cart-rail");
+    if (!rail || !data) return;
+    var sum = rail.querySelector(".cart-rail-sum");
+    if (sum && data.subtotal) sum.textContent = data.subtotal;
+    var urg = rail.querySelector("[data-rail-urgency]");
+    if (data.off_pct && data.save_text) {
+      if (!urg) {
+        urg = document.createElement("div");
+        urg.className = "cart-rail-urgency";
+        urg.setAttribute("data-rail-urgency", "");
+        var hd = rail.querySelector(".cart-rail-hd");
+        var ship0 = rail.querySelector(".cart-rail-ship");
+        if (hd) hd.insertBefore(urg, ship0 || null);
+      }
+      urg.innerHTML = '<span class="urg-pct"></span><span class="urg-dot">·</span><span class="urg-last"></span><span class="urg-cd">--:--:--</span><span class="urg-save"></span>';
+      var pctEl = urg.querySelector(".urg-pct");
+      var lastEl = urg.querySelector(".urg-last");
+      var saveEl = urg.querySelector(".urg-save");
+      var cdEl = urg.querySelector(".urg-cd");
+      var cfg = window.harborRailI18n || {};
+      if (pctEl) pctEl.textContent = (cfg.off_pct || "{pct}% off").replace("{pct}", data.off_pct);
+      if (lastEl) lastEl.textContent = cfg.last_day || "Last day";
+      if (saveEl) saveEl.textContent = (cfg.saved || "Saved {amount}").replace("{amount}", data.save_text);
+      if (cdEl && data.deal_ends) {
+        cdEl.setAttribute("data-ends", data.deal_ends);
+              }
+    } else if (urg) {
+      urg.remove();
+    }
+    var ship = rail.querySelector(".cart-rail-ship");
+    if (ship) {
+      ship.textContent = data.ship_line || ship.textContent;
+      ship.classList.toggle("met", !!data.ship_met);
+    }
+    var bar = rail.querySelector(".freeprog .bar i");
+    if (bar && typeof data.progress === "number") bar.style.width = data.progress + "%";
+    var tabN = rail.querySelector(".cart-rail-tab .n");
+    if (tabN && data.cart_count != null) tabN.textContent = String(data.cart_count);
+    if (data.cart_count != null) paintCount(data.cart_count);
+    var box = rail.querySelector(".cart-rail-items");
+    if (box && Array.isArray(data.rail)) {
+      box.innerHTML = data.rail.map(function (line) {
+        var href = "/p/" + encodeURIComponent(line.product_sku || line.sku);
+        return '<a class="cart-rail-line" href="' + href + '">'
+          + '<img src="' + (line.image || "") + '" alt="">'
+          + '<span class="name">' + (line.name || "") + "</span>"
+          + "<b>" + (line.price || "") + "</b>"
+          + "<i>×" + (line.qty || 1) + "</i></a>";
+      }).join("");
+    }
+  }
+  function paintCount(count) {
+    var text = String(count);
+    document.querySelectorAll(".cartbtn, .tabbar a[href*='/cart']").forEach(function (host) {
+      var badge = host.querySelector(".n");
+      if (!badge) {
+        badge = document.createElement("span");
+        badge.className = host.classList.contains("cartbtn") ? "n cart-count" : "n";
+        var label = host.querySelector(".ht-label, span");
+        if (label) host.insertBefore(badge, label);
+        else host.appendChild(badge);
+      }
+      badge.textContent = text;
+    });
+  }
+  function fillAdded(box, data) {
+    if (!box) return;
+    var added = data.added || {};
+    var title = box.querySelector("b");
+    var name = box.querySelector("em");
+    var img = box.querySelector("img");
+    if (title) title.textContent = data.message || "";
+    if (name) name.textContent = added.label || added.name || "";
+    if (img) {
+      if (added.image) { img.src = added.image; img.hidden = false; }
+      else img.hidden = true;
+    }
+  }
+  function showAdded(data) {
+    var el = document.getElementById("atc-toast");
+    if (!el) return;
+    fillAdded(el, data);
+    el.hidden = false;
+    el.classList.add("show");
+    clearTimeout(showAdded.timer);
+    showAdded.timer = setTimeout(function () {
+      el.classList.remove("show");
+      el.hidden = true;
+    }, 2200);
+  }
+  function closeGap() {
+    var root = document.getElementById("atc-gap");
+    if (root) root.hidden = true;
+    document.body.classList.remove("atc-open");
+  }
+  function loadPicks(root, ignoreQuery) {
+    var grid = root.querySelector("[data-atc-grid]");
+    if (!grid) return;
+    var tabBtn = root.querySelector(".atc-tabs .on");
+    var tab = tabBtn ? tabBtn.getAttribute("data-tab") : "recommended";
+    var input = root.querySelector(".atc-search input");
+    var typed = input ? (input.value || "").trim() : "";
+    var preset = input ? (input.getAttribute("data-preset") || "") : "";
+    var q = ignoreQuery ? "" : (typed || preset);
+    var country = "";
+    var match = location.search.match(/[?&]country=([A-Za-z]{2})/);
+    if (match) country = match[1];
+    var url = "/cart/picks?tab=" + encodeURIComponent(tab || "recommended") + "&q=" + encodeURIComponent(q);
+    if (country) url += "&country=" + encodeURIComponent(country);
+    fetch(url, { credentials: "same-origin", headers: { "Accept": "text/html" } })
+      .then(function (r) { return r.text(); })
+      .then(function (html) { grid.innerHTML = html; })
+      .catch(function () {});
+  }
+  function bindGap(root) {
+    root.querySelectorAll("[data-atc-close]").forEach(function (node) {
+      node.addEventListener("click", closeGap);
+    });
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") closeGap();
+    });
+    var search = root.querySelector(".atc-search");
+    if (search) search.addEventListener("submit", function (event) {
+      event.preventDefault();
+      loadPicks(root);
+    });
+    root.querySelectorAll(".atc-tabs button").forEach(function (node) {
+      node.addEventListener("click", function () {
+        root.querySelectorAll(".atc-tabs button").forEach(function (other) {
+          other.classList.toggle("on", other === node);
+        });
+        loadPicks(root, true);
+      });
+    });
+  }
+  function openGap(data, keep) {
+    var root = document.getElementById("atc-gap");
+    if (!root) return;
+    if (!data || data.ship_met || !data.gap_title) {
+      closeGap();
+      return;
+    }
+    var title = root.querySelector("[data-atc-title]");
+    var copy = root.querySelector("[data-atc-copy]");
+    var bar = root.querySelector(".freeprog .bar i");
+    var sum = root.querySelector("[data-atc-sum]");
+    if (title) title.innerHTML = data.gap_title || "";
+    if (copy) copy.textContent = data.gap_body || data.ship_line || "";
+    if (bar && typeof data.progress === "number") bar.style.width = data.progress + "%";
+    if (sum) sum.textContent = data.subtotal || "";
+    var save = root.querySelector("[data-atc-save]");
+    if (save) {
+      if (data.save_text) {
+        save.hidden = false;
+        save.textContent = (save.getAttribute("data-save-fmt") || "Saved {amount}").replace("{amount}", data.save_text);
+      } else {
+        save.hidden = true;
+      }
+    }
+    fillAdded(root.querySelector(".atc-added"), data);
+    if (!keep) {
+      root.querySelectorAll(".atc-tabs button").forEach(function (node) {
+        node.classList.toggle("on", node.getAttribute("data-tab") === "recommended");
+      });
+      var input = root.querySelector(".atc-search input");
+      if (input && !keep) input.value = "";
+    }
+    if (!root.dataset.ready) {
+      bindGap(root);
+      root.dataset.ready = "1";
+    }
+    root.hidden = false;
+    document.body.classList.add("atc-open");
+    try { sessionStorage.setItem("harbor-interrupt", "1"); } catch (err) {}
+    loadPicks(root);
+  }
+  document.addEventListener("submit", function (ev) {
+    var form = ev.target;
+    if (!form || form.tagName !== "FORM") return;
+    if ((form.getAttribute("action") || "").indexOf("/cart/add") === -1) return;
+    // Buy-now / checkout intents still full navigate
+    if (form.querySelector("[name=buy][value='1']")) return;
+    var next = form.querySelector("input[name=next]");
+    if (next && (next.value || "").indexOf("/checkout") === 0) return;
+    var fromPeek = form.closest("#peek");
+    if (fromPeek && location.pathname.indexOf("/cart") === 0) return;
+    if (!fromPeek && next && (next.value || "").indexOf("/cart") === 0) return;
+    // Stay on the page. Desktop opens a centered gap window; phone opens a bottom sheet.
+    ev.preventDefault();
+    var fd = new FormData(form);
+    fd.set("ajax", "1");
+    var country = fd.get("country") || "";
+    var addUrl = "/cart/add" + (country ? ("?country=" + encodeURIComponent(country)) : "");
+    fetch(addUrl, {
+      method: "POST",
+      body: fd,
+      credentials: "same-origin",
+      headers: { "X-Harbor-Ajax": "1", "Accept": "application/json" }
+    }).then(function (r) { return r.json(); }).then(function (data) {
+      if (!data || !data.ok) {
+        form.removeEventListener; // no-op
+        form.submit();
+        return;
+      }
+      paintRail(data);
+      if (window.harborTrack) {
+        try { window.harborTrack("AddToCart", {currency: (window.harborCfg || {}).currency || "USD"}); } catch (e) {}
+      }
+      var sheet = document.getElementById("sku-sheet");
+      if (sheet) {
+        sheet.classList.remove("is-open");
+        document.body.classList.remove("sku-open");
+        document.body.classList.remove("sku-desk");
+      }
+      var fromGap = form.closest("#atc-gap");
+      if (fromPeek && window.closePeek) window.closePeek();
+      showAdded(data);
+      if (fromGap) openGap(data, true);
+    }).catch(function () {
+      // fallback classic submit
+      var ajax = form.querySelector("input[name=ajax]");
+      if (ajax) ajax.remove();
+      HTMLFormElement.prototype.submit.call(form);
+    });
+  }, true);
+})();
+</script>
+
+<script>
+(function () {
+  var peek = document.getElementById("peek");
+  var slot = document.getElementById("peek-slot");
+  if (!peek || !slot) return;
+  function country() {
+    var m = location.search.match(/[?&]country=([A-Za-z]{2})/);
+    return m ? m[1] : "";
+  }
+  function closePeek() {
+    peek.hidden = true;
+    document.body.classList.remove("peek-open");
+    slot.innerHTML = "";
+  }
+  window.closePeek = closePeek;
+  function openPeek(sku) {
+    if (!sku) return;
+    var url = "/p/" + encodeURIComponent(sku) + "/peek";
+    var c = country();
+    if (c) url += "?country=" + encodeURIComponent(c);
+    slot.innerHTML = "";
+    peek.hidden = false;
+    document.body.classList.add("peek-open");
+    fetch(url, { credentials: "same-origin", headers: { "Accept": "text/html" } })
+      .then(function (r) { return r.text(); })
+      .then(function (html) { slot.innerHTML = html; })
+      .catch(function () { closePeek(); });
+  }
+  document.addEventListener("click", function (ev) {
+    var qty = ev.target.closest("#peek [data-qty]");
+    if (qty) {
+      var input = qty.parentNode.querySelector("input[name=qty]");
+      if (!input) return;
+      var n = (parseInt(input.value, 10) || 1) + (parseInt(qty.getAttribute("data-qty"), 10) || 0);
+      input.value = String(Math.max(1, n));
+      return;
+    }
+    var offer = ev.target.closest("#peek .peek-offer input");
+    if (offer) {
+      var price = peek.querySelector(".peek-price b");
+      var was = peek.querySelector(".peek-price s");
+      if (price) price.textContent = offer.getAttribute("data-price") || price.textContent;
+      if (was) {
+        var original = offer.getAttribute("data-original") || "";
+        was.textContent = original;
+        was.hidden = !original;
+      }
+      return;
+    }
+    if (ev.target.closest("[data-peek-close]")) {
+      ev.preventDefault();
+      closePeek();
+      return;
+    }
+    var hit = ev.target.closest("[data-peek]");
+    if (!hit || !hit.closest("#gap-modal, #atc-gap")) return;
+    ev.preventDefault();
+    openPeek(hit.getAttribute("data-peek"));
+  });
+  document.addEventListener("keydown", function (ev) {
+    if (ev.key === "Escape" && !peek.hidden) {
+      ev.stopPropagation();
+      closePeek();
+    }
+  }, true);
+})();
+</script>
+<script>
+(function () {
+  var KEY = "harbor-gap-30";
+  var SPAN = 30 * 60 * 1000;
+  var end = 0;
+  var armed = false;
+  function pad(n, w) {
+    var s = String(n);
+    while (s.length < w) s = "0" + s;
+    return s;
+  }
+  function label(ms) {
+    if (ms < 0) ms = 0;
+    ms = Math.floor(ms);
+    var m = Math.floor(ms / 60000);
+    var s = Math.floor((ms % 60000) / 1000);
+    var milli = ms % 1000;
+    return pad(m, 2) + ":" + pad(s, 2) + "." + pad(milli, 3);
+  }
+  function tick() {
+    var nodes = document.querySelectorAll("[data-gap-cd]");
+    if (!nodes.length) return;
+    var now = Date.now();
+    if (!armed) {
+      var stored = 0;
+      try { stored = parseInt(sessionStorage.getItem(KEY) || "0", 10) || 0; } catch (e) {}
+      end = stored > now ? stored : now + SPAN;
+      try { sessionStorage.setItem(KEY, String(end)); } catch (e) {}
+      armed = true;
+    }
+    var text = label(end - now);
+    for (var i = 0; i < nodes.length; i++) {
+      if (nodes[i].textContent !== text) nodes[i].textContent = text;
+    }
+  }
+  setInterval(tick, 16);
+})();
+</script>
+
+
+
+</body>
+</html>

@@ -1,0 +1,16 @@
+﻿{% extends "base.html" %}
+{% block body %}
+<div class="fn-policy" style="max-width:720px;margin:0 auto;padding:32px 48px">
+  <h1 class="fn-acc-title">{{ t.country_currency if t.country_currency is defined else 'Country & currency' }}</h1>
+  <p class="tiny" style="margin-top:6px">{{ t.locale_follow if t.locale_follow is defined else 'Language and currency follow the country you pick.' }}</p>
+  <div class="fn-locale-list" style="margin-top:16px">
+    {% for code, label in ship_countries %}
+    <form method="get" action="{{ href('/', code) }}" style="margin:0">
+      <button type="submit" class="fn-panel" style="width:100%;text-align:left;cursor:pointer;border:{% if code == country %}2px solid #0F2744{% else %}1px solid var(--fn-line, #E2E6EE){% endif %}">
+        <strong>{{ label }}</strong> · {{ code }}
+      </button>
+    </form>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

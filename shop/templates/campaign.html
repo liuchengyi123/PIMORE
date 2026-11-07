@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+{% block body_class %} act act-{{ mode }}{% endblock %}
+{% block body %}
+{% set found = namespace(share=None, install=None, check=None) %}
+{% for offer in offers|default([]) %}
+  {% if offer.kind == 'share' and found.share is none %}{% set found.share = offer %}{% endif %}
+  {% if offer.kind == 'desktop' and found.install is none %}{% set found.install = offer %}{% endif %}
+  {% if offer.kind == 'checkin' and found.check is none %}{% set found.check = offer %}{% endif %}
+{% endfor %}
+{% set share_offer = found.share %}
+{% set install_offer = found.install %}
+{% set check_offer = found.check %}
+{% set today_done = stamped|default(false) or checked_today|default(false) %}
+
+{% if mode == 'plaza' %}
+
+<div class="fn-act-wide">
+<aside class="fn-act-desktop-rail" aria-label="{{ t.account }}">
+  <a href="{{ href('/account/coupons', country) }}">{{ t.my_coupons }}</a>
+  <a href="{{ href('/check-in', country) }}">{{ t.checkin }}</a>
+  <a class="on" href="{{ href('/account/balance', country) }}">{{ t.balance }}</a>
+  <a href="{{ href('/account/withdraw', country) }}">{{ t.withdraw }}</a>
+  <a href="{{ href('/share', country) }}">{{ t.share }}</a>
+</aside>
+<div class="fn-act-main">
+<nav class="crumb"><a href="{{ href('/', country) }}">{{ t.home }}</a><span>›</span><span class="on">{{ t.my_balance }}</span></nav>
+<section class="sec">
+  <div class="bal fn-bal-hero">
+    <div class="amt">{{ balance_text }}</div>
+    <div class="note">{{ t.rebate_note }}</div>
+    <a class="cta coral" href="{{ href('/account/withdraw', country) }}">{{ t.withdraw }}</a>
+  </div>
+  <div class="sechead"><h2>{{ t.act_rules }}</h2></div>
+  <article class="art">
+    <div><div class="nm">{{ t.rebate_note }}</div></div>
+    {% if signed_in %}<span class="st ok">{{ t.act_got }}</span>{% endif %}
+  </article>
+  {% if share_offer %}
+  <article class="art">
+    <div>
+      <div class="nm">{{ t.act_share_name }} · {{ share_offer.amount }}</div>
+      <div class="meta">{{ t.act_you_earn }}</div>
+    </div>
+    <a class="lnk" href="{{ href('/share', country) }}">{{ t.act_look }} ›</a>
+  </article>
+  {% endif %}
+  {% if check_offer %}
+  <article class="art">
+    <div>
+      <div class="nm">{{ t.checkin }} · {{ check_offer.amount }}</div>
+      <div class="meta">{{ t.checkin_note }}</div>
+    </div>
+    <a class="lnk" href="{{ href('/check-in', country) }}">{{ t.act_look }} ›</a>
+  </article>
+  {% endif %}
+  {% if install_offer %}
+  <article class="art">
+    <div>
+      <div class="nm">{{ t.act_install_name }} · {{ install_offer.amount }}</div>
+      <div class="meta">{{ t.coupon_rule.format(over=install_offer.threshold) }}</div>
+    </div>
+    <a class="lnk" href="{{ href('/install', country) }}">{{ t.act_look }} ›</a>
+  </article>
+  {% endif %}
+</section>
+
+</div></div><!-- /fn-act-wide -->
+{% elif mode == 'share' %}
+
+<div class="fn-act-wide">
+<aside class="fn-act-desktop-rail" aria-label="{{ t.account }}">
+  <a href="{{ href('/account/coupons', country) }}">{{ t.my_coupons }}</a>
+  <a href="{{ href('/check-in', country) }}">{{ t.checkin }}</a>
+  <a href="{{ href('/account/balance', country) }}">{{ t.balance }}</a>
+  <a class="on" href="{{ href('/share', country) }}">{{ t.share }}</a>
+</aside>
+<div class="fn-act-main">
+<header class="fn-act-mbar"><a class="fn-list-back" href="{{ href('/', country) }}">‹</a><h1 class="fn-list-mtitle">{{ t.share }}</h1><span class="fn-list-filter-spacer"></span></header>
+<div class="fn-share-hero">
+  <div class="fn-share-kicker">Share Harbor</div>
+  <h2 class="fn-share-title">{{ t.share }}</h2>
+  <p class="fn-share-sub">{{ t.act_you_earn }}{% if share_offer %} · {{ share_offer.amount }}{% endif %}</p>
+</div>
+<nav class="crumb" style="display:none"><a href="{{ href('/', country) }}">{{ t.home }}</a><span>›</span><span class="on">{{ t.share }}</span></nav>
+<section class="sec">
+  <div class="promohead">
+    <h2>{% if share_offer %}{{ share_offer.amount }}{% else %}{{ t.act_share_name }}{% endif %}</h2>
+    <span class="sub">{{ t.act_you_earn }}{% if share_offer %} · {{ t.act_friend_gets }} {{ share_offer.amount }}{% endif %}</span>
+  </div>
+  <div class="pdinfo">
+    <b>{{ t.act_link }}</b>
+    {% if share_link|default('') %}
+    <div class="coupon">
+      <strong id="invite">{{ request.url.scheme }}://{{ request.url.netloc }}{{ share_link }}</strong>
+      <button type="button" id="copy" data-label="{{ t.act_copy }}" data-done="{{ t.act_copied }}">{{ t.act_copy }}</button>
+    </div>
+    {% else %}
+    <a class="cta" href="{{ href('/login?next=/share', country) }}">{{ t.act_signin_link }}</a>
+    {% endif %}
+    <p class="fine">{{ t.act_later_line }}</p>
+  </div>
+  {% if share_link|default('') %}
+  <div class="sechead"><h2>{{ t.share }}</h2></div>
+  <div class="sharecard">
+    <button type="button" data-copy>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12a4 4 0 0 1 6-3.4M15 12a4 4 0 0 1-6 3.4"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="5" r="2.6"/><circle cx="18" cy="19" r="2.6"/></svg>
+      {{ t.act_copy }}
+    </button>
+    <button type="button" data-copy><b>f</b> Facebook</button>
+    <button type="button" data-copy><b>✈</b> WhatsApp</button>
+    <button type="button" data-copy><b>𝕏</b> X</button>
+  </div>
+  {% endif %}
+  <div class="pdinfo">
+    <b>{{ t.act_rules }}</b>
+    <ul class="rules">
+      <li><b>1</b>{{ t.act_s1 }} · {{ t.act_s1b }}</li>
+      <li><b>2</b>{{ t.act_s2 }} · {{ t.act_s2b }}</li>
+      <li><b>3</b>{{ t.act_s3 }} · {{ t.act_s3b }}</li>
+      <li><b>4</b>{{ t.act_s4 }} · {{ t.act_s4b }}</li>
+    </ul>
+    <p class="fine">{{ t.act_r1 }}</p>
+    <p class="fine">{{ t.act_r2 }}</p>
+    <p class="fine">{{ t.act_r3 }}</p>
+  </div>
+</section>
+
+</div></div><!-- /fn-act-wide -->
+{% elif mode == 'install' %}
+<div class="fn-install-page">
+<nav class="crumb" style="display:none"><a href="{{ href('/', country) }}">{{ t.home }}</a><span>›</span><span class="on">{{ t.act_pwa_title }}</span></nav>
+<section class="sec" data-mode="install" data-pop="{{ 1 if claimed|default(false) else 0 }}">
+  <div class="promohead green fn-checkin-hero">
+    <div class="fn-install-mark" aria-hidden="true">H</div>
+    <h2>{{ t.act_pwa_title }}</h2>
+    <span class="sub">{{ t.act_drop }}{% if install_offer %} · {{ install_offer.amount }}{% endif %}</span>
+    {% if claimed|default(false) %}
+    <a class="cta coral" href="{{ href('/account/coupons', country) }}">{{ t.my_coupons }}</a>
+    {% else %}
+    <button class="cta coral" type="button" data-pwa-add>{{ t.act_pwa_btn }}</button>
+    {% endif %}
+  </div>
+  <div class="panel">
+    <h3>{{ t.act_add }}</h3>
+    <ul class="rules">
+      <li><b>1</b>{{ t.act_pwa_guide }}</li>
+      <li><b>2</b>{{ t.act_pwa_android }}</li>
+      <li><b>3</b>{{ t.act_pwa_ios }}</li>
+    </ul>
+  </div>
+  <div class="art"><div><div class="nm">{{ t.act_install_name }}</div><div class="meta">{% if install_offer %}{{ install_offer.amount }} · {{ t.coupon_rule.format(over=install_offer.threshold) }}{% endif %}</div></div></div>
+  <div class="art"><div><div class="nm">{{ t.act_add }}</div><div class="meta">{{ t.act_install_steps }}</div></div></div>
+  {% if claimed|default(false) %}
+  <div class="art"><div><div class="nm">{{ t.act_claimed }}</div></div><span class="st ok">{{ t.act_got }}</span></div>
+  {% endif %}
+  <div class="hmodal" id="pop">
+    <button class="hmodal-scrim" type="button" data-close></button>
+    <div class="hmodal-box" role="dialog">
+      <button class="hmodal-x" type="button" data-close aria-label="{{ t.pop_close }}">×</button>
+      <p>{{ t.act_got }}</p>
+      <div class="code">{% if install_offer %}{{ install_offer.amount }}{% endif %}</div>
+      <p>{{ t.act_claimed }}</p>
+      <button class="cta" type="button" data-close>{{ t.act_look }}</button>
+    </div>
+  </div>
+</section>
+
+</div>
+{% elif mode == 'claim' %}
+<nav class="crumb"><a href="{{ href('/', country) }}">{{ t.home }}</a><span>›</span><span class="on">{{ invite_code }}</span></nav>
+<section class="sec" data-mode="claim" data-pop="{{ 1 if claimed|default(false) else 0 }}">
+  <div class="couponhero">
+    <div>
+      <div class="amt">{% if share_offer %}{{ share_offer.amount }}{% endif %}</div>
+      <div class="codechip">{{ invite_code }}</div>
+    </div>
+    <div class="side">
+      {% if own|default(false) %}
+      <span>{{ t.act_own_link }}</span>
+      <a class="cta" href="{{ href('/share', country) }}">{{ t.act_link }}</a>
+      {% elif claimed|default(false) %}
+      <span><b>{{ t.act_claimed_you }}</b></span>
+      {% if share_offer %}<span>{{ share_offer.amount }} · {{ t.coupon_rule.format(over=share_offer.threshold) }}</span>{% endif %}
+      {% if need_login|default(false) %}
+      <a class="cta" href="{{ href('/login?next=/account/coupons', country) }}">{{ t.login }}</a>
+      {% else %}
+      <a class="cta" href="{{ href('/account/coupons', country) }}">{{ t.my_coupons }}</a>
+      {% endif %}
+      {% else %}
+      <span><b>{{ t.act_claim_title }}</b></span>
+      <span>{{ t.act_claim_line }}</span>
+      {% if share_offer %}<span>{{ t.coupon_rule.format(over=share_offer.threshold) }}</span>{% endif %}
+      {% if bad|default(false) %}<span class="warn">{{ t.act_need_email }}</span>{% endif %}
+      <form class="claim" method="post" action="/r/{{ invite_code }}/claim">
+        <label class="field">{{ t.email }}
+          <input name="email" type="email" required autocomplete="email" placeholder="name@email.com">
+        </label>
+        <button class="cta" type="submit">{{ t.act_claim_go }}</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+  <div class="pdinfo">
+    <b>{{ t.act_rules }}</b>
+    <ul class="rules">
+      <li><b>1</b>{{ t.act_claim_line }}</li>
+      <li><b>2</b>{% if share_offer %}{{ t.coupon_rule.format(over=share_offer.threshold) }}{% else %}{{ t.act_r3 }}{% endif %}</li>
+      <li><b>3</b>{{ t.act_r3 }}</li>
+    </ul>
+  </div>
+  {% if recent|default([]) %}
+  <div class="sechead"><h2>{{ t.shop_picks }}</h2></div>
+  <div class="product-grid">
+    {% for item in recent %}{% include "card.html" %}{% endfor %}
+  </div>
+  {% endif %}
+  <div class="hmodal" id="pop">
+    <button class="hmodal-scrim" type="button" data-close></button>
+    <div class="hmodal-box" role="dialog">
+      <button class="hmodal-x" type="button" data-close aria-label="{{ t.pop_close }}">×</button>
+      <p>{{ t.act_opened }}</p>
+      <div class="code">{% if share_offer %}{{ share_offer.amount }}{% endif %}</div>
+      <p>{{ t.act_claimed_you }}</p>
+      <button class="cta" type="button" data-close>{{ t.act_look }}</button>
+    </div>
+  </div>
+</section>
+
+{% elif mode == 'checkin' %}
+
+<div class="fn-act-wide">
+<aside class="fn-act-desktop-rail" aria-label="{{ t.account }}">
+  <a href="{{ href('/account/coupons', country) }}">{{ t.my_coupons }}</a>
+  <a class="on" href="{{ href('/check-in', country) }}">{{ t.checkin }}</a>
+  <a href="{{ href('/account/balance', country) }}">{{ t.balance }}</a>
+  <a href="{{ href('/share', country) }}">{{ t.share }}</a>
+</aside>
+<div class="fn-act-main">
+<header class="fn-act-mbar"><a class="fn-list-back" href="{{ href('/', country) }}">‹</a><h1 class="fn-list-mtitle">{{ t.checkin }}</h1><span class="fn-list-filter-spacer"></span></header>
+<nav class="crumb fn-desk-only"><a href="{{ href('/', country) }}">{{ t.home }}</a><span>›</span><span class="on">{{ t.checkin }}</span></nav>
+<section class="sec" data-mode="checkin" data-pop="{{ 1 if stamped|default(false) else 0 }}">
+  <div class="promohead green fn-checkin-hero">
+    <div class="fn-checkin-streak">Day {{ weekday + 1 }} streak</div>
+    <h2>Check in for a coupon</h2>
+    <span class="sub">{% if check_offer %}{{ check_offer.amount }}{% endif %}</span>
+  </div>
+  <div class="panel">
+    <h3>{{ t.act_days[weekday] }}</h3>
+    <div class="ckgrid">
+      {% for name in t.act_days %}
+      <div class="ckcell {% if loop.index0 == weekday and today_done %}done{% elif loop.index0 == weekday %}today{% else %}lock{% endif %}">
+        <span class="d">{{ loop.index }}</span>
+        {{ name }}{% if check_offer %}<br>{{ check_offer.amount }}{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% if email %}
+    <form method="post" action="/check-in" id="check-form">
+      <button class="cta" type="submit"{% if today_done %} disabled{% endif %}>
+        {% if today_done %}{{ t.act_stamped }}{% else %}{{ t.act_stamp }}{% if check_offer %} · {{ check_offer.amount }}{% endif %}{% endif %}
+      </button>
+    </form>
+    {% else %}
+    <a class="cta" href="{{ href('/login?next=/check-in', country) }}">{{ t.act_sign }}</a>
+    {% endif %}
+    <p class="fine">{{ t.checkin_note }}</p>
+  </div>
+  {% if today_done and check_offer %}
+  <div class="sechead"><h2>{{ t.my_coupons }}</h2></div>
+  <article class="art">
+    <div>
+      <div class="nm">{{ check_offer.name }} · {{ check_offer.amount }}</div>
+      <div class="meta">{{ t.coupon_rule.format(over=check_offer.threshold) }}</div>
+    </div>
+    <span class="st ok">{{ t.act_checked }}</span>
+  </article>
+  {% endif %}
+  <div class="hmodal" id="pop">
+    <button class="hmodal-scrim" type="button" data-close></button>
+    <div class="hmodal-box" role="dialog">
+      <button class="hmodal-x" type="button" data-close aria-label="{{ t.pop_close }}">×</button>
+      <p>{{ t.act_marked }}</p>
+      <div class="code">{% if check_offer %}{{ check_offer.amount }}{% endif %}</div>
+      <p>{{ t.checkin_note }}</p>
+      <button class="cta" type="button" data-close>{{ t.act_look }}</button>
+    </div>
+  </div>
+</section>
+</div></div><!-- /fn-act-wide -->
+
+{% endif %}
+<script src="/static/campaign.js?v=2"></script>
+<script>
+  document.querySelectorAll("[data-copy]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      var main = document.getElementById("copy");
+      if (main) main.click();
+    });
+  });
+</script>
+{% endblock %}

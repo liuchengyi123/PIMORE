@@ -1,0 +1,45 @@
+<div class="peek-layout">
+  <div class="peek-media">
+    <img src="{{ item.image }}" alt="{{ item.name }}" width="480" height="480">
+  </div>
+  <div class="peek-copy">
+    <h2 class="peek-name">{{ item.name }}</h2>
+    {% if peek_about %}<p class="peek-about">{{ peek_about }}</p>{% endif %}
+    <p class="peek-price">
+      <b>{{ item.price }}</b>
+      {% if item.original and item.higher %}<s>{{ item.original }}</s>{% endif %}
+      {% if item.off_pct %}<span class="off-badge">{{ t.off_badge.format(pct=item.off_pct) }}</span>{% endif %}
+    </p>
+    {% if item.save_amount %}<p class="gap-saved">{{ t.you_save.format(amount=item.save_amount) }}</p>{% endif %}
+    {% if item.stock > 0 %}
+    <form method="post" action="/cart/add" class="peek-form">
+      <input type="hidden" name="sku" value="{{ item.sku }}">
+      <input type="hidden" name="country" value="{{ country }}">
+      <input type="hidden" name="next" value="/cart?gap=1">
+      {% if item.offers|length == 1 %}
+      <input type="hidden" name="offer" value="{{ item.offers[0].id }}">
+      {% endif %}
+      {% if item.offers|length > 1 %}
+      <div class="peek-offers" role="radiogroup">
+        {% for offer in item.offers %}
+        <label class="peek-offer">
+          <input type="radio" name="offer" value="{{ offer.id }}" data-price="{{ offer.price }}" data-original="{{ offer.original }}" {% if loop.first %}checked{% endif %}>
+          {% if offer.image %}<img src="{{ offer.image }}" alt="">{% endif %}
+          <span>{{ offer.label }}</span>
+        </label>
+        {% endfor %}
+      </div>
+      {% endif %}
+      <div class="stepper peek-qty">
+        <span>{{ t.qty }}</span>
+        <button type="button" data-qty="-1" aria-label="-">−</button>
+        <input name="qty" value="1" inputmode="numeric">
+        <button type="button" data-qty="1" aria-label="+">+</button>
+      </div>
+      <button class="btn peek-add" type="submit">{{ t.add_cart }}</button>
+    </form>
+    {% else %}
+    <p>{{ t.out_of_stock }}</p>
+    {% endif %}
+  </div>
+</div>

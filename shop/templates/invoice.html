@@ -1,0 +1,21 @@
+﻿{% extends "base.html" %}
+{% block body %}
+<div class="fn-invoice">
+  <div class="fn-panel fn-invoice-card">
+    <div class="fn-auth-brand">HARBOR</div>
+    <h1 class="fn-acc-title" style="margin-top:4px">{{ t.invoice }}</h1>
+    <p class="tiny">{{ t.order_number }} {{ order['id'] }}</p>
+    <div class="fn-rule"></div>
+    <p class="tiny">{{ order['email'] }}</p>
+    <p class="tiny">{{ order['ship_name'] }} · {{ order['address'] }} {{ order['city'] }} {{ order['ship_country'] }}</p>
+    <div class="fn-rule"></div>
+    {% for line in lines %}
+    <div class="fn-sum-row"><span>{{ line['sku'] }} × {{ line['qty'] }}</span><span></span></div>
+    {% endfor %}
+    <div class="fn-sum-row total"><span>{{ t.due }}</span><span class="price">{{ due_text }}</span></div>
+    <p class="tiny" style="margin-top:12px">{{ order['pay_method'] }} · {{ order['speed'] }}</p>
+    {% if order['gift_message'] %}<p class="tiny">{{ t.gift }} {{ order['gift_message'] }}</p>{% endif %}
+  </div>
+  <button class="btn" type="button" onclick="window.print()">Download / Print</button>
+</div>
+{% endblock %}

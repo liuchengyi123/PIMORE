@@ -1,0 +1,35 @@
+﻿/* Harbor App · First Design shopping tokens */
+$hb-forest: #0F2744;
+$hb-deep: #0E7490;
+$hb-soft: #E0F2FE;
+$hb-coral: #E11D48;
+$hb-coral-soft: #FEE2E2;
+$hb-paper: #F7F4EF;
+$hb-line: #E2E6EE;
+$hb-ink: #0F2744;
+$hb-muted: #5C6570;
+$hb-white: #FFFFFF;
+$hb-strike: #8B93A0;
+$hb-success: #128A5E;
+$hb-price: #B45309;
+
+$hb-radius-card: 22px;
+$hb-radius-btn: 16px;
+$hb-radius-btn-lg: 18px;
+$hb-radius-pill: 999px;
+$hb-tab-height: 58px;
+$hb-page-pad: 16px;
+
+$hb-shadow-soft: 0 2px 16px rgba(14, 17, 22, 0.05);
+$hb-shadow-lift: 0 10px 30px rgba(14, 17, 22, 0.08);
+$hb-shadow-tab: 0 12px 40px rgba(14, 17, 22, 0.12);
+
+:export {
+  forest: $hb-forest;
+  deep: $hb-deep;
+  soft: $hb-soft;
+  coral: $hb-coral;
+  paper: $hb-paper;
+  ink: $hb-ink;
+  muted: $hb-muted;
+}

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block body_class %} fn-depts-page{% endblock %}
+{% block body %}
+<div class="fn-depts">
+  <header class="fn-depts-top">
+    <h1 class="fn-depts-title">{% if t.browse is defined %}{{ t.browse }}{% elif lang.startswith('en') %}Browse{% else %}{{ t.departments }}{% endif %}</h1>
+    <form method="get" action="{{ request.url.path }}" class="fn-depts-loc-form">
+      <label class="fn-depts-loc">{{ country }}
+        <select name="country" aria-label="{{ t.locale }}" onchange="this.form.submit()">
+          {% for row in ship_countries %}
+          <option value="{{ row[0] }}" {% if country == row[0] %}selected{% endif %}>{{ row[0] }} · {{ row[1] }}</option>
+          {% endfor %}
+        </select>
+      </label>
+    </form>
+  </header>
+
+  <form class="fn-depts-search" action="{{ href('/search', country) }}" method="get" role="search">
+    <input type="hidden" name="country" value="{{ country }}">
+    <img src="/static/m01/search.svg" width="18" height="18" alt="">
+    <input type="search" name="q" value="" placeholder="{{ t.search_departments if t.search_departments is defined else 'Search departments' }}" aria-label="{{ t.search }}">
+  </form>
+
+  <div class="fn-dept-grid" id="fn-dept-grid">
+    {% for board in boards %}
+    <a class="fn-dept-card fn-dept-{{ board.key }}" href="{{ href('/c/' ~ board.key, country) }}" data-dept="{{ board.key }}">
+      <span class="fn-dept-shot" aria-hidden="true">
+        {% if board.image %}
+        <img src="{{ board.image }}" alt="" width="72" height="72" loading="lazy">
+        {% else %}
+        <img src="/static/dept/{{ board.key }}.svg" alt="" width="48" height="48" loading="lazy">
+        {% endif %}
+      </span>
+      <span class="fn-dept-meta">
+        <strong>{{ t.categories[board.key] }}</strong>
+        {% if board.chips %}<span class="tiny">{{ board.chips | join(' · ') }}</span>{% endif %}
+      </span>
+      <span class="fn-dept-chev" aria-hidden="true">›</span>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
