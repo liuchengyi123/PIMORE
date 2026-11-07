@@ -1,0 +1,19 @@
+<section class="lp-dense">
+  <header class="lp-hero">
+    <p class="lp-kicker">Flash aisle</p>
+    <h1>{{ lp.category_en }} deals, packed in</h1>
+    <p class="lp-sub">Open any item, or enter the store to shop this whole aisle.</p>
+    {% include "lp/_countdown.html" %}
+    {% include "lp/_enter.html" %}
+  </header>
+  {% if cards %}
+  <div class="lp-grid">
+    {% for item in cards %}
+    {% with eager=loop.index <= 2 %}{% include "lp/_card.html" %}{% endwith %}
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="lp-empty">This aisle is restocking. Enter the store to keep browsing.</p>
+  {% endif %}
+  <div class="lp-foot">{% include "lp/_enter.html" %}</div>
+</section>

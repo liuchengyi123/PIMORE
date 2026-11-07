@@ -59,6 +59,21 @@ from shop.adtrack import (
     update_account,
     delete_account,
 )
+from shop.lp_links import (
+    create_link as create_lp_link,
+    get_by_code as get_lp_link,
+    list_recent as list_lp_links,
+    preview_path as lp_preview_path,
+)
+from shop.lp_modules import (
+    IMPULSE_MAX_CENTS,
+    IMPULSE_MIN_CENTS,
+    SKINS as LP_SKINS,
+    TEMPLATES as LP_TEMPLATES,
+    LpChoiceError,
+    band_groups,
+    resolve_module,
+)
 from shop.alibaba import (
     AlibabaFormatError,
     apply_prices,
@@ -7433,6 +7448,196 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
     async def admin_traffic_save_legacy(request: Request):
         require_admin(request)
         return RedirectResponse("/admin/traffic?notice=saved", status_code=303)
+
+    def _lp_text(source, key, default=""):
+        if source is None:
+            return default
+        raw = source.get(key)
+        if raw is None:
+            return default
+        text = str(raw).strip()
+        return text or default
+
+    def _lp_form_state(source=None):
+        platform = _lp_text(source, "platform", "meta") or "meta"
+        category = _lp_text(source, "category", "kitchen") or "kitchen"
+        return {
+            "template": _lp_text(source, "template", "dense_flash") or "dense_flash",
+            "category": category,
+            "skin": _lp_text(source, "skin", category) or category,
+            "platform": platform,
+            "utm_source": _lp_text(source, "utm_source", platform) or platform,
+            "utm_medium": _lp_text(source, "utm_medium", "paid") or "paid",
+            "utm_campaign": _lp_text(source, "utm_campaign"),
+            "utm_content": _lp_text(source, "utm_content"),
+            "utm_term": _lp_text(source, "utm_term"),
+            "acct": _lp_text(source, "acct"),
+            "country": (_lp_text(source, "country", "US") or "US").upper()[:2],
+            "label": _lp_text(source, "label"),
+        }
+
+    def _lp_cards(request, category):
+        ctx = view(request)
+        card_ctx = dict(ctx)
+        card_ctx["lang"] = "en"
+        card_ctx["prefer_zh"] = False
+        picked = []
+        fallback = []
+        for row in catalog_rows():
+            if str(row.get("category") or "") != category:
+                continue
+            if int(row.get("published") or 0) != 1:
+                continue
+            if int(row.get("stock") or 0) <= 0:
+                continue
+            cents = int(row.get("price_cents") or 0)
+            if IMPULSE_MIN_CENTS <= cents <= IMPULSE_MAX_CENTS:
+                picked.append(row)
+            else:
+                fallback.append(row)
+        rows = picked or fallback
+        rows.sort(key=lambda row: (int(row.get("price_cents") or 0), str(row.get("sku") or "")))
+        cards = []
+        country = ctx["country"]
+        for row in rows[:24]:
+            card = present_card(row, card_ctx)
+            sku = card["sku"]
+            card["grab_href"] = f"/api/ad/deal?sku={sku}&country={country}&to=/p/{sku}"
+            cards.append(card)
+        return cards, ctx
+
+    def _lp_response(request, spec, *, preview=False, code=""):
+        cards, ctx = _lp_cards(request, spec["category"])
+        bands, overflow = band_groups(cards)
+        ends_at, _set_cookie = lp_flash_window(request)
+        lp = {
+            **spec,
+            "ends_at": ends_at,
+            "enter_href": href(f"/c/{spec['category']}", ctx["country"]),
+            "preview": preview,
+            "code": code,
+            "product_count": len(cards),
+        }
+        if not preview:
+            try:
+                attrs = getattr(request.state, "ad_attrs", None) or {}
+                record_funnel(
+                    conn,
+                    "land",
+                    seg=spec["category"],
+                    utm_source=attrs.get("utm_source") or request.query_params.get("utm_source") or "",
+                    utm_campaign=attrs.get("utm_campaign") or request.query_params.get("utm_campaign") or "",
+                    visitor=lp_visitor_seed(request),
+                    extra=f"template={spec['template_id']}",
+                    acct=attrs.get("acct") or request.query_params.get("acct") or "",
+                )
+            except Exception:
+                pass
+        response = render(
+            request,
+            "lp_ad.html",
+            lp=lp,
+            cards=cards,
+            hero=cards[0] if cards else None,
+            rest=cards[1:] if len(cards) > 1 else [],
+            bands=bands,
+            overflow=overflow,
+            seo_title=page_title(f"{spec['category_en']} — {spec['template_en']}"),
+            seo_description=f"Shop {spec['category_en']} on Harbor.",
+            seo_robots="noindex, nofollow",
+        )
+        if ends_at:
+            response.set_cookie(
+                "lp_flash_end",
+                ends_at,
+                max_age=60 * 11,
+                path="/",
+                samesite="lax",
+            )
+        return response
+
+    @app.get("/lp/ad/preview", response_class=HTMLResponse)
+    def lp_ad_preview(request: Request):
+        try:
+            spec = resolve_module(
+                request.query_params.get("template"),
+                request.query_params.get("category"),
+                request.query_params.get("skin"),
+            )
+        except LpChoiceError:
+            return render(request, "not_found.html", status_code=404)
+        return _lp_response(request, spec, preview=True)
+
+    @app.get("/lp/ad/{code}", response_class=HTMLResponse)
+    def lp_ad_saved(request: Request, code: str):
+        row = get_lp_link(conn, code)
+        if row is None:
+            return render(request, "not_found.html", status_code=404)
+        try:
+            spec = resolve_module(row["template"], row["category"], row["skin"])
+        except LpChoiceError:
+            return render(request, "not_found.html", status_code=404)
+        return _lp_response(request, spec, preview=False, code=row["code"])
+
+    _LP_ERRORS = {
+        "template": "请选择有效的落地页模块。",
+        "category": "请选择有效的类目。",
+        "skin": "请选择有效的皮肤。",
+    }
+
+    def _launch_page(request, form_state, notice="", error="", built=None):
+        try:
+            resolve_module(form_state["template"], form_state["category"], form_state["skin"])
+            preview_src = lp_preview_path(
+                form_state["template"],
+                form_state["category"],
+                form_state["skin"],
+                form_state["country"],
+            )
+        except LpChoiceError:
+            preview_src = lp_preview_path("dense_flash", "kitchen", "kitchen", "US")
+        return render(
+            request,
+            "admin_launch.html",
+            lp_templates=LP_TEMPLATES,
+            lp_skins=LP_SKINS,
+            form_state=form_state,
+            preview_src=preview_src,
+            launch_notice=notice,
+            launch_error=error,
+            built_link=built,
+            launch_links=list_lp_links(conn),
+        )
+
+    @app.get("/admin/launch", response_class=HTMLResponse)
+    def admin_launch(request: Request):
+        require_admin(request)
+        return _launch_page(request, _lp_form_state())
+
+    @app.post("/admin/launch", response_class=HTMLResponse)
+    async def admin_launch_create(request: Request):
+        require_admin(request)
+        form = await request.form()
+        state = _lp_form_state(form)
+        try:
+            built = create_lp_link(
+                conn,
+                template=state["template"],
+                category=state["category"],
+                skin=state["skin"],
+                platform=state["platform"],
+                utm_source=state["utm_source"],
+                utm_medium=state["utm_medium"],
+                utm_campaign=state["utm_campaign"],
+                utm_content=state["utm_content"],
+                utm_term=state["utm_term"],
+                acct=state["acct"],
+                country=state["country"],
+                label=state["label"],
+            )
+        except LpChoiceError as exc:
+            return _launch_page(request, state, error=_LP_ERRORS.get(exc.field, "无法生成链接。"))
+        return _launch_page(request, state, notice="built", built=built)
 
     @app.get("/admin/ads", response_class=HTMLResponse)
     def admin_ads(request: Request):

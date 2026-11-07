@@ -1,0 +1,18 @@
+<section class="lp-countgrid">
+  <header class="lp-count-top">
+    <p class="lp-kicker">Ends soon</p>
+    <h1>{{ lp.category_en }} countdown</h1>
+    {% include "lp/_countdown.html" %}
+    <p class="lp-sub">Shop the aisle before this window closes.</p>
+  </header>
+  {% if cards %}
+  <div class="lp-grid">
+    {% for item in cards %}
+    {% with eager=loop.index <= 2 %}{% include "lp/_card.html" %}{% endwith %}
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="lp-empty">This aisle is restocking. Enter the store to keep browsing.</p>
+  {% endif %}
+  <div class="lp-foot">{% include "lp/_enter.html" %}</div>
+</section>

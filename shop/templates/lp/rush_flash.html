@@ -1,0 +1,28 @@
+<section class="lp-rush">
+  <header class="lp-rush-head">
+    <p class="lp-kicker">Rush</p>
+    <h1>Rush the {{ lp.category_en }} aisle before this window turns over</h1>
+    {% include "lp/_countdown.html" %}
+    {% include "lp/_enter.html" %}
+  </header>
+  <div class="lp-ticker" aria-hidden="true">
+    <div class="lp-ticker-track">
+      <span>Selling through this aisle</span>
+      <span>Open the store</span>
+      <span>Grab a single item</span>
+      <span>Selling through this aisle</span>
+      <span>Open the store</span>
+      <span>Grab a single item</span>
+    </div>
+  </div>
+  {% if cards %}
+  <div class="lp-grid">
+    {% for item in cards %}
+    {% with eager=loop.index <= 2 %}{% include "lp/_card.html" %}{% endwith %}
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="lp-empty">This rush is restocking. Enter the store to keep browsing.</p>
+  {% endif %}
+  <div class="lp-foot">{% include "lp/_enter.html" %}</div>
+</section>

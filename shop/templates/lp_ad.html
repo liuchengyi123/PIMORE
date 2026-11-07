@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>{{ seo_title }}</title>
+  <link rel="stylesheet" href="/static/lp-ad.css?v=1">
+</head>
+<body class="lp-ad" data-lp-template="{{ lp.template_id }}" data-lp-skin="{{ lp.skin_id }}" data-lp-category="{{ lp.category }}" data-lp-master="{{ '1' if lp.master else '0' }}"{% if lp.code %} data-lp-code="{{ lp.code }}"{% endif %} style="--accent: {{ lp.accent }}; --ink: {{ lp.ink }}; --wash: {{ lp.wash }}; --deep: {{ lp.deep }};">
+  <header class="lp-top">
+    <a class="lp-brand" href="{{ lp.enter_href }}">Harbor</a>
+    <span class="lp-top-cat">{{ lp.category_en }}</span>
+    <span class="lp-ship">Free shipping</span>
+  </header>
+  <main class="lp-main">
+    {% include lp.partial %}
+  </main>
+  <script>
+  (function () {
+    function paint(node) {
+      var end = Date.parse(node.getAttribute("data-ends") || "");
+      if (!end) return;
+      var left = end - Date.now();
+      if (left < 0) left = 0;
+      var total = Math.floor(left / 1000);
+      var h = Math.floor(total / 3600);
+      var m = Math.floor((total % 3600) / 60);
+      var s = total % 60;
+      function z(n) { return (n < 10 ? "0" : "") + n; }
+      node.textContent = (h ? z(h) + ":" : "") + z(m) + ":" + z(s);
+    }
+    function tick() {
+      document.querySelectorAll(".lp-cd[data-ends]").forEach(paint);
+    }
+    tick();
+    setInterval(tick, 1000);
+  })();
+  </script>
+</body>
+</html>

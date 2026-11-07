@@ -140,7 +140,7 @@
   <div class="card">
     <h2>创意链接（本账户）</h2>
     <div class="pad">
-      <p class="muted small">链接自动带 <code>acct={{ active_acct.code }}</code>。投放时一组多链换 seg 即可。</p>
+      <p class="muted small">链接自动带 <code>acct={{ active_acct.code }}</code>。按落地页模块和类目生成投放链，用 <a href="/admin/launch">投放落地页</a>。</p>
       <form class="fields traffic-form" method="post" action="/admin/traffic/link">
         <input type="hidden" name="account_id" value="{{ active_acct.id }}">
         <input type="hidden" name="platform" value="{{ platform }}">

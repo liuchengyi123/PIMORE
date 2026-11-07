@@ -1,0 +1,31 @@
+<section class="lp-waterfall">
+  <header class="lp-hero">
+    <p class="lp-kicker">Price bands</p>
+    <h1>{{ lp.category_en }} from $1 to $10</h1>
+    <p class="lp-sub">Impulse picks in this aisle. Enter the store for the full range.</p>
+    {% include "lp/_countdown.html" %}
+  </header>
+  {% for band in bands %}
+  <section class="lp-band" data-band="{{ band.id }}">
+    <h2>{{ band.label }}</h2>
+    <div class="lp-grid">
+      {% for item in band["items"] %}
+      {% include "lp/_card.html" %}
+      {% endfor %}
+    </div>
+  </section>
+  {% else %}
+  <p class="lp-empty">No $1–$10 picks in this aisle right now.</p>
+  {% endfor %}
+  {% if overflow %}
+  <section class="lp-band" data-band="more">
+    <h2>More from this aisle</h2>
+    <div class="lp-grid">
+      {% for item in overflow %}
+      {% include "lp/_card.html" %}
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+  <div class="lp-foot">{% include "lp/_enter.html" %}</div>
+</section>
