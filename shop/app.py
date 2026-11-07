@@ -8115,6 +8115,13 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             active_acct=active,
             ad_logs=recent_ad_logs(conn, 20),
             ad_funnel=funnel_stats(conn, 14),
+            platform_fields=PLATFORM_FIELDS.get(platform) or [],
+            ad_masked={
+                key: mask_secret((active.get("credentials") or {}).get(key) or "")
+                for key, _t, secret in (PLATFORM_FIELDS.get(platform) or [])
+                if secret and active
+            },
+            body_class="admin-launch",
         )
 
     @app.get("/admin/launch", response_class=HTMLResponse)
@@ -8167,6 +8174,31 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         if code:
             q += f"&acct={code}"
         return RedirectResponse(q, status_code=303)
+
+    @app.post("/admin/launch/account/save")
+    async def admin_launch_account_save(request: Request):
+        """Save Pixel / CAPI for the selected account from the launch page."""
+        require_admin_role(request)
+        form = await request.form()
+        platform = str(form.get("platform") or "meta").strip().lower()
+        try:
+            account_id = int(form.get("account_id") or 0)
+        except ValueError:
+            account_id = 0
+        acct = get_account(conn, account_id=account_id)
+        if not acct:
+            return RedirectResponse(f"/admin/launch?platform={platform}&notice=error", status_code=303)
+        patch = {}
+        for key, _title, _secret in PLATFORM_FIELDS.get(acct["platform"], []):
+            if key in form:
+                patch[key] = str(form.get(key) or "")
+        updated = update_account(conn, account_id, credentials_patch=patch)
+        code = (updated or acct).get("code") or ""
+        q = f"/admin/launch?platform={platform}&notice=pixel_saved"
+        if code:
+            q += f"&acct={code}"
+        return RedirectResponse(q, status_code=303)
+
 
     @app.get("/admin/ads", response_class=HTMLResponse)
     def admin_ads(request: Request):

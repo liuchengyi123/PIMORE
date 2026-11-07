@@ -9,10 +9,12 @@
 
 {% if launch_notice == "built" %}<p class="ok">链接已生成（含所选账户 acct），可复制到广告后台。右侧预览与公开页同一套模板。</p>{% endif %}
 {% if launch_notice == "test_ok" %}<p class="ok">测试回传已发送，请到 Meta Events Manager / TikTok Events 查看；下方「最近回传」也会刷新。</p>{% endif %}
+{% if launch_notice == "pixel_saved" %}<p class="ok">Pixel / 回传密钥已保存到当前账户。</p>{% endif %}
 {% if launch_notice == "test_fail" %}<p class="error">测试回传失败：先到「投放回传」配好该账户 Pixel / CAPI，再回来测。</p>{% endif %}
 {% if launch_error %}<p class="error">{{ launch_error }}</p>{% endif %}
 
 <div class="launch-split">
+  <div class="launch-left">
   <form id="lp-launch-form" class="card" method="post" action="/admin/launch">
     <h2>选择落地页模块</h2>
     <div class="pad">
@@ -74,6 +76,52 @@
       {% endif %}
     </div>
   </form>
+  <div class="card" id="launch-pixel">
+    <h2>广告 Pixel / 回传</h2>
+    <div class="pad">
+      {% if active_acct %}
+      <div class="status-list rowish" style="margin:0 0 10px">
+        <span class="badge {% if active_acct.status.pixel %}ok{% else %}missing{% endif %}">
+          <span class="dot {% if active_acct.status.pixel %}on{% else %}off{% endif %}"></span>
+          Pixel {% if active_acct.status.pixel %}已配置{% else %}未配置{% endif %}
+        </span>
+        <span class="badge {% if active_acct.status.capi %}ok{% else %}missing{% endif %}">
+          <span class="dot {% if active_acct.status.capi %}on{% else %}off{% endif %}"></span>
+          服务端回传 {% if active_acct.status.capi %}就绪{% else %}缺密钥{% endif %}
+        </span>
+        <span class="muted small"><code>{{ active_acct.code }}</code> · {{ active_acct.name }}</span>
+      </div>
+      <form class="fields" method="post" action="/admin/launch/account/save">
+        <input type="hidden" name="account_id" value="{{ active_acct.id }}">
+        <input type="hidden" name="platform" value="{{ form_state.platform }}">
+        {% for key, title, secret in platform_fields %}
+          {% if secret %}
+          <label class="wide">{{ title }}
+            <input name="{{ key }}" value="{% if active_acct.credentials.get(key) %}********{% endif %}"
+                   placeholder="{{ ad_masked.get(key) or '•••' }}" autocomplete="off">
+          </label>
+          {% else %}
+          <label class="wide">{{ title }}
+            <input name="{{ key }}" value="{{ active_acct.credentials.get(key) or '' }}" autocomplete="off">
+          </label>
+          {% endif %}
+        {% endfor %}
+        <div class="wide actions" style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" type="submit">保存 Pixel</button>
+        </div>
+      </form>
+      <form method="post" action="/admin/launch/test" style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+        <input type="hidden" name="account_id" value="{{ active_acct.id }}">
+        <input type="hidden" name="platform" value="{{ form_state.platform }}">
+        <input type="hidden" name="acct" value="{{ active_acct.code }}">
+        <button class="btn ghost sm" type="submit">发送测试回传</button>
+      </form>
+      {% else %}
+      <p class="error">该平台还没有广告账户。请先到 <a href="/admin/traffic?platform={{ form_state.platform }}">投放回传</a> 添加账户。</p>
+      {% endif %}
+    </div>
+  </div>
+  </div>
 
   <aside class="lp-preview-frame">
     <div class="lp-preview-label">实时预览</div>
@@ -85,7 +133,7 @@
 <div class="card" id="launch-postback">
   <h2>回传联调</h2>
   <div class="pad">
-    <p class="muted small">生成的投放链接会带上上面的 <code>acct</code>；落地写 cookie，成交走该账户 Pixel / CAPI。密钥仍在 <a href="/admin/traffic">投放回传</a> 配置。</p>
+    <p class="muted small">生成的投放链接会带上上面的 <code>acct</code>；落地写 cookie，成交走该账户 Pixel / CAPI。Pixel 填在左侧「广告 Pixel / 回传」。完整账户管理仍可打开 <a href="/admin/traffic">投放回传</a>。</p>
     {% if active_acct %}
     <div class="status-list rowish" style="margin:10px 0">
       <span class="badge {% if active_acct.status.pixel %}ok{% else %}missing{% endif %}">
