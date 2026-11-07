@@ -7,7 +7,9 @@
   </div>
 </header>
 
-{% if launch_notice == "built" %}<p class="ok">链接已生成，可复制到广告后台。右侧预览与公开页使用同一套模板。</p>{% endif %}
+{% if launch_notice == "built" %}<p class="ok">链接已生成（含所选账户 acct），可复制到广告后台。右侧预览与公开页同一套模板。</p>{% endif %}
+{% if launch_notice == "test_ok" %}<p class="ok">测试回传已发送，请到 Meta Events Manager / TikTok Events 查看；下方「最近回传」也会刷新。</p>{% endif %}
+{% if launch_notice == "test_fail" %}<p class="error">测试回传失败：先到「投放回传」配好该账户 Pixel / CAPI，再回来测。</p>{% endif %}
 {% if launch_error %}<p class="error">{{ launch_error }}</p>{% endif %}
 
 <div class="launch-split">
@@ -47,7 +49,14 @@
         </label>
         <label>country <input name="country" value="{{ form_state.country }}" maxlength="2"></label>
         <label>内部备注 <input name="label" value="{{ form_state.label }}" maxlength="80" placeholder="例如 厨房-密铺-0312"></label>
-        <label>acct <input name="acct" value="{{ form_state.acct }}" placeholder="投放账户代码，可空"></label>
+        <label>投放账户
+          <select name="acct" id="lp-acct">
+            <option value="">（该平台默认账户）</option>
+            {% for a in launch_accounts %}
+            <option value="{{ a.code }}" {% if form_state.acct == a.code %}selected{% endif %}>{{ a.name }} · {{ a.code }}{% if a.is_default %} · 默认{% endif %}{% if not a.enabled %} · 停用{% endif %}</option>
+            {% endfor %}
+          </select>
+        </label>
         <label>utm_source <input name="utm_source" value="{{ form_state.utm_source }}"></label>
         <label>utm_medium <input name="utm_medium" value="{{ form_state.utm_medium }}"></label>
         <label>utm_campaign <input name="utm_campaign" value="{{ form_state.utm_campaign }}"></label>
@@ -70,6 +79,65 @@
     <div class="lp-preview-label">实时预览</div>
     <iframe id="lp-preview" title="落地页实时预览" src="{{ preview_src }}"></iframe>
   </aside>
+</div>
+
+
+<div class="card" id="launch-postback">
+  <h2>回传联调</h2>
+  <div class="pad">
+    <p class="muted small">生成的投放链接会带上上面的 <code>acct</code>；落地写 cookie，成交走该账户 Pixel / CAPI。密钥仍在 <a href="/admin/traffic">投放回传</a> 配置。</p>
+    {% if active_acct %}
+    <div class="status-list rowish" style="margin:10px 0">
+      <span class="badge {% if active_acct.status.pixel %}ok{% else %}missing{% endif %}">
+        <span class="dot {% if active_acct.status.pixel %}on{% else %}off{% endif %}"></span>
+        Pixel {% if active_acct.status.pixel %}已配置{% else %}未配置{% endif %}
+      </span>
+      <span class="badge {% if active_acct.status.capi %}ok{% else %}missing{% endif %}">
+        <span class="dot {% if active_acct.status.capi %}on{% else %}off{% endif %}"></span>
+        服务端回传 {% if active_acct.status.capi %}就绪{% else %}缺密钥{% endif %}
+      </span>
+      <span class="muted small">当前账户 <code>{{ active_acct.code }}</code> · {{ active_acct.name }}</span>
+    </div>
+    <form method="post" action="/admin/launch/test" class="inline" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <input type="hidden" name="account_id" value="{{ active_acct.id }}">
+      <input type="hidden" name="platform" value="{{ form_state.platform }}">
+      <input type="hidden" name="acct" value="{{ active_acct.code }}">
+      <button class="btn ghost sm" type="submit">发送测试回传</button>
+      <a class="btn ghost sm" href="/admin/traffic?platform={{ form_state.platform }}&amp;acct={{ active_acct.code }}">打开账户密钥</a>
+    </form>
+    {% else %}
+    <p class="error">该平台还没有广告账户。请先到 <a href="/admin/traffic?platform={{ form_state.platform }}">投放回传</a> 添加并配置 Pixel / CAPI。</p>
+    {% endif %}
+    {% set f = ad_funnel if ad_funnel is defined else none %}
+    {% if f %}
+    <div class="funnel-totals" style="margin-top:14px">
+      <div><strong>{{ f.totals.land }}</strong><span>落地</span></div>
+      <div><strong>{{ f.totals.deal_click }}</strong><span>点商品</span></div>
+      <div><strong>{{ f.totals.purchase }}</strong><span>成交</span></div>
+      <div><strong>{% if f.totals.land %}{{ (100.0 * f.totals.purchase / f.totals.land)|round(1) }}%{% else %}—{% endif %}</strong><span>落地→成交</span></div>
+    </div>
+    {% endif %}
+  </div>
+  <h2 style="margin-top:8px">最近回传</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>时间</th><th>平台</th><th>事件</th><th>订单</th><th>结果</th><th>详情</th></tr></thead>
+      <tbody>
+      {% for row in ad_logs %}
+        <tr>
+          <td>{{ row.created_at }}</td>
+          <td>{{ row.platform }}</td>
+          <td>{{ row.event_name }}</td>
+          <td>{{ row.order_id }}</td>
+          <td>{% if row.ok %}<span class="badge ok">OK</span>{% else %}<span class="badge warn">SKIP</span>{% endif %}</td>
+          <td class="mono">{{ row.detail }}</td>
+        </tr>
+      {% else %}
+        <tr><td class="empty" colspan="6">暂无回传记录。配好密钥后点「发送测试回传」。</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 
 <div class="card">
@@ -98,7 +166,42 @@
   var frame = document.getElementById("lp-preview");
   var category = document.getElementById("lp-category");
   var skin = document.getElementById("lp-skin");
+  var platformEl = document.getElementById("lp-platform");
+  var acctEl = document.getElementById("lp-acct");
+  var accountsByPlat = {{ accounts_by_plat | tojson }};
   if (!form || !frame) return;
+  function rebuildAcct() {
+    if (!acctEl || !platformEl) return;
+    var plat = platformEl.value || "meta";
+    var list = (accountsByPlat && accountsByPlat[plat]) || [];
+    var cur = acctEl.value;
+    acctEl.innerHTML = "";
+    var opt0 = document.createElement("option");
+    opt0.value = "";
+    opt0.textContent = "（该平台默认账户）";
+    acctEl.appendChild(opt0);
+    list.forEach(function (a) {
+      var opt = document.createElement("option");
+      opt.value = a.code || "";
+      var label = (a.name || "") + " · " + (a.code || "");
+      if (a.is_default) label += " · 默认";
+      if (!a.enabled) label += " · 停用";
+      opt.textContent = label;
+      acctEl.appendChild(opt);
+    });
+    var prefer = list.find(function (a) { return a.code === cur; })
+      || list.find(function (a) { return a.is_default && a.enabled; })
+      || list.find(function (a) { return a.enabled; })
+      || list[0];
+    acctEl.value = prefer ? (prefer.code || "") : "";
+  }
+  if (platformEl) platformEl.addEventListener("change", function () {
+    rebuildAcct();
+    var src = form.querySelector("[name=utm_source]");
+    if (src && (!src.value || src.value === "meta" || src.value === "tiktok" || src.value === "google")) {
+      src.value = platformEl.value;
+    }
+  });
   var skinLocked = !!(skin && category && skin.value !== category.value);
   var timer = 0;
   function previewSrc() {
@@ -112,10 +215,35 @@
     q.set("country", (data.get("country") || "US").toString().slice(0, 2));
     return "/lp/ad/preview?" + q.toString();
   }
+  function fitPreview() {
+    try {
+      var doc = frame.contentDocument || (frame.contentWindow && frame.contentWindow.document);
+      if (!doc) return;
+      var body = doc.body;
+      var htmlEl = doc.documentElement;
+      var h = Math.max(
+        body ? body.scrollHeight : 0,
+        body ? body.offsetHeight : 0,
+        htmlEl ? htmlEl.scrollHeight : 0,
+        htmlEl ? htmlEl.offsetHeight : 0
+      );
+      if (h > 80) frame.style.height = h + "px";
+    } catch (e) {}
+  }
   function paint() {
     var next = previewSrc();
-    if (frame.getAttribute("src") !== next) frame.setAttribute("src", next);
+    if (frame.getAttribute("src") !== next) {
+      frame.style.height = "640px";
+      frame.setAttribute("src", next);
+    } else {
+      fitPreview();
+    }
   }
+  frame.addEventListener("load", function () {
+    fitPreview();
+    window.setTimeout(fitPreview, 200);
+    window.setTimeout(fitPreview, 800);
+  });
   function schedule() {
     window.clearTimeout(timer);
     timer = window.setTimeout(paint, 120);

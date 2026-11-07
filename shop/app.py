@@ -8069,6 +8069,25 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
     }
 
     def _launch_page(request, form_state, notice="", error="", built=None):
+        ensure_ad_tables(conn)
+        platform = (form_state.get("platform") or "meta").strip().lower()
+        if platform not in dict(PLATFORMS):
+            platform = "meta"
+            form_state = dict(form_state)
+            form_state["platform"] = platform
+        grouped = accounts_by_platform(conn)
+        accounts = grouped.get(platform) or []
+        acct_code = (form_state.get("acct") or "").strip()
+        active = get_account(conn, code=acct_code) if acct_code else None
+        if active and active.get("platform") != platform:
+            active = None
+        if active is None and accounts:
+            active = next((a for a in accounts if a.get("is_default") and a.get("enabled")), None) or next(
+                (a for a in accounts if a.get("enabled")), None
+            ) or accounts[0]
+            if active and not acct_code:
+                form_state = dict(form_state)
+                form_state["acct"] = active.get("code") or ""
         try:
             resolve_module(form_state["template"], form_state["category"], form_state["skin"])
             preview_src = lp_preview_path(
@@ -8090,12 +8109,20 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             launch_error=error,
             built_link=built,
             launch_links=list_lp_links(conn),
+            platforms=PLATFORMS,
+            launch_accounts=accounts,
+            accounts_by_plat=grouped,
+            active_acct=active,
+            ad_logs=recent_ad_logs(conn, 20),
+            ad_funnel=funnel_stats(conn, 14),
         )
 
     @app.get("/admin/launch", response_class=HTMLResponse)
     def admin_launch(request: Request):
         require_admin(request)
-        return _launch_page(request, _lp_form_state())
+        state = _lp_form_state(request.query_params)
+        notice = str(request.query_params.get("notice") or "")
+        return _launch_page(request, state, notice=notice)
 
     @app.post("/admin/launch", response_class=HTMLResponse)
     async def admin_launch_create(request: Request):
@@ -8121,6 +8148,25 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         except LpChoiceError as exc:
             return _launch_page(request, state, error=_LP_ERRORS.get(exc.field, "无法生成链接。"))
         return _launch_page(request, state, notice="built", built=built)
+
+    @app.post("/admin/launch/test")
+    async def admin_launch_test(request: Request):
+        """Send a platform test event, then return to launch for LP+回传联调."""
+        require_admin(request)
+        form = await request.form()
+        platform = str(form.get("platform") or "meta").strip().lower()
+        try:
+            account_id = int(form.get("account_id") or 0) or None
+        except ValueError:
+            account_id = None
+        acct = get_account(conn, account_id=account_id) if account_id else None
+        ok, _detail = send_test_event(conn, platform=platform, account_id=account_id)
+        notice = "test_ok" if ok else "test_fail"
+        code = (acct or {}).get("code") or str(form.get("acct") or "")
+        q = f"/admin/launch?platform={platform}&notice={notice}"
+        if code:
+            q += f"&acct={code}"
+        return RedirectResponse(q, status_code=303)
 
     @app.get("/admin/ads", response_class=HTMLResponse)
     def admin_ads(request: Request):
