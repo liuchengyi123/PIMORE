@@ -1952,8 +1952,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             no_rate = True
         promos = cached_promos()
         cart_count = sum(line["qty"] for line in load_lines(request.cookies.get("cart")))
-<<<<<<< HEAD
-        prefer_zh = prefer_zh_copy(request)
+        prefer_zh = prefer_zh_copy(request) or str(lang).startswith("zh")
         ua = (request.headers.get("user-agent") or "").lower()
         is_mobile = (
             "mobile" in ua
@@ -1963,9 +1962,6 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             or "webos" in ua
             or "blackberry" in ua
         ) and "ipad" not in ua
-=======
-        prefer_zh = prefer_zh_copy(request) or str(lang).startswith("zh")
->>>>>>> origin/cursor/ad-lp-modules-455a
         ctx = {
             "request": request,
             "t": UI.get(lang) or UI["en"],
@@ -2515,26 +2511,14 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         else:
             original = format_money(goods_local(original_cents, ctx["units"], ctx["currency"]), ctx["currency"])
         image = (row["image_url"] if "image_url" in row.keys() and row["image_url"] else "") or f"/static/products/{row['sku']}.svg"
-<<<<<<< HEAD
         image = resolve_catalog_image(image, row, ctx["lang"], ROOT) or image
         image = card_image(listing_photo(row["sku"], ctx["lang"], image), ROOT)
-        if ctx.get("prefer_zh"):
-            card_name = _product_label(
-                row["source_zh"] if "source_zh" in row.keys() else "",
-                names,
-                row["sku"],
-            )
-        else:
-            card_name = names.get(ctx["lang"]) or names.get("en") or row["sku"]
-=======
-        image = card_image(storefront_image(image, ctx["lang"], ROOT), ROOT)
         card_name = localized_copy(
             names,
             ctx.get("lang") or "en",
             fallback=row["sku"],
             source_zh=row["source_zh"] if "source_zh" in row.keys() else "",
         )
->>>>>>> origin/cursor/ad-lp-modules-455a
         item = {
             "sku": row["sku"],
             "category": row["category"],
