@@ -155,7 +155,12 @@ def storefront_image(url, lang, root):
     return url
 
 
-def product_image_urls(row):
+def product_image_urls(row, *, include_offers=True):
+    """Catalog images for a product.
+
+    Offer/SKU packshots are shared across languages (white studio shots with no
+    on-image copy), so translation queues skip them unless include_offers=True.
+    """
     found = []
 
     def add(url):
@@ -171,13 +176,30 @@ def product_image_urls(row):
         for key in ("gallery", "detail_images"):
             for url in listing.get(key) or []:
                 add(url)
+    if include_offers:
+        try:
+            offers = json.loads(row["offers"] or "[]")
+        except json.JSONDecodeError:
+            offers = []
+        for offer in offers if isinstance(offers, list) else []:
+            if isinstance(offer, dict):
+                add(offer.get("image") or "")
+    return found
+
+
+def generated_offer_image_urls(row):
+    """URLs of SKU offers already redrawn as shared white packshots."""
     try:
         offers = json.loads(row["offers"] or "[]")
-    except json.JSONDecodeError:
+    except (json.JSONDecodeError, TypeError, KeyError):
         offers = []
+    found = []
     for offer in offers if isinstance(offers, list) else []:
-        if isinstance(offer, dict):
-            add(offer.get("image") or "")
+        if not isinstance(offer, dict) or not offer.get("generated"):
+            continue
+        url = str(offer.get("image") or "").strip()
+        if url and url not in found:
+            found.append(url)
     return found
 
 
@@ -193,7 +215,7 @@ def resume_range(rows, start, end):
 
 
 def pending_images(rows, root, lang, start="", end="", sku=""):
-    """Every image that does not yet have this language file. Upload dates are not a filter."""
+    """Main/gallery/detail images missing this language file. SKU offer packshots are excluded."""
     if lang not in IMAGE_LANGS:
         raise ImageTranslateError("一次只能选一种语言。德语这档模型译不了。")
     wanted = str(sku or "").strip()
@@ -201,7 +223,8 @@ def pending_images(rows, root, lang, start="", end="", sku=""):
     for row in rows:
         if wanted and str(row["sku"] or "") != wanted:
             continue
-        for url in product_image_urls(row):
+        # SKU/offer packshots are language-agnostic: never queue per-lang copies.
+        for url in product_image_urls(row, include_offers=False):
             path = catalog_file(url, root)
             if path is None or language_file(path, lang).is_file():
                 continue

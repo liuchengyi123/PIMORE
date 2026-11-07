@@ -2,7 +2,7 @@
 <button class="btn quiet" id="use-here" type="button">{{ t.locate }}</button>
 <p class="note">{{ t.locate_note }}</p>
 <input type="hidden" name="ship_country" id="ship-country" value="{{ values.ship_country }}">
-<p class="locked-country">{{ t.country }} <strong>{% for code, label in ship_countries %}{% if code == values.ship_country %}{{ label }}{% endif %}{% endfor %}</strong></p>
+<p class="locked-country">{{ t.country }} <strong>{{ values.ship_country }}{% for code, label in ship_countries %}{% if code == values.ship_country %} · {{ label }}{% endif %}{% endfor %}</strong></p>
 <div class="addr-fields" id="addr-fields">
   <label class="addr-field{% if 'region' in errors %} field-error{% endif %}" data-part="region"{% if 'region' in errors %} data-field="region"{% endif %}>
     <span class="caption">{{ spec.labels.region }}</span>

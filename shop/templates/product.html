@@ -40,9 +40,9 @@
     </div>
     {% if item.images|length > 1 %}<span class="gallery-count" id="gallery-count">1/{{ item.images|length }}</span>{% endif %}
     {% if item.offers and item.offers[0].label %}
-    <p class="sku-tag" id="sku-tag">{{ item.offers[0].label }}</p>
+    <p class="sku-tag" id="sku-tag" aria-hidden="true">{{ item.offers[0].label }}</p>
     {% elif item.offers %}
-    <p class="sku-tag" id="sku-tag" hidden></p>
+    <p class="sku-tag" id="sku-tag" hidden aria-hidden="true"></p>
     {% endif %}
   </figure>
   {% if item.images|length > 1 %}
@@ -54,6 +54,7 @@
   {% endif %}
 </div>
 <div class="detail-rest">
+{% if advantages %}
 <section>
   <h2>{{ t.advantages }}</h2>
   <ul class="advantages">
@@ -62,6 +63,7 @@
     {% endfor %}
   </ul>
 </section>
+{% endif %}
 {% if item.detail_images or (item.description and item.description != item.name) %}
 <section>
   <h2>{{ t.description }}</h2>
@@ -73,14 +75,16 @@
   {% endif %}
 </section>
 {% endif %}
+{% if item.specs.material or item.specs.size or item.specs.weight %}
 <section>
   <h2>{{ t.specs }}</h2>
   <table class="specs">
-    <tr><th>{{ t.material }}</th><td>{{ item.specs.material }}</td></tr>
-    <tr><th>{{ t.size }}</th><td>{{ item.specs.size }}</td></tr>
-    <tr><th>{{ t.weight }}</th><td>{{ item.specs.weight }}</td></tr>
+    {% if item.specs.material %}<tr><th>{{ t.material }}</th><td>{{ item.specs.material }}</td></tr>{% endif %}
+    {% if item.specs.size %}<tr><th>{{ t.size }}</th><td>{{ item.specs.size }}</td></tr>{% endif %}
+    {% if item.specs.weight %}<tr><th>{{ t.weight }}</th><td>{{ item.specs.weight }}</td></tr>{% endif %}
   </table>
 </section>
+{% endif %}
 {% set mid = ads.get('pdp-mid') %}
 {% if mid %}
 {% set creative = mid %}

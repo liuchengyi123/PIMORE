@@ -141,9 +141,9 @@
       {% endfor %}
     </section>
 
-    {% set size = page_size|default(12) %}
+    {% set size = page_size|default(20) %}
     {% if total > size %}
-    <nav class="pager fn-pager" id="list-pager" data-page="{{ page }}" data-more="{{ 1 if list_has_more else 0 }}">
+    <nav class="pager fn-pager" id="list-pager" data-page="{{ page }}" data-more="{{ 1 if list_has_more else 0 }}" {% if list_has_more %}hidden{% endif %}>
       {% if page > 1 %}
       <a href="?country={{ country }}&amp;q={{ q }}&amp;category={{ category }}&amp;sort={{ sort }}&amp;min={{ min }}&amp;max={{ max }}&amp;page={{ page - 1 }}&amp;lang={{ lang }}">{{ t.prev }}</a>
       {% endif %}

@@ -93,6 +93,9 @@ def merge_line(lines, sku, qty):
 
 
 def build_quote(promos, *, merchandise_cents, ship_country, units, currency, minor_units, coupon_cents=0, coupon_threshold_cents=0, balance_cents=0, use_balance=False):
+    # Always-free shipping policy: charge $0 shipping regardless of threshold/country.
+    # UI copy must match (no "free over $X" when under threshold).
+    _ = (ship_country, promos.get("free_shipping_cents"), promos.get("shipping"))
     return quote(
         merchandise_cents=merchandise_cents,
         tiers=promos["tiers"],

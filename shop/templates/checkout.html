@@ -58,9 +58,9 @@
   <fieldset>
     <legend>{{ t.coupon }}</legend>
     <p class="muted">{{ t.coupon_best }}</p>
-    <label><input type="radio" name="coupon_id" value="" {% if not best_id %}checked{% endif %}> {{ t.coupon_none }}</label>
+    <label><input type="radio" name="coupon_id" value="" checked> {{ t.coupon_none }}</label>
     {% for coupon in coupons %}
-    <label><input type="radio" name="coupon_id" value="{{ coupon.id }}" {% if best_id == coupon.id %}checked{% endif %}> {{ coupon.name }} · {{ coupon.amount }} · {{ t.coupon_rule.format(over=coupon.threshold) }}</label>
+    <label><input type="radio" name="coupon_id" value="{{ coupon.id }}"> {{ coupon.name }} · {{ coupon.amount }} · {{ t.coupon_rule.format(over=coupon.threshold) }}</label>
     {% endfor %}
   </fieldset>
   {% endif %}
@@ -131,7 +131,7 @@
       <p>{{ t.returns_window }}</p>
       <p>{{ t.trust_track_line }}</p>
       {% if promise_line %}<p class="met">{{ promise_line }}</p>{% endif %}
-      {% if free_ship_policy and not cart_ship_met and cart_gap %}<p class="ship-gap">{{ cart_gap }}</p>{% endif %}
+      {% if cart_gap %}<p class="ship-gap">{{ cart_gap }}</p>{% endif %}
     </div>
   </aside>
 </form>

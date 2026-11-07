@@ -410,6 +410,44 @@ def migrate(conn):
     task_cols = _column_names(conn, "gen_tasks")
     if "touched" not in task_cols:
         conn.execute("alter table gen_tasks add column touched real not null default 0")
+    conn.execute(
+        """
+        create table if not exists sku_gen_tasks (
+            id text primary key,
+            product_sku text not null default '',
+            image text not null default '',
+            status text not null,
+            worker text not null default '',
+            error text not null default '',
+            touched real not null default 0
+        )
+        """
+    )
+    sku_task_cols = _column_names(conn, "sku_gen_tasks")
+    # Migrate legacy product-level queue (sku PK, no image column) -> image-level.
+    if "id" not in sku_task_cols and "sku" in sku_task_cols:
+        conn.execute("alter table sku_gen_tasks rename to sku_gen_tasks_legacy")
+        conn.execute(
+            """
+            create table sku_gen_tasks (
+                id text primary key,
+                product_sku text not null default '',
+                image text not null default '',
+                status text not null,
+                worker text not null default '',
+                error text not null default '',
+                touched real not null default 0
+            )
+            """
+        )
+        conn.execute("drop table sku_gen_tasks_legacy")
+        sku_task_cols = _column_names(conn, "sku_gen_tasks")
+    if "product_sku" not in sku_task_cols:
+        conn.execute("alter table sku_gen_tasks add column product_sku text not null default ''")
+    if "image" not in sku_task_cols:
+        conn.execute("alter table sku_gen_tasks add column image text not null default ''")
+    if "touched" not in sku_task_cols:
+        conn.execute("alter table sku_gen_tasks add column touched real not null default 0")
     lines = _column_names(conn, "order_lines")
     if "bought" not in lines:
         conn.execute("alter table order_lines add column bought integer not null default 0")

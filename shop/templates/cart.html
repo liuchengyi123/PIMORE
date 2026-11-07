@@ -13,7 +13,7 @@
 <div class="cart-col">
 {% if cart_count and free_ship_policy %}
 <div class="fn-cart-ship freeprog {% if cart_ship_met %}met{% endif %}" role="group" aria-label="{{ t.ship_progress_label }}">
-  <div class="tt">{% if cart_ship_met %}{{ t.gap_free }}{% else %}{{ cart_gap or promise_line }}{% endif %}</div>
+  <div class="tt">{% if cart_gap %}{{ cart_gap }}{% elif cart_ship_met %}{{ t.gap_free }}{% else %}{{ promise_line }}{% endif %}</div>
   <div class="bar"><i style="width:{{ cart_ship_progress }}%"></i></div>
 </div>
 {% endif %}
@@ -108,12 +108,12 @@
   <h2>{{ t.summary }}</h2>
   {% if cart_count and free_ship_policy %}
   <div class="freeprog {% if cart_ship_met %}met{% endif %}" role="group" aria-label="{{ t.ship_progress_label }}">
-    <div class="tt">{% if cart_ship_met %}{{ t.gap_free }}{% else %}{{ cart_gap or promise_line }}{% endif %}</div>
+    <div class="tt">{% if cart_gap %}{{ cart_gap }}{% elif cart_ship_met %}{{ t.gap_free }}{% else %}{{ promise_line }}{% endif %}</div>
     <div class="bar"><i style="width:{{ cart_ship_progress }}%"></i></div>
   </div>
   {% endif %}
   {% if bill %}
-  <p>{{ t.original_total }} <s class="was">{{ original_text }}</s></p>
+  {% if original_text %}<p>{{ t.original_total }} <s class="was">{{ original_text }}</s></p>{% endif %}
   <p class="pay-total">{{ t.pay_total }} <strong>{{ pay_text }}</strong></p>
   {% if list_off_pct and list_save_text %}
   <p class="cart-deal-banner">

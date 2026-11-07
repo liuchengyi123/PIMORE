@@ -83,7 +83,9 @@
       {% for item in products %}{% set eager = loop.first %}{% include "card.html" %}{% endfor %}
     </div>
     <div class="home-more-wrap">
-      <button type="button" class="btn ghost home-more" id="home-more" data-home-more data-page="{{ home_page|default(1) }}" data-tab="{{ home_tab|default('recommended') }}" {% if home_has_more is defined and not home_has_more %}hidden{% endif %}>{{ t.view_more if t.view_more is defined else 'View more' }}</button>
+      <div class="home-more m01-more" id="home-more" data-home-more data-page="{{ home_page|default(1) }}" data-tab="{{ home_tab|default('recommended') }}" {% if home_has_more is defined and not home_has_more %}hidden{% endif %} aria-hidden="true">
+        <img src="/static/m01/spinner.svg" width="14" height="14" alt="">
+      </div>
     </div>
     {% endif %}
 
@@ -164,9 +166,9 @@
     </a>
     <form method="get" action="{{ request.url.path }}">
       <label class="m01-loc">{{ country }} · {{ currency }}
-        <select name="country" aria-label="{{ t.locale }}" onchange="this.form.submit()">
-          {% for row in ship_countries %}
-          <option value="{{ row[0] }}" {% if country == row[0] %}selected{% endif %}>{{ row[0] }} · {{ row[1] }}</option>
+        <select name="lang" aria-label="{{ t.locale }}" onchange="harborLang(this)">
+          {% for code, label in [('en', 'English'), ('zh', '简体中文'), ('zh-Hant', '繁體中文'), ('ja', '日本語'), ('de', 'Deutsch'), ('fr', 'Français'), ('es', 'Español'), ('pt', 'Português')] %}
+          <option value="{{ code }}" {% if lang == code %}selected{% endif %}>{{ label }}</option>
           {% endfor %}
         </select>
       </label>
@@ -206,17 +208,14 @@
   </div>
   <div class="m01-sec">
     <h3>In the shop</h3>
-    <span>一次 10 个 · 可继续下滑</span>
   </div>
   <div class="m01-grid" data-home-grid>
-    {% for item in products[:10] %}{% include "card.html" %}{% endfor %}
+    {% for item in products[:20] %}{% include "card.html" %}{% endfor %}
   </div>
   <div class="m01-more-wrap">
-    <div class="m01-more" id="m01-more" data-home-more data-page="{{ home_page|default(1) }}" data-tab="{{ home_tab|default('recommended') }}" {% if home_has_more is defined and not home_has_more %}hidden{% endif %}>
+    <div class="m01-more" id="m01-more" data-home-more data-page="{{ home_page|default(1) }}" data-tab="{{ home_tab|default('recommended') }}" {% if home_has_more is defined and not home_has_more %}hidden{% endif %} aria-hidden="true">
       <img src="/static/m01/spinner.svg" width="14" height="14" alt="">
-      <span>上拉加载更多</span>
     </div>
-    <p>建议新增 · 一次加载 10 个；滑到底再往上拉/继续下滑，再加载 10 个；可一直加载</p>
   </div>
 </div>
 
