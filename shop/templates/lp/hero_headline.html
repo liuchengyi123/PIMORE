@@ -1,6 +1,6 @@
 {% from "shot.html" import shot %}
 <section class="lp-headline">
-  <p class="lp-kicker">Today's headline</p>
+  <p class="lp-kicker">{{ t.lp_hero_kicker }}</p>
   {% if hero %}
   <article class="lp-hero-sku" data-lp-hero="{{ hero.sku }}">
     <a class="lp-hero-shot" href="{{ hero.grab_href }}">
@@ -9,20 +9,20 @@
     <div class="lp-card-meta">
       <h1 class="lp-card-title">{{ hero.name }}</h1>
       <p class="lp-card-price"><strong>{{ hero.price }}</strong>{% if hero.original %}<s>{{ hero.original }}</s>{% endif %}</p>
-      <p class="lp-card-stock">{% if hero.only_left %}{{ hero.only_left }} left{% else %}In stock{% endif %}</p>
-      <a class="lp-grab" href="{{ hero.grab_href }}">Grab</a>
+      <p class="lp-card-stock">{% if hero.only_left %}{{ t.lp_left.format(n=hero.only_left) }}{% else %}{{ t.lp_stock }}{% endif %}</p>
+      <a class="lp-grab" href="{{ hero.grab_href }}">{{ t.lp_grab }}</a>
     </div>
   </article>
   {% else %}
-  <h1>{{ lp.category_en }}</h1>
-  <p class="lp-empty">This aisle is restocking.</p>
+  <h1>{{ t.categories[lp.category] }}</h1>
+  <p class="lp-empty">{{ t.lp_empty_short }}</p>
   {% endif %}
   <div class="lp-hero-tools">
     {% include "lp/_countdown.html" %}
     {% include "lp/_enter.html" %}
   </div>
   {% if rest %}
-  <h2 class="lp-rail-title">More in {{ lp.category_en }}</h2>
+  <h2 class="lp-rail-title">{{ t.lp_hero_more.format(name=t.categories[lp.category]) }}</h2>
   <div class="lp-rail">
     {% for item in rest %}
     {% include "lp/_card.html" %}

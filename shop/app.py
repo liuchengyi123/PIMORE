@@ -456,10 +456,11 @@ def accept_ui_lang(header):
 
 
 def ui_lang_for(request, country_lang):
-    """Language is independent of the store country and its currency.
+    """Manual choice, otherwise the IP country's language.
 
-    Query lang/hl wins, then the language cookie, then the browser language.
-    The country only supplies a default, and it never changes the currency.
+    Explicit ``?lang=`` / ``?hl=`` and the ``harbor_hl`` cookie are a manual
+    choice. Accept-Language never overrides the country default. Currency
+    stays on the IP country and is not read here.
     """
     raw = ""
     try:
@@ -475,12 +476,6 @@ def ui_lang_for(request, country_lang):
         saved = ""
     if saved and saved in UI:
         return saved
-    try:
-        browser = accept_ui_lang(request.headers.get("accept-language"))
-    except Exception:
-        browser = ""
-    if browser and browser in UI:
-        return browser
     if country_lang in UI:
         return country_lang
     return "en"
@@ -842,6 +837,10 @@ class HarborLangCookie:
 
     async def __call__(self, scope, receive, send):
         if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+        # Ad landing pages never record a manual language choice.
+        if str(scope.get("path") or "").startswith("/lp/ad"):
             await self.app(scope, receive, send)
             return
         qs = scope.get("query_string") or b""
@@ -1763,7 +1762,8 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         forced = getattr(request.state, "seo_lang", None)
         if forced in OPEN_LANGS:
             lang = forced
-        # Language can be Chinese on a US IP. Currency stays on country.
+        # Manual ?lang= / ?hl= or harbor_hl wins. Otherwise keep the IP language.
+        # Accept-Language is not consulted. Currency stays on country.
         lang = ui_lang_for(request, lang)
         now = datetime.now(timezone.utc)
         try:
@@ -1781,7 +1781,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             no_rate = True
         promos = cached_promos()
         cart_count = sum(line["qty"] for line in load_lines(request.cookies.get("cart")))
-        prefer_zh = prefer_zh_copy(request)
+        prefer_zh = prefer_zh_copy(request) or str(lang).startswith("zh")
         ctx = {
             "request": request,
             "t": UI.get(lang) or UI["en"],
@@ -2321,7 +2321,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         except Exception:
             qlang = ""
         code = normalize_ui_lang(qlang)
-        if code and code in UI:
+        if code and code in UI and not request.url.path.startswith("/lp/ad"):
             response.set_cookie("harbor_hl", code, max_age=31536000, path="/", samesite="lax")
         if request.cookies.get("locale"):
             response.delete_cookie("locale", path="/")
@@ -7476,11 +7476,43 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             "label": _lp_text(source, "label"),
         }
 
-    def _lp_cards(request, category):
+    def _lp_market(request, ctx, preview):
+        """Ad LP language follows the IP country. Preview may pass ?country=.
+
+        Uses the country view() already resolved from the local MMDB. No second
+        lookup and no remote geo call. A manual storefront cookie is ignored.
+        """
+        country = ctx["country"]
+        if preview:
+            query = str(request.query_params.get("country") or "").strip().upper()[:2]
+            if len(query) == 2 and query.isalpha():
+                country = query
+        lang, currency = resolve(country)
+        if lang not in UI:
+            lang = "en"
+        text = UI.get(lang) or UI["en"]
+        market = dict(ctx)
+        market["country"] = country
+        market["lang"] = lang
+        market["currency"] = currency
+        market["t"] = text
+        market["prefer_zh"] = str(lang).startswith("zh")
+        if currency != ctx.get("currency") or country != ctx.get("country"):
+            try:
+                rate = app.state.book.rate_for(currency, datetime.now(timezone.utc))
+                units = rate.units_per_usd
+                coef = coefficient_for(conn, country)
+                if coef != 1.0:
+                    units = float(units) * float(coef)
+                market["units"] = units
+                market["coefficient"] = coef
+            except NoRate:
+                market["units"] = None
+        return market
+
+    def _lp_cards(request, category, preview):
         ctx = view(request)
-        card_ctx = dict(ctx)
-        card_ctx["lang"] = "en"
-        card_ctx["prefer_zh"] = False
+        market = _lp_market(request, ctx, preview)
         picked = []
         fallback = []
         for row in catalog_rows():
@@ -7498,16 +7530,16 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         rows = picked or fallback
         rows.sort(key=lambda row: (int(row.get("price_cents") or 0), str(row.get("sku") or "")))
         cards = []
-        country = ctx["country"]
+        country = market["country"]
         for row in rows[:24]:
-            card = present_card(row, card_ctx)
+            card = present_card(row, market)
             sku = card["sku"]
             card["grab_href"] = f"/api/ad/deal?sku={sku}&country={country}&to=/p/{sku}"
             cards.append(card)
-        return cards, ctx
+        return cards, market
 
     def _lp_response(request, spec, *, preview=False, code=""):
-        cards, ctx = _lp_cards(request, spec["category"])
+        cards, ctx = _lp_cards(request, spec["category"], preview)
         bands, overflow = band_groups(cards)
         ends_at, _set_cookie = lp_flash_window(request)
         lp = {
@@ -7542,8 +7574,11 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             rest=cards[1:] if len(cards) > 1 else [],
             bands=bands,
             overflow=overflow,
-            seo_title=page_title(f"{spec['category_en']} — {spec['template_en']}"),
-            seo_description=f"Shop {spec['category_en']} on Harbor.",
+            lang=ctx["lang"],
+            t=ctx["t"],
+            prefer_zh=ctx["prefer_zh"],
+            seo_title=page_title(ctx["t"]["categories"].get(spec["category"]) or spec["category_en"]),
+            seo_description=ctx["t"].get("lp_dense_sub") or "",
             seo_robots="noindex, nofollow",
         )
         if ends_at:

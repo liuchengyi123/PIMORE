@@ -1,8 +1,8 @@
 <section class="lp-dense">
   <header class="lp-hero">
-    <p class="lp-kicker">Flash aisle</p>
-    <h1>{{ lp.category_en }} deals, packed in</h1>
-    <p class="lp-sub">Open any item, or enter the store to shop this whole aisle.</p>
+    <p class="lp-kicker">{{ t.lp_dense_kicker }}</p>
+    <h1>{{ t.lp_dense_title.format(name=t.categories[lp.category]) }}</h1>
+    <p class="lp-sub">{{ t.lp_dense_sub }}</p>
     {% include "lp/_countdown.html" %}
     {% include "lp/_enter.html" %}
   </header>
@@ -13,7 +13,7 @@
     {% endfor %}
   </div>
   {% else %}
-  <p class="lp-empty">This aisle is restocking. Enter the store to keep browsing.</p>
+  <p class="lp-empty">{{ t.lp_empty }}</p>
   {% endif %}
   <div class="lp-foot">{% include "lp/_enter.html" %}</div>
 </section>

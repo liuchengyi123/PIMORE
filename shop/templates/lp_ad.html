@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ lang }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,11 +7,11 @@
   <title>{{ seo_title }}</title>
   <link rel="stylesheet" href="/static/lp-ad.css?v=1">
 </head>
-<body class="lp-ad" data-lp-template="{{ lp.template_id }}" data-lp-skin="{{ lp.skin_id }}" data-lp-category="{{ lp.category }}" data-lp-master="{{ '1' if lp.master else '0' }}"{% if lp.code %} data-lp-code="{{ lp.code }}"{% endif %} style="--accent: {{ lp.accent }}; --ink: {{ lp.ink }}; --wash: {{ lp.wash }}; --deep: {{ lp.deep }};">
+<body class="lp-ad" data-lp-template="{{ lp.template_id }}" data-lp-skin="{{ lp.skin_id }}" data-lp-category="{{ lp.category }}" data-lp-lang="{{ lang }}" data-lp-master="{{ '1' if lp.master else '0' }}"{% if lp.code %} data-lp-code="{{ lp.code }}"{% endif %} style="--accent: {{ lp.accent }}; --ink: {{ lp.ink }}; --wash: {{ lp.wash }}; --deep: {{ lp.deep }};">
   <header class="lp-top">
     <a class="lp-brand" href="{{ lp.enter_href }}">Harbor</a>
-    <span class="lp-top-cat">{{ lp.category_en }}</span>
-    <span class="lp-ship">Free shipping</span>
+    <span class="lp-top-cat">{{ t.categories[lp.category] }}</span>
+    <span class="lp-ship">{{ t.lp_ship }}</span>
   </header>
   <main class="lp-main">
     {% include lp.partial %}

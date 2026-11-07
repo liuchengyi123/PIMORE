@@ -6,7 +6,7 @@
   <div class="lp-card-meta">
     <h3 class="lp-card-title">{{ item.name }}</h3>
     <p class="lp-card-price"><strong>{{ item.price }}</strong>{% if item.original %}<s>{{ item.original }}</s>{% endif %}</p>
-    <p class="lp-card-stock">{% if item.only_left %}{{ item.only_left }} left{% elif item.stock %}In stock{% else %}In stock{% endif %}</p>
-    <a class="lp-grab" href="{{ item.grab_href }}">Grab</a>
+    <p class="lp-card-stock">{% if item.only_left %}{{ t.lp_left.format(n=item.only_left) }}{% else %}{{ t.lp_stock }}{% endif %}</p>
+    <a class="lp-grab" href="{{ item.grab_href }}">{{ t.lp_grab }}</a>
   </div>
 </article>

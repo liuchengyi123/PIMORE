@@ -199,3 +199,180 @@ def test_preview_resolves_each_template_skin_and_category_pool():
     assert missing.status_code == 404
     unknown = client.get("/lp/ad/deadbeef")
     assert unknown.status_code == 404
+    assert 'lang="en"' in page.text
+    assert 'data-lp-lang="en"' in page.text
+
+
+def test_ui_lang_for_uses_country_unless_the_visitor_chose():
+    from shop.app import ui_lang_for
+
+    class Req:
+        def __init__(self, params=None, cookies=None, headers=None):
+            self.query_params = params or {}
+            self.cookies = cookies or {}
+            self.headers = headers or {}
+
+    browser = Req(headers={"accept-language": "ja,zh-CN;q=0.8"})
+    assert ui_lang_for(browser, "de") == "de"
+    assert ui_lang_for(browser, "en") == "en"
+    chosen = Req(params={"hl": "fr"}, headers={"accept-language": "ja"})
+    assert ui_lang_for(chosen, "de") == "fr"
+    saved = Req(cookies={"harbor_hl": "zh-Hant"}, headers={"accept-language": "en"})
+    assert ui_lang_for(saved, "en") == "zh-Hant"
+
+
+def test_storefront_first_visit_follows_ip_country_not_the_browser():
+    client = _client()
+    first = client.get("/?country=DE", headers={"Accept-Language": "ja,zh-CN;q=0.9"})
+    assert first.status_code == 200
+    assert 'lang="de"' in first.text
+    assert 'aria-label="Suchen"' in first.text
+    assert "harbor_hl" not in (first.headers.get("set-cookie") or "")
+    manual = client.get("/?country=DE&lang=ja", headers={"Accept-Language": "en"})
+    assert 'lang="ja"' in manual.text
+    assert "harbor_hl=ja" in (manual.headers.get("set-cookie") or "")
+    kept = client.get(
+        "/?country=US",
+        cookies={"harbor_hl": "fr"},
+        headers={"Accept-Language": "de"},
+    )
+    assert 'lang="fr"' in kept.text
+    assert 'aria-label="Rechercher"' in kept.text
+
+
+def test_ad_lp_language_follows_ip_and_preview_country_only():
+    from shop.i18n import UI
+
+    client = _client()
+    _login(client)
+    made = client.post(
+        "/admin/launch",
+        data={
+            "template": "dense_flash",
+            "category": "kitchen",
+            "skin": "kitchen",
+            "platform": "meta",
+            "country": "US",
+        },
+    )
+    assert made.status_code == 200
+    code = client.app.state.db.execute("select code from ad_launch_links").fetchone()["code"]
+    headers = {"Accept-Language": "zh-CN,zh;q=0.9"}
+    cookies = {"harbor_hl": "fr"}
+    preview = client.get(
+        "/lp/ad/preview",
+        params={
+            "template": "dense_flash",
+            "category": "kitchen",
+            "skin": "kitchen",
+            "preview": "1",
+            "country": "DE",
+            "lang": "ja",
+        },
+        headers=headers,
+        cookies=cookies,
+    )
+    assert preview.status_code == 200
+    assert 'lang="de"' in preview.text
+    assert 'data-lp-lang="de"' in preview.text
+    assert "Kostenloser Versand" in preview.text
+    assert "Greifen" in preview.text
+    assert "Zum Shop" in preview.text
+    assert "Ölsprüher" in preview.text
+    assert "harbor_hl" not in (preview.headers.get("set-cookie") or "")
+    assert "满" not in preview.text
+    japan = client.get(
+        "/lp/ad/preview",
+        params={"template": "hero_headline", "category": "kitchen", "skin": "kitchen", "country": "JP"},
+        headers=headers,
+        cookies=cookies,
+    )
+    assert 'lang="ja"' in japan.text
+    assert "ショップへ" in japan.text
+    assert "オイルスプレー" in japan.text
+    china = client.get(
+        "/lp/ad/preview",
+        params={"template": "countdown_grid", "category": "kitchen", "skin": "kitchen", "country": "CN"},
+        headers={"Accept-Language": "en"},
+        cookies={"harbor_hl": "en"},
+    )
+    assert 'lang="zh"' in china.text
+    assert "进入店铺" in china.text
+    assert "包邮" in china.text
+    assert "满" not in china.text
+    taiwan = client.get(
+        "/lp/ad/preview",
+        params={"template": "rush_flash", "category": "kitchen", "skin": "kitchen", "country": "TW"},
+    )
+    assert 'lang="zh-Hant"' in taiwan.text
+    assert "進入店鋪" in taiwan.text
+    assert "滿" not in taiwan.text
+    for code_lang in ("en", "es", "pt", "de", "fr", "ja", "zh", "zh-Hant"):
+        assert UI[code_lang]["lp_grab"]
+        assert UI[code_lang]["lp_enter"]
+        assert UI[code_lang]["lp_ship"]
+        assert "{n}" in UI[code_lang]["lp_left"]
+
+
+def test_saved_lp_ignores_browser_and_query_when_ip_country_is_known(monkeypatch):
+    monkeypatch.setattr("shop.geo.lookup_country", lambda ip: "JP")
+    client = _client()
+    _login(client)
+    client.post(
+        "/admin/launch",
+        data={"template": "dense_flash", "category": "kitchen", "skin": "kitchen", "country": "US"},
+    )
+    code = client.app.state.db.execute("select code from ad_launch_links").fetchone()["code"]
+    saved = client.get(
+        f"/lp/ad/{code}",
+        params={"country": "DE", "lang": "fr"},
+        headers={"Accept-Language": "de"},
+        cookies={"harbor_hl": "es"},
+    )
+    assert 'lang="ja"' in saved.text
+    assert "ショップへ" in saved.text
+    assert "Kostenloser Versand" not in saved.text
+    assert "harbor_hl" not in (saved.headers.get("set-cookie") or "")
+    preview = client.get(
+        "/lp/ad/preview",
+        params={"template": "dense_flash", "category": "kitchen", "skin": "kitchen", "country": "DE", "preview": "1"},
+        cookies={"harbor_hl": "es"},
+        headers={"Accept-Language": "ja"},
+    )
+    assert 'lang="de"' in preview.text
+    home = client.get("/", headers={"Accept-Language": "de"})
+    assert 'lang="ja"' in home.text
+
+
+def test_language_resolution_does_not_call_remote_geo():
+    import time
+
+    import httpx
+
+    from shop.locale import resolve
+
+    def boom(*_args, **_kwargs):
+        raise AssertionError("remote geo")
+
+    original = httpx.get
+    httpx.get = boom
+    try:
+        client = _client()
+        page = client.get(
+            "/lp/ad/preview",
+            params={"template": "dense_flash", "category": "kitchen", "skin": "kitchen", "country": "PT", "preview": "1"},
+            headers={"Accept-Language": "ja"},
+        )
+        assert page.status_code == 200
+        assert 'lang="pt"' in page.text
+        assert "Entrar na loja" in page.text
+        home = client.get("/?country=ES", headers={"Accept-Language": "en"})
+        assert home.status_code == 200
+        assert 'lang="es"' in home.text
+    finally:
+        httpx.get = original
+    start = time.perf_counter()
+    for _ in range(5000):
+        assert resolve("DE") == ("de", "EUR")
+        assert resolve("US")[0] == "en"
+    assert time.perf_counter() - start < 0.1
