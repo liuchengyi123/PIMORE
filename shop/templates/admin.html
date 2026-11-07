@@ -1,4 +1,4 @@
-{% extends "admin_base.html" %}
+﻿{% extends "admin_base.html" %}
 {% block body %}
 {% set status_name = {'pending':'待支付','paid':'已支付','shipped':'已发货','cancelled':'已取消','refunded':'已退款'} %}
 {% set kind_name = {'public':'公开','first':'首单','share':'分享','desktop':'桌面','checkin':'签到'} %}
@@ -181,7 +181,7 @@
       <label>拦截百分比 <input name="hold_percent" value="{{ pricing.hold_percent }}" inputmode="decimal"></label>
       <label>多少克 1 美元 <input name="grams_per_dollar" value="{{ pricing.grams_per_dollar }}" inputmode="decimal"></label>
     </div>
-    <p class="note">原价 = 供货价 × 原价倍率。成本售价 = 供货价 × 售价倍率。重量售价 = 克数 ÷ {{ pricing.grams_per_dollar }} × 1 美元。售价取成本售价与重量售价更高的那个；原价不低于售价。某个规格的重量价达到成本售价的 {{ pricing.hold_percent }}% 以上（刚好也算），只拦这个规格，其他规格照常。规格全都超了，整件才不上架。原价按原价倍率，并且不会低于售价。</p>
+    <p class="note">原价 = 供货价 × 原价倍率。成本售价 = 供货价 × 售价倍率。重量售价 = 克数 ÷ {{ pricing.grams_per_dollar }} × 1 美元。售价取成本售价与重量售价更高的那个；原价不低于售价。某个规格的重量价达到成本售价的 {{ pricing.hold_percent }}% 以上（刚好也算），只删这个规格，其他规格照常。规格全都超了，整件商品直接删除（不再挂未上架拦截）。原价按原价倍率，并且不会低于售价。</p>
     <div><button class="btn" type="submit">保存定价规则</button></div>
   </form>
 </div>
@@ -478,11 +478,11 @@
   </script>
   {% if weight_preview %}
   <div class="pad stack">
-    <p class="note"><b>分析队列就绪 — 「开始上传」在下方</b>。队列共 {{ weight_preview.packages|length if weight_preview.packages is defined else 1 }} 个包：可上架 {{ weight_preview.passed }} 件，整件拦截 {{ weight_preview.held }} 件，另有 {{ weight_preview.spec_held|default(0) }} 个规格单独不上。改数字后点「重新计算」会重算队列里全部包；点「开始上传」按顺序写入待翻译。已在库的同一商品编码只补原图，标题和售价不动。新商品里超线的规格不配图、不上架。</p>
+    <p class="note"><b>分析队列就绪 — 「开始上传」在下方</b>。队列共 {{ weight_preview.packages|length if weight_preview.packages is defined else 1 }} 个包：可上架 {{ weight_preview.passed }} 件，整件将删除 {{ weight_preview.held }} 件，另有 {{ weight_preview.spec_held|default(0) }} 个规格单独不上。改数字后点「重新计算」会重算队列里全部包；点「开始上传」按顺序写入待翻译。已在库的同一商品编码只补原图，标题和售价不动。新商品里超线的规格直接删除；整件超线则整件不入库。</p>
     {% if weight_preview.packages and weight_preview.packages|length %}
     <div class="table-wrap">
       <table>
-        <thead><tr><th>#</th><th>数据包</th><th>可上架</th><th>整件拦截</th><th>规格拦截</th><th>商品数</th></tr></thead>
+        <thead><tr><th>#</th><th>数据包</th><th>可上架</th><th>整件将删除</th><th>规格将删除</th><th>商品数</th></tr></thead>
         <tbody>
         {% for pack in weight_preview.packages %}
           <tr>
@@ -515,7 +515,7 @@
         <td>{{ row.cost }}</td>
         <td>{{ row.weight }}</td>
         <td>{{ row.sale }}</td>
-        <td>{% if row.held %}这个规格不上{% else %}通过{% endif %}</td>
+        <td>{% if row.held %}这个规格将删除{% else %}通过{% endif %}</td>
       </tr>
       {% endfor %}
       </tbody>
@@ -585,21 +585,28 @@
         {% set _uj = upload_job if upload_job is defined else catalog_job %}
     {% set _tj = translate_job if translate_job is defined else catalog_job %}
     {% if _uj and not _uj.running and _uj.result and _uj.result.imported %}
-    <p class="note">已导入 {{ _uj.result.imported }} 条{% if _uj.result.held %}，其中 {{ _uj.result.held }} 条进入待翻译队列，前台先不显示{% endif %}{% if _uj.result.price_held %}，{{ _uj.result.price_held }} 条因定价规则整件拦截（本批，不译）{% endif %}{% if _uj.result.images_filled %}，已有货号补图 {{ _uj.result.images_filled }} 条（标题和售价未改）{% endif %}{% if _uj.result.skipped %}，跳过 {{ _uj.result.skipped }} 条（库里已有同一商品编码，且这个包里没有可写入的图）{% endif %}。可继续一次选多个包分析，不必马上翻译。</p>
+    <p class="note">已导入 {{ _uj.result.imported }} 条{% if _uj.result.held %}，其中 {{ _uj.result.held }} 条进入待翻译队列，前台先不显示{% endif %}{% if _uj.result.price_held %}，{{ _uj.result.price_held }} 条因定价规则整件将删除（本批，不译）{% endif %}{% if _uj.result.images_filled %}，已有货号补图 {{ _uj.result.images_filled }} 条（标题和售价未改）{% endif %}{% if _uj.result.skipped %}，跳过 {{ _uj.result.skipped }} 条（库里已有同一商品编码，且这个包里没有可写入的图）{% endif %}。可继续一次选多个包分析，不必马上翻译。</p>
     {% endif %}
     {% if _tj and not _tj.running and _tj.result and _tj.result.published %}
     <p class="note">已翻译上架 {{ _tj.result.published }} 条{% if _tj.result.failed %}，{{ _tj.result.failed }} 条没译成，还在待翻译{% endif %}。</p>
     {% elif _tj and not _tj.running and _tj.result and _tj.result.failed and not _tj.error %}
     <p class="error">{{ _tj.result.failed }} 条没有译成，仍是待翻译，没有上架。</p>
     {% endif %}
-<p class="note">流程：一次选 N 个 zip「分析重量」进队列（也可继续追加）→ 一次「开始上传」按顺序进待翻译 → 准备好后统一翻译上架。「分析重量 / 开始上传 / 翻译上架 / 图片翻译」可同时进行；刷新页面进度条会从服务器接上。「分析重量」后刷新，分析队列还在；点「开始上传」并成功后会自动清空这一波，避免下次又带着旧包重复跳过。同名 zip 再分析会覆盖队列里旧的那条。分析时整件拦截的不会进待译队列；下面「待翻译」只统计当前可译商品，不会把全库历史拦截算进来。</p>
+<p class="note">流程：一次选 N 个 zip「分析重量」进队列（也可继续追加）→ 一次「开始上传」按顺序进待翻译 → 准备好后统一翻译上架。「分析重量 / 开始上传 / 翻译上架 / 图片翻译」可同时进行；刷新页面进度条会从服务器接上。「分析重量」后刷新，分析队列还在；点「开始上传」并成功后会自动清空这一波，避免下次又带着旧包重复跳过。同名 zip 再分析会覆盖队列里旧的那条。分析时整件将删除的不会进待译队列；下面「待翻译」只统计当前可译商品，不会把全库历史拦截算进来。</p>
     {% if wait_translate %}
-    <p class="note"><b>待翻译队列 {{ wait_translate }} 件</b>。标题和规格会译成前台语言，商品编码不改。译完才上架。{% if weight_preview and weight_preview.held %}当前分析队列另有 {{ weight_preview.held }} 件整件拦截（未写入待译）。{% endif %}</p>
+    {% if request.query_params.get('purged') or request.query_params.get('stripped') %}
+    <p class="import-banner ad11-ok">拦截清理完成：删除整件 {{ request.query_params.get('purged', 0) }} · 去掉部分规格的商品 {{ request.query_params.get('stripped', 0) }} · 删除规格 {{ request.query_params.get('offers', 0) }}。</p>
+    {% endif %}
+    <form class="pad stack" method="post" action="/admin/catalog/purge-intercept" style="margin:8px 0">
+      <p class="note"><b>拦截清理规则</b>：整件拦截且未上架 → 删除整件；仅部分规格拦截 → 只删这些规格。点一次按规则清存量。</p>
+      <div><button class="btn quiet" type="submit" onclick="return confirm('按拦截删除规则清理存量？整件未上架拦截会删掉商品和图片目录。')">清理已拦截未上架</button></div>
+    </form>
+<p class="note"><b>待翻译队列 {{ wait_translate }} 件</b>。标题和规格会译成前台语言，商品编码不改。译完才上架。{% if weight_preview and weight_preview.held %}当前分析队列另有 {{ weight_preview.held }} 件整件将删除（未写入待译）。{% endif %}</p>
     <form method="post" action="/admin/catalog/publish">
       <button class="btn" type="submit">翻译标题和规格并上架（{{ wait_translate }} 件）</button>
     </form>
     {% elif held %}
-    <p class="note">当前没有可翻译商品。{% if weight_preview and weight_preview.held %}当前分析队列有 {{ weight_preview.held }} 件整件拦截（未写入待译）。{% elif held_intercept %}全库另有 {{ held_intercept }} 件因定价规则整件拦截（历史累计，不是本批）。{% endif %}</p>
+    <p class="note">当前没有可翻译商品。{% if weight_preview and weight_preview.held %}当前分析队列有 {{ weight_preview.held }} 件整件将删除（未写入待译）。{% elif held_intercept %}全库另有 {{ held_intercept }} 件因定价规则整件将删除（历史累计，不是本批）。{% endif %}</p>
     {% else %}
     <p class="note">待翻译队列为空。上传分析并「开始上传」后会累积到这里。</p>
     {% endif %}
@@ -841,8 +848,7 @@
       {% for item in gen_queue["items"] %}
       <li class="note">
         <b>{{ item.sku }}</b>
-        {% if item.generate %}要出 {{ item.generate }} 张，跳过 {{ item.skip }} 张{% else %}不打接口{% endif %}
-        <span>{{ item.note }}</span>
+        规格图 {{ item.note }}{% if item.generate %}（待出）{% else %}（跳过）{% endif %}
       </li>
       {% else %}
       <li class="note">队列里没有待生成的商品。</li>
@@ -856,7 +862,7 @@
     </p>
     {% endif %}
     <h3>出图列表</h3>
-    <p class="note">一页 10 条。只有本地真的盖过新图，右边才是生成后。11 月 5 日标过完成、但文件还是供应商原图的，右边会写明还是原图。</p>
+    <p class="note">一页 10 条。右边只显示这件主图第 4 张白底图。没有这张，就不会拿原图或规格图来冒充。</p>
     {% if gen_compare.total %}
     <p class="note">共 {{ gen_compare.total }} 条，第 {{ gen_compare.page }} / {{ gen_compare.pages }} 页</p>
     {% endif %}
@@ -890,7 +896,7 @@
     {% endif %}
   </div>
   <form class="pad stack" method="post" action="/admin/images/gen/one">
-    <p class="note">一次只出一件，每张图只打一次接口。个数装、几件套不出图。单色，以及一种颜色加另一种颜色，有自己的原图才各出一张。出成功立刻写入商品记录。失败的再点一次，只补没落库的那张。</p>
+    <p class="note">一次只出一件的主图第 4 张白底图（en/main/4.jpg）。规格白底图请用下面「只出规格图」。出成功立刻写入商品记录。</p>
     <div class="fields">
       <label>货号 <input name="sku" value="{{ gen_plan.sku if gen_plan else '' }}" placeholder="要跑的一个商品"></label>
     </div>
@@ -912,12 +918,14 @@
     </div>
   </form>
   <form class="pad stack" method="post" action="/admin/images/gen/rest">
-    <p class="note">还没出过图的商品有 {{ gen_left }} 个。待生成已经在上面的列表里，点「继续生图」就会按并发领。</p>
+    <p class="note">还没出过主图第 4 张的商品有 {{ gen_left }} 个。这条队列只出主图第 4 张，不出规格图。</p>
+    {% if gen_paused %}<p class="error">生图暂停着，点下面不会开始。先点上面的「继续生图」，再点这里。</p>{% endif %}
+    {% if gen_error %}<p class="error">{{ gen_error }}</p>{% endif %}
     <div id="gen-job" {% if not gen_job.total %}hidden{% endif %}>
       <p id="gen-job-count">已完成 {{ gen_job.result.done }} / {{ gen_job.total }}{% if gen_job.result.failed %}，失败 {{ gen_job.result.failed }}{% endif %}{% if gen_job.active %}，{{ gen_job.active }} 件正在出图{% endif %}{% if gen_job.pending %}，还剩 {{ gen_job.pending }}{% endif %}</p>
       <p id="gen-job-label" class="note">{{ gen_job.label }}</p>
     </div>
-    <div><button class="btn" type="submit" onclick="return confirm('把还没出过图的商品放进队列？暂停时不会领。')">跑剩余所有商品</button></div>
+    <div><button class="btn" type="submit" onclick="return confirm('把还没出过主图第4张的放进队列？只出主图，不出规格。暂停时不会领。')">跑剩余主图第4张</button></div>
   </form>
   <script>
   (function () {
@@ -929,7 +937,7 @@
       box.hidden = !job.total;
       var text = job.total ? ("已完成 " + (result.done || 0) + " / " + job.total) : "";
       if (result.failed) text += "，失败 " + result.failed;
-      if (job.active) text += "，" + job.active + " 件正在出图";
+      if (job.active) text += "，  + job.active + " 张正在出图";
       if (job.pending) text += "，还剩 " + job.pending;
       document.getElementById("gen-job-count").textContent = text;
       document.getElementById("gen-job-label").textContent = job.label || "";
@@ -952,6 +960,85 @@
   })();
   </script>
 </div>
+
+  <form class="pad stack" method="post" action="/admin/images/sku/one">
+    <h3>只出规格图（SKU 白底棚拍）</h3>
+    <p class="note"><b>调用规则</b>：参照原规格图重拍；白底居中、软光接触阴影、画面无文字；成功后 <code>generated=1</code>，各国语言共用同一张，不进多语言译图队列。默认跳过已生成，除非勾选强制。优先已上架商品；并发用上面的生图并发路数。</p>
+    <div class="fields">
+      <label>货号 <input name="sku" value="{{ sku_gen_plan.sku if sku_gen_plan else '' }}" placeholder="要跑规格图的一个货号"></label>
+      <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" name="force" value="1"> 强制重出已生成的</label>
+    </div>
+    {% if sku_gen_plan %}
+    <p class="note">{{ sku_gen_plan.sku }}：要出 {{ sku_gen_plan.generate }} 张，跳过 {{ sku_gen_plan.skip }} 张。</p>
+    <ul class="gen-compare">
+      {% for item in sku_gen_plan.rows %}
+      <li class="note">
+        <b>{% if item.action == 'generate' %}要出{% else %}跳过{% endif %}</b>
+        {{ item.label }}
+        <span>{{ item.reason }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    <div>
+      <button class="btn" type="submit" formaction="/admin/images/sku/plan">先算规格图</button>
+      <button class="btn teal" type="submit" onclick="return confirm('只出这一件的规格白底图？主图不动。')">生成这一件规格图</button>
+    </div>
+  </form>
+  <form class="pad stack" method="post" action="/admin/images/sku/rest">
+    <p class="note">点「跑剩余规格图」会按「张」入队：已上架商品下、路径为 c*/s* 的规格图、文件存在、且尚未 generated=1（除非勾选强制）。<b>总数 = 待出规格图张数</b>，不是商品件数。当前待出约 <b>{{ sku_gen_left }}</b> 张；队列里 {{ sku_gen_queue.pending }} 张待跑 / {{ sku_gen_queue.shots }} 张会打接口。</p>
+    {% if sku_gen_queue.items %}
+    <ul class="gen-compare">
+      {% for item in sku_gen_queue["items"] %}
+      <li class="note">
+        <b>{{ item.sku }}</b>
+        {% if item.generate %}要出 {{ item.generate }} 张，跳过 {{ item.skip }} 张{% else %}不打接口{% endif %}
+        <span>{{ item.note }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    <div id="sku-gen-job" {% if not sku_gen_job.total %}hidden{% endif %}>
+      <p id="sku-gen-job-count">已完成 {{ sku_gen_job.result.done }} / {{ sku_gen_job.total }} 张{% if sku_gen_job.result.failed %}，失败 {{ sku_gen_job.result.failed }}{% endif %}{% if sku_gen_job.active %}，{{ sku_gen_job.active }} 张正在出图{% endif %}{% if sku_gen_job.pending %}，还剩 {{ sku_gen_job.pending }} 张{% endif %}</p>
+      <p id="sku-gen-job-label" class="note">{{ sku_gen_job.label }}</p>
+    </div>
+    {% if gen_paused %}<p class="error">生图暂停着，点下面不会开始。先点上面的「继续生图」。</p>{% endif %}
+    <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" name="force" value="1"> 强制重出已生成的</label>
+    <div><button class="btn" type="submit" onclick="return confirm('把已上架、还缺的规格图按张全部放进队列（约 {{ sku_gen_left }} 张）？主图不动。')">跑剩余规格图</button></div>
+  </form>
+  <script>
+  (function () {
+    var box = document.getElementById("sku-gen-job");
+    if (!box) return;
+    var watching = {{ "true" if sku_gen_job.running else "false" }};
+    function paint(job) {
+      var result = job.result || {};
+      box.hidden = !job.total;
+      var text = job.total ? ("已完成 " + (result.done || 0) + " / " + job.total) : "";
+      if (result.failed) text += "，失败 " + result.failed;
+      if (job.active) text += "，" + job.active + " 件正在出图";
+      if (job.pending) text += "，还剩 " + job.pending;
+      document.getElementById("sku-gen-job-count").textContent = text;
+      document.getElementById("sku-gen-job-label").textContent = job.label || "";
+    }
+    function tick() {
+      fetch("/admin/images/sku/progress", {headers: {Accept: "application/json"}})
+        .then(function (response) { return response.json(); })
+        .then(function (job) {
+          paint(job);
+          if (job.running) {
+            watching = true;
+            setTimeout(tick, 1500);
+            return;
+          }
+          if (watching) location.reload();
+        })
+        .catch(function () { setTimeout(tick, 2000); });
+    }
+    if (watching) tick();
+  })();
+  </script>
+
 {% else %}
 <p class="note">商品图生成仅管理员可见。</p>
 {% endif %}
@@ -1595,3 +1682,4 @@
 </div>
 {% endif %}
 {% endblock %}
+

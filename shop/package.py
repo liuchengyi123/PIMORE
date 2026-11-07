@@ -4,7 +4,7 @@ import re
 import zipfile
 from decimal import Decimal, ROUND_HALF_UP
 
-from shop.alibaba import category_for, hold_reason, markup_cents, sku_price, weight_floor_cents
+from shop.alibaba import apply_intercept_rules, category_for, hold_reason, markup_cents, sku_price, weight_floor_cents
 
 
 class PackageError(Exception):
@@ -155,6 +155,7 @@ def describe_preview(products, sale_rate, grams_per_dollar):
                 "sale": _dollars(offer["price_cents"]),
                 "held": bool(offer.get("hold")),
                 "product_held": blocked,
+                # Preview still shows intercepted rows; import will delete them.
             })
     return {
         "rows": rows,
@@ -174,7 +175,7 @@ def preview_sheets(blobs, list_rate, sale_rate, grams_per_dollar=25, hold_percen
         if lower.endswith(".zip") or (raw[:2] == b"PK" and not lower.endswith(".xlsx")):
             found = True
             products.extend(_preview_zip(
-                raw, list_rate, sale_rate, seen, grams_per_dollar, hold_percent,
+                raw, list_rate, sale_rate, seen, grams_per_dollar, hold_percent, keep_held=True,
             ))
             continue
         sheet_name = name if lower.endswith(".xlsx") else f"{name or '表格'}.xlsx"
@@ -183,6 +184,7 @@ def preview_sheets(blobs, list_rate, sale_rate, grams_per_dollar=25, hold_percen
         found = True
         products.extend(_products(
             raw, _empty_pictures(), list_rate, sale_rate, seen, grams_per_dollar, hold_percent,
+            keep_held=True,
         ))
     if not found:
         raise PackageError("请先选择数据包里的商品表格。")
@@ -191,7 +193,7 @@ def preview_sheets(blobs, list_rate, sale_rate, grams_per_dollar=25, hold_percen
     return _blank_images(products)
 
 
-def _preview_zip(raw, list_rate, sale_rate, seen, grams_per_dollar, hold_percent):
+def _preview_zip(raw, list_rate, sale_rate, seen, grams_per_dollar, hold_percent, keep_held=True):
     try:
         archive = zipfile.ZipFile(io.BytesIO(raw))
     except zipfile.BadZipFile:
@@ -206,7 +208,7 @@ def _preview_zip(raw, list_rate, sale_rate, seen, grams_per_dollar, hold_percent
             continue
         products.extend(_products(
             archive.read(info), _empty_pictures(), list_rate, sale_rate, seen,
-            grams_per_dollar, hold_percent,
+            grams_per_dollar, hold_percent, keep_held=True,
         ))
     if not products:
         raise PackageError("压缩包里没有「商品数据」表格。")
@@ -249,17 +251,17 @@ def read_package(raw, list_rate, sale_rate, grams_per_dollar=25, hold_percent=20
     for root in sheets:
         bucket = buckets[root]
         sheet_bytes = archive.read(bucket["sheet"])
-        if skip_held_images:
-            probe = set(seen)
-            bare = _products(
-                sheet_bytes, _empty_pictures(), list_rate, sale_rate, probe,
-                grams_per_dollar, hold_percent,
-            )
-            if bare and all(item["listing"].get("hold") for item in bare):
-                seen.clear()
-                seen.update(probe)
-                products.extend(_blank_images(bare))
-                continue
+        # Probe pricing first so wholly-intercepted sheets never enter the catalog.
+        probe = set(seen)
+        bare = _products(
+            sheet_bytes, _empty_pictures(), list_rate, sale_rate, probe,
+            grams_per_dollar, hold_percent,
+        )
+        # _products already drops held SKUs / wholly-held products.
+        if not bare:
+            seen.clear()
+            seen.update(probe)
+            continue
         pictures = {}
         for kind in ("main", "detail", "color"):
             files = sorted(bucket[kind], key=lambda item: (_order(item[0]), item[0]))
@@ -268,17 +270,13 @@ def read_package(raw, list_rate, sale_rate, grams_per_dollar=25, hold_percent=20
             sheet_bytes, pictures, list_rate, sale_rate, seen,
             grams_per_dollar, hold_percent,
         )
-        if skip_held_images:
-            for item in part:
-                if item["listing"].get("hold"):
-                    _blank_images([item])
         products.extend(part)
     if not products:
         raise PackageError("表格里没有读到商品。需要商品名称、供货价和商品编码。")
     return products
 
 
-def _products(raw, pictures, list_rate, sale_rate, seen, grams_per_dollar=25, hold_percent=20):
+def _products(raw, pictures, list_rate, sale_rate, seen, grams_per_dollar=25, hold_percent=20, keep_held=False):
     from openpyxl import load_workbook
 
     workbook = load_workbook(io.BytesIO(raw), read_only=True, data_only=True)
@@ -347,15 +345,12 @@ def _products(raw, pictures, list_rate, sale_rate, seen, grams_per_dollar=25, ho
             })
             stock_text = _text(cell(row, "库存"))
             stock += int(stock_text) if stock_text.isdigit() else 0
-        for offer in offers:
-            if offer.get("hold") and isinstance(offer.get("image"), (bytes, bytearray)):
-                offer["image"] = ""
-        sellable = [offer for offer in offers if not offer.get("hold")]
-        chosen = min(sellable or offers, key=lambda offer: (offer["price_cents"], offer["original_cents"]))
         weight = _text(cell(first, "重量"))
         if weight and weight.replace(".", "", 1).isdigit():
             weight = f"{weight}kg"
-        products.append({
+        sellable = [offer for offer in offers if not offer.get("hold")]
+        chosen = min(sellable or offers, key=lambda offer: (offer["price_cents"], offer["original_cents"]))
+        draft = {
             "sku": sku,
             "title": title,
             "category": category_for(
@@ -386,5 +381,13 @@ def _products(raw, pictures, list_rate, sale_rate, seen, grams_per_dollar=25, ho
                 "url": "",
             },
             "offers": offers,
-        })
+        }
+        if keep_held:
+            # Preview/analysis: keep hold flags so后台能看到将删除的规格/整件。
+            products.append(draft)
+        else:
+            # Import path: 超线规格直接删；整件超线不入库。
+            cleaned = apply_intercept_rules(draft)
+            if cleaned is not None:
+                products.append(cleaned)
     return products

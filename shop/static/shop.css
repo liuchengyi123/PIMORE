@@ -986,7 +986,8 @@ main h1 {
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
   overflow-wrap: anywhere;
-  pointer-events: none;
+  pointer-events: none !important;
+  user-select: none;
 }
 .gallery-count {
   position: absolute;
@@ -2922,7 +2923,15 @@ body:has(.buy-actions) .pwa-promo,
   color: #ffffff;
 }
 .home-more-wrap { display: flex; justify-content: center; padding: 16px 0 8px; }
-.home-more { min-width: 160px; }
+.home-more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 20px;
+}
+.home-more[hidden] { display: none !important; }
+.home-more img { width: 14px; height: 14px; background: none; }
 
 /* PDP gallery: one sharp main frame, not a stretched strip of three */
 .gallery {

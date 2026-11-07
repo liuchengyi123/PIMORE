@@ -298,8 +298,7 @@
   }
   .m01-more img { width: 14px; height: 14px; background: none; }
   .m01-more[hidden] { display: none !important; }
-  .m01-more-wrap p { margin: 6px 0 0; font-size: 10px; line-height: 14px; color: #5C6570; font-weight: 400; }
-  .m01-rail { display: none !important; }
+    .m01-rail { display: none !important; }
   .m01-rail .card {
     flex: 0 0 120px; width: 120px; min-width: 120px !important; background: transparent !important;
     border: 0 !important; border-radius: 0 !important; box-shadow: none !important; overflow: visible;
@@ -820,8 +819,13 @@
     margin-top: -16px !important;
     position: relative !important;
     z-index: 2 !important;
-    padding: 14px 16px 100px !important;
+    padding: 14px 16px 16px !important;
     box-shadow: 0 -8px 24px rgba(15,39,68,.06) !important;
+  }
+  .fn-pdp .sku-pane {
+    margin-top: 0 !important;
+    padding-bottom: 0 !important;
+    box-shadow: none !important;
   }
   .fn-pdp .sku-summary .price-row {
     display: flex !important;

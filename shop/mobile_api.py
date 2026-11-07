@@ -1,4 +1,4 @@
-﻿"""JSON catalog endpoints for Harbor Android / mobile clients.
+"""JSON catalog endpoints for Harbor Android / mobile clients.
 
 Mounted from create_app; reuses present_card / present / catalog helpers.
 Does not change SSR HTML routes.
@@ -336,9 +336,24 @@ def mount_mobile_api(
         request: Request,
         limit: int = 24,
         offset: int = 0,
+        page: int = 0,
+        page_size: int = 0,
         category: Optional[str] = None,
     ):
         ctx = view(request)
+        # Honor page/page_size in addition to limit/offset (mobile clients use both).
+        try:
+            page_i = int(page or 0)
+        except (TypeError, ValueError):
+            page_i = 0
+        try:
+            page_size_i = int(page_size or 0)
+        except (TypeError, ValueError):
+            page_size_i = 0
+        if page_size_i > 0:
+            limit = page_size_i
+        if page_i > 0:
+            offset = max(0, (page_i - 1) * max(1, int(limit or 24)))
         limit = max(1, min(100, int(limit or 24)))
         offset = max(0, int(offset or 0))
         rows = _filter_rows(catalog_rows(), category)
@@ -354,6 +369,8 @@ def mount_mobile_api(
                 "total": len(pool),
                 "limit": limit,
                 "offset": offset,
+                "page": page_i or ((offset // limit) + 1 if limit else 1),
+                "page_size": limit,
                 "category": category,
             }
         )
