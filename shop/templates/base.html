@@ -128,8 +128,7 @@
             <div class="fn-country ht" style="position:relative">
         <form method="get" action="{{ request.url.path }}">
           <label class="fn-country" style="position:relative;display:inline-flex;align-items:center;gap:6px;cursor:pointer">
-            <span>{{ country }} · {{ currency }}</span>
-            <span>{{ country }} · {{ currency }}</span>
+            <span class="fn-locale-pill">{{ country }} · {{ currency }}</span>
             <select name="lang" aria-label="{{ t.locale }}" onchange="harborLang(this)" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%">
               {% for code, label in [('en', 'English'), ('zh', '简体中文'), ('zh-Hant', '繁體中文'), ('ja', '日本語'), ('de', 'Deutsch'), ('fr', 'Français'), ('es', 'Español'), ('pt', 'Português')] %}
               <option value="{{ code }}" {% if lang == code %}selected{% endif %}>{{ label }}</option>
