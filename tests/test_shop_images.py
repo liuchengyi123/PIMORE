@@ -2,7 +2,7 @@ import io
 
 from PIL import Image
 
-from shop.images import CARD_EDGE, DETAIL_WIDTH, PHONE_EDGE, PHOTO_EDGE, card_image, phone_image, prepare_image, safe_image_url, save_image_bytes
+from shop.images import CARD_EDGE, DETAIL_WIDTH, PHONE_EDGE, PHOTO_EDGE, card_image, drain_fits, phone_image, prepare_image, safe_image_url, save_image_bytes
 
 
 def test_local_and_private_image_urls_are_refused():
@@ -58,11 +58,15 @@ def test_card_image_shrinks_a_large_photo(tmp_path):
     folder.mkdir(parents=True)
     Image.new("RGB", (1600, 1200), (20, 40, 60)).save(folder / "0.jpg", quality=90)
     url = card_image("/static/catalog/sku1/0.jpg", tmp_path)
-    assert url == "/static/catalog/sku1/card/0.jpg"
+    assert url == "/static/catalog/sku1/0.jpg"
+    assert drain_fits(timeout=3)
+    again = card_image("/static/catalog/sku1/0.jpg", tmp_path)
+    assert again == "/static/catalog/sku1/card/0.jpg"
     with Image.open(folder / "card" / "0.jpg") as saved:
         assert max(saved.size) <= CARD_EDGE
-    again = card_image("/static/catalog/sku1/0.jpg", tmp_path)
-    assert again == url
+    phone = phone_image("/static/catalog/sku1/0.jpg", tmp_path)
+    assert phone == "/static/catalog/sku1/0.jpg"
+    assert drain_fits(timeout=3)
     phone = phone_image("/static/catalog/sku1/0.jpg", tmp_path)
     assert phone == "/static/catalog/sku1/view/0.jpg"
     with Image.open(folder / "view" / "0.jpg") as saved:

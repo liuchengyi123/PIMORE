@@ -59,6 +59,7 @@ from shop.adtrack import (
     update_account,
     delete_account,
     track_server_event,
+    start_postback_workers,
     encode_pixel_queue,
     account_public_view,
     new_event_id,
@@ -1717,17 +1718,18 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 pass
         return response
 
-    def _view_content(request, response, sku, item=None):
+    def _view_content(request, response, sku, item=None, ctx=None):
         cents = int((item or {}).get("price_cents") or 0)
         if item is None:
             row = catalog_index().get(sku)
             if row is not None:
                 cents = int(row["price_cents"] or 0)
-        ctx = {"currency": "USD", "units": None}
-        try:
-            ctx = view(request)
-        except Exception:
-            pass
+        if ctx is None:
+            ctx = {"currency": "USD", "units": None}
+            try:
+                ctx = view(request)
+            except Exception:
+                pass
         content, price, currency = _content_item(sku, 1, cents, ctx)
         event = _track_ad(
             request,
@@ -1820,8 +1822,10 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             elif path.startswith("/static/catalog/") or path.startswith("/static/products/"):
                 response.headers["Cache-Control"] = "public, max-age=604800"
             elif path.startswith("/static/"):
-                # icons / css / js may be version-queried; keep a day but allow revalidate
-                response.headers["Cache-Control"] = "public, max-age=86400, must-revalidate"
+                if request.query_params.get("v"):
+                    response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+                else:
+                    response.headers["Cache-Control"] = "public, max-age=86400, must-revalidate"
             return response
         response.headers["Cache-Control"] = "no-store"
         vid = request.cookies.get("harbor_vid") or getattr(request.state, "visitor", "")
@@ -2254,8 +2258,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             qty = int(line["qty"])
             sale_merchandise += unit_cents * qty
             list_merchandise += (list_cents if list_cents > unit_cents else unit_cents) * qty
-            image = (row["image_url"] if "image_url" in row.keys() and row["image_url"] else "") or f"/static/products/{row['sku']}.svg"
-            image = card_image(listing_photo(parent, lang, image), ROOT)
+            image = card_src(row, lang)
             if units is None or not unit_cents:
                 price_text = "—"
             else:
@@ -2514,7 +2517,6 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 "select * from products where published = 1 order by rowid"
             ).fetchall()
         ]
-        app.state.catalog_token += 1
         app.state.cache.set("shop:catalog", rows)
         app.state.cache.set("shop:catalog-index", {row["sku"]: row for row in rows})
         return rows
@@ -2531,7 +2533,6 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 f"select {cols} from products where published = 1 order by rowid"
             ).fetchall()
         ]
-        app.state.catalog_token += 1
         app.state.cache.set("shop:catalog-slim", rows)
         return rows
 
@@ -2543,10 +2544,21 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         app.state.cache.set("shop:catalog-index", index)
         return index
 
+    _home_pools = {}
+    _home_pool_locks = {}
+    _card_src_cache = {}
+    _cart_pick_cache = {}
+    _gallery_cache = {}
+
     def forget_public():
         app.state.memo.clear()
+        _home_pools.clear()
+        _card_src_cache.clear()
+        _cart_pick_cache.clear()
+        _gallery_cache.clear()
 
     def forget_catalog():
+        app.state.catalog_token += 1
         app.state.cache.delete("shop:catalog")
         app.state.cache.delete("shop:catalog-slim")
         app.state.cache.delete("shop:catalog-index")
@@ -2577,6 +2589,8 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
     def bust_reco_cache():
         app.state.memo.pop("reco_rules", None)
         app.state.memo.pop("click_counts", None)
+        _home_pools.clear()
+        _cart_pick_cache.clear()
 
     def shown_heat(sku):
         rules = cached_reco_rules()
@@ -2678,16 +2692,16 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
 
         item["image"] = shown(item["image"])
         item["detail_images"] = [shown(url) for url in item["detail_images"]]
-        story = story_urls(row["sku"], ctx["lang"], ROOT)
+        story = cached_gallery("story", row["sku"], ctx["lang"])
         # Chinese keeps the original detail photos. English fills in only for other store languages.
         if not story and ctx["lang"] != "en" and not str(ctx["lang"]).startswith("zh"):
-            story = story_urls(row["sku"], "en", ROOT)
+            story = cached_gallery("story", row["sku"], "en")
         if story:
             item["detail_images"] = story
         item["images"] = [shown(url) for url in item["images"]]
-        mains = main_urls(row["sku"], ctx["lang"], ROOT)
+        mains = cached_gallery("main", row["sku"], ctx["lang"])
         if not mains and ctx["lang"] != "en" and not str(ctx["lang"]).startswith("zh"):
-            mains = main_urls(row["sku"], "en", ROOT)
+            mains = cached_gallery("main", row["sku"], "en")
         if mains:
             item["images"] = mains
             item["image"] = mains[0]
@@ -2702,7 +2716,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 if mains and not str(ctx["lang"]).startswith("zh"):
                     offer["image"] = mains[0]
         first = item["images"][0] if item["images"] else item["image"]
-        item["image_phone"] = phone_image(first, ROOT)
+        item["image_phone"] = phone_src(first)
         sale_cents, list_cents = sale_list_cents(row)
         item["off_pct"] = item.get("off_pct") or format_off_pct(sale_cents, list_cents)
         if list_cents > sale_cents > 0 and ctx.get("units") is not None:
@@ -2731,7 +2745,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             return mains[0]
         return storefront_image(fallback, lang, ROOT)
 
-    def present_card(row, ctx, with_offers=False):
+    def present_card(row, ctx, with_offers=False, image=None):
         names = json.loads(row["names"])
         cents, original_cents = sale_list_cents(row)
         if ctx["units"] is None:
@@ -2747,9 +2761,8 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             original = ""
         else:
             original = format_money(goods_local(original_cents, ctx["units"], ctx["currency"]), ctx["currency"])
-        image = (row["image_url"] if "image_url" in row.keys() and row["image_url"] else "") or f"/static/products/{row['sku']}.svg"
-        image = resolve_catalog_image(image, row, ctx["lang"], ROOT) or image
-        image = card_image(listing_photo(row["sku"], ctx["lang"], image), ROOT)
+        if not image:
+            image = card_src(row, ctx["lang"])
         card_name = localized_copy(
             names,
             ctx.get("lang") or "en",
@@ -2805,8 +2818,50 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             item["off_pct"] = format_off_pct(cents, original_cents)
         return item
 
-    def render(request, name, status_code=200, **extra):
-        ctx = view(request)
+    def _admin_template(name):
+        base = str(name or "").replace("\\", "/").rsplit("/", 1)[-1]
+        return base == "admin.html" or base.startswith("admin_")
+
+    def _storefront_job_defaults():
+        idle = {
+            "running": False,
+            "phase": "",
+            "label": "",
+            "done": 0,
+            "total": 0,
+            "workers": 0,
+            "result": {},
+            "error": "",
+            "kind": "",
+        }
+        return {
+            "catalog_job": dict(idle),
+            "upload_job": dict(idle),
+            "translate_job": dict(idle),
+            "pending_parts": [],
+            "image_job": {"running": False, "label": "", "done": 0, "total": 0, "error": "", "result": {}, "lang": ""},
+            "image_account": {"saved": False, "tail": "", "workspace": ""},
+            "image_langs": [],
+            "image_left": 0,
+            "story_products": 0,
+            "gen_job": {"running": False, "label": "", "total": 0, "pending": 0, "active": 0, "error": "", "result": {"done": 0, "failed": 0}, "paused": False},
+            "gen_paused": False,
+            "gen_api": {"saved": False, "tail": "", "url": "", "model": "", "workers": 1},
+            "gen_workers": {},
+            "gen_left": 0,
+            "gen_error": "",
+            "gen_plan": None,
+            "sku_gen_left": 0,
+            "sku_gen_queue": {"pending": 0, "calling": 0, "shots": 0, "idle": 0, "page": 1, "pages": 1, "items": []},
+            "sku_gen_plan": None,
+            "sku_gen_job": {"running": False, "label": "", "total": 0, "pending": 0, "active": 0, "error": "", "result": {"done": 0, "failed": 0}},
+        }
+
+    def render(request, name, status_code=200, ctx=None, **extra):
+        if ctx is None:
+            ctx = view(request)
+        elif "request" not in ctx:
+            ctx["request"] = request
         ctx.update(extra)
         staff = getattr(request.state, "staff", None)
         ctx.setdefault("is_admin_role", bool(staff and is_admin_role(staff)))
@@ -2822,27 +2877,31 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             ("pdp-sponsored", "商品页推荐"),
             ("cart-recommend", "购物车推荐"),
         ])
-        catalog_snapshot = job_read()
-        ctx.setdefault("catalog_job", catalog_snapshot)
-        ctx.setdefault("upload_job", catalog_snapshot.get("upload") or upload_job_read())
-        ctx.setdefault("translate_job", catalog_snapshot.get("translate") or translate_job_read())
-        ctx.setdefault("pending_parts", pending_part_uploads())
-        ctx.setdefault("image_job", image_job_read())
-        ctx.setdefault("image_account", image_account())
-        ctx.setdefault("image_langs", [{"code": code, "name": label} for code, label in IMAGE_LANGS.items()])
-        ctx.setdefault("image_left", 0)
-        ctx.setdefault("story_products", 0)
-        ctx.setdefault("gen_job", gen_job_read())
-        ctx.setdefault("gen_paused", gen_is_paused())
-        ctx.setdefault("gen_api", gen_api_account())
-        ctx.setdefault("gen_workers", gen_worker_form())
-        ctx.setdefault("gen_left", 0)
-        ctx.setdefault("gen_error", "")
-        ctx.setdefault("gen_plan", None)
-        ctx.setdefault("sku_gen_left", 0)
-        ctx.setdefault("sku_gen_queue", {"pending": 0, "calling": 0, "shots": 0, "idle": 0, "page": 1, "pages": 1, "items": []})
-        ctx.setdefault("sku_gen_plan", None)
-        ctx.setdefault("sku_gen_job", {"running": False, "label": "", "total": 0, "pending": 0, "active": 0, "error": "", "result": {"done": 0, "failed": 0}})
+        if _admin_template(name):
+            catalog_snapshot = job_read()
+            ctx.setdefault("catalog_job", catalog_snapshot)
+            ctx.setdefault("upload_job", catalog_snapshot.get("upload") or upload_job_read())
+            ctx.setdefault("translate_job", catalog_snapshot.get("translate") or translate_job_read())
+            ctx.setdefault("pending_parts", pending_part_uploads())
+            ctx.setdefault("image_job", image_job_read())
+            ctx.setdefault("image_account", image_account())
+            ctx.setdefault("image_langs", [{"code": code, "name": label} for code, label in IMAGE_LANGS.items()])
+            ctx.setdefault("image_left", 0)
+            ctx.setdefault("story_products", 0)
+            ctx.setdefault("gen_job", gen_job_read())
+            ctx.setdefault("gen_paused", gen_is_paused())
+            ctx.setdefault("gen_api", gen_api_account())
+            ctx.setdefault("gen_workers", gen_worker_form())
+            ctx.setdefault("gen_left", 0)
+            ctx.setdefault("gen_error", "")
+            ctx.setdefault("gen_plan", None)
+            ctx.setdefault("sku_gen_left", 0)
+            ctx.setdefault("sku_gen_queue", {"pending": 0, "calling": 0, "shots": 0, "idle": 0, "page": 1, "pages": 1, "items": []})
+            ctx.setdefault("sku_gen_plan", None)
+            ctx.setdefault("sku_gen_job", {"running": False, "label": "", "total": 0, "pending": 0, "active": 0, "error": "", "result": {"done": 0, "failed": 0}})
+        else:
+            for key, value in _storefront_job_defaults().items():
+                ctx.setdefault(key, value)
         ctx.setdefault("ad_pixels", {"meta_ok": False, "google_ok": False, "tiktok_ok": False})
         ctx.setdefault("ad_attrs", {})
         if status_code >= 400:
@@ -3293,9 +3352,151 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         body.append("</urlset>")
         return Response("\n".join(body), media_type="application/xml")
 
+    def cached_gallery(kind, sku, lang):
+        key = (kind, str(sku), str(lang or ""), int(app.state.catalog_token))
+        hit = _gallery_cache.get(key)
+        if hit is not None:
+            return hit
+        if kind == "story":
+            urls = story_urls(sku, lang, ROOT)
+        else:
+            urls = main_urls(sku, lang, ROOT)
+        _gallery_cache[key] = list(urls or [])
+        return _gallery_cache[key]
+
+    def card_src(row, lang):
+        """Card image URL, cached so a shelf does not glob the catalog per request."""
+        sku = str(row["sku"] if "sku" in row.keys() else "")
+        lang = str(lang or "en")
+        key = ("card", sku, lang, int(app.state.catalog_token))
+        hit = _card_src_cache.get(key)
+        now = time.monotonic()
+        if hit and (hit[1] or now - hit[2] < 60):
+            return hit[0]
+        image = (row["image_url"] if "image_url" in row.keys() and row["image_url"] else "") or f"/static/products/{sku}.svg"
+        image = resolve_catalog_image(image, row, lang, ROOT) or image
+        image = card_image(listing_photo(sku, lang, image), ROOT)
+        _card_src_cache[key] = (image, "/card/" in image, time.monotonic())
+        return image
+
+    def phone_src(url):
+        text = str(url or "")
+        key = ("view", text, int(app.state.catalog_token))
+        hit = _card_src_cache.get(key)
+        now = time.monotonic()
+        if hit and (hit[1] or now - hit[2] < 60):
+            return hit[0]
+        image = phone_image(text, ROOT)
+        _card_src_cache[key] = (image, "/view/" in image, time.monotonic())
+        return image
+
+    def light_shuffle(rows, salt, band=8):
+        items = list(rows)
+        if len(items) < 2:
+            return items
+        rng = random.Random(int(salt) & 0xFFFFFFFF)
+        width = band if band > 1 else 8
+        for start in range(0, len(items), width):
+            chunk = items[start:start + width]
+            rng.shuffle(chunk)
+            items[start:start + width] = chunk
+        return items
+
+    def home_candidate_pool(country, lang):
+        """Ordered shelf inputs for one country/language, reused for about a minute.
+
+        Rank heat is clicks × heat_per_click plus the hot-list boost. Card image
+        URLs are resolved here so a request only shuffles or re-ranks that cache.
+        """
+        country = str(country or "US")
+        lang = str(lang or "en")
+        catalog_list_rows()
+
+        def pool_key():
+            rules = cached_reco_rules()
+            clicks = cached_click_counts()
+            return (
+                country,
+                lang,
+                int(app.state.catalog_token),
+                int(app.state.hot_token),
+                id(rules),
+                id(clicks),
+            )
+
+        def fresh(hit, now):
+            return bool(hit) and now - hit[0] < 60
+
+        key = pool_key()
+        now = time.monotonic()
+        hit = _home_pools.get(key)
+        if fresh(hit, now):
+            return hit[1]
+        lock = _home_pool_locks.setdefault((country, lang), threading.Lock())
+        with lock:
+            now = time.monotonic()
+            key = pool_key()
+            hit = _home_pools.get(key)
+            if fresh(hit, now):
+                return hit[1]
+            rows = list(catalog_list_rows())
+            by_sku = {row["sku"]: row for row in rows}
+            rules, heat_map = shelf_heat(rows, country)
+            key = pool_key()
+            hit = _home_pools.get(key)
+            if fresh(hit, time.monotonic()):
+                return hit[1]
+            prior_map = {row["sku"]: rank(row, country) for row in rows}
+            images = {row["sku"]: card_src(row, lang) for row in rows}
+            rails = {}
+            for cat in CATEGORIES:
+                cat_rows = [row for row in rows if row["category"] == cat]
+                cat_rows.sort(key=lambda row: (prior_map.get(row["sku"], 1), -heat_map.get(row["sku"], 0), row["sku"]))
+                rails[cat] = cat_rows
+            deals = [row for row in rows if int(row["price_cents"] or 0) <= 600]
+            deals.sort(key=lambda row: (prior_map.get(row["sku"], 1), -heat_map.get(row["sku"], 0), row["sku"]))
+            stocked = [row for row in rows if int(row.get("stock") or 0) > 0]
+            diverse = diverse_order(
+                stocked or list(rows),
+                salt=0,
+                heat=heat_map,
+                prior=prior_map,
+                boost={},
+                heat_unit=rules["heat_per_click"],
+            )
+            light = [
+                {
+                    "sku": row["sku"],
+                    "category": row["category"],
+                    "price_cents": row["price_cents"],
+                    "stock": row["stock"],
+                }
+                for row in rows
+            ]
+            data = {
+                "rows": rows,
+                "by_sku": by_sku,
+                "heat_map": heat_map,
+                "prior_map": prior_map,
+                "images": images,
+                "rails": rails,
+                "deals": deals,
+                "stocked": stocked or list(rows),
+                "diverse": diverse,
+                "light": light,
+                "rules": rules,
+            }
+            _home_pools[key] = (time.monotonic(), data)
+            if len(_home_pools) > 24:
+                oldest = min(_home_pools, key=lambda item: _home_pools[item][0])
+                if oldest != key:
+                    _home_pools.pop(oldest, None)
+            return data
+
     def home_feed_cards(request, ctx, tab="recommended", page=1, page_size=20, q="", exclude=()):
         """Liked items first, then the rest of this shelf. Order is stable across pages."""
-        catalog = list(catalog_list_rows())
+        pool = home_candidate_pool(ctx["country"], ctx["lang"])
+        catalog = pool["rows"]
         rows = catalog
         needle = (q or "").strip().casefold()
         if needle:
@@ -3309,7 +3510,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 if needle in blob or needle in str(row["sku"]).casefold():
                     matched.append(row)
             rows = matched
-        by_sku = {row["sku"]: row for row in catalog}
+        by_sku = pool["by_sku"]
         country = ctx["country"]
         promoted = set(sponsored_skus(ctx["ads"]))
         cart_skus = [line["sku"].split("~", 1)[0] for line in load_lines(request.cookies.get("cart"))]
@@ -3320,34 +3521,55 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         page = max(1, int(page or 1))
         page_size = max(4, min(48, int(page_size or 20)))
         feed_exclude = {str(sku) for sku in (exclude or ()) if sku}
-        rules = cached_reco_rules()
+        rules = pool["rules"]
         share = browse_share_for(interest, taste, rules)
+        heat_map = pool["heat_map"]
+        prior_map = pool["prior_map"]
         if tab in CATEGORIES:
-            pool = [row for row in rows if row.get("category") == tab]
+            if needle:
+                base = [row for row in rows if row.get("category") == tab]
+            else:
+                base = list(pool["rails"].get(tab) or [])
+                if not base:
+                    base = [row for row in rows if row.get("category") == tab]
             salt = (salt ^ (sum(ord(ch) for ch in tab) * 131)) & 0xFFFFFFFF
         else:
-            pool = list(rows)
-        _rules, pool_heat = shelf_heat(pool, country)
-        ordered = blend_order(
-            pool,
-            interest=interest,
-            catalog=catalog,
-            cart_skus=cart_skus,
-            taste=taste,
-            salt=salt,
-            heat=pool_heat,
-            prior={row["sku"]: rank(row, country) for row in pool},
-            boost={sku: 4.0 for sku in promoted},
-            browse_share=share,
-            exclude=feed_exclude,
-            heat_unit=rules["heat_per_click"],
-        )
+            base = list(rows)
+        # Cold visitors reuse the cached click-heat order and only shuffle it.
+        # Search, a cart, or enough browse signals re-rank with the admin share.
+        cold = share <= 0 and not needle and not cart_skus
+        if cold and tab not in CATEGORIES:
+            ordered = light_shuffle(pool["diverse"], salt)
+            if promoted:
+                ordered.sort(key=lambda row: 0 if row["sku"] in promoted else 1)
+            if feed_exclude:
+                ordered = [row for row in ordered if str(row.get("sku") or "") not in feed_exclude]
+        elif cold:
+            ordered = light_shuffle(base, salt)
+            if feed_exclude:
+                ordered = [row for row in ordered if str(row.get("sku") or "") not in feed_exclude]
+        else:
+            ordered = blend_order(
+                base,
+                interest=interest,
+                catalog=catalog,
+                cart_skus=cart_skus,
+                taste=taste,
+                salt=salt,
+                heat=heat_map,
+                prior=prior_map,
+                boost={sku: 4.0 for sku in promoted},
+                browse_share=share,
+                exclude=feed_exclude,
+                heat_unit=rules["heat_per_click"],
+            )
         start = (page - 1) * page_size
         slice_rows = ordered[start : start + page_size]
         has_more = start + page_size < len(ordered)
         cards = []
+        images = pool["images"]
         for row in slice_rows:
-            item = present_card(row, ctx)
+            item = present_card(row, ctx, image=images.get(row["sku"]))
             item["sponsored"] = row["sku"] in promoted
             cards.append(item)
         return cards, has_more, tab
@@ -3355,32 +3577,33 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
     @app.get("/", response_class=HTMLResponse)
     def home(request: Request):
         ctx = view(request)
-        rows = list(catalog_list_rows())
-        # Never serve a frozen public cache for the product shelf — each visitor / refresh must reshuffle.
+        shelf = home_candidate_pool(ctx["country"], ctx["lang"])
+        rows = shelf["rows"]
+        # Candidate pools are cached. This request only shuffles with the visitor salt.
         promoted = set(sponsored_skus(ctx["ads"]))
-        by_sku = {row["sku"]: row for row in rows}
+        by_sku = shelf["by_sku"]
         country = ctx["country"]
         def on_shelf(row):
             return int(row["stock"] or 0) > 0
 
-        def pictured(pool, limit):
-            stocked = [row for row in pool if on_shelf(row)]
-            with_photo = [row for row in stocked if (row.get("image_url") or "").strip()]
-            return (with_photo or stocked)[:limit]
+        def pictured(seq, limit):
+            stocked_rows = [row for row in seq if on_shelf(row)]
+            with_photo = [row for row in stocked_rows if (row.get("image_url") or "").strip()]
+            return (with_photo or stocked_rows)[:limit]
 
         salt = rec_salt(request)
-        rules, heat_map = shelf_heat(rows, country)
+        rules = shelf["rules"]
+        heat_map = shelf["heat_map"]
+        prior_map = shelf["prior_map"]
         rail_rows = {}
         for key in CATEGORIES:
-            pool = sorted(
-                [row for row in rows if row["category"] == key],
-                key=lambda row: (rank(row, country), -heat_map.get(row["sku"], 0), row["sku"]),
-            )
-            picked = pictured(pool, 4)
+            ordered = shelf["rails"].get(key) or []
+            picked = pictured(ordered, 4)
             if picked:
+                random.Random((salt ^ (sum(ord(ch) for ch in key) * 17)) & 0xFFFFFFFF).shuffle(picked)
                 rail_rows[key] = picked
         deal_rows = mix_price_bands(
-            [row for row in rows if int(row["price_cents"] or 0) <= 600],
+            shelf["deals"],
             heat_map,
             limit=8,
             under_cents=300,
@@ -3393,20 +3616,11 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         interest = interest_profile(request, by_sku=by_sku, cart_skus=cart_skus)
         seen = read_skus(request.cookies.get("history"), 24) or [sku for sku in interest if sku in by_sku]
         recent_rows = [by_sku[sku] for sku in seen if sku in by_sku][:8]
-        light = [
-            {
-                "sku": row["sku"],
-                "category": row["category"],
-                "price_cents": row["price_cents"],
-                "stock": row["stock"],
-            }
-            for row in rows
-        ]
+        light = shelf["light"]
         taste = read_taste(request.cookies.get("taste"))
         share = browse_share_for(interest, taste, rules)
-        prior_map = {row["sku"]: rank(row, country) for row in rows}
         boost_map = {sku: 4.0 for sku in promoted}
-        stocked = [row for row in rows if int(row.get("stock") or 0) > 0]
+        stocked = shelf["stocked"]
         # In the shop: system random only — no browse interest, cross-category.
         # Skip recently viewed SKUs so this strip does not echo what they just opened.
         recent_skus = set(seen[:16])
@@ -3505,10 +3719,12 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
 
         shown = {item["sku"]: item for item in feed_rows_cards}
 
+        images = shelf["images"]
+
         def card(row):
             item = shown.get(row["sku"])
             if item is None:
-                item = present_card(row, ctx)
+                item = present_card(row, ctx, image=images.get(row["sku"]))
                 item["sponsored"] = row["sku"] in promoted
                 shown[row["sku"]] = item
             return item
@@ -3538,7 +3754,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             "home_page": 1,
             "home_has_more": feed_has_more,
         })
-        return render(request, "home.html", **{k: ctx[k] for k in ctx if k != "request"})
+        return render(request, "home.html", ctx=ctx)
 
     @app.get("/home/feed", response_class=HTMLResponse)
     def home_feed(request: Request):
@@ -3573,7 +3789,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             "new_block": None,
             "cart_preview": [],
         })
-        return render(request, "home.html", **{k: ctx[k] for k in ctx if k != "request"})
+        return render(request, "home.html", ctx=ctx)
 
     @app.get("/cart/picks", response_class=HTMLResponse)
     def cart_pick_cards(request: Request):
@@ -4243,7 +4459,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         response = store_public(request, key, "product.html", ctx)
         seen = read_skus(request.cookies.get("history"))
         response.set_cookie("history", write_skus([sku, *seen]), max_age=31536000, path="/")
-        _view_content(request, response, sku, item)
+        _view_content(request, response, sku, item, ctx)
         remember(response, request, item["category"], 1, sku=sku)
         return response
 
@@ -4298,6 +4514,9 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
     @app.post("/cart/add")
     async def add_cart(request: Request):
         form = await request.form()
+        return await asyncio.to_thread(_add_cart, request, form)
+
+    def _add_cart(request, form):
         country = str(form.get("country") or "US")
         sku = str(form.get("sku") or "")
         offer = chosen_offer(sku, str(form.get("offer") or ""))
@@ -4348,10 +4567,12 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             reminded = read_skus(request.cookies.get("remind"), limit=36)
             response.set_cookie("remind", write_skus([sku, *reminded], 36), max_age=31536000, path="/")
         ad_event = None
+        ctx = None
         try:
             sold = find_sellable(conn, code)
             unit = int(sold["price_cents"]) if sold else 0
-            content, price, currency = _content_item(code, qty, unit, view(request))
+            ctx = view(request)
+            content, price, currency = _content_item(code, qty, unit, ctx)
             ad_event = _track_ad(
                 request,
                 "AddToCart",
@@ -4367,7 +4588,8 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             # Refresh view-like rail summary using the new cart cookie value.
             fake = request
             # Manually compute rail from `lines`
-            ctx = view(request)
+            if ctx is None:
+                ctx = view(request)
             # Override cart lines in ctx by recomputing with dumped cookie already set on response —
             # view() still reads old request cookies, so rebuild rail from `lines`.
             # Full catalog (not slim) so selected offer prices resolve correctly.
@@ -4584,6 +4806,53 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             return picked
         return ranked_for_you(shelf, {}, limit=8, salt=salt, heat=heat_map, heat_unit=rules["heat_per_click"])
 
+    def empty_cart_picks(request, ctx, shelf):
+        """At most 12 cards from three categories, ranked by click heat, reused briefly."""
+        rules = cached_reco_rules()
+        clicks = cached_click_counts()
+        key = (
+            ctx["country"],
+            ctx["lang"],
+            int(app.state.catalog_token),
+            int(app.state.hot_token),
+            id(rules),
+            id(clicks),
+        )
+        now = time.monotonic()
+        hit = _cart_pick_cache.get(key)
+        if not hit or now - hit[0] >= 45:
+            _rules, heat_map = shelf_heat(shelf, ctx["country"])
+            chosen = []
+            cats = 0
+            for cat in CATEGORIES:
+                rows = [
+                    item
+                    for item in shelf
+                    if item.get("category") == cat and int(item.get("stock") or 0) > 0
+                ]
+                if not rows:
+                    continue
+                rows.sort(
+                    key=lambda item: (
+                        -float(heat_map.get(item.get("sku"), 0) or 0),
+                        str(item.get("sku") or ""),
+                    )
+                )
+                chosen.extend(rows[:4])
+                cats += 1
+                if cats >= 3 or len(chosen) >= 12:
+                    break
+            cards = cards_for(ctx, [{"sku": item["sku"]} for item in chosen[:12]])
+            _cart_pick_cache[key] = (time.monotonic(), cards)
+            hit = _cart_pick_cache[key]
+            if len(_cart_pick_cache) > 24:
+                oldest = min(_cart_pick_cache, key=lambda item: _cart_pick_cache[item][0])
+                if oldest != key:
+                    _cart_pick_cache.pop(oldest, None)
+        cards = list(hit[1])[:12]
+        random.Random(rec_salt(request) & 0xFFFFFFFF).shuffle(cards)
+        return cards
+
     @app.get("/cart", response_class=HTMLResponse)
     def cart(request: Request):
         ctx, shown, merchandise = line_views(request, load_lines(request.cookies.get("cart")))
@@ -4594,15 +4863,36 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         nudge = nudge_for(ctx, merchandise, bool(shown))
         budget = nudge["need"] if nudge and nudge["kind"] != "done" else None
         shelf = [item for item in catalog_items(ctx) if item["stock"] > 0 and item["sku"] not in have]
-        touched = touched_products(shelf, request)
+        touched = touched_products(shelf, request) if shown else []
         bundle_groups = []
-        for key in CATEGORIES:
-            rows = [item for item in shelf if item["category"] == key]
-            if not rows:
-                continue
-            bundle_groups.append({
-                "key": key,
-                "items": cards_for(
+        if shown:
+            weights = {}
+            for line in shown:
+                cat = line.get("category") or ""
+                if cat:
+                    weights[cat] = weights.get(cat, 0.0) + 5.0
+            for key, qty in (read_taste(request.cookies.get("taste")) or {}).items():
+                try:
+                    weights[key] = weights.get(key, 0.0) + float(qty or 0)
+                except (TypeError, ValueError):
+                    continue
+            seen_cats = []
+            seen_set = set()
+            for item in shelf:
+                cat = item.get("category") or ""
+                if cat and cat not in seen_set:
+                    seen_set.add(cat)
+                    seen_cats.append(cat)
+            seen_cats.sort(key=lambda key: (-weights.get(key, 0.0), CATEGORIES.index(key) if key in CATEGORIES else 99))
+            remaining = 12
+            for key in seen_cats[:3]:
+                if remaining <= 0:
+                    break
+                rows = [item for item in shelf if item["category"] == key]
+                take = min(4, remaining, len(rows))
+                if take <= 0:
+                    continue
+                items = cards_for(
                     ctx,
                     choose(
                         rows,
@@ -4610,11 +4900,14 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                         anchors=shown,
                         touched=touched,
                         budget=budget,
-                        limit=min(8, len(rows)),
+                        limit=take,
                     ),
                     with_offers=True,
-                ),
-            })
+                )
+                if not items:
+                    continue
+                bundle_groups.append({"key": key, "items": items})
+                remaining -= len(items)
         _saved_ctx, saved, _saved_total = line_views(request, [{"sku": sku, "qty": 1} for sku in read_skus(request.cookies.get("saved"))])
         notes = read_notes(request.cookies.get("notes"))
         for line in shown:
@@ -4670,7 +4963,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             "deal_met": bool(bill and bill.discount_cents > 0),
             "ship_met": True,  # always-free shipping
             "ship_gap": "",
-            "picks": cards_for(ctx, cart_picks(request, ctx, shown, budget)),
+            "picks": cards_for(ctx, cart_picks(request, ctx, shown, budget)) if shown else empty_cart_picks(request, ctx, shelf),
             "gap_pick": gap_pick,
             "notice": request.cookies.get("harbor_notice") or "",
         })
@@ -4988,6 +5281,9 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
     @app.post("/checkout")
     async def submit_checkout(request: Request):
         form = await request.form()
+        return await asyncio.to_thread(_submit_checkout, request, form)
+
+    def _submit_checkout(request, form):
         buy = str(form.get("buy") or "") == "1"
         raw_lines = load_lines(request.cookies.get("checkout_line") if buy else request.cookies.get("cart"))
         values = {key: str(form.get(key) or "") for key in (
@@ -5166,6 +5462,10 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
 
     @app.post("/orders/{order_id}/pay")
     async def pay_order(request: Request, order_id: str):
+        form = await request.form()
+        return await asyncio.to_thread(_pay_order, request, order_id, form)
+
+    def _pay_order(request, order_id, form):
         row = conn.execute("select * from orders where id = ?", (order_id,)).fetchone()
         if row is None:
             raise HTTPException(status_code=404)
@@ -5176,7 +5476,6 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             mark_paid(conn, row["id"])
             response = redirect(f"/orders/{row['id']}", row["ship_country"] or "US")
             return _note_payment(request, response, row)
-        form = await request.form()
         offered = list(app.state.pay_status.get("shown") or [])
         picked = str(form.get("pay_method") or "")
         if picked == "card":
@@ -5229,42 +5528,59 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
 
     @app.get("/orders/{order_id}/paypal")
     async def paypal_return(request: Request, order_id: str):
-        finish = getattr(app.state.gateways.get("paypal"), "finish", None)
         token = str(request.query_params.get("token") or "")
-        if finish:
-            try:
-                finish(order_id, token=token)
-            except TypeError:
-                finish(order_id)
-        row = conn.execute("select ship_country from orders where id = ?", (order_id,)).fetchone()
-        return redirect(f"/orders/{order_id}", (row["ship_country"] if row else None) or "US")
+
+        def work():
+            finish = getattr(app.state.gateways.get("paypal"), "finish", None)
+            if finish:
+                try:
+                    finish(order_id, token=token)
+                except TypeError:
+                    finish(order_id)
+            row = conn.execute("select ship_country from orders where id = ?", (order_id,)).fetchone()
+            return redirect(f"/orders/{order_id}", (row["ship_country"] if row else None) or "US")
+
+        return await asyncio.to_thread(work)
 
     @app.post("/paypal/webhook")
     async def paypal_webhook(request: Request):
-        accept = getattr(app.state.gateways.get("paypal"), "accept_notify", None)
         raw = await request.body()
-        if accept is None or not accept(raw, dict(request.headers)):
-            raise HTTPException(status_code=400, detail="paypal")
-        return {"ok": True}
+        headers = dict(request.headers)
+
+        def work():
+            accept = getattr(app.state.gateways.get("paypal"), "accept_notify", None)
+            if accept is None or not accept(raw, headers):
+                raise HTTPException(status_code=400, detail="paypal")
+            return {"ok": True}
+
+        return await asyncio.to_thread(work)
 
     @app.api_route("/orders/{order_id}/lianlian", methods=["GET", "POST"])
     async def lianlian_return(request: Request, order_id: str):
-        finish = getattr(app.state.gateways.get("lianlian"), "finish", None)
-        if finish:
-            try:
-                finish(order_id)
-            except TypeError:
-                finish(order_id)
-        row = conn.execute("select ship_country from orders where id = ?", (order_id,)).fetchone()
-        return redirect(f"/orders/{order_id}", (row["ship_country"] if row else None) or "US")
+        def work():
+            finish = getattr(app.state.gateways.get("lianlian"), "finish", None)
+            if finish:
+                try:
+                    finish(order_id)
+                except TypeError:
+                    finish(order_id)
+            row = conn.execute("select ship_country from orders where id = ?", (order_id,)).fetchone()
+            return redirect(f"/orders/{order_id}", (row["ship_country"] if row else None) or "US")
+
+        return await asyncio.to_thread(work)
 
     @app.post("/lianlian/notify")
     async def lianlian_notify(request: Request):
-        accept = getattr(app.state.gateways.get("lianlian"), "accept_notify", None)
         raw = await request.body()
-        if accept is None or not accept(raw, request.headers.get("signature", "")):
-            return JSONResponse({"code": 400, "message": "fail"}, status_code=400)
-        return {"code": 200, "message": "success"}
+        signature = request.headers.get("signature", "")
+
+        def work():
+            accept = getattr(app.state.gateways.get("lianlian"), "accept_notify", None)
+            if accept is None or not accept(raw, signature):
+                return JSONResponse({"code": 400, "message": "fail"}, status_code=400)
+            return {"code": 200, "message": "success"}
+
+        return await asyncio.to_thread(work)
 
     @app.get("/r/{code}", response_class=HTMLResponse)
     def open_referral(request: Request, code: str):
@@ -8443,6 +8759,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         response = render(
             request,
             "lp_ad.html",
+            ctx=ctx,
             lp=lp,
             cards=cards,
             hero=cards[0] if cards else None,
@@ -11323,6 +11640,10 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             start_smart_job(conn, db_path)
         except Exception:
             pass
+    try:
+        start_postback_workers()
+    except Exception:
+        pass
 
     try:
         mount_mobile_api(

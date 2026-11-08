@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import queue
 import re
 import json
 import os
@@ -254,6 +255,8 @@ create table if not exists ad_groups (
     updated_at text not null default '',
     primary key (acct, adgroup)
 );
+create index if not exists idx_ad_event_log_lookup on ad_event_log(platform, event_name, event_id);
+create index if not exists idx_ad_event_log_created on ad_event_log(created_at);
 create table if not exists ad_ratio_history (
     id integer primary key,
     created_at text not null,
@@ -280,6 +283,8 @@ create table if not exists ad_send_decision (
 
 
 def ensure_tables(conn) -> None:
+    if getattr(conn, "_ad_tables_ready", False):
+        return
     conn.executescript(SCHEMA_EXTRA)
     try:
         cols = set()
@@ -325,6 +330,19 @@ def ensure_tables(conn) -> None:
     _add_column(conn, "orders", "ad_campaign", "ad_campaign text not null default ''")
     _add_column(conn, "orders", "ad_id", "ad_id text not null default ''")
     migrate_legacy_accounts(conn)
+    try:
+        order_cols = set()
+        for row in conn.execute("pragma table_info(orders)").fetchall():
+            try:
+                order_cols.add(row["name"])
+            except Exception:
+                order_cols.add(row[1])
+        # migrate() may call this before the shop schema creates orders.
+        # Stay uncached until the throttle columns are actually present.
+        if "adgroup" in order_cols and "ad_id" in order_cols:
+            conn._ad_tables_ready = True
+    except Exception:
+        pass
 
 
 def _add_column(conn, table: str, name: str, ddl: str) -> None:
@@ -1110,7 +1128,7 @@ def log_event(
         status = int(http_status or 0)
     except (TypeError, ValueError):
         status = 0
-    conn.execute(
+    result = conn.execute(
         "insert into ad_event_log (created_at, platform, event_name, order_id, event_id, ok, detail, acct, http_status) "
         "values (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
@@ -1129,6 +1147,10 @@ def log_event(
     conn.execute(
         "delete from ad_event_log where id not in (select id from ad_event_log order by id desc limit 500)"
     )
+    try:
+        return int(result.lastrowid or 0)
+    except (TypeError, ValueError):
+        return 0
 
 
 def _shanghai(iso: str) -> str:
@@ -1522,6 +1544,7 @@ def send_meta_event(
     phone: str = "",
     phone_country: str = "",
     external_id: str = "",
+    timeout: int = 12,
 ) -> tuple[bool, int, str]:
     pixel = cfg.get("meta_pixel_id") or ""
     token = cfg.get("meta_capi_token") or ""
@@ -1579,7 +1602,7 @@ def send_meta_event(
     if test_code:
         payload["test_event_code"] = test_code
     url = f"https://graph.facebook.com/v19.0/{pixel}/events?access_token={urllib.parse.quote(token)}"
-    ok, status, detail = _http_json(url, payload)
+    ok, status, detail = _http_json(url, payload, timeout=timeout)
     return ok, status, redact_log(detail)
 
 
@@ -1599,7 +1622,7 @@ def send_meta_purchase(cfg: dict, order: dict, attrs: dict, event_id: str, event
     )
 
 
-def send_google_mp_purchase(cfg: dict, order: dict, attrs: dict, event_id: str) -> tuple[bool, int, str]:
+def send_google_mp_purchase(cfg: dict, order: dict, attrs: dict, event_id: str, timeout: int = 12) -> tuple[bool, int, str]:
     mid = cfg.get("google_measurement_id") or ""
     secret = cfg.get("google_api_secret") or ""
     if not mid or not secret:
@@ -1624,7 +1647,7 @@ def send_google_mp_purchase(cfg: dict, order: dict, attrs: dict, event_id: str) 
         "events": [params],
     }
     url = f"https://www.google-analytics.com/mp/collect?measurement_id={urllib.parse.quote(mid)}&api_secret={urllib.parse.quote(secret)}"
-    ok, status, detail = _http_json(url, payload)
+    ok, status, detail = _http_json(url, payload, timeout=timeout)
     return ok, status, redact_log(detail)
 
 
@@ -1643,6 +1666,7 @@ def send_tiktok_event(
     phone: str = "",
     phone_country: str = "",
     external_id: str = "",
+    timeout: int = 12,
 ) -> tuple[bool, int, str]:
     pixel = cfg.get("tiktok_pixel_id") or ""
     token = cfg.get("tiktok_access_token") or ""
@@ -1703,6 +1727,7 @@ def send_tiktok_event(
         "https://business-api.tiktok.com/open_api/v1.3/event/track/",
         payload,
         headers={"Access-Token": token},
+        timeout=timeout,
     )
     return ok, status, redact_log(detail)
 
@@ -1755,6 +1780,156 @@ def accounts_for_event(conn, attrs: dict | None, *, fallback_all: bool = False) 
     return found
 
 
+_POSTBACK_QUEUE = queue.Queue(maxsize=8192)
+_POSTBACK_STARTED = False
+_POSTBACK_LOCK = threading.Lock()
+_POSTBACK_INFLIGHT = set()
+_POSTBACK_INFLIGHT_LOCK = threading.Lock()
+_POSTBACK_TIMEOUT = 3
+
+
+def start_postback_workers(count=2):
+    """One or two daemon threads send Meta/TikTok/Google off the request path."""
+    global _POSTBACK_STARTED
+    with _POSTBACK_LOCK:
+        if _POSTBACK_STARTED:
+            return
+        width = max(1, min(2, int(count or 1)))
+        for index in range(width):
+            threading.Thread(target=_postback_worker, name=f"ad-postback-{index}", daemon=True).start()
+        _POSTBACK_STARTED = True
+
+
+def drain_postbacks(timeout=2.0) -> bool:
+    start_postback_workers()
+    deadline = time.monotonic() + float(timeout)
+    while time.monotonic() < deadline:
+        if _POSTBACK_QUEUE.unfinished_tasks == 0:
+            return True
+        time.sleep(0.01)
+    return _POSTBACK_QUEUE.unfinished_tasks == 0
+
+
+def _claim_postback(platform, event_name, event_id) -> bool:
+    key = (_clip(platform, 32), _clip(event_name, 64), _clip(event_id, 128))
+    with _POSTBACK_INFLIGHT_LOCK:
+        if key in _POSTBACK_INFLIGHT:
+            return False
+        _POSTBACK_INFLIGHT.add(key)
+        return True
+
+
+def _release_postback(platform, event_name, event_id) -> None:
+    key = (_clip(platform, 32), _clip(event_name, 64), _clip(event_id, 128))
+    with _POSTBACK_INFLIGHT_LOCK:
+        _POSTBACK_INFLIGHT.discard(key)
+
+
+def _mark_event(conn, row_id, ok, detail, http_status) -> None:
+    try:
+        status = int(http_status or 0)
+    except (TypeError, ValueError):
+        status = 0
+    if not row_id:
+        return
+    conn.execute(
+        "update ad_event_log set ok = ?, detail = ?, http_status = ? where id = ?",
+        (1 if ok else 0, redact_log(detail), status, int(row_id)),
+    )
+
+
+def _dispatch_postback(job) -> tuple[bool, int, str]:
+    cfg = job["cfg"]
+    timeout = _POSTBACK_TIMEOUT
+    platform = job["platform"]
+    if platform == "meta":
+        return send_meta_event(
+            cfg,
+            job["event_name"],
+            job["order"] or None,
+            job["attrs"],
+            job["event_id"],
+            value=job["value"],
+            currency=job["currency"],
+            source_url=job["source_url"],
+            content_ids=job["content_ids"],
+            contents=job["contents"],
+            search_string=job["search_string"],
+            phone=job["phone"],
+            phone_country=job["phone_country"],
+            external_id=job["external_id"],
+            timeout=timeout,
+        )
+    if platform == "tiktok":
+        return send_tiktok_event(
+            cfg,
+            job["event_name"],
+            job["order"] or None,
+            job["attrs"],
+            job["event_id"],
+            value=job["value"],
+            currency=job["currency"],
+            source_url=job["source_url"],
+            content_ids=job["content_ids"],
+            contents=job["contents"],
+            search_string=job["search_string"],
+            phone=job["phone"],
+            phone_country=job["phone_country"],
+            external_id=job["external_id"],
+            timeout=timeout,
+        )
+    if platform == "google":
+        return send_google_mp_purchase(cfg, job["order"], job["attrs"], job["event_id"], timeout=timeout)
+    return False, 0, "unknown_platform"
+
+
+def _deliver_postback(job) -> None:
+    delays = (0.0, 0.4, 1.2)
+    ok, status, detail = False, 0, "no_attempt"
+    try:
+        for delay in delays:
+            if delay:
+                time.sleep(delay)
+            try:
+                ok, status, detail = _dispatch_postback(job)
+            except Exception as exc:  # noqa: BLE001
+                ok, status, detail = False, 0, redact_log(str(exc))
+            if ok:
+                break
+            try:
+                code = int(status or 0)
+            except (TypeError, ValueError):
+                code = 0
+            if 400 <= code < 500:
+                break
+        _mark_event(job["conn"], job["row_id"], ok, detail, status)
+    finally:
+        _release_postback(job["platform"], job["log_name"], job["event_id"])
+
+
+def _postback_worker() -> None:
+    while True:
+        job = _POSTBACK_QUEUE.get()
+        try:
+            _deliver_postback(job)
+        except Exception:
+            try:
+                _release_postback(job.get("platform"), job.get("log_name"), job.get("event_id"))
+            except Exception:
+                pass
+        finally:
+            _POSTBACK_QUEUE.task_done()
+
+
+def _enqueue_postback(job) -> bool:
+    start_postback_workers()
+    try:
+        _POSTBACK_QUEUE.put_nowait(job)
+        return True
+    except queue.Full:
+        return False
+
+
 def track_server_event(
     conn,
     *,
@@ -1798,17 +1973,7 @@ def track_server_event(
     }
     targets = accounts_for_event(conn, attrs, fallback_all=fallback_all)
     if not targets:
-        log_event(
-            conn,
-            "none",
-            event_name,
-            oid,
-            event_id,
-            False,
-            "no_account",
-            acct=_clip(attrs.get("acct"), 64),
-            http_status=0,
-        )
+        # Unconfigured traffic is not a conversion. Skip the log write.
         return browser
     for acct in targets:
         cfg = account_to_cfg(acct)
@@ -1816,6 +1981,7 @@ def track_server_event(
         code = acct.get("code") or ""
         send_value = value
         if event_name == "Purchase":
+            # Decide and store before enqueue so the browser pixel matches the server.
             decision = decide_purchase(conn, oid, attrs)
             browser["send"] = bool(decision.get("send"))
             decided_acct = decision.get("acct") or ""
@@ -1841,56 +2007,53 @@ def track_server_event(
                 mult = 1.0
             if send_value is not None:
                 send_value = round(float(send_value) * mult, 2)
-        if idempotent and event_already_ok(conn, platform, event_name, event_id):
-            continue
+        log_name = event_name
         if platform == "meta":
             if not cfg.get("meta_capi_ok"):
-                log_event(conn, "meta", event_name, oid, event_id, False, "meta_not_configured", acct=code, http_status=0)
                 continue
-            ok, status, detail = send_meta_event(
-                cfg,
-                event_name,
-                order or None,
-                attrs,
-                event_id,
-                value=send_value,
-                currency=currency,
-                source_url=source_url,
-                content_ids=content_ids,
-                contents=contents,
-                search_string=search_string,
-                phone=phone,
-                phone_country=phone_country,
-                external_id=external_id,
-            )
-            log_event(conn, "meta", event_name, oid, event_id, ok, detail, acct=code, http_status=status)
         elif platform == "tiktok":
             if not cfg.get("tiktok_api_ok"):
-                log_event(conn, "tiktok", event_name, oid, event_id, False, "tiktok_not_configured", acct=code, http_status=0)
                 continue
-            ok, status, detail = send_tiktok_event(
-                cfg,
-                event_name,
-                order or None,
-                attrs,
-                event_id,
-                value=send_value,
-                currency=currency,
-                source_url=source_url,
-                content_ids=content_ids,
-                contents=contents,
-                search_string=search_string,
-                phone=phone,
-                phone_country=phone_country,
-                external_id=external_id,
-            )
-            log_event(conn, "tiktok", event_name, oid, event_id, ok, detail, acct=code, http_status=status)
         elif platform == "google" and event_name == "Purchase":
             if not cfg.get("google_mp_ok"):
-                log_event(conn, "google", event_name, oid, event_id, False, "google_mp_not_configured", acct=code, http_status=0)
                 continue
-            ok, status, detail = send_google_mp_purchase(cfg, order, attrs, event_id)
-            log_event(conn, "google", "purchase", oid, event_id, ok, detail, acct=code, http_status=status)
+            log_name = "purchase"
+        else:
+            continue
+        if idempotent and (
+            event_already_ok(conn, platform, event_name, event_id)
+            or (log_name != event_name and event_already_ok(conn, platform, log_name, event_id))
+        ):
+            continue
+        if not _claim_postback(platform, log_name, event_id):
+            continue
+        row_id = log_event(
+            conn, platform, log_name, oid, event_id, False, "queued", acct=code, http_status=0
+        )
+        job = {
+            "conn": conn,
+            "platform": platform,
+            "log_name": log_name,
+            "cfg": dict(cfg),
+            "event_name": event_name,
+            "order": dict(order or {}),
+            "attrs": dict(attrs),
+            "event_id": event_id,
+            "value": send_value,
+            "currency": currency,
+            "source_url": source_url,
+            "content_ids": list(content_ids or []),
+            "contents": [dict(item) if isinstance(item, dict) else item for item in (contents or [])],
+            "search_string": search_string,
+            "phone": phone,
+            "phone_country": phone_country,
+            "external_id": external_id,
+            "row_id": row_id,
+            "acct": code,
+        }
+        if not _enqueue_postback(job):
+            _mark_event(conn, row_id, False, "queue_full", 0)
+            _release_postback(platform, log_name, event_id)
     return browser
 
 
