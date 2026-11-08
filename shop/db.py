@@ -120,6 +120,7 @@ create table if not exists order_lines (
     bought integer not null default 0,
     campaign_item_id integer not null default 0
 );
+create index if not exists order_lines_order_id on order_lines (order_id);
 create table if not exists campaigns (
     id integer primary key,
     kind text not null,
@@ -173,6 +174,7 @@ create table if not exists reviews (
     body text not null,
     unique (email, sku)
 );
+create index if not exists reviews_sku on reviews (sku);
 create table if not exists referrals (
     email text primary key,
     code text not null
@@ -210,6 +212,7 @@ create table if not exists questions (
     body text not null,
     answer text not null default ''
 );
+create index if not exists questions_sku on questions (sku);
 create table if not exists addresses (
     id integer primary key,
     email text not null,
@@ -471,4 +474,11 @@ def migrate(conn):
     from shop.lp_links import ensure_table as ensure_lp_links
 
     ensure_lp_links(conn)
+    conn.execute("create index if not exists reviews_sku on reviews (sku)")
+    conn.execute("create index if not exists questions_sku on questions (sku)")
+    conn.execute("create index if not exists order_lines_order_id on order_lines (order_id)")
+    conn.execute("create index if not exists gen_tasks_status on gen_tasks (status)")
+    conn.execute("create index if not exists sku_gen_tasks_status on sku_gen_tasks (status)")
+    conn.execute("create index if not exists idx_ad_event_log_lookup on ad_event_log (platform, event_name, event_id)")
+    conn.execute("create index if not exists idx_ad_event_log_created on ad_event_log (created_at)")
     conn.commit()

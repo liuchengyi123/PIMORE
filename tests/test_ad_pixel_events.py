@@ -11,6 +11,7 @@ from shop.adtrack import (
     clean_platform_id,
     create_account,
     decide_purchase,
+    drain_postbacks,
     ensure_tables,
     evaluate_stoploss,
     merge_from_request,
@@ -254,6 +255,7 @@ def test_funnel_events_log_from_lp_through_checkout(monkeypatch):
     assert added.json()["ad_event"]["event_id"]
     checkout = client.get("/checkout?country=US")
     assert checkout.status_code == 200
+    assert drain_postbacks(timeout=3)
     names = [
         item["event_name"]
         for item in db.execute("select event_name from ad_event_log order by id asc").fetchall()
@@ -271,6 +273,7 @@ def test_funnel_events_log_from_lp_through_checkout(monkeypatch):
     assert wish.json()["ad_event"]["name"] == "AddToWishlist"
     found = client.get("/search?country=US&q=strainer")
     assert found.status_code == 200
+    assert drain_postbacks(timeout=3)
     names = [item["event_name"] for item in db.execute("select event_name from ad_event_log").fetchall()]
     assert "Search" in names
     assert "AddToWishlist" in names
@@ -293,6 +296,7 @@ def test_funnel_events_log_from_lp_through_checkout(monkeypatch):
     assert stamped["ad_campaign"] == "77"
     assert stamped["ad_id"] == "88"
     assert stamped["status"] == "pending"
+    assert drain_postbacks(timeout=3)
     logged = [item["event_name"] for item in db.execute(
         "select event_name from ad_event_log where event_name = 'AddPaymentInfo'"
     ).fetchall()]

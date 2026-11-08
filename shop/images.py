@@ -1,4 +1,7 @@
 import io
+import queue
+import threading
+import time
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -98,33 +101,121 @@ def phone_image(url, root):
     return fitted_image(url, root, PHONE_EDGE, "view", PHONE_QUALITY, 160_000)
 
 
+_FIT_QUEUE = queue.Queue(maxsize=4096)
+_FIT_STARTED = False
+_FIT_LOCK = threading.Lock()
+_FIT_SEEN = set()
+_FIT_SEEN_LOCK = threading.Lock()
+
+
+def start_fit_workers(count=1):
+    """Background thumbnail writers. The request path must not run PIL."""
+    global _FIT_STARTED
+    with _FIT_LOCK:
+        if _FIT_STARTED:
+            return
+        width = max(1, min(2, int(count or 1)))
+        for index in range(width):
+            threading.Thread(target=_fit_worker, name=f"image-fit-{index}", daemon=True).start()
+        _FIT_STARTED = True
+
+
+def drain_fits(timeout=2.0):
+    start_fit_workers()
+    deadline = time.monotonic() + float(timeout)
+    while time.monotonic() < deadline:
+        if _FIT_QUEUE.unfinished_tasks == 0:
+            return True
+        time.sleep(0.01)
+    return _FIT_QUEUE.unfinished_tasks == 0
+
+
+def _fit_worker():
+    while True:
+        job = _FIT_QUEUE.get()
+        try:
+            _write_fit(*job)
+        except Exception:
+            pass
+        finally:
+            _FIT_QUEUE.task_done()
+
+
+def _write_fit(src, dest, edge, quality, skip_under):
+    src = Path(src)
+    dest = Path(dest)
+    try:
+        if not src.is_file():
+            return
+        if dest.is_file() and dest.stat().st_mtime >= src.stat().st_mtime:
+            return
+        if max(src.stat().st_size, 1) <= skip_under and src.suffix.lower() in {".jpg", ".jpeg"}:
+            try:
+                with Image.open(src) as image:
+                    longest = max(image.size)
+                if longest <= edge:
+                    return
+            except Exception:
+                return
+        cooked = _fit_bytes(src.read_bytes(), edge, quality)
+        if not cooked:
+            return
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        tmp = dest.with_suffix(dest.suffix + ".tmp")
+        tmp.write_bytes(cooked)
+        tmp.replace(dest)
+    finally:
+        with _FIT_SEEN_LOCK:
+            _FIT_SEEN.discard(str(dest))
+
+
+def _enqueue_fit(src, dest, edge, quality, skip_under):
+    key = str(dest)
+    with _FIT_SEEN_LOCK:
+        if key in _FIT_SEEN:
+            return
+        _FIT_SEEN.add(key)
+    start_fit_workers()
+    try:
+        _FIT_QUEUE.put_nowait((str(src), key, edge, quality, skip_under))
+    except queue.Full:
+        with _FIT_SEEN_LOCK:
+            _FIT_SEEN.discard(key)
+
+
+def _fitted_url(dest, root):
+    relative = Path(dest).relative_to(Path(root) / "static").as_posix()
+    return f"/static/{relative}"
+
+
 def fitted_image(url, root, edge, folder, quality, skip_under):
+    """Serve a ready thumbnail, or the original while a worker writes the card.
+
+    PIL never runs on the caller. A cache hit (card file newer than the source)
+    returns the card path after a stat. A miss returns the original immediately.
+    """
     text = str(url or "")
     if not text.startswith("/static/catalog/") or "/card/" in text or "/view/" in text:
         return url
     path = Path(root) / "static" / text[len("/static/"):]
-    if not path.is_file():
-        return url
-    if max(path.stat().st_size, 1) <= skip_under and path.suffix.lower() in {".jpg", ".jpeg"}:
-        try:
-            with Image.open(path) as image:
-                longest = max(image.size)
-            if longest <= edge:
-                return url
-        except Exception:
+    try:
+        if not path.is_file():
             return url
+    except OSError:
+        return url
     dest = path.parent / folder / f"{path.stem}.jpg"
     try:
-        if not dest.is_file() or dest.stat().st_mtime < path.stat().st_mtime:
-            cooked = _fit_bytes(path.read_bytes(), edge, quality)
-            if not cooked:
-                return url
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            dest.write_bytes(cooked)
-    except Exception:
+        if dest.is_file() and dest.stat().st_mtime >= path.stat().st_mtime:
+            return _fitted_url(dest, root)
+    except OSError:
         return url
-    relative = dest.relative_to(Path(root) / "static").as_posix()
-    return f"/static/{relative}"
+    _enqueue_fit(path, dest, edge, quality, skip_under)
+    try:
+        if dest.is_file():
+            return _fitted_url(dest, root)
+    except OSError:
+        return url
+    return url
 
 
 def _fit_bytes(data, edge, quality):
