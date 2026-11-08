@@ -333,7 +333,12 @@
       headers: { "X-Harbor-Ajax": "1", "Accept": "application/json" }
     }).then(function (r) { return r.json().catch(function () { return null; }); })
       .then(function (data) {
-        if (data && data.ok) paint(!!data.wished);
+        if (data && data.ok) {
+          paint(!!data.wished);
+          if (data.wished && data.ad_event && window.harborTrack) {
+            try { window.harborTrack(data.ad_event.name, data.ad_event.params || {}, data.ad_event.event_id, !!data.ad_event.custom); } catch (e2) {}
+          }
+        }
         else paint(cookieWish().indexOf(sku) >= 0);
       })
       .catch(function () { paint(cookieWish().indexOf(sku) >= 0); })

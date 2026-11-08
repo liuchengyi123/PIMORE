@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block body_attrs %}{% if order and order['status'] in ['paid', 'shipped'] %}data-paid="1" data-order="{{ order['id'] }}" data-order-value="{{ ((order['due_cents'] or 0) / 100)|round(2) }}" data-order-currency="{{ order['currency'] }}" data-ad-send="{{ ad_send_ok|default(1) }}" data-email="{{ order['email'] }}"{% endif %}{% endblock %}
+{% block body_attrs %}{% if order and order['status'] in ['paid', 'shipped'] %}data-paid="1" data-order="{{ order['id'] }}" data-order-value="{{ ((order['due_cents'] or 0) / 100)|round(2) }}" data-order-currency="{{ order['currency'] }}" data-ad-send="{{ ad_send_ok|default(0) }}" data-content-ids="{% for line in order_lines %}{{ line['sku'] }}{% if not loop.last %},{% endif %}{% endfor %}" data-email="{{ order['email'] }}"{% endif %}{% endblock %}
 {% block body %}
 <div class="fn-order">
   <div class="fn-order-main">

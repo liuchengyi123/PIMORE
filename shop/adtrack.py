@@ -6,13 +6,16 @@ import hashlib
 import re
 import json
 import os
+import threading
 import time
+import uuid
 import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 from typing import Any
 from urllib.parse import urlencode
+from zoneinfo import ZoneInfo
 
 SEG_PRESETS = [
     ("flash", "闪购通用"),
@@ -163,6 +166,11 @@ CLICK_KEYS = (
     "utm_term",
     "seg",
     "acct",
+    "adgroup",
+    "adset_id",
+    "adgroup_id",
+    "campaign_id",
+    "ad_id",
 )
 
 ENV_MAP = {
@@ -174,6 +182,7 @@ ENV_MAP = {
     "google_api_secret": "GOOGLE_API_SECRET",
     "tiktok_pixel_id": "TIKTOK_PIXEL_ID",
     "tiktok_access_token": "TIKTOK_ACCESS_TOKEN",
+    "tiktok_test_code": "TIKTOK_TEST_EVENT_CODE",
 }
 
 SETTING_KEY = "ad_platform"
@@ -192,7 +201,9 @@ create table if not exists ad_event_log (
     order_id text not null default "",
     event_id text not null default "",
     ok integer not null default 0,
-    detail text not null default ""
+    detail text not null default "",
+    acct text not null default '',
+    http_status integer not null default 0
 );
 create table if not exists ad_funnel (
     id integer primary key,
@@ -223,6 +234,48 @@ create table if not exists ad_accounts (
     updated_at text not null default ""
 );
 create index if not exists idx_ad_accounts_platform on ad_accounts(platform, enabled);
+create table if not exists ad_groups (
+    acct text not null,
+    adgroup text not null default '',
+    platform text not null default '',
+    acc integer not null default 0,
+    day text not null default '',
+    day_orders integer not null default 0,
+    ratio_override real,
+    target_cpa_override real,
+    effective_ratio real,
+    reason text not null default '',
+    spend real not null default 0,
+    prev_spend real not null default 0,
+    real_orders integer not null default 0,
+    sent_orders integer not null default 0,
+    cpa real not null default 0,
+    last_adjusted_at text not null default '',
+    updated_at text not null default '',
+    primary key (acct, adgroup)
+);
+create table if not exists ad_ratio_history (
+    id integer primary key,
+    created_at text not null,
+    acct text not null,
+    adgroup text not null default '',
+    ratio real not null default 100,
+    reason text not null default '',
+    spend real not null default 0,
+    real_orders integer not null default 0,
+    sent_orders integer not null default 0,
+    cpa real not null default 0
+);
+create table if not exists ad_send_decision (
+    order_id text primary key,
+    acct text not null default '',
+    adgroup text not null default '',
+    send integer not null default 1,
+    reason text not null default '',
+    ratio real not null default 100,
+    multiplier real not null default 1,
+    created_at text not null default ''
+);
 """
 
 
@@ -239,7 +292,47 @@ def ensure_tables(conn) -> None:
             conn.execute("alter table ad_funnel add column acct text not null default ''")
     except Exception:
         pass
+    try:
+        cols = set()
+        for row in conn.execute("pragma table_info(ad_event_log)").fetchall():
+            try:
+                cols.add(row["name"])
+            except Exception:
+                cols.add(row[1])
+        if "acct" not in cols:
+            conn.execute("alter table ad_event_log add column acct text not null default ''")
+        if "http_status" not in cols:
+            conn.execute("alter table ad_event_log add column http_status integer not null default 0")
+    except Exception:
+        pass
+    for name, ddl in (
+        ("learning_min", "learning_min integer not null default 50"),
+        ("daily_floor", "daily_floor integer not null default 5"),
+        ("ratio_min", "ratio_min real not null default 60"),
+        ("ratio_max", "ratio_max real not null default 100"),
+        ("smart_enabled", "smart_enabled integer not null default 0"),
+        ("target_cpa", "target_cpa real not null default 0"),
+        ("smart_checked_at", "smart_checked_at text not null default ''"),
+    ):
+        _add_column(conn, "ad_accounts", name, ddl)
+    _add_column(conn, "orders", "adgroup", "adgroup text not null default ''")
+    _add_column(conn, "orders", "ad_campaign", "ad_campaign text not null default ''")
+    _add_column(conn, "orders", "ad_id", "ad_id text not null default ''")
     migrate_legacy_accounts(conn)
+
+
+def _add_column(conn, table: str, name: str, ddl: str) -> None:
+    try:
+        cols = set()
+        for row in conn.execute(f"pragma table_info({table})").fetchall():
+            try:
+                cols.add(row["name"])
+            except Exception:
+                cols.add(row[1])
+        if cols and name not in cols:
+            conn.execute(f"alter table {table} add column {ddl}")
+    except Exception:
+        return
 
 
 def _now() -> str:
@@ -265,7 +358,7 @@ def parse_cookie(raw: str | None) -> dict:
         val = _clip(data.get(key), 512)
         if val:
             out[key] = val
-    for key in ("fbp", "fbc", "ttp", "event_source_url"):
+    for key in ("fbp", "fbc", "ttp", "event_source_url", "client_ip", "client_ua", "external_id"):
         val = _clip(data.get(key), 512)
         if val:
             out[key] = val
@@ -281,6 +374,16 @@ def pack_cookie(data: dict) -> str:
     return json.dumps(clean, ensure_ascii=False, separators=(",", ":"))
 
 
+def clean_platform_id(value: Any) -> str:
+    """Keep a real ad id. Leave unsubstituted Meta/TikTok macros empty."""
+    text = _clip(value, 80)
+    if not text or "{{" in text or "}}" in text or "__" in text:
+        return ""
+    if not re.fullmatch(r"[A-Za-z0-9_\-]{1,64}", text):
+        return ""
+    return text
+
+
 def merge_from_request(existing: dict, params, headers=None) -> dict:
     merged = dict(existing or {})
     for key in CLICK_KEYS:
@@ -291,9 +394,86 @@ def merge_from_request(existing: dict, params, headers=None) -> dict:
     if not merged.get("seg") and merged.get("utm_content"):
         merged["seg"] = _clip(merged["utm_content"], 64)
     fbclid = merged.get("fbclid")
-    if fbclid and not merged.get("fbc"):
-        merged["fbc"] = f"fb.1.{int(time.time())}.{fbclid}"
+    # Meta: fbc is fb.1.<unix-ms>.<fbclid>. Never invent one without a real fbclid.
+    if fbclid and not _valid_fbc(merged.get("fbc")):
+        merged["fbc"] = f"fb.1.{int(time.time() * 1000)}.{fbclid}"
+    group = (
+        clean_platform_id(merged.get("adset_id"))
+        or clean_platform_id(merged.get("adgroup_id"))
+        or clean_platform_id(merged.get("adgroup"))
+    )
+    merged.pop("adset_id", None)
+    merged.pop("adgroup_id", None)
+    if group:
+        merged["adgroup"] = group
+    else:
+        merged.pop("adgroup", None)
+    for key in ("campaign_id", "ad_id"):
+        cleaned = clean_platform_id(merged.get(key))
+        if cleaned:
+            merged[key] = cleaned
+        else:
+            merged.pop(key, None)
     return merged
+
+
+_FBC_RE = re.compile(r"^fb\.\d+\.\d{10,13}\.\S+$")
+_EMAIL_RE = re.compile(r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}")
+_PHONE_RE = re.compile(r"(?<!\w)\+?\d[\d\-\s().]{6,}\d")
+_TOKEN_RE = re.compile(
+    r"((?:access_token|token|authorization|api_secret)(['\"=:\s]+))[^'\"&\s]+",
+    re.I,
+)
+_EAA_RE = re.compile(r"\bEAA[A-Za-z0-9]{8,}")
+
+
+def _valid_fbc(value: str | None) -> bool:
+    text = _clip(value, 512)
+    return bool(text and _FBC_RE.match(text))
+
+
+def canonical_fbc(attrs: dict | None) -> str:
+    """Use a stored _fbc, or derive fb.1.<ms>.<fbclid>. Never fabricate without fbclid."""
+    attrs = attrs or {}
+    fbc = _clip(attrs.get("fbc"), 512)
+    if _valid_fbc(fbc):
+        return fbc
+    fbclid = _clip(attrs.get("fbclid"), 500)
+    if not fbclid or any(ch.isspace() for ch in fbclid):
+        return ""
+    return f"fb.1.{int(time.time() * 1000)}.{fbclid}"
+
+
+def apply_request_context(attrs, *, cookies=None, client_ip="", user_agent="", external_id=""):
+    """Refresh IP / UA and copy browser click cookies. Does not invent fbc."""
+    merged = dict(attrs or {})
+    cookies = cookies or {}
+    fbc = _clip(cookies.get("_fbc"), 512)
+    if _valid_fbc(fbc):
+        merged["fbc"] = fbc
+    for src, dst in (("_fbp", "fbp"), ("_ttp", "ttp")):
+        val = _clip(cookies.get(src), 512)
+        if val and not merged.get(dst):
+            merged[dst] = val
+    ip = _clip(client_ip, 64)
+    if ip:
+        merged["client_ip"] = ip
+    ua = _clip(user_agent, 512)
+    if ua:
+        merged["client_ua"] = ua
+    ext = _clip(external_id, 128)
+    if ext:
+        merged["external_id"] = ext
+    return merged
+
+
+def redact_log(value: str) -> str:
+    text = str(value or "")
+    text = _EMAIL_RE.sub("[redacted]", text)
+    text = _PHONE_RE.sub("[redacted]", text)
+    text = _TOKEN_RE.sub(r"\1[redacted]", text)
+    text = _EAA_RE.sub("[redacted]", text)
+    return text[:180]
 
 
 
@@ -308,6 +488,7 @@ PLATFORM_FIELDS = {
         ("meta_pixel_id", "Pixel ID", False),
         ("meta_capi_token", "CAPI Access Token", True),
         ("meta_test_code", "Test Event Code", False),
+        ("meta_ad_account_id", "广告账户 ID（选填，拉消耗）", False),
     ],
     "google": [
         ("google_aw_id", "Google Ads AW ID", False),
@@ -317,6 +498,8 @@ PLATFORM_FIELDS = {
     "tiktok": [
         ("tiktok_pixel_id", "Pixel ID", False),
         ("tiktok_access_token", "Events API Token", True),
+        ("tiktok_test_code", "Test Event Code", False),
+        ("tiktok_advertiser_id", "广告主 ID（选填，拉消耗）", False),
     ],
 }
 
@@ -443,6 +626,30 @@ def account_to_dict(row) -> dict:
         d["value_multiplier"] = float(d.get("value_multiplier") if d.get("value_multiplier") is not None else 1)
     except (TypeError, ValueError):
         d["value_multiplier"] = 1.0
+    try:
+        d["learning_min"] = int(d["learning_min"]) if d.get("learning_min") is not None else 50
+    except (TypeError, ValueError, KeyError):
+        d["learning_min"] = 50
+    try:
+        d["daily_floor"] = int(d["daily_floor"]) if d.get("daily_floor") is not None else 5
+    except (TypeError, ValueError, KeyError):
+        d["daily_floor"] = 5
+    try:
+        d["ratio_min"] = float(d["ratio_min"]) if d.get("ratio_min") is not None else 60
+    except (TypeError, ValueError, KeyError):
+        d["ratio_min"] = 60.0
+    try:
+        d["ratio_max"] = float(d["ratio_max"]) if d.get("ratio_max") is not None else 100
+    except (TypeError, ValueError, KeyError):
+        d["ratio_max"] = 100.0
+    if d["ratio_max"] < d["ratio_min"]:
+        d["ratio_max"] = d["ratio_min"]
+    d["smart_enabled"] = bool(int(d.get("smart_enabled") or 0))
+    try:
+        d["target_cpa"] = float(d.get("target_cpa") or 0)
+    except (TypeError, ValueError):
+        d["target_cpa"] = 0.0
+    d["smart_checked_at"] = d.get("smart_checked_at") or ""
     d["status"] = account_status(d)
     return d
 
@@ -461,7 +668,44 @@ def account_status(account: dict) -> dict:
     elif platform == "tiktok":
         pixel = bool(creds.get("tiktok_pixel_id"))
         capi = bool(creds.get("tiktok_pixel_id") and creds.get("tiktok_access_token"))
-    return {"pixel": pixel, "capi": capi, "platform": platform}
+    test_code = False
+    if platform == "meta":
+        test_code = bool(creds.get("meta_test_code"))
+    elif platform == "tiktok":
+        test_code = bool(creds.get("tiktok_test_code"))
+    return {"pixel": pixel, "capi": capi, "platform": platform, "test_code": test_code}
+
+
+def account_public_view(account: dict | None) -> dict:
+    """Launch-page status. No tokens, no raw pixel id."""
+    if not account:
+        return {}
+    creds = account.get("credentials") or {}
+    platform = (account.get("platform") or "").lower()
+    if platform == "meta":
+        pixel = creds.get("meta_pixel_id") or ""
+        capi_set = bool(creds.get("meta_capi_token"))
+        test_code_set = bool(creds.get("meta_test_code"))
+    elif platform == "tiktok":
+        pixel = creds.get("tiktok_pixel_id") or ""
+        capi_set = bool(creds.get("tiktok_access_token"))
+        test_code_set = bool(creds.get("tiktok_test_code"))
+    else:
+        pixel = creds.get("google_measurement_id") or creds.get("google_aw_id") or ""
+        capi_set = bool(creds.get("google_api_secret"))
+        test_code_set = False
+    return {
+        "id": account.get("id"),
+        "code": account.get("code") or "",
+        "name": account.get("name") or "",
+        "platform": platform,
+        "platform_label": dict(PLATFORMS).get(platform, platform),
+        "enabled": bool(account.get("enabled")),
+        "is_default": bool(account.get("is_default")),
+        "pixel_masked": mask_secret(pixel) if pixel else "",
+        "capi_set": capi_set,
+        "test_code_set": test_code_set,
+    }
 
 
 def get_account(conn, account_id: int | None = None, code: str | None = None) -> dict | None:
@@ -608,6 +852,12 @@ def update_account(
     value_multiplier: float | None = None,
     enabled: bool | None = None,
     make_default: bool = False,
+    learning_min: int | None = None,
+    daily_floor: int | None = None,
+    ratio_min: float | None = None,
+    ratio_max: float | None = None,
+    smart_enabled: bool | None = None,
+    target_cpa: float | None = None,
 ) -> dict | None:
     ensure_tables(conn)
     acct = get_account(conn, account_id=account_id)
@@ -629,6 +879,14 @@ def update_account(
     ratio = acct["send_ratio_pct"] if send_ratio_pct is None else max(0.0, min(100.0, float(send_ratio_pct)))
     mult = acct["value_multiplier"] if value_multiplier is None else max(0.0, min(2.0, float(value_multiplier)))
     en = acct["enabled"] if enabled is None else bool(enabled)
+    learn = acct.get("learning_min", 50) if learning_min is None else max(0, min(10000, int(learning_min)))
+    floor = acct.get("daily_floor", 5) if daily_floor is None else max(0, min(1000, int(daily_floor)))
+    rmin = acct.get("ratio_min", 60) if ratio_min is None else max(0.0, min(100.0, float(ratio_min)))
+    rmax = acct.get("ratio_max", 100) if ratio_max is None else max(0.0, min(100.0, float(ratio_max)))
+    if rmax < rmin:
+        rmax = rmin
+    smart = acct.get("smart_enabled", False) if smart_enabled is None else bool(smart_enabled)
+    tcpa = acct.get("target_cpa", 0) if target_cpa is None else max(0.0, float(target_cpa))
     is_default = 1 if make_default or acct["is_default"] else (1 if acct["is_default"] else 0)
     if make_default:
         conn.execute(
@@ -637,7 +895,8 @@ def update_account(
         )
         is_default = 1
     conn.execute(
-        "update ad_accounts set name = ?, credentials = ?, send_ratio_pct = ?, value_multiplier = ?, enabled = ?, is_default = ?, updated_at = ? where id = ?",
+        "update ad_accounts set name = ?, credentials = ?, send_ratio_pct = ?, value_multiplier = ?, enabled = ?, is_default = ?, "
+        "learning_min = ?, daily_floor = ?, ratio_min = ?, ratio_max = ?, smart_enabled = ?, target_cpa = ?, updated_at = ? where id = ?",
         (
             new_name,
             json.dumps(creds, ensure_ascii=False),
@@ -645,6 +904,12 @@ def update_account(
             mult,
             1 if en else 0,
             is_default,
+            int(learn),
+            int(floor),
+            float(rmin),
+            float(rmax),
+            1 if smart else 0,
+            float(tcpa),
             _now(),
             int(account_id),
         ),
@@ -791,6 +1056,10 @@ def save_attribution(conn, order_id: str, attrs: dict) -> None:
         "on conflict(order_id) do update set payload = excluded.payload",
         (oid, payload, _now()),
     )
+    try:
+        stamp_order_ads(conn, oid, attrs or {})
+    except Exception:
+        return
 
 
 def load_attribution(conn, order_id: str) -> dict:
@@ -804,16 +1073,52 @@ def load_attribution(conn, order_id: str) -> dict:
     return parse_cookie(row["payload"])
 
 
-def log_event(conn, platform: str, event_name: str, order_id: str, event_id: str, ok: bool, detail: str = "") -> None:
+def log_event(
+    conn,
+    platform: str,
+    event_name: str,
+    order_id: str,
+    event_id: str,
+    ok: bool,
+    detail: str = "",
+    acct: str = "",
+    http_status: int = 0,
+) -> None:
     ensure_tables(conn)
+    try:
+        status = int(http_status or 0)
+    except (TypeError, ValueError):
+        status = 0
     conn.execute(
-        "insert into ad_event_log (created_at, platform, event_name, order_id, event_id, ok, detail) values (?, ?, ?, ?, ?, ?, ?)",
-        (_now(), _clip(platform, 32), _clip(event_name, 64), _clip(order_id, 64), _clip(event_id, 128), 1 if ok else 0, _clip(detail, 500)),
+        "insert into ad_event_log (created_at, platform, event_name, order_id, event_id, ok, detail, acct, http_status) "
+        "values (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (
+            _now(),
+            _clip(platform, 32),
+            _clip(event_name, 64),
+            _clip(order_id, 64),
+            _clip(event_id, 128),
+            1 if ok else 0,
+            redact_log(detail),
+            _clip(acct, 64),
+            status,
+        ),
     )
     # keep last ~500
     conn.execute(
         "delete from ad_event_log where id not in (select id from ad_event_log order by id desc limit 500)"
     )
+
+
+def _shanghai(iso: str) -> str:
+    text = str(iso or "")
+    try:
+        dt = datetime.fromisoformat(text.replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(ZoneInfo("Asia/Shanghai")).strftime("%Y-%m-%d %H:%M:%S")
+    except Exception:
+        return text
 
 
 def recent_logs(conn, limit: int = 40) -> list:
@@ -822,7 +1127,29 @@ def recent_logs(conn, limit: int = 40) -> list:
         "select * from ad_event_log order by id desc limit ?",
         (max(1, min(int(limit or 40), 200)),),
     ).fetchall()
-    return [dict(row) for row in rows]
+    out = []
+    for row in rows:
+        item = dict(row)
+        item["detail"] = redact_log(item.get("detail") or "")
+        item["created_at_sh"] = _shanghai(item.get("created_at") or "")
+        item["acct"] = item.get("acct") or ""
+        try:
+            item["http_status"] = int(item.get("http_status") or 0)
+        except (TypeError, ValueError):
+            item["http_status"] = 0
+        out.append(item)
+    return out
+
+
+def event_already_ok(conn, platform: str, event_name: str, event_id: str) -> bool:
+    ensure_tables(conn)
+    if not event_id:
+        return False
+    row = conn.execute(
+        "select 1 from ad_event_log where platform = ? and event_name = ? and event_id = ? and ok = 1 limit 1",
+        (_clip(platform, 32), _clip(event_name, 64), _clip(event_id, 128)),
+    ).fetchone()
+    return row is not None
 
 
 def build_creative_url(base: str, country: str = "US", seg: str = "", utm: dict | None = None, acct: str = "") -> str:
@@ -847,7 +1174,7 @@ def build_creative_url(base: str, country: str = "US", seg: str = "", utm: dict 
     return f"{base}{sep}{urlencode(query)}" if query else base
 
 
-def _http_json(url: str, payload: dict, headers: dict | None = None, timeout: int = 12) -> tuple[bool, str]:
+def _http_json(url: str, payload: dict, headers: dict | None = None, timeout: int = 12) -> tuple[bool, int, str]:
     body = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(
         url,
@@ -858,19 +1185,128 @@ def _http_json(url: str, payload: dict, headers: dict | None = None, timeout: in
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             raw = resp.read().decode("utf-8", "replace")
-            return True, raw[:400]
+            status = int(getattr(resp, "status", 200) or 200)
+            return True, status, redact_log(raw)
     except urllib.error.HTTPError as exc:
         raw = exc.read().decode("utf-8", "replace") if exc.fp else str(exc)
-        return False, f"HTTP {exc.code}: {raw[:300]}"
+        return False, int(exc.code or 0), redact_log(raw)
     except Exception as exc:  # noqa: BLE001
-        return False, str(exc)[:300]
+        return False, 0, redact_log(str(exc))
+
+
+def _sha256(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
 def _hash_email(email: str) -> str:
     text = (email or "").strip().lower()
+    if "@" not in text:
+        return ""
+    return _sha256(text)
+
+
+def _phone_digits(phone: str, country: str = "") -> str:
+    digits = re.sub(r"\D", "", phone or "")
+    digits = digits.lstrip("0")
+    if not digits:
+        return ""
+    if country.upper() == "US" and len(digits) == 10:
+        digits = "1" + digits
+    return digits
+
+
+def _hash_phone_meta(phone: str, country: str = "") -> str:
+    """Meta: digits only, country code, no plus, then SHA256."""
+    digits = _phone_digits(phone, country)
+    if not digits:
+        return ""
+    return _sha256(digits)
+
+
+def _hash_phone_tiktok(phone: str, country: str = "") -> str:
+    """TikTok: SHA256 of E.164, keeping the leading +."""
+    digits = _phone_digits(phone, country)
+    if not digits:
+        return ""
+    return _sha256("+" + digits)
+
+
+def _hash_external(value: str) -> str:
+    text = (value or "").strip().lower()
     if not text:
         return ""
-    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+    return _sha256(text)
+
+
+def new_event_id(prefix: str) -> str:
+    clean = re.sub(r"[^a-z0-9]+", "", (prefix or "ev").lower())[:12] or "ev"
+    return f"{clean}_{uuid.uuid4().hex[:16]}"
+
+
+def encode_pixel_queue(existing_raw: str, event: dict | None) -> str:
+    events = []
+    raw = urllib.parse.unquote(existing_raw or "")
+    try:
+        data = json.loads(raw) if raw else []
+        if isinstance(data, list):
+            events = [item for item in data if isinstance(item, dict)]
+        elif isinstance(data, dict):
+            events = [data]
+    except json.JSONDecodeError:
+        events = []
+    if event and event.get("name"):
+        events.append(
+            {
+                "name": event.get("name"),
+                "event_id": event.get("event_id") or "",
+                "custom": bool(event.get("custom")),
+                "params": event.get("params") or {},
+            }
+        )
+    return json.dumps(events[-6:], ensure_ascii=False, separators=(",", ":"))
+
+
+def _browser_params(value, currency, content_ids, contents, search_string) -> dict:
+    params = {}
+    if value is not None:
+        params["value"] = round(float(value), 2)
+        params["currency"] = (currency or "USD").upper()
+    ids = [str(item) for item in (content_ids or []) if item]
+    safe_contents = []
+    for item in contents or []:
+        if not isinstance(item, dict):
+            continue
+        cid = str(item.get("id") or item.get("content_id") or "")
+        if not cid:
+            continue
+        try:
+            qty = int(item.get("quantity") or 1)
+        except (TypeError, ValueError):
+            qty = 1
+        try:
+            price = round(float(item.get("item_price") if item.get("item_price") is not None else item.get("price") or 0), 2)
+        except (TypeError, ValueError):
+            price = 0.0
+        safe_contents.append(
+            {
+                "id": cid,
+                "content_id": cid,
+                "quantity": qty,
+                "item_price": price,
+                "price": price,
+            }
+        )
+        if cid not in ids:
+            ids.append(cid)
+    if ids:
+        params["content_ids"] = ids
+        params["content_type"] = "product"
+    if safe_contents:
+        params["contents"] = safe_contents
+        params["content_type"] = "product"
+    if search_string:
+        params["search_string"] = _clip(search_string, 200)
+    return params
 
 
 def purchase_event_id(order_id: str) -> str:
@@ -1010,66 +1446,102 @@ def funnel_stats(conn, days: int = 14) -> dict:
     }
 
 
-def send_meta_purchase(cfg: dict, order: dict, attrs: dict, event_id: str, event_source_url: str = "") -> tuple[bool, str]:
+def _meta_contents(contents: list) -> list:
+    out = []
+    for item in contents or []:
+        if not isinstance(item, dict):
+            continue
+        cid = str(item.get("id") or item.get("content_id") or "")
+        if not cid:
+            continue
+        try:
+            qty = int(item.get("quantity") or 1)
+        except (TypeError, ValueError):
+            qty = 1
+        try:
+            price = round(float(item.get("item_price") if item.get("item_price") is not None else item.get("price") or 0), 2)
+        except (TypeError, ValueError):
+            price = 0.0
+        out.append({"id": cid, "quantity": qty, "item_price": price})
+    return out
+
+
+def _tiktok_contents(contents: list) -> list:
+    out = []
+    for item in contents or []:
+        if not isinstance(item, dict):
+            continue
+        cid = str(item.get("content_id") or item.get("id") or "")
+        if not cid:
+            continue
+        try:
+            qty = int(item.get("quantity") or 1)
+        except (TypeError, ValueError):
+            qty = 1
+        try:
+            price = round(float(item.get("price") if item.get("price") is not None else item.get("item_price") or 0), 2)
+        except (TypeError, ValueError):
+            price = 0.0
+        out.append({"content_id": cid, "price": price, "quantity": qty})
+    return out
+
+
+def send_meta_event(
+    cfg: dict,
+    event_name: str,
+    order: dict | None,
+    attrs: dict,
+    event_id: str,
+    value: float | None = None,
+    currency: str = "USD",
+    source_url: str = "",
+    content_ids: list | None = None,
+    contents: list | None = None,
+    search_string: str = "",
+    phone: str = "",
+    phone_country: str = "",
+    external_id: str = "",
+) -> tuple[bool, int, str]:
     pixel = cfg.get("meta_pixel_id") or ""
     token = cfg.get("meta_capi_token") or ""
     if not pixel or not token:
-        return False, "meta_not_configured"
-    value, currency = _order_value_currency(order)
+        return False, 0, "meta_not_configured"
+    attrs = attrs or {}
     user = {}
-    email_hash = _hash_email(order.get("email") or "")
+    email_hash = _hash_email((order or {}).get("email") or "")
     if email_hash:
         user["em"] = [email_hash]
+    phone_hash = _hash_phone_meta(phone or (order or {}).get("phone") or "", phone_country or (order or {}).get("ship_country") or "")
+    if phone_hash:
+        user["ph"] = [phone_hash]
+    ext = _hash_external(external_id or attrs.get("external_id") or "")
+    if ext:
+        user["external_id"] = [ext]
+    if attrs.get("client_ip"):
+        user["client_ip_address"] = _clip(attrs.get("client_ip"), 64)
+    if attrs.get("client_ua"):
+        user["client_user_agent"] = _clip(attrs.get("client_ua"), 512)
     if attrs.get("fbp"):
         user["fbp"] = attrs["fbp"]
-    if attrs.get("fbc"):
-        user["fbc"] = attrs["fbc"]
-    elif attrs.get("fbclid"):
-        user["fbc"] = f"fb.1.{int(time.time())}.{attrs['fbclid']}"
-    event = {
-        "event_name": "Purchase",
-        "event_time": int(time.time()),
-        "event_id": event_id,
-        "action_source": "website",
-        "user_data": user,
-        "custom_data": {
-            "currency": currency,
-            "value": value,
-            "order_id": str(order.get("id") or ""),
-        },
-    }
-    if event_source_url or attrs.get("event_source_url"):
-        event["event_source_url"] = event_source_url or attrs.get("event_source_url")
-    payload = {"data": [event]}
-    test_code = cfg.get("meta_test_code") or ""
-    if test_code:
-        payload["test_event_code"] = test_code
-    url = f"https://graph.facebook.com/v19.0/{pixel}/events?access_token={urllib.parse.quote(token)}"
-    return _http_json(url, payload)
-
-
-def send_meta_event(cfg: dict, event_name: str, order: dict | None, attrs: dict, event_id: str, value: float | None = None, currency: str = "USD", source_url: str = "") -> tuple[bool, str]:
-    pixel = cfg.get("meta_pixel_id") or ""
-    token = cfg.get("meta_capi_token") or ""
-    if not pixel or not token:
-        return False, "meta_not_configured"
-    user = {}
-    if order:
-        email_hash = _hash_email(order.get("email") or "")
-        if email_hash:
-            user["em"] = [email_hash]
-    if attrs.get("fbp"):
-        user["fbp"] = attrs["fbp"]
-    if attrs.get("fbc"):
-        user["fbc"] = attrs["fbc"]
-    elif attrs.get("fbclid"):
-        user["fbc"] = f"fb.1.{int(time.time())}.{attrs['fbclid']}"
+    fbc = canonical_fbc(attrs)
+    if fbc:
+        user["fbc"] = fbc
     custom = {}
     if value is not None:
-        custom["value"] = value
-        custom["currency"] = currency
-    if order and order.get("id"):
-        custom["order_id"] = str(order["id"])
+        custom["value"] = round(float(value), 2)
+        custom["currency"] = (currency or "USD").upper()
+    ids = [str(item) for item in (content_ids or []) if item]
+    meta_contents = _meta_contents(contents or [])
+    if not ids and meta_contents:
+        ids = [item["id"] for item in meta_contents]
+    if ids:
+        custom["content_ids"] = ids
+        custom["content_type"] = "product"
+    if meta_contents:
+        custom["contents"] = meta_contents
+        custom["content_type"] = "product"
+    if search_string:
+        custom["search_string"] = _clip(search_string, 200)
     event = {
         "event_name": event_name,
         "event_time": int(time.time()),
@@ -1078,24 +1550,41 @@ def send_meta_event(cfg: dict, event_name: str, order: dict | None, attrs: dict,
         "user_data": user,
         "custom_data": custom,
     }
-    if source_url or attrs.get("event_source_url"):
-        event["event_source_url"] = source_url or attrs.get("event_source_url")
+    page = source_url or attrs.get("event_source_url") or ""
+    if page:
+        event["event_source_url"] = page
     payload = {"data": [event]}
     test_code = cfg.get("meta_test_code") or ""
     if test_code:
         payload["test_event_code"] = test_code
     url = f"https://graph.facebook.com/v19.0/{pixel}/events?access_token={urllib.parse.quote(token)}"
-    return _http_json(url, payload)
+    ok, status, detail = _http_json(url, payload)
+    return ok, status, redact_log(detail)
 
 
-def send_google_mp_purchase(cfg: dict, order: dict, attrs: dict, event_id: str) -> tuple[bool, str]:
+def send_meta_purchase(cfg: dict, order: dict, attrs: dict, event_id: str, event_source_url: str = "") -> tuple[bool, int, str]:
+    value, currency = _order_value_currency(order)
+    return send_meta_event(
+        cfg,
+        "Purchase",
+        order,
+        attrs,
+        event_id,
+        value=value,
+        currency=currency,
+        source_url=event_source_url,
+        phone=(order or {}).get("phone") or "",
+        phone_country=(order or {}).get("ship_country") or "",
+    )
+
+
+def send_google_mp_purchase(cfg: dict, order: dict, attrs: dict, event_id: str) -> tuple[bool, int, str]:
     mid = cfg.get("google_measurement_id") or ""
     secret = cfg.get("google_api_secret") or ""
     if not mid or not secret:
-        return False, "google_mp_not_configured"
+        return False, 0, "google_mp_not_configured"
     value, currency = _order_value_currency(order)
     client_id = attrs.get("gclid") or attrs.get("wbraid") or attrs.get("gbraid") or f"harbor.{order.get('id')}"
-    # GA4 MP client_id format: random.random — use stable hash
     cid = hashlib.sha256(str(client_id).encode()).hexdigest()
     cid = f"{int(cid[:8], 16)}.{int(cid[8:16], 16)}"
     params = {
@@ -1114,50 +1603,278 @@ def send_google_mp_purchase(cfg: dict, order: dict, attrs: dict, event_id: str) 
         "events": [params],
     }
     url = f"https://www.google-analytics.com/mp/collect?measurement_id={urllib.parse.quote(mid)}&api_secret={urllib.parse.quote(secret)}"
-    return _http_json(url, payload)
+    ok, status, detail = _http_json(url, payload)
+    return ok, status, redact_log(detail)
 
 
-def send_tiktok_purchase(cfg: dict, order: dict, attrs: dict, event_id: str, source_url: str = "") -> tuple[bool, str]:
+def send_tiktok_event(
+    cfg: dict,
+    event_name: str,
+    order: dict | None,
+    attrs: dict,
+    event_id: str,
+    value: float | None = None,
+    currency: str = "USD",
+    source_url: str = "",
+    content_ids: list | None = None,
+    contents: list | None = None,
+    search_string: str = "",
+    phone: str = "",
+    phone_country: str = "",
+    external_id: str = "",
+) -> tuple[bool, int, str]:
     pixel = cfg.get("tiktok_pixel_id") or ""
     token = cfg.get("tiktok_access_token") or ""
     if not pixel or not token:
-        return False, "tiktok_not_configured"
-    value, currency = _order_value_currency(order)
-    email_hash = _hash_email(order.get("email") or "")
+        return False, 0, "tiktok_not_configured"
+    attrs = attrs or {}
     user = {}
-    if email_hash:
-        user["email"] = email_hash
     if attrs.get("ttclid"):
         user["ttclid"] = attrs["ttclid"]
     if attrs.get("ttp"):
         user["ttp"] = attrs["ttp"]
+    if attrs.get("client_ip"):
+        user["ip"] = _clip(attrs.get("client_ip"), 64)
+    if attrs.get("client_ua"):
+        user["user_agent"] = _clip(attrs.get("client_ua"), 512)
+    email_hash = _hash_email((order or {}).get("email") or "")
+    if email_hash:
+        user["email"] = email_hash
+    phone_hash = _hash_phone_tiktok(phone or (order or {}).get("phone") or "", phone_country or (order or {}).get("ship_country") or "")
+    if phone_hash:
+        user["phone"] = phone_hash
+    ext = _hash_external(external_id or attrs.get("external_id") or "")
+    if ext:
+        user["external_id"] = ext
+    properties = {}
+    tt_contents = _tiktok_contents(contents or [])
+    ids = [str(item) for item in (content_ids or []) if item]
+    if not ids and tt_contents:
+        ids = [item["content_id"] for item in tt_contents]
+    if ids or tt_contents:
+        properties["content_type"] = "product"
+    if ids:
+        properties["content_ids"] = ids
+    if tt_contents:
+        properties["contents"] = tt_contents
+    if value is not None:
+        properties["value"] = round(float(value), 2)
+        properties["currency"] = (currency or "USD").upper()
+    if search_string:
+        properties["search_string"] = _clip(search_string, 200)
+    data = {
+        "event": event_name,
+        "event_time": int(time.time()),
+        "event_id": event_id,
+        "user": user,
+        "page": {"url": source_url or attrs.get("event_source_url") or ""},
+        "properties": properties,
+    }
     payload = {
         "event_source": "web",
         "event_source_id": pixel,
-        "data": [
-            {
-                "event": "CompletePayment",
-                "event_time": int(time.time()),
-                "event_id": event_id,
-                "user": user,
-                "properties": {
-                    "currency": currency,
-                    "value": value,
-                    "content_type": "product",
-                },
-                "page": {"url": source_url or attrs.get("event_source_url") or ""},
-            }
-        ],
+        "data": [data],
     }
-    return _http_json(
+    test_code = cfg.get("tiktok_test_code") or ""
+    if test_code:
+        payload["test_event_code"] = test_code
+    ok, status, detail = _http_json(
         "https://business-api.tiktok.com/open_api/v1.3/event/track/",
         payload,
         headers={"Access-Token": token},
     )
+    return ok, status, redact_log(detail)
+
+
+def send_tiktok_purchase(cfg: dict, order: dict, attrs: dict, event_id: str, source_url: str = "") -> tuple[bool, int, str]:
+    value, currency = _order_value_currency(order)
+    return send_tiktok_event(
+        cfg,
+        "Purchase",
+        order,
+        attrs,
+        event_id,
+        value=value,
+        currency=currency,
+        source_url=source_url,
+        phone=(order or {}).get("phone") or "",
+        phone_country=(order or {}).get("ship_country") or "",
+    )
+
+
+def accounts_for_event(conn, attrs: dict | None, *, fallback_all: bool = False) -> list:
+    """Selected acct wins. Otherwise the platform implied by utm_source, else nothing."""
+    ensure_tables(conn)
+    attrs = attrs or {}
+    code = _clip(attrs.get("acct"), 64)
+    if code:
+        acct = resolve_account(conn, acct_code=code)
+        return [acct] if acct else []
+    source = _clip(attrs.get("utm_source"), 64).lower()
+    platform = {
+        "meta": "meta",
+        "facebook": "meta",
+        "fb": "meta",
+        "instagram": "meta",
+        "ig": "meta",
+        "tiktok": "tiktok",
+        "tt": "tiktok",
+        "google": "google",
+    }.get(source, "")
+    if platform:
+        acct = get_default_account(conn, platform)
+        return [acct] if acct else []
+    if not fallback_all:
+        return []
+    found = []
+    for name, _label in PLATFORMS:
+        acct = get_default_account(conn, name)
+        if acct:
+            found.append(acct)
+    return found
+
+
+def track_server_event(
+    conn,
+    *,
+    event_name: str,
+    event_id: str,
+    attrs: dict | None = None,
+    source_url: str = "",
+    value: float | None = None,
+    currency: str = "USD",
+    content_ids: list | None = None,
+    contents: list | None = None,
+    search_string: str = "",
+    email: str = "",
+    phone: str = "",
+    phone_country: str = "",
+    external_id: str = "",
+    order: dict | None = None,
+    order_id: str = "",
+    idempotent: bool = False,
+    fallback_all: bool = False,
+) -> dict:
+    """Send one server event for the attributed account. Returns the browser pixel payload."""
+    ensure_tables(conn)
+    attrs = dict(attrs or {})
+    event_name = _clip(event_name, 64) or "PageView"
+    event_id = _clip(event_id, 128) or new_event_id(event_name.lower())
+    order = dict(order or {})
+    if email and not order.get("email"):
+        order["email"] = email
+    if phone and not order.get("phone"):
+        order["phone"] = phone
+    if phone_country and not order.get("ship_country"):
+        order["ship_country"] = phone_country
+    oid = _clip(order_id or order.get("id") or "", 64)
+    params = _browser_params(value, currency, content_ids, contents, search_string)
+    browser = {
+        "name": event_name,
+        "event_id": event_id,
+        "custom": event_name == "EnterStore",
+        "params": params,
+    }
+    targets = accounts_for_event(conn, attrs, fallback_all=fallback_all)
+    if not targets:
+        log_event(
+            conn,
+            "none",
+            event_name,
+            oid,
+            event_id,
+            False,
+            "no_account",
+            acct=_clip(attrs.get("acct"), 64),
+            http_status=0,
+        )
+        return browser
+    for acct in targets:
+        cfg = account_to_cfg(acct)
+        platform = cfg.get("platform") or acct.get("platform") or ""
+        code = acct.get("code") or ""
+        send_value = value
+        if event_name == "Purchase":
+            decision = decide_purchase(conn, oid, attrs)
+            browser["send"] = bool(decision.get("send"))
+            decided_acct = decision.get("acct") or ""
+            if decided_acct and code and decided_acct != code:
+                continue
+            if not decision.get("send"):
+                if decision.get("fresh"):
+                    log_event(
+                        conn,
+                        platform or "throttle",
+                        event_name,
+                        oid,
+                        event_id,
+                        False,
+                        f"skipped_throttle {decision.get('reason') or ''} ratio={decision.get('ratio')}",
+                        acct=code or decided_acct,
+                        http_status=0,
+                    )
+                continue
+            try:
+                mult = max(0.0, min(2.0, float(decision.get("multiplier") if decision.get("multiplier") is not None else cfg.get("value_multiplier") or 1)))
+            except (TypeError, ValueError):
+                mult = 1.0
+            if send_value is not None:
+                send_value = round(float(send_value) * mult, 2)
+        if idempotent and event_already_ok(conn, platform, event_name, event_id):
+            continue
+        if platform == "meta":
+            if not cfg.get("meta_capi_ok"):
+                log_event(conn, "meta", event_name, oid, event_id, False, "meta_not_configured", acct=code, http_status=0)
+                continue
+            ok, status, detail = send_meta_event(
+                cfg,
+                event_name,
+                order or None,
+                attrs,
+                event_id,
+                value=send_value,
+                currency=currency,
+                source_url=source_url,
+                content_ids=content_ids,
+                contents=contents,
+                search_string=search_string,
+                phone=phone,
+                phone_country=phone_country,
+                external_id=external_id,
+            )
+            log_event(conn, "meta", event_name, oid, event_id, ok, detail, acct=code, http_status=status)
+        elif platform == "tiktok":
+            if not cfg.get("tiktok_api_ok"):
+                log_event(conn, "tiktok", event_name, oid, event_id, False, "tiktok_not_configured", acct=code, http_status=0)
+                continue
+            ok, status, detail = send_tiktok_event(
+                cfg,
+                event_name,
+                order or None,
+                attrs,
+                event_id,
+                value=send_value,
+                currency=currency,
+                source_url=source_url,
+                content_ids=content_ids,
+                contents=contents,
+                search_string=search_string,
+                phone=phone,
+                phone_country=phone_country,
+                external_id=external_id,
+            )
+            log_event(conn, "tiktok", event_name, oid, event_id, ok, detail, acct=code, http_status=status)
+        elif platform == "google" and event_name == "Purchase":
+            if not cfg.get("google_mp_ok"):
+                log_event(conn, "google", event_name, oid, event_id, False, "google_mp_not_configured", acct=code, http_status=0)
+                continue
+            ok, status, detail = send_google_mp_purchase(cfg, order, attrs, event_id)
+            log_event(conn, "google", "purchase", oid, event_id, ok, detail, acct=code, http_status=status)
+    return browser
 
 
 def notify_purchase(conn, order: dict, attrs: dict | None = None, event_source_url: str = "") -> list:
-    """Fire server 回传 for a paid order using the attributed ad account (acct)."""
+    """Fire server Purchase once for a paid order. Same event_id on every retry."""
     ensure_tables(conn)
     order = dict(order or {})
     oid = str(order.get("id") or "")
@@ -1165,9 +1882,7 @@ def notify_purchase(conn, order: dict, attrs: dict | None = None, event_source_u
         return []
     attrs = dict(attrs or load_attribution(conn, oid) or {})
     event_id = purchase_event_id(oid)
-    results = []
     acct_code = _clip(attrs.get("acct"), 64)
-
     try:
         record_funnel(
             conn,
@@ -1181,79 +1896,47 @@ def notify_purchase(conn, order: dict, attrs: dict | None = None, event_source_u
         )
     except Exception:
         pass
-
-    # Build list of accounts to notify: explicit acct OR each platform default
-    targets = []
-    if acct_code:
-        acct = resolve_account(conn, acct_code=acct_code)
-        if acct:
-            targets.append(acct)
-    else:
-        for platform, _label in PLATFORMS:
-            acct = get_default_account(conn, platform)
-            if acct:
-                targets.append(acct)
-        # legacy fallback to env/settings blob if no accounts rows somehow
-        if not targets:
-            targets.append({"platform": "legacy", "credentials": {}, "code": "", "name": "legacy",
-                            "send_ratio_pct": 100, "value_multiplier": 1, "enabled": True,
-                            **{"_legacy_cfg": load_config(conn)}})
-
-    if not targets:
-        log_event(conn, "throttle", "Purchase", oid, event_id, False, "skipped_no_account")
-        return [("none", False, "no_account")]
-
-    for acct in targets:
-        if acct.get("_legacy_cfg"):
-            cfg = acct["_legacy_cfg"]
-            platform = "legacy"
-            code = ""
-        else:
-            cfg = account_to_cfg(acct)
-            platform = cfg.get("platform") or acct.get("platform") or ""
-            code = acct.get("code") or ""
-        ratio = float(cfg.get("send_ratio_pct") or 100)
-        mult = float(cfg.get("value_multiplier") or 1)
-        # per-account deterministic throttle (include acct code)
-        throttle_key = f"{code}:{oid}" if code else oid
-        if not should_send_conversion(throttle_key, ratio):
-            log_event(
-                conn,
-                platform or "throttle",
-                "Purchase",
-                oid,
-                event_id,
-                False,
-                f"skipped_throttle acct={code or '-'} ratio={ratio} mult={mult}",
+    contents = []
+    content_ids = []
+    try:
+        rows = conn.execute(
+            "select sku, qty, price_cents from order_lines where order_id = ?",
+            (oid,),
+        ).fetchall()
+        for row in rows:
+            sku = str(row["sku"] if hasattr(row, "keys") else row[0])
+            qty = int(row["qty"] if hasattr(row, "keys") else row[2])
+            cents = int(row["price_cents"] if hasattr(row, "keys") else row[1])
+            price = round(cents / 100.0, 2)
+            content_ids.append(sku)
+            contents.append(
+                {"id": sku, "content_id": sku, "quantity": qty, "item_price": price, "price": price}
             )
-            results.append((platform or "throttle", False, "skipped_throttle"))
-            continue
-        send_order = apply_value_multiplier(order, mult)
-        tag = f"acct={code or '-'}"
-
-        if platform in {"meta", "legacy"} and cfg.get("meta_capi_ok"):
-            ok, detail = send_meta_purchase(cfg, send_order, attrs, event_id, event_source_url)
-            log_event(conn, "meta", "Purchase", oid, event_id, ok, (detail if not ok else f"ok {tag} mult={mult}"))
-            results.append(("meta", ok, detail))
-        elif platform == "meta":
-            log_event(conn, "meta", "Purchase", oid, event_id, False, f"skipped_no_keys {tag}")
-
-        if platform in {"google", "legacy"} and cfg.get("google_mp_ok"):
-            ok, detail = send_google_mp_purchase(cfg, send_order, attrs, event_id)
-            log_event(conn, "google", "purchase", oid, event_id, ok, (detail if not ok else f"ok {tag} mult={mult}"))
-            results.append(("google", ok, detail))
-        elif platform == "google":
-            log_event(conn, "google", "purchase", oid, event_id, False, f"skipped_no_keys {tag}")
-
-        if platform in {"tiktok", "legacy"} and cfg.get("tiktok_api_ok"):
-            ok, detail = send_tiktok_purchase(cfg, send_order, attrs, event_id, event_source_url)
-            log_event(conn, "tiktok", "CompletePayment", oid, event_id, ok, (detail if not ok else f"ok {tag} mult={mult}"))
-            results.append(("tiktok", ok, detail))
-        elif platform == "tiktok":
-            log_event(conn, "tiktok", "CompletePayment", oid, event_id, False, f"skipped_no_keys {tag}")
-
-    return results
-
+    except Exception:
+        contents = []
+        content_ids = []
+    value, currency = _order_value_currency(order)
+    had_acct = bool(acct_code)
+    track_server_event(
+        conn,
+        event_name="Purchase",
+        event_id=event_id,
+        attrs=attrs,
+        source_url=event_source_url or attrs.get("event_source_url") or "",
+        value=value,
+        currency=currency,
+        content_ids=content_ids,
+        contents=contents,
+        email=order.get("email") or "",
+        phone=order.get("phone") or "",
+        phone_country=order.get("ship_country") or "",
+        external_id=attrs.get("external_id") or "",
+        order=order,
+        order_id=oid,
+        idempotent=True,
+        fallback_all=not had_acct,
+    )
+    return [("logged", True, event_id)]
 
 
 def send_test_event(conn, platform: str = "", account_id: int | None = None) -> tuple[bool, str]:
@@ -1263,20 +1946,516 @@ def send_test_event(conn, platform: str = "", account_id: int | None = None) -> 
         acct = get_default_account(conn, platform)
     cfg = account_to_cfg(acct) if acct else load_config(conn)
     platform = (acct.get("platform") if acct else platform or "").strip().lower()
-    fake_order = {"id": f"test_{int(time.time())}", "due_cents": 100, "currency": "USD", "email": ""}
-    attrs = {}
+    fake_order = {"id": f"test_{int(time.time())}", "due_cents": 100, "currency": "USD", "email": "", "phone": ""}
+    attrs = {"client_ip": "127.0.0.1", "client_ua": "HarborTest"}
     event_id = f"test_{platform}_{int(time.time())}"
-    tag = f"acct={(acct or {}).get('code') or '-'}"
+    code = (acct or {}).get("code") or ""
     if platform == "meta":
-        ok, detail = send_meta_event(cfg, "PageView", None, attrs, event_id, source_url="https://linkiip.com/")
-        log_event(conn, "meta", "PageView", fake_order["id"], event_id, ok, detail if not ok else f"test_ok {tag}")
+        ok, status, detail = send_meta_event(cfg, "PageView", None, attrs, event_id, source_url="https://linkiip.com/")
+        log_event(conn, "meta", "PageView", fake_order["id"], event_id, ok, detail, acct=code, http_status=status)
         return ok, detail
     if platform == "google":
-        ok, detail = send_google_mp_purchase(cfg, fake_order, attrs, event_id)
-        log_event(conn, "google", "purchase", fake_order["id"], event_id, ok, detail if not ok else f"test_ok {tag}")
+        ok, status, detail = send_google_mp_purchase(cfg, fake_order, attrs, event_id)
+        log_event(conn, "google", "purchase", fake_order["id"], event_id, ok, detail, acct=code, http_status=status)
         return ok, detail
     if platform == "tiktok":
-        ok, detail = send_tiktok_purchase(cfg, fake_order, attrs, event_id, "https://linkiip.com/")
-        log_event(conn, "tiktok", "CompletePayment", fake_order["id"], event_id, ok, detail if not ok else f"test_ok {tag}")
+        ok, status, detail = send_tiktok_event(cfg, "PageView", None, attrs, event_id, source_url="https://linkiip.com/")
+        log_event(conn, "tiktok", "PageView", fake_order["id"], event_id, ok, detail, acct=code, http_status=status)
         return ok, detail
     return False, "unknown_platform"
+
+
+_DECIDE_LOCK = threading.Lock()
+_SMART_STARTED = False
+
+
+def _shanghai_day(now=None) -> str:
+    moment = now or datetime.now(timezone.utc)
+    if moment.tzinfo is None:
+        moment = moment.replace(tzinfo=timezone.utc)
+    return moment.astimezone(ZoneInfo("Asia/Shanghai")).strftime("%Y-%m-%d")
+
+
+def clamp_ratio(ratio, lo, hi) -> float:
+    try:
+        low = max(0.0, min(100.0, float(lo)))
+    except (TypeError, ValueError):
+        low = 60.0
+    try:
+        high = max(0.0, min(100.0, float(hi)))
+    except (TypeError, ValueError):
+        high = 100.0
+    if high < low:
+        high = low
+    try:
+        value = float(ratio)
+    except (TypeError, ValueError):
+        value = high
+    return max(low, min(high, value))
+
+
+def bresenham_step(acc: int, ratio: int) -> tuple[int, bool]:
+    """Even spread: ratio 70 sends exactly 7 of every 10 and 70 of 100."""
+    nxt = int(acc) + int(ratio)
+    if nxt >= 100:
+        return nxt - 100, True
+    return nxt, False
+
+
+def spread_sends(ratio: int, count: int, acc: int = 0) -> list[bool]:
+    out = []
+    for _ in range(max(0, int(count))):
+        acc, send = bresenham_step(acc, int(ratio))
+        out.append(send)
+    return out
+
+
+def stamp_order_ads(conn, order_id: str, attrs: dict) -> None:
+    ensure_tables(conn)
+    oid = str(order_id or "").strip()
+    if not oid:
+        return
+    attrs = attrs or {}
+    try:
+        conn.execute(
+            "update orders set adgroup = ?, ad_campaign = ?, ad_id = ? where id = ?",
+            (
+                clean_platform_id(attrs.get("adgroup")),
+                clean_platform_id(attrs.get("campaign_id")),
+                clean_platform_id(attrs.get("ad_id")),
+                oid,
+            ),
+        )
+    except Exception:
+        return
+
+
+def _decision_from_row(row, fresh: bool) -> dict:
+    data = _row_dict(row)
+    return {
+        "order_id": str(data.get("order_id") or ""),
+        "acct": data.get("acct") or "",
+        "adgroup": data.get("adgroup") or "",
+        "send": bool(int(data.get("send") or 0)),
+        "reason": data.get("reason") or "",
+        "ratio": float(data.get("ratio") or 100),
+        "multiplier": float(data.get("multiplier") if data.get("multiplier") is not None else 1),
+        "fresh": fresh,
+    }
+
+
+def load_send_decision(conn, order_id: str) -> dict | None:
+    row = conn.execute(
+        "select * from ad_send_decision where order_id = ?",
+        (str(order_id or ""),),
+    ).fetchone()
+    if not row:
+        return None
+    return _decision_from_row(row, False)
+
+
+def _prior_purchases(conn, acct: str, adgroup: str, now) -> int:
+    since = (now - timedelta_days(7)).replace(microsecond=0).isoformat()
+    row = conn.execute(
+        "select count(*) as c from ad_send_decision where acct = ? and adgroup = ? and created_at >= ?",
+        (acct, adgroup, since),
+    ).fetchone()
+    if not row:
+        return 0
+    try:
+        return int(row["c"] if "c" in row.keys() else row[0])
+    except Exception:
+        return int(row[0])
+
+
+def timedelta_days(days: int):
+    from datetime import timedelta
+    return timedelta(days=days)
+
+
+def decide_purchase(conn, order_id: str, attrs: dict | None = None, now=None) -> dict:
+    """One stored send/drop per order. Retries return the same decision."""
+    ensure_tables(conn)
+    oid = str(order_id or "").strip()
+    attrs = dict(attrs or {})
+    if not oid:
+        return {"send": True, "reason": "no_order", "acct": "", "adgroup": "", "ratio": 100, "multiplier": 1, "fresh": False}
+    moment = now or datetime.now(timezone.utc)
+    if moment.tzinfo is None:
+        moment = moment.replace(tzinfo=timezone.utc)
+    with _DECIDE_LOCK:
+        try:
+            existing = load_send_decision(conn, oid)
+            if existing:
+                return existing
+            acct = resolve_account(conn, acct_code=_clip(attrs.get("acct"), 64)) if attrs.get("acct") else None
+            if acct is None:
+                found = accounts_for_event(conn, attrs, fallback_all=False)
+                acct = found[0] if found else None
+            if acct is None:
+                return {
+                    "send": True,
+                    "reason": "no_account",
+                    "acct": "",
+                    "adgroup": clean_platform_id(attrs.get("adgroup")),
+                    "ratio": 100.0,
+                    "multiplier": 1.0,
+                    "fresh": True,
+                }
+            code = acct.get("code") or ""
+            group = clean_platform_id(attrs.get("adgroup"))
+            lo = float(acct.get("ratio_min") if acct.get("ratio_min") is not None else 60)
+            hi = float(acct.get("ratio_max") if acct.get("ratio_max") is not None else 100)
+            base = clamp_ratio(100 if acct.get("send_ratio_pct") is None else acct.get("send_ratio_pct"), lo, hi)
+            grow = conn.execute(
+                "select * from ad_groups where acct = ? and adgroup = ?",
+                (code, group),
+            ).fetchone()
+            grow = _row_dict(grow) if grow else {}
+            if grow.get("ratio_override") is not None:
+                base = clamp_ratio(grow.get("ratio_override"), lo, hi)
+            current = base
+            if acct.get("smart_enabled") and grow.get("effective_ratio") is not None:
+                current = clamp_ratio(grow.get("effective_ratio"), lo, hi)
+            prior = _prior_purchases(conn, code, group, moment)
+            learn_at = int(acct.get("learning_min") if acct.get("learning_min") is not None else 50)
+            floor_n = int(acct.get("daily_floor") if acct.get("daily_floor") is not None else 5)
+            day = _shanghai_day(moment)
+            acc = int(grow.get("acc") or 0)
+            if (grow.get("day") or "") != day:
+                day_orders = 0
+            else:
+                day_orders = int(grow.get("day_orders") or 0)
+            if prior < learn_at:
+                acc, _natural = bresenham_step(acc, 100)
+                send, reason, used = True, "learning", 100.0
+            elif day_orders < floor_n:
+                acc, _natural = bresenham_step(acc, 100)
+                send, reason, used = True, "floor", 100.0
+            else:
+                used_int = int(round(current))
+                acc, send = bresenham_step(acc, used_int)
+                reason, used = ("ratio" if send else "drop"), float(used_int)
+            day_orders += 1
+            mult = float(acct.get("value_multiplier") or 1)
+            conn.execute(
+                "insert into ad_send_decision (order_id, acct, adgroup, send, reason, ratio, multiplier, created_at) "
+                "values (?, ?, ?, ?, ?, ?, ?, ?)",
+                (oid, code, group, 1 if send else 0, reason, used, mult, moment.replace(microsecond=0).isoformat()),
+            )
+            conn.execute(
+                "insert into ad_groups (acct, adgroup, platform, acc, day, day_orders, updated_at) "
+                "values (?, ?, ?, ?, ?, ?, ?) "
+                "on conflict(acct, adgroup) do update set platform = excluded.platform, acc = excluded.acc, "
+                "day = excluded.day, day_orders = excluded.day_orders, updated_at = excluded.updated_at",
+                (code, group, acct.get("platform") or "", acc, day, day_orders, _now()),
+            )
+            return {
+                "send": send,
+                "reason": reason,
+                "acct": code,
+                "adgroup": group,
+                "ratio": used,
+                "multiplier": mult,
+                "fresh": True,
+            }
+        except Exception:
+            existing = load_send_decision(conn, oid)
+            if existing:
+                return existing
+            raise
+
+
+def list_ad_groups(conn, acct_code: str) -> list:
+    ensure_tables(conn)
+    rows = conn.execute(
+        "select * from ad_groups where acct = ? order by real_orders desc, adgroup asc",
+        (_clip(acct_code, 64),),
+    ).fetchall()
+    return [_row_dict(row) for row in rows]
+
+
+def list_ratio_history(conn, acct_code: str, limit: int = 30) -> list:
+    ensure_tables(conn)
+    rows = conn.execute(
+        "select * from ad_ratio_history where acct = ? order by id desc limit ?",
+        (_clip(acct_code, 64), max(1, min(int(limit or 30), 100))),
+    ).fetchall()
+    out = []
+    for row in rows:
+        item = _row_dict(row)
+        item["created_at_sh"] = _shanghai(item.get("created_at") or "")
+        out.append(item)
+    return out
+
+
+def save_group_override(conn, acct_code: str, adgroup: str, ratio_override, target_cpa_override, platform: str = "") -> None:
+    ensure_tables(conn)
+    code = _clip(acct_code, 64)
+    group = clean_platform_id(adgroup)
+    if not code:
+        return
+    ratio = None if ratio_override in (None, "") else max(0.0, min(100.0, float(ratio_override)))
+    tcpa = None if target_cpa_override in (None, "") else max(0.0, float(target_cpa_override))
+    conn.execute(
+        "insert into ad_groups (acct, adgroup, platform, updated_at, ratio_override, target_cpa_override) "
+        "values (?, ?, ?, ?, ?, ?) "
+        "on conflict(acct, adgroup) do update set ratio_override = excluded.ratio_override, "
+        "target_cpa_override = excluded.target_cpa_override, updated_at = excluded.updated_at",
+        (code, group, _clip(platform, 16), _now(), ratio, tcpa),
+    )
+
+
+def propose_ratio(current, base, target_cpa, actual_cpa, spend, prev_spend, lo, hi) -> tuple[float, str]:
+    """Step 5 or 10 points. Near the target, walk back toward the base ratio."""
+    current = clamp_ratio(current, lo, hi)
+    base = clamp_ratio(base, lo, hi)
+    try:
+        target = float(target_cpa or 0)
+    except (TypeError, ValueError):
+        target = 0.0
+    if target <= 0 or actual_cpa is None:
+        return base, "no_target_keep_base"
+    try:
+        spend_now = float(spend or 0)
+        spend_prev = float(prev_spend or 0)
+    except (TypeError, ValueError):
+        spend_now, spend_prev = 0.0, 0.0
+    falling = spend_prev > 0 and spend_now < spend_prev * 0.7
+    rel = float(actual_cpa) / target if target else 1
+    if falling or rel > 1.15:
+        step = 10 if (rel > 1.4 or (falling and rel > 1)) else 5
+        return clamp_ratio(current + step, lo, hi), ("step_up_spend" if falling and rel <= 1.15 else "step_up_cpa")
+    if rel < 0.85:
+        step = 10 if rel < 0.6 else 5
+        return clamp_ratio(current - step, lo, hi), "step_down"
+    gap = current - base
+    if abs(gap) <= 5:
+        return base, "near_target"
+    step = 10 if abs(gap) >= 10 else 5
+    if gap > 0:
+        return clamp_ratio(current - step, lo, hi), "near_target"
+    return clamp_ratio(current + step, lo, hi), "near_target"
+
+
+def _http_get(url: str, headers: dict | None = None, timeout: int = 12) -> tuple[int, str]:
+    req = urllib.request.Request(url, headers=headers or {}, method="GET")
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return int(getattr(resp, "status", 200) or 200), resp.read().decode("utf-8", "replace")
+    except urllib.error.HTTPError as exc:
+        raw = exc.read().decode("utf-8", "replace") if exc.fp else str(exc)
+        return int(exc.code or 0), raw
+    except Exception as exc:  # noqa: BLE001
+        return 0, str(exc)
+
+
+def fetch_meta_spend(token: str, adset_id: str) -> tuple[float | None, str]:
+    if not token:
+        return None, "no_token"
+    if not adset_id:
+        return None, "no_adgroup"
+    url = (
+        f"https://graph.facebook.com/v19.0/{urllib.parse.quote(adset_id)}/insights"
+        f"?fields=spend&date_preset=last_7d&access_token={urllib.parse.quote(token)}"
+    )
+    status, raw = _http_get(url)
+    if status != 200:
+        return None, redact_log(f"meta_http_{status}")
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        return None, "meta_bad_json"
+    spend = 0.0
+    for row in data.get("data") or []:
+        try:
+            spend += float(row.get("spend") or 0)
+        except (TypeError, ValueError):
+            continue
+    return spend, ""
+
+
+def fetch_tiktok_spend(token: str, advertiser_id: str, adgroup_id: str, now=None) -> tuple[float | None, str]:
+    if not token:
+        return None, "no_token"
+    if not advertiser_id:
+        return None, "no_advertiser_id"
+    if not adgroup_id:
+        return None, "no_adgroup"
+    moment = now or datetime.now(timezone.utc)
+    end = moment.astimezone(ZoneInfo("Asia/Shanghai")).date()
+    start = end - timedelta_days(6)
+    query = urllib.parse.urlencode(
+        {
+            "advertiser_id": advertiser_id,
+            "service_type": "AUCTION",
+            "report_type": "BASIC",
+            "data_level": "AUCTION_ADGROUP",
+            "dimensions": json.dumps(["adgroup_id"]),
+            "metrics": json.dumps(["spend"]),
+            "start_date": start.isoformat(),
+            "end_date": end.isoformat(),
+            "filtering": json.dumps(
+                [{"field_name": "adgroup_ids", "filter_type": "IN", "filter_value": json.dumps([adgroup_id])}]
+            ),
+            "page": 1,
+            "page_size": 20,
+        }
+    )
+    status, raw = _http_get(
+        "https://business-api.tiktok.com/open_api/v1.3/report/integrated/get/?" + query,
+        headers={"Access-Token": token},
+    )
+    if status != 200:
+        return None, redact_log(f"tiktok_http_{status}")
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        return None, "tiktok_bad_json"
+    if int((data or {}).get("code") or 0) not in {0}:
+        return None, "tiktok_api_error"
+    spend = 0.0
+    for row in ((data.get("data") or {}).get("list") or []):
+        metrics = row.get("metrics") or {}
+        try:
+            spend += float(metrics.get("spend") or 0)
+        except (TypeError, ValueError):
+            continue
+    return spend, ""
+
+
+def _record_ratio(conn, acct, adgroup, ratio, reason, spend, real_orders, sent_orders, cpa) -> None:
+    conn.execute(
+        "insert into ad_ratio_history (created_at, acct, adgroup, ratio, reason, spend, real_orders, sent_orders, cpa) "
+        "values (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (_now(), acct, adgroup, float(ratio), _clip(reason, 80), float(spend or 0), int(real_orders or 0), int(sent_orders or 0), float(cpa or 0)),
+    )
+
+
+def run_smart_ratios(conn, fetch=None, now=None) -> list:
+    """Adjust each smart account's ad-group ratio. Failures keep the base ratio and are logged."""
+    ensure_tables(conn)
+    moment = now or datetime.now(timezone.utc)
+    if moment.tzinfo is None:
+        moment = moment.replace(tzinfo=timezone.utc)
+    notes = []
+    for acct in list_accounts(conn):
+        if not acct.get("smart_enabled"):
+            continue
+        checked = acct.get("smart_checked_at") or ""
+        if checked:
+            try:
+                prev = datetime.fromisoformat(checked.replace("Z", "+00:00"))
+                if prev.tzinfo is None:
+                    prev = prev.replace(tzinfo=timezone.utc)
+                if (moment - prev).total_seconds() < 6 * 3600:
+                    continue
+            except ValueError:
+                pass
+        code = acct.get("code") or ""
+        groups = list_ad_groups(conn, code)
+        if not any(clean_platform_id(g.get("adgroup")) for g in groups):
+            groups.append({"acct": code, "adgroup": "", "effective_ratio": None, "ratio_override": None, "prev_spend": 0, "last_adjusted_at": ""})
+        creds = acct.get("credentials") or {}
+        platform = acct.get("platform") or ""
+        lo = acct.get("ratio_min", 60)
+        hi = acct.get("ratio_max", 100)
+        for group in groups:
+            adgroup = clean_platform_id(group.get("adgroup")) if group.get("adgroup") else ""
+            base_raw = group.get("ratio_override") if group.get("ratio_override") is not None else acct.get("send_ratio_pct")
+            base = clamp_ratio(100 if base_raw is None else base_raw, lo, hi)
+            current = clamp_ratio(group.get("effective_ratio") if group.get("effective_ratio") is not None else base, lo, hi)
+            real = _prior_purchases(conn, code, adgroup, moment)
+            sent_row = conn.execute(
+                "select count(*) as c from ad_send_decision where acct = ? and adgroup = ? and send = 1 and created_at >= ?",
+                (code, adgroup, (moment - timedelta_days(7)).replace(microsecond=0).isoformat()),
+            ).fetchone()
+            sent = int(sent_row["c"] if sent_row and "c" in sent_row.keys() else (sent_row[0] if sent_row else 0))
+            token = creds.get("meta_capi_token") if platform == "meta" else creds.get("tiktok_access_token")
+            spend, err = (None, "no_token")
+            if fetch is not None:
+                try:
+                    spend, err = fetch(acct, adgroup)
+                except Exception as exc:  # noqa: BLE001
+                    spend, err = None, redact_log(str(exc))
+            elif platform == "meta":
+                spend, err = fetch_meta_spend(token or "", adgroup)
+            elif platform == "tiktok":
+                spend, err = fetch_tiktok_spend(token or "", creds.get("tiktok_advertiser_id") or "", adgroup, moment)
+            else:
+                err = "unsupported_platform"
+            if err or spend is None:
+                reason = err or "fetch_failed"
+                new_ratio = base
+            else:
+                if real <= 0:
+                    actual = None if float(spend or 0) <= 0 else float(spend) * 1000
+                else:
+                    actual = float(spend) / real
+                target = group.get("target_cpa_override")
+                if target is None:
+                    target = acct.get("target_cpa") or 0
+                new_ratio, reason = propose_ratio(current, base, target, actual, spend, group.get("prev_spend") or 0, lo, hi)
+                if real <= 0 and float(spend or 0) > 0:
+                    reason = "step_up_cpa" if new_ratio >= current else reason
+            last = group.get("last_adjusted_at") or ""
+            changed = abs(float(new_ratio) - float(current)) >= 0.5
+            recent = False
+            if last:
+                try:
+                    prev = datetime.fromisoformat(last.replace("Z", "+00:00"))
+                    if prev.tzinfo is None:
+                        prev = prev.replace(tzinfo=timezone.utc)
+                    recent = (moment - prev).total_seconds() < 6 * 3600
+                except ValueError:
+                    recent = False
+            if err or spend is None:
+                recent = False
+            if changed and recent:
+                new_ratio = current
+                reason = "held_" + reason
+            cpa = (float(spend) / real) if (spend is not None and real > 0) else 0.0
+            conn.execute(
+                "insert into ad_groups (acct, adgroup, platform, effective_ratio, reason, spend, prev_spend, real_orders, sent_orders, cpa, last_adjusted_at, updated_at) "
+                "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+                "on conflict(acct, adgroup) do update set platform = excluded.platform, effective_ratio = excluded.effective_ratio, "
+                "reason = excluded.reason, prev_spend = ad_groups.spend, spend = excluded.spend, real_orders = excluded.real_orders, "
+                "sent_orders = excluded.sent_orders, cpa = excluded.cpa, "
+                "last_adjusted_at = case when abs(excluded.effective_ratio - coalesce(ad_groups.effective_ratio, excluded.effective_ratio)) >= 0.5 "
+                "then excluded.last_adjusted_at else ad_groups.last_adjusted_at end, updated_at = excluded.updated_at",
+                (
+                    code,
+                    adgroup,
+                    platform,
+                    float(new_ratio),
+                    _clip(reason, 80),
+                    float(spend or 0),
+                    float(spend or 0),
+                    int(real),
+                    int(sent),
+                    float(cpa or 0),
+                    moment.replace(microsecond=0).isoformat() if changed and not recent else (last or ""),
+                    _now(),
+                ),
+            )
+            _record_ratio(conn, code, adgroup, new_ratio, reason, spend or 0, real, sent, cpa)
+            notes.append({"acct": code, "adgroup": adgroup, "ratio": new_ratio, "reason": reason})
+        conn.execute("update ad_accounts set smart_checked_at = ? where code = ?", (moment.replace(microsecond=0).isoformat(), code))
+    return notes
+
+
+def start_smart_job(conn, db_path) -> None:
+    global _SMART_STARTED
+    if _SMART_STARTED or str(db_path or "") == ":memory:":
+        return
+    _SMART_STARTED = True
+
+    def loop():
+        while True:
+            time.sleep(6 * 3600)
+            try:
+                run_smart_ratios(conn)
+            except Exception:
+                continue
+
+    threading.Thread(target=loop, name="ad-smart-ratio", daemon=True).start()

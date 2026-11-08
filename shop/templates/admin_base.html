@@ -41,6 +41,7 @@
       <a class="{% if request.url.path.startswith('/admin/ads') %}on{% endif %}" href="/admin/ads"><i></i>站点广告</a>
       <a class="{% if request.url.path.startswith('/admin/traffic') %}on{% endif %}" href="/admin/traffic"><i></i>投放回传</a>
       <a class="{% if request.url.path.startswith('/admin/launch') %}on{% endif %}" href="/admin/launch"><i></i>投放落地页</a>
+      <a class="{% if request.url.path.startswith('/admin/conversions') %}on{% endif %}" href="/admin/conversions"><i></i>转化日志</a>
 
       {% if is_admin_role %}
       <p class="side-label">系统</p>
@@ -80,6 +81,7 @@
             {% elif request.url.path.startswith('/admin/promos') %}满减运费
             {% elif request.url.path.startswith('/admin/withdrawals') %}提现
             {% elif request.url.path.startswith('/admin/launch') %}投放落地页
+            {% elif request.url.path.startswith('/admin/conversions') %}转化日志
             {% elif request.url.path.startswith('/admin/traffic') %}投放回传
             {% elif request.url.path.startswith('/admin/ads') %}站点广告位
             {% elif request.url.path.startswith('/admin/coefficients') %}国家系数

@@ -58,6 +58,17 @@ from shop.adtrack import (
     create_account,
     update_account,
     delete_account,
+    track_server_event,
+    encode_pixel_queue,
+    account_public_view,
+    new_event_id,
+    apply_request_context,
+    decide_purchase,
+    list_ad_groups,
+    list_ratio_history,
+    save_group_override,
+    run_smart_ratios,
+    start_smart_job,
 )
 from shop.lp_links import (
     create_link as create_lp_link,
@@ -1583,6 +1594,178 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         except Exception:
             return
 
+    def _major_value(cents, ctx):
+        cents = int(cents or 0)
+        currency = ((ctx or {}).get("currency") or "USD").upper()
+        units = (ctx or {}).get("units")
+        if units is None:
+            return round(cents / 100.0, 2), currency
+        local = goods_local(cents, units, currency)
+        places = MINOR.get(currency, 2)
+        if places <= 0:
+            return float(int(local)), currency
+        return round(local / (10 ** places), 2), currency
+
+    def _content_item(sku, qty, unit_cents, ctx):
+        price, currency = _major_value(unit_cents, ctx)
+        sid = str(sku or "")
+        return {
+            "id": sid,
+            "content_id": sid,
+            "quantity": int(qty or 1),
+            "item_price": price,
+            "price": price,
+        }, price, currency
+
+    def _queue_pixel(response, request, event):
+        if response is None or not event or not event.get("name"):
+            return response
+        response.set_cookie(
+            "harbor_ad_px",
+            encode_pixel_queue(request.cookies.get("harbor_ad_px") or "", event),
+            max_age=180,
+            path="/",
+            samesite="lax",
+        )
+        return response
+
+    def _track_ad(
+        request,
+        event_name,
+        event_id,
+        *,
+        value=None,
+        currency="",
+        contents=None,
+        content_ids=None,
+        search_string="",
+        email="",
+        phone="",
+        phone_country="",
+        order=None,
+        order_id="",
+        idempotent=False,
+        fallback_all=False,
+        source_url="",
+    ):
+        attrs = dict(getattr(request.state, "ad_attrs", None) or {})
+        try:
+            page = source_url or str(request.url)
+        except Exception:
+            page = source_url or ""
+        vid = getattr(request.state, "visitor", None) or request.cookies.get("harbor_vid") or ""
+        try:
+            return track_server_event(
+                conn,
+                event_name=event_name,
+                event_id=event_id,
+                attrs=attrs,
+                source_url=page,
+                value=value,
+                currency=currency or (view(request).get("currency") if currency == "" else currency),
+                content_ids=content_ids,
+                contents=contents,
+                search_string=search_string,
+                email=email,
+                phone=phone,
+                phone_country=phone_country,
+                external_id=vid,
+                order=order,
+                order_id=order_id,
+                idempotent=idempotent,
+                fallback_all=fallback_all,
+            )
+        except Exception:
+            return {
+                "name": event_name,
+                "event_id": event_id,
+                "custom": event_name == "EnterStore",
+                "params": {},
+            }
+
+    def _listing_ads(request, response):
+        if response is None:
+            return response
+        params = request.query_params
+        if str(params.get("ad_enter") or "") == "1":
+            eid = str(params.get("eid") or "")
+            if not re.fullmatch(r"enter_[A-Za-z0-9]{8,40}", eid or ""):
+                eid = new_event_id("enter")
+            try:
+                _track_ad(request, "EnterStore", eid, idempotent=True)
+            except Exception:
+                pass
+        query = str(params.get("q") or "").strip()
+        partial = str(params.get("partial") or "")
+        if query and request.url.path.startswith("/search") and partial not in {"1", "cards", "true"}:
+            try:
+                event = _track_ad(request, "Search", new_event_id("search"), search_string=query)
+                _queue_pixel(response, request, event)
+            except Exception:
+                pass
+        return response
+
+    def _view_content(request, response, sku, item=None):
+        cents = int((item or {}).get("price_cents") or 0)
+        if item is None:
+            row = catalog_index().get(sku)
+            if row is not None:
+                cents = int(row["price_cents"] or 0)
+        ctx = {"currency": "USD", "units": None}
+        try:
+            ctx = view(request)
+        except Exception:
+            pass
+        content, price, currency = _content_item(sku, 1, cents, ctx)
+        event = _track_ad(
+            request,
+            "ViewContent",
+            new_event_id("vc"),
+            value=price,
+            currency=currency,
+            content_ids=[sku],
+            contents=[content],
+        )
+        _queue_pixel(response, request, event)
+        return response
+
+    def _note_payment(request, response, order_row, source_url=""):
+        if response is None or order_row is None:
+            return response
+        try:
+            lines = conn.execute(
+                "select sku, qty, price_cents from order_lines where order_id = ?",
+                (order_row["id"],),
+            ).fetchall()
+        except Exception:
+            lines = []
+        ctx = {"currency": order_row["currency"] if "currency" in order_row.keys() else "USD", "units": None}
+        contents = []
+        ids = []
+        total = 0.0
+        for line in lines:
+            content, price, _currency = _content_item(line["sku"], line["qty"], line["price_cents"], ctx)
+            contents.append(content)
+            ids.append(str(line["sku"]))
+            total += price * int(line["qty"] or 1)
+        event = _track_ad(
+            request,
+            "AddPaymentInfo",
+            f"payinfo_{order_row['id']}",
+            value=round(total, 2) if contents else None,
+            currency=ctx["currency"],
+            content_ids=ids,
+            contents=contents,
+            email=order_row["email"] if "email" in order_row.keys() else "",
+            phone=order_row["phone"] if "phone" in order_row.keys() else "",
+            phone_country=order_row["ship_country"] if "ship_country" in order_row.keys() else "",
+            order_id=str(order_row["id"]),
+            idempotent=True,
+            source_url=source_url,
+        )
+        _queue_pixel(response, request, event)
+        return response
+
     def _probe_path(path: str) -> bool:
         lower = (path or "/").split("?", 1)[0].lower()
         if lower.startswith("/.well-known/"):
@@ -1605,7 +1788,15 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         request.state.visitor = request.cookies.get("harbor_vid") or secrets.token_hex(8)
         existing_ad = parse_ad_cookie(request.cookies.get("harbor_ad"))
         incoming_ad = merge_from_request(existing_ad, request.query_params)
-        # Merge browser-set fbp/ttp from cookie jar if present in query (rare) — primary via JS later.
+        fwd = (request.headers.get("x-forwarded-for") or "").split(",")[0].strip()
+        client_ip = fwd[:64] if fwd else ((request.client.host if request.client else "") or "")[:64]
+        incoming_ad = apply_request_context(
+            incoming_ad,
+            cookies=request.cookies,
+            client_ip=client_ip,
+            user_agent=request.headers.get("user-agent") or "",
+            external_id=request.state.visitor,
+        )
         request.state.ad_attrs = incoming_ad
         response = await call_next(request)
         path = request.url.path
@@ -2833,7 +3024,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         if hit is not None:
             if forced_category in CATEGORIES:
                 remember(hit, request, forced_category, 1)
-            return hit
+            return _listing_ads(request, hit)
         sort = params.get("sort", "featured")
         if sort not in SORTS:
             sort = "featured"
@@ -2964,7 +3155,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             response = store_public(request, key, "home_cards.html", {**ctx, "products": items})
             response.headers["X-Harbor-Has-More"] = "1" if page * page_size < total else "0"
             response.headers["X-Harbor-Page"] = str(page)
-            return response
+            return _listing_ads(request, response)
         if category and category in ctx["t"]["categories"]:
             label = ctx["sub_name"] or ctx["t"]["categories"][category]
             ctx["seo_title"] = page_title(label)
@@ -2978,7 +3169,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         response = store_public(request, key, "listing.html", ctx)
         if forced_category in CATEGORIES:
             remember(response, request, forced_category, 1)
-        return response
+        return _listing_ads(request, response)
 
     @app.get("/robots.txt")
     def robots():
@@ -3891,6 +4082,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         if hit is not None:
             seen = read_skus(request.cookies.get("history"))
             hit.set_cookie("history", write_skus([sku, *seen]), max_age=31536000, path="/")
+            _view_content(request, hit, sku)
             return remember(hit, request, row["category"], 1, sku=sku)
         item = present(row, ctx)
         paint_deal(item, request, ctx)
@@ -3984,6 +4176,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         response = store_public(request, key, "product.html", ctx)
         seen = read_skus(request.cookies.get("history"))
         response.set_cookie("history", write_skus([sku, *seen]), max_age=31536000, path="/")
+        _view_content(request, response, sku, item)
         remember(response, request, item["category"], 1, sku=sku)
         return response
 
@@ -4087,6 +4280,22 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         if str(form.get("remind") or "") == "1":
             reminded = read_skus(request.cookies.get("remind"), limit=36)
             response.set_cookie("remind", write_skus([sku, *reminded], 36), max_age=31536000, path="/")
+        ad_event = None
+        try:
+            sold = find_sellable(conn, code)
+            unit = int(sold["price_cents"]) if sold else 0
+            content, price, currency = _content_item(code, qty, unit, view(request))
+            ad_event = _track_ad(
+                request,
+                "AddToCart",
+                new_event_id("atc"),
+                value=round(price * int(qty or 1), 2),
+                currency=currency,
+                content_ids=[code],
+                contents=[content],
+            )
+        except Exception:
+            ad_event = None
         if wants_ajax and not buy and isinstance(response, JSONResponse):
             # Refresh view-like rail summary using the new cart cookie value.
             fake = request
@@ -4219,11 +4428,14 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 "off_pct": off_pct,
                 "deal_ends": deal_ends_iso(conn) if save_cents else "",
                 "message": ctx["t"].get("added_rail") or ctx["t"].get("add_cart") or "Added",
+                "ad_event": ad_event,
             })
             response.set_cookie("cart", dump_lines(lines), max_age=31536000, path="/", samesite="lax")
             stamp_promo_notice(response, request, code, qty, lines)
             if row is not None:
                 remember(response, request, row["category"], 3, sku=sku)
+        if ad_event and not isinstance(response, JSONResponse):
+            _queue_pixel(response, request, ad_event)
         if not (buy and nxt == "/checkout"):
             push_open_room_cart(conn, request, lines)
         return response
@@ -4620,7 +4832,28 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 ),
             }
         )
-        return templates.TemplateResponse(request, "checkout.html", ctx)
+        response = templates.TemplateResponse(request, "checkout.html", ctx)
+        if request.method == "GET":
+            contents = []
+            ids = []
+            total = 0.0
+            currency = ctx.get("currency") or "USD"
+            for item in shown:
+                content, price, currency = _content_item(item.get("sku"), item.get("qty") or 1, item.get("price_cents") or 0, ctx)
+                contents.append(content)
+                ids.append(str(item.get("sku") or ""))
+                total += price * int(item.get("qty") or 1)
+            event = _track_ad(
+                request,
+                "InitiateCheckout",
+                new_event_id("ic"),
+                value=round(total, 2) if shown else None,
+                currency=currency,
+                content_ids=ids,
+                contents=contents,
+            )
+            _queue_pixel(response, request, event)
+        return response
 
     @app.get("/lookup/regions")
     def regions_lookup(country: str = ""):
@@ -4834,6 +5067,11 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         )
         response.delete_cookie("gift_sku", path="/")
         forget_catalog()
+        try:
+            placed_row = conn.execute("select * from orders where id = ?", (order_id,)).fetchone()
+            _note_payment(request, response, placed_row)
+        except Exception:
+            pass
         return response
 
     def referrer_email(request):
@@ -4858,7 +5096,8 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             raise HTTPException(status_code=403)
         if int(row["due_local"] or 0) <= 0:
             mark_paid(conn, row["id"])
-            return redirect(f"/orders/{row['id']}", row["ship_country"] or "US")
+            response = redirect(f"/orders/{row['id']}", row["ship_country"] or "US")
+            return _note_payment(request, response, row)
         form = await request.form()
         offered = list(app.state.pay_status.get("shown") or [])
         picked = str(form.get("pay_method") or "")
@@ -4887,8 +5126,9 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             "amount": row["due_local"],
         }
         if session.get("url"):
-            return RedirectResponse(session["url"], status_code=303)
-        return render(
+            response = RedirectResponse(session["url"], status_code=303)
+            return _note_payment(request, response, row)
+        response = render(
             request,
             "payment.html",
             order_number=row["id"],
@@ -4896,6 +5136,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             pay_currency=session["currency"],
             pay_amount=session["amount"],
         )
+        return _note_payment(request, response, row)
 
     @app.post("/stripe/webhook")
     async def stripe_webhook(request: Request):
@@ -5029,19 +5270,15 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             "select reason, status from returns where order_id = ? order by id desc",
             (row["id"],),
         ).fetchall()
-        try:
-            from shop.adtrack import load_attribution as _load_attr, resolve_account as _resolve_acct, account_to_cfg as _acct_cfg
-            _attrs = _load_attr(conn, row["id"])
-            _acct = _resolve_acct(conn, acct_code=(_attrs or {}).get("acct") or "")
-            if _acct:
-                _ad_cfg = _acct_cfg(_acct)
-                _key = f"{_acct.get('code')}:{row['id']}"
-            else:
-                _ad_cfg = load_ad_config(conn)
-                _key = row["id"]
-            ad_send_ok = 1 if should_send_conversion(_key, float(_ad_cfg.get("send_ratio_pct") or 100)) else 0
-        except Exception:
-            ad_send_ok = 1
+        ad_send_ok = 0
+        if paid:
+            try:
+                from shop.adtrack import load_attribution as _load_attr
+                _attrs = _load_attr(conn, row["id"])
+                decision = decide_purchase(conn, str(row["id"]), _attrs or {})
+                ad_send_ok = 1 if decision.get("send") else 0
+            except Exception:
+                ad_send_ok = 1
         response = render(
             request,
             "order.html",
@@ -7763,6 +8000,8 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             "notice": notice or str(request.query_params.get("notice") or ""),
             "link_preview": link_preview or "",
             "link_fields": link_fields or {},
+            "ad_groups": list_ad_groups(conn, active.get("code") or "") if active else [],
+            "ad_ratio_history": list_ratio_history(conn, active.get("code") or "", 20) if active else [],
         }
 
     @app.get("/admin/traffic", response_class=HTMLResponse)
@@ -7813,6 +8052,13 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             mult = acct["value_multiplier"]
         enabled = str(form.get("enabled") or "") in {"1", "on", "true", "yes"}
         make_default = str(form.get("make_default") or "") in {"1", "on", "true", "yes"}
+
+        def _num(key, default, kind=float):
+            try:
+                return kind(str(form.get(key) if form.get(key) not in (None, "") else default))
+            except (TypeError, ValueError):
+                return default
+
         updated = update_account(
             conn,
             account_id,
@@ -7822,8 +8068,67 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             value_multiplier=mult,
             enabled=enabled,
             make_default=make_default,
+            learning_min=_num("learning_min", acct.get("learning_min", 50), int),
+            daily_floor=_num("daily_floor", acct.get("daily_floor", 5), int),
+            ratio_min=_num("ratio_min", acct.get("ratio_min", 60)),
+            ratio_max=_num("ratio_max", acct.get("ratio_max", 100)),
+            smart_enabled=str(form.get("smart_enabled") or "") in {"1", "on", "true", "yes"},
+            target_cpa=_num("target_cpa", acct.get("target_cpa", 0)),
         )
         return _traffic_redirect(platform, (updated or acct).get("code") or "", "saved")
+
+    @app.post("/admin/traffic/group/save")
+    async def admin_traffic_group_save(request: Request):
+        require_admin_role(request)
+        form = await request.form()
+        platform = str(form.get("platform") or "meta").strip().lower()
+        try:
+            account_id = int(form.get("account_id") or 0)
+        except ValueError:
+            account_id = 0
+        acct = get_account(conn, account_id=account_id)
+        if not acct:
+            return _traffic_redirect(platform, "", "error")
+        ratio_raw = str(form.get("ratio_override") or "").strip()
+        cpa_raw = str(form.get("target_cpa_override") or "").strip()
+        try:
+            save_group_override(
+                conn,
+                acct.get("code") or "",
+                str(form.get("adgroup") or ""),
+                None if ratio_raw == "" else float(ratio_raw),
+                None if cpa_raw == "" else float(cpa_raw),
+                acct.get("platform") or platform,
+            )
+        except ValueError:
+            return _traffic_redirect(platform, acct.get("code") or "", "error")
+        return _traffic_redirect(platform, acct.get("code") or "", "saved")
+
+    @app.post("/admin/traffic/smart")
+    async def admin_traffic_smart(request: Request):
+        require_admin(request)
+        form = await request.form()
+        platform = str(form.get("platform") or "meta").strip().lower()
+        code = str(form.get("acct") or "").strip()
+        acct = get_account(conn, code=code) if code else None
+        if acct:
+            conn.execute("update ad_accounts set smart_checked_at = '' where id = ?", (acct["id"],))
+        try:
+            run_smart_ratios(conn)
+            notice = "smart_ok"
+        except Exception:
+            notice = "smart_fail"
+        return _traffic_redirect(platform, code, notice)
+
+    @app.get("/admin/conversions", response_class=HTMLResponse)
+    def admin_conversions(request: Request):
+        require_admin(request)
+        ensure_ad_tables(conn)
+        return render(
+            request,
+            "admin_conversions.html",
+            ad_logs=recent_ad_logs(conn, 100),
+        )
 
     @app.post("/admin/traffic/account/delete")
     async def admin_traffic_account_delete(request: Request):
@@ -7990,10 +8295,14 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         cards, ctx = _lp_cards(request, spec["category"], preview)
         bands, overflow = band_groups(cards)
         ends_at, _set_cookie = lp_flash_window(request)
+        enter_base = href(f"/c/{spec['category']}", ctx["country"])
+        enter_eid = new_event_id("enter")
+        enter_join = "&" if "?" in enter_base else "?"
         lp = {
             **spec,
             "ends_at": ends_at,
-            "enter_href": href(f"/c/{spec['category']}", ctx["country"]),
+            "enter_href": f"{enter_base}{enter_join}ad_enter=1&eid={enter_eid}",
+            "enter_eid": enter_eid,
             "preview": preview,
             "code": code,
             "product_count": len(cards),
@@ -8037,6 +8346,12 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 path="/",
                 samesite="lax",
             )
+        if not preview:
+            try:
+                event = _track_ad(request, "PageView", new_event_id("pv"))
+                _queue_pixel(response, request, event)
+            except Exception:
+                pass
         return response
 
     @app.get("/lp/ad/preview", response_class=HTMLResponse)
@@ -8111,8 +8426,12 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             launch_links=list_lp_links(conn),
             platforms=PLATFORMS,
             launch_accounts=accounts,
-            accounts_by_plat=grouped,
+            accounts_by_plat={
+                key: [account_public_view(item) for item in rows]
+                for key, rows in grouped.items()
+            },
             active_acct=active,
+            active_public=account_public_view(active) if active else {},
             ad_logs=recent_ad_logs(conn, 20),
             ad_funnel=funnel_stats(conn, 14),
             platform_fields=PLATFORM_FIELDS.get(platform) or [],
@@ -8177,24 +8496,17 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
 
     @app.post("/admin/launch/account/save")
     async def admin_launch_account_save(request: Request):
-        """Save Pixel / CAPI for the selected account from the launch page."""
-        require_admin_role(request)
+        """Pixel edits live on the ad account. Launch only links there."""
+        require_admin(request)
         form = await request.form()
         platform = str(form.get("platform") or "meta").strip().lower()
         try:
             account_id = int(form.get("account_id") or 0)
         except ValueError:
             account_id = 0
-        acct = get_account(conn, account_id=account_id)
-        if not acct:
-            return RedirectResponse(f"/admin/launch?platform={platform}&notice=error", status_code=303)
-        patch = {}
-        for key, _title, _secret in PLATFORM_FIELDS.get(acct["platform"], []):
-            if key in form:
-                patch[key] = str(form.get(key) or "")
-        updated = update_account(conn, account_id, credentials_patch=patch)
-        code = (updated or acct).get("code") or ""
-        q = f"/admin/launch?platform={platform}&notice=pixel_saved"
+        acct = get_account(conn, account_id=account_id) if account_id else None
+        code = (acct or {}).get("code") or str(form.get("acct") or "")
+        q = f"/admin/traffic?platform={platform or (acct or {}).get('platform') or 'meta'}"
         if code:
             q += f"&acct={code}"
         return RedirectResponse(q, status_code=303)
@@ -8639,8 +8951,23 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             items = [sku, *items]
         wished = bool(sku and sku in items)
         ajax = str(form.get("ajax") or "") == "1" or (request.headers.get("X-Harbor-Ajax") or "") == "1"
+        ad_event = None
+        if wished and sku:
+            try:
+                ad_event = _track_ad(
+                    request,
+                    "AddToWishlist",
+                    new_event_id("wish"),
+                    content_ids=[sku],
+                    contents=[{"id": sku, "content_id": sku, "quantity": 1, "item_price": 0, "price": 0}],
+                )
+            except Exception:
+                ad_event = None
         if ajax:
-            response = JSONResponse({"ok": True, "wished": wished, "sku": sku})
+            body = {"ok": True, "wished": wished, "sku": sku}
+            if ad_event:
+                body["ad_event"] = ad_event
+            response = JSONResponse(body)
             response.set_cookie("wishlist", write_skus(items, 36), max_age=31536000, path="/")
             return response
         nxt = str(form.get("next") or "/account/wishlist")
@@ -8648,6 +8975,8 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             nxt = "/account/wishlist"
         response = RedirectResponse(href(nxt, country), status_code=303)
         response.set_cookie("wishlist", write_skus(items, 36), max_age=31536000, path="/")
+        if ad_event:
+            _queue_pixel(response, request, ad_event)
         return response
 
     
@@ -10870,6 +11199,12 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         mount_support(app, conn=conn, render=render, require_staff=require_staff, buyer_email=buyer_email, get_translator=active_translator, get_complete=active_complete)
     except Exception as exc:
         print("support mount failed", exc)
+
+    if db_path != ":memory:":
+        try:
+            start_smart_job(conn, db_path)
+        except Exception:
+            pass
 
     try:
         mount_mobile_api(
