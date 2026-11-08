@@ -1,0 +1,88 @@
+{% extends "admin_base.html" %}
+{% block body %}
+<section class="panel">
+  <div class="head-row">
+    <div>
+      <h1>推荐规则</h1>
+      <p class="muted">落地页、首页冷启动、空购物车和商品上的「关注热度」共用这一页。保存后约 30 秒内生效。不改已经记下的点击次数。</p>
+    </div>
+    <div class="actions">
+      <button class="btn ghost" type="submit" form="reco-form" name="reset" value="1">恢复默认</button>
+      <button class="btn" type="submit" form="reco-form">保存规则</button>
+    </div>
+  </div>
+
+  {% if flash == 'reco_saved' %}
+  <div class="flash-banner"><span class="ok">已保存。新打开的页面按新规则排。</span></div>
+  {% elif flash == 'reco_reset' %}
+  <div class="flash-banner"><span class="ok">已恢复默认（关注热度系数 98，落地页打乱，低价最多 6 个）。</span></div>
+  {% elif flash == 'reco_bad' %}
+  <div class="flash-banner"><span class="error">{{ reco_error or "请检查下面的数字。" }}</span></div>
+  {% endif %}
+
+  <form id="reco-form" method="post" action="/admin/reco">
+    <div class="card">
+      <h2>关注热度</h2>
+      <div class="pad fields">
+        <label>每次打开加多少
+          <input type="number" name="heat_per_click" value="{{ rules.heat_per_click }}" min="0" max="10000" step="1" required>
+        </label>
+        <p class="muted small wide">控制什么：商品页和商品卡片上的「关注热度」。公式是 打开次数 × 这个数。默认 98，所以 1 次打开显示 98，2 次显示 196。次数来自站内商品页访问（visits，kind=product），不是亚马逊标题匹配，也不是去重人数。什么时候生效：保存后约 30 秒。例子：改成 10 之后，打开 2 次的商品显示 20。</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>落地页组货 /lp/ad</h2>
+      <div class="pad fields">
+        <label>刷新时打乱
+          <input type="hidden" name="lp_shuffle" value="0">
+          <input type="checkbox" name="lp_shuffle" value="1" {% if rules.lp_shuffle %}checked{% endif %}>
+        </label>
+        <label>一页几个
+          <input type="number" name="lp_max_cards" value="{{ rules.lp_max_cards }}" min="4" max="60" step="1" required>
+        </label>
+        <label>$3 以下最多
+          <input type="number" name="lp_under3_cap" value="{{ rules.lp_under3_cap }}" min="0" max="60" step="1" required>
+        </label>
+        <label>$3–$5 至少
+          <input type="number" name="lp_band_3_5_min" value="{{ rules.lp_band_3_5_min }}" min="0" max="60" step="1" required>
+        </label>
+        <label>$5–$10 至少
+          <input type="number" name="lp_band_5_10_min" value="{{ rules.lp_band_5_10_min }}" min="0" max="60" step="1" required>
+        </label>
+        <label>同一子类目最多
+          <input type="number" name="lp_sub_cap" value="{{ rules.lp_sub_cap }}" min="0" max="24" step="1" required>
+        </label>
+        <p class="muted small wide">控制什么：广告落地页选哪些商品、怎么排。$1–$10 仍是候选池，但不再按价格从低到高排。热度高的更靠前。头图优先 $3–$8 且有图的。某一档货不够时，从旁边的价位补，而不是用一堆 $1 商品填满。打乱默认开：刷新会轻轻换近分商品的位置，热度差出一个点击的不会被挤下去。关掉打乱后顺序固定，仍然不按价格排。子类目填 0 表示不限制；凑不满一页时会放宽上限。首页同一访客翻页仍保持连续，只有落地页按大约 45 秒换一次抖动。例子：24 个坑、低价最多 6、$3–$5 和 $5–$10 各至少 6，页面不会变成一整墙 $0.x–$2 的商品。</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>千人千面</h2>
+      <div class="pad fields">
+        <label>兴趣坑占比
+          <input type="number" name="browse_share" value="{{ '%.2f'|format(rules.browse_share) }}" min="0" max="1" step="0.05" required>
+        </label>
+        <label>至少几条信号才开
+          <input type="number" name="personal_min_signals" value="{{ rules.personal_min_signals }}" min="0" max="100" step="1" required>
+        </label>
+        <p class="muted small wide">控制什么：首页推荐、类目列表的默认排序、空购物车推荐里，有多少坑跟这个人的浏览走。0.40 表示大约四成跟兴趣，其余跨类目打散。信号指兴趣、历史、口味里权重大于等于 1 的条数。购物车带出来的 0.15 弱提示不算。没达到条数时占比不生效，整页走冷启动（点击热度 + 下面的外部热销加分）。设为 0 表示不看条数，直接用占比。购物车里已经有商品时，仍按购物车搭配推荐，不受这条门槛影响。例子：门槛设为 3，只点开过 1 个商品的人仍看到冷启动货架；点开 3 个之后才混入兴趣坑。</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>冷启动 · 外部热销</h2>
+      <div class="pad fields">
+        <label>用外部热销加分
+          <input type="hidden" name="hot_boost" value="0">
+          <input type="checkbox" name="hot_boost" value="1" {% if rules.hot_boost %}checked{% endif %}>
+        </label>
+        <label>权重
+          <input type="number" name="hot_weight" value="{{ '%.1f'|format(rules.hot_weight) }}" min="0" max="500" step="0.5" required>
+        </label>
+        <p class="muted small wide">控制什么：没人点过的时候，用已经抓来的亚马逊畅销标题（热销同款）给站内相关商品加分，让冷启动看起来像一个正常货架，而不是最便宜的一排。对得上标题的商品加「重合分 × 权重」。同一类目里没对上标题、但同类已有对上的，再加 0.35 × 权重，当作连带款。有真实点击之后，点击热度仍是主排序，这里只是加分。关掉或权重设为 0 就不用这份名单。例子：默认权重 12，标题重合 2 分只加 24，低于 1 次点击的 98，所以被人打开过的商品仍排在纯外部热销前面。</p>
+      </div>
+    </div>
+  </form>
+</section>
+{% endblock %}

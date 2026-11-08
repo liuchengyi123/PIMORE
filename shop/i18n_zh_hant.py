@@ -197,7 +197,7 @@ ZH_HANT_UI = {
     'original_total': '原價合計',
     'pay_total': '實付',
     'you_save': '已省',
-    'interest_count': '{n} 人對這個有興趣',
+    'interest_count': '{n} 關注熱度',
     'guest': '遊客',
     'sign_in_hint': '登入後同步訂單與優惠',
     'no_orders': '下單後，訂單狀態會顯示在這裡。',

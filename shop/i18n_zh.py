@@ -203,7 +203,7 @@ ZH_UI = {
     "original_total": "原价合计",
     "pay_total": "实付",
     "you_save": "已省",
-        "interest_count": "{n} 人对这个有兴趣",
+    "interest_count": "{n} 关注热度",
     "guest": "游客",
     "sign_in_hint": "登录后同步订单与优惠",
     "no_orders": "下单后，订单状态会显示在这里。",
