@@ -1,5 +1,6 @@
 import hashlib
 import json
+from datetime import datetime, timedelta, timezone
 
 from fastapi.testclient import TestClient
 
@@ -11,6 +12,7 @@ from shop.adtrack import (
     create_account,
     decide_purchase,
     ensure_tables,
+    evaluate_stoploss,
     merge_from_request,
     propose_ratio,
     run_smart_ratios,
@@ -65,6 +67,8 @@ def _account(db, platform="meta", code="meta_home", **throttle):
         smart_enabled=throttle.get("smart_enabled", False),
         target_cpa=throttle.get("target_cpa", 0),
         value_multiplier=throttle.get("value_multiplier", 1),
+        stoploss_multiple=throttle.get("stoploss_multiple", 1.5),
+        stoploss_hours=throttle.get("stoploss_hours", 24),
     )
     return acct
 
@@ -402,6 +406,99 @@ def test_smart_ratio_steps_and_keeps_base_when_fetch_fails():
     assert history["reason"] == "no_token"
 
 
+def test_smart_off_uses_base_ratio_without_bounds():
+    client = _client()
+    db = client.app.state.db
+    _account(
+        db,
+        code="meta_home",
+        send_ratio_pct=50,
+        learning_min=0,
+        daily_floor=0,
+        ratio_min=60,
+        ratio_max=100,
+        smart_enabled=False,
+    )
+    flags = [decide_purchase(db, f"b{i}", {"acct": "meta_home", "adgroup": "555"})["send"] for i in range(10)]
+    assert flags.count(True) == 5
+
+
+def test_stoploss_holds_ratio_then_clears_when_cpa_recovers():
+    started = datetime(2026, 11, 1, tzinfo=timezone.utc)
+    active, since, hold = evaluate_stoploss("", started, 20, 8, 1.5, 24)
+    assert hold is False and active is False and since
+    active, since, hold = evaluate_stoploss(since, started + timedelta(hours=24), 20, 8, 1.5, 24)
+    assert active is True and hold is True
+    active, since, hold = evaluate_stoploss(since, started + timedelta(hours=48), 8, 8, 1.5, 24)
+    assert active is False and hold is False and since == ""
+
+    client = _client()
+    db = client.app.state.db
+    _account(
+        db,
+        code="meta_home",
+        send_ratio_pct=70,
+        learning_min=0,
+        daily_floor=0,
+        ratio_min=60,
+        ratio_max=100,
+        smart_enabled=True,
+        target_cpa=8,
+        stoploss_multiple=1.5,
+        stoploss_hours=24,
+    )
+    decide_purchase(db, "hot-1", {"acct": "meta_home", "adgroup": "555"})
+
+    def hot(_acct, _adgroup):
+        return 20.0, ""
+
+    run_smart_ratios(db, fetch=hot, now=started)
+    row = db.execute(
+        "select effective_ratio, reason, stoploss_active, stoploss_since from ad_groups where adgroup = '555'"
+    ).fetchone()
+    assert row["stoploss_active"] == 0
+    assert row["reason"] == "step_up_cpa"
+    held = row["effective_ratio"]
+    db.execute("update ad_accounts set smart_checked_at = ''")
+    run_smart_ratios(db, fetch=hot, now=started + timedelta(hours=24))
+    row = db.execute(
+        "select effective_ratio, reason, stoploss_active from ad_groups where adgroup = '555'"
+    ).fetchone()
+    assert row["stoploss_active"] == 1
+    assert row["reason"] == "止损：真实CPA持续超标"
+    assert row["effective_ratio"] == held
+    assert db.execute("select reason from ad_ratio_history order by id desc limit 1").fetchone()["reason"] == "止损：真实CPA持续超标"
+    db.execute("update ad_accounts set smart_checked_at = ''")
+    run_smart_ratios(db, fetch=lambda _a, _g: (8.0, ""), now=started + timedelta(hours=30))
+    row = db.execute("select stoploss_active, reason, stoploss_since from ad_groups where adgroup = '555'").fetchone()
+    assert row["stoploss_active"] == 0
+    assert row["stoploss_since"] == ""
+    assert row["reason"] != "止损：真实CPA持续超标"
+
+
+def test_traffic_page_explains_each_throttle_rule():
+    client = _client()
+    _login(client)
+    page = client.get("/admin/traffic?platform=meta")
+    assert page.status_code == 200
+    for text in (
+        "扣量规则说明",
+        "真实 CPA",
+        "平台看到的 CPA",
+        "智能关",
+        "止损倍数",
+        "止损时长",
+        "学习期",
+        "每日保底",
+        "浏览器 Purchase",
+        "漏斗仍按全额",
+    ):
+        assert text in page.text
+    launch = client.get("/admin/launch")
+    assert "打码后的值" in launch.text
+    assert "测试事件" in launch.text
+
+
 def test_existing_sqlite_gets_throttle_columns(tmp_path):
     import sqlite3
 
@@ -415,7 +512,7 @@ def test_existing_sqlite_gets_throttle_columns(tmp_path):
     conn.execute("create table settings (key text primary key, value text)")
     ensure_tables(conn)
     cols = {row["name"] for row in conn.execute("pragma table_info(ad_accounts)")}
-    assert {"learning_min", "daily_floor", "ratio_min", "ratio_max", "smart_enabled", "target_cpa"} <= cols
+    assert {"learning_min", "daily_floor", "ratio_min", "ratio_max", "smart_enabled", "target_cpa", "stoploss_multiple", "stoploss_hours"} <= cols
     order_cols = {row["name"] for row in conn.execute("pragma table_info(orders)")}
     assert "adgroup" in order_cols
     log_cols = {row["name"] for row in conn.execute("pragma table_info(ad_event_log)")}

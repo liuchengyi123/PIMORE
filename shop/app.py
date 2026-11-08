@@ -8074,6 +8074,8 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             ratio_max=_num("ratio_max", acct.get("ratio_max", 100)),
             smart_enabled=str(form.get("smart_enabled") or "") in {"1", "on", "true", "yes"},
             target_cpa=_num("target_cpa", acct.get("target_cpa", 0)),
+            stoploss_multiple=_num("stoploss_multiple", acct.get("stoploss_multiple", 1.5)),
+            stoploss_hours=_num("stoploss_hours", acct.get("stoploss_hours", 24)),
         )
         return _traffic_redirect(platform, (updated or acct).get("code") or "", "saved")
 
@@ -8091,6 +8093,8 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             return _traffic_redirect(platform, "", "error")
         ratio_raw = str(form.get("ratio_override") or "").strip()
         cpa_raw = str(form.get("target_cpa_override") or "").strip()
+        sl_mult_raw = str(form.get("stoploss_multiple_override") or "").strip()
+        sl_hours_raw = str(form.get("stoploss_hours_override") or "").strip()
         try:
             save_group_override(
                 conn,
@@ -8099,6 +8103,8 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 None if ratio_raw == "" else float(ratio_raw),
                 None if cpa_raw == "" else float(cpa_raw),
                 acct.get("platform") or platform,
+                None if sl_mult_raw == "" else float(sl_mult_raw),
+                None if sl_hours_raw == "" else float(sl_hours_raw),
             )
         except ValueError:
             return _traffic_redirect(platform, acct.get("code") or "", "error")

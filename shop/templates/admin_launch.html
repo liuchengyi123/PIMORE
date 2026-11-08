@@ -81,12 +81,12 @@
       <p class="muted small">Pixel / CAPI 只配在投放账户上。一个投放账户对应一个 Pixel。受众差很多的类目请分开建账户（例如 meta_home 和 meta_beauty），即使它们投在同一个 Meta/TikTok 广告账户里。</p>
       {% if active_acct %}
       <dl class="fields" id="lp-pixel-status" style="margin-top:10px">
-        <div><dt>平台</dt><dd id="lp-st-platform">{{ active_public.platform_label or active_acct.platform }}</dd></div>
-        <div><dt>Pixel ID</dt><dd id="lp-st-pixel" class="mono">{{ active_public.pixel_masked or "未配置" }}</dd></div>
-        <div><dt>CAPI / Events Token</dt><dd id="lp-st-capi">{{ "已设置" if active_public.capi_set else "未设置" }}</dd></div>
-        <div><dt>test_event_code</dt><dd id="lp-st-test">{{ "已设置" if active_public.test_code_set else "未设置" }}</dd></div>
+        <div><dt>平台</dt><dd id="lp-st-platform">{{ active_public.platform_label or active_acct.platform }}<br><span class="muted small">这条链接只加载该平台的 Pixel。换平台会换成那个平台的账户。</span></dd></div>
+        <div><dt>Pixel ID</dt><dd id="lp-st-pixel" class="mono">{{ active_public.pixel_masked or "未配置" }}<br><span class="muted small">浏览器像素和服务器回传都用这个 ID。这里只显示打码后的值，完整 ID 在投放回传里改。</span></dd></div>
+        <div><dt>CAPI / Events Token</dt><dd id="lp-st-capi">{{ "已设置" if active_public.capi_set else "未设置" }}<br><span class="muted small">已设置才会发服务器事件。未设置时浏览器像素仍可工作，服务器日志记为未配置。</span></dd></div>
+        <div><dt>test_event_code</dt><dd id="lp-st-test">{{ "已设置" if active_public.test_code_set else "未设置" }}<br><span class="muted small">有值时每次服务器事件都带测试码，到 Meta / TikTok 的测试事件里核对。正式投放请留空。</span></dd></div>
       </dl>
-      <p style="margin-top:10px"><a id="lp-st-edit" href="/admin/traffic?platform={{ active_acct.platform }}&amp;acct={{ active_acct.code }}">编辑此账户的 Pixel</a></p>
+      <p style="margin-top:10px"><a id="lp-st-edit" href="/admin/traffic?platform={{ active_acct.platform }}&amp;acct={{ active_acct.code }}">编辑此账户的 Pixel</a><br><span class="muted small">Pixel、密钥、回传比例和止损都在投放回传里改，落地页只看状态。</span></p>
       {% else %}
       <p class="error">该平台还没有广告账户。请先到 <a href="/admin/traffic?platform={{ form_state.platform }}">投放回传</a> 添加账户。</p>
       {% endif %}

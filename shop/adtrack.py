@@ -312,9 +312,15 @@ def ensure_tables(conn) -> None:
         ("ratio_max", "ratio_max real not null default 100"),
         ("smart_enabled", "smart_enabled integer not null default 0"),
         ("target_cpa", "target_cpa real not null default 0"),
+        ("stoploss_multiple", "stoploss_multiple real not null default 1.5"),
+        ("stoploss_hours", "stoploss_hours real not null default 24"),
         ("smart_checked_at", "smart_checked_at text not null default ''"),
     ):
         _add_column(conn, "ad_accounts", name, ddl)
+    _add_column(conn, "ad_groups", "stoploss_multiple_override", "stoploss_multiple_override real")
+    _add_column(conn, "ad_groups", "stoploss_hours_override", "stoploss_hours_override real")
+    _add_column(conn, "ad_groups", "stoploss_since", "stoploss_since text not null default ''")
+    _add_column(conn, "ad_groups", "stoploss_active", "stoploss_active integer not null default 0")
     _add_column(conn, "orders", "adgroup", "adgroup text not null default ''")
     _add_column(conn, "orders", "ad_campaign", "ad_campaign text not null default ''")
     _add_column(conn, "orders", "ad_id", "ad_id text not null default ''")
@@ -650,6 +656,14 @@ def account_to_dict(row) -> dict:
     except (TypeError, ValueError):
         d["target_cpa"] = 0.0
     d["smart_checked_at"] = d.get("smart_checked_at") or ""
+    try:
+        d["stoploss_multiple"] = float(d["stoploss_multiple"]) if d.get("stoploss_multiple") is not None else 1.5
+    except (TypeError, ValueError, KeyError):
+        d["stoploss_multiple"] = 1.5
+    try:
+        d["stoploss_hours"] = float(d["stoploss_hours"]) if d.get("stoploss_hours") is not None else 24
+    except (TypeError, ValueError, KeyError):
+        d["stoploss_hours"] = 24.0
     d["status"] = account_status(d)
     return d
 
@@ -858,6 +872,8 @@ def update_account(
     ratio_max: float | None = None,
     smart_enabled: bool | None = None,
     target_cpa: float | None = None,
+    stoploss_multiple: float | None = None,
+    stoploss_hours: float | None = None,
 ) -> dict | None:
     ensure_tables(conn)
     acct = get_account(conn, account_id=account_id)
@@ -887,6 +903,8 @@ def update_account(
         rmax = rmin
     smart = acct.get("smart_enabled", False) if smart_enabled is None else bool(smart_enabled)
     tcpa = acct.get("target_cpa", 0) if target_cpa is None else max(0.0, float(target_cpa))
+    sl_mult = acct.get("stoploss_multiple", 1.5) if stoploss_multiple is None else max(1.0, float(stoploss_multiple))
+    sl_hours = acct.get("stoploss_hours", 24) if stoploss_hours is None else max(0.0, float(stoploss_hours))
     is_default = 1 if make_default or acct["is_default"] else (1 if acct["is_default"] else 0)
     if make_default:
         conn.execute(
@@ -896,7 +914,8 @@ def update_account(
         is_default = 1
     conn.execute(
         "update ad_accounts set name = ?, credentials = ?, send_ratio_pct = ?, value_multiplier = ?, enabled = ?, is_default = ?, "
-        "learning_min = ?, daily_floor = ?, ratio_min = ?, ratio_max = ?, smart_enabled = ?, target_cpa = ?, updated_at = ? where id = ?",
+        "learning_min = ?, daily_floor = ?, ratio_min = ?, ratio_max = ?, smart_enabled = ?, target_cpa = ?, "
+        "stoploss_multiple = ?, stoploss_hours = ?, updated_at = ? where id = ?",
         (
             new_name,
             json.dumps(creds, ensure_ascii=False),
@@ -910,6 +929,8 @@ def update_account(
             float(rmax),
             1 if smart else 0,
             float(tcpa),
+            float(sl_mult),
+            float(sl_hours),
             _now(),
             int(account_id),
         ),
@@ -2106,17 +2127,24 @@ def decide_purchase(conn, order_id: str, attrs: dict | None = None, now=None) ->
             group = clean_platform_id(attrs.get("adgroup"))
             lo = float(acct.get("ratio_min") if acct.get("ratio_min") is not None else 60)
             hi = float(acct.get("ratio_max") if acct.get("ratio_max") is not None else 100)
-            base = clamp_ratio(100 if acct.get("send_ratio_pct") is None else acct.get("send_ratio_pct"), lo, hi)
+            raw_base = 100 if acct.get("send_ratio_pct") is None else acct.get("send_ratio_pct")
             grow = conn.execute(
                 "select * from ad_groups where acct = ? and adgroup = ?",
                 (code, group),
             ).fetchone()
             grow = _row_dict(grow) if grow else {}
             if grow.get("ratio_override") is not None:
-                base = clamp_ratio(grow.get("ratio_override"), lo, hi)
-            current = base
-            if acct.get("smart_enabled") and grow.get("effective_ratio") is not None:
-                current = clamp_ratio(grow.get("effective_ratio"), lo, hi)
+                raw_base = grow.get("ratio_override")
+            if acct.get("smart_enabled"):
+                current = clamp_ratio(raw_base, lo, hi)
+                if grow.get("effective_ratio") is not None:
+                    current = clamp_ratio(grow.get("effective_ratio"), lo, hi)
+            else:
+                # Smart off: bounds and target CPA do not apply. Group ratio override is that group's base.
+                try:
+                    current = max(0.0, min(100.0, float(raw_base)))
+                except (TypeError, ValueError):
+                    current = 100.0
             prior = _prior_purchases(conn, code, group, moment)
             learn_at = int(acct.get("learning_min") if acct.get("learning_min") is not None else 50)
             floor_n = int(acct.get("daily_floor") if acct.get("daily_floor") is not None else 5)
@@ -2189,7 +2217,19 @@ def list_ratio_history(conn, acct_code: str, limit: int = 30) -> list:
     return out
 
 
-def save_group_override(conn, acct_code: str, adgroup: str, ratio_override, target_cpa_override, platform: str = "") -> None:
+STOPLOSS_REASON = "止损：真实CPA持续超标"
+
+
+def save_group_override(
+    conn,
+    acct_code: str,
+    adgroup: str,
+    ratio_override,
+    target_cpa_override,
+    platform: str = "",
+    stoploss_multiple_override=None,
+    stoploss_hours_override=None,
+) -> None:
     ensure_tables(conn)
     code = _clip(acct_code, 64)
     group = clean_platform_id(adgroup)
@@ -2197,13 +2237,49 @@ def save_group_override(conn, acct_code: str, adgroup: str, ratio_override, targ
         return
     ratio = None if ratio_override in (None, "") else max(0.0, min(100.0, float(ratio_override)))
     tcpa = None if target_cpa_override in (None, "") else max(0.0, float(target_cpa_override))
+    sl_mult = None if stoploss_multiple_override in (None, "") else max(1.0, float(stoploss_multiple_override))
+    sl_hours = None if stoploss_hours_override in (None, "") else max(0.0, float(stoploss_hours_override))
     conn.execute(
-        "insert into ad_groups (acct, adgroup, platform, updated_at, ratio_override, target_cpa_override) "
-        "values (?, ?, ?, ?, ?, ?) "
+        "insert into ad_groups (acct, adgroup, platform, updated_at, ratio_override, target_cpa_override, "
+        "stoploss_multiple_override, stoploss_hours_override) values (?, ?, ?, ?, ?, ?, ?, ?) "
         "on conflict(acct, adgroup) do update set ratio_override = excluded.ratio_override, "
-        "target_cpa_override = excluded.target_cpa_override, updated_at = excluded.updated_at",
-        (code, group, _clip(platform, 16), _now(), ratio, tcpa),
+        "target_cpa_override = excluded.target_cpa_override, "
+        "stoploss_multiple_override = excluded.stoploss_multiple_override, "
+        "stoploss_hours_override = excluded.stoploss_hours_override, updated_at = excluded.updated_at",
+        (code, group, _clip(platform, 16), _now(), ratio, tcpa, sl_mult, sl_hours),
     )
+
+
+def evaluate_stoploss(since: str, now, actual_cpa, target, multiple, hours) -> tuple[bool, str, bool]:
+    """Return (active, since, hold). Hold freezes the ratio; active marks the red row.
+
+    The clock starts the first time real CPA is above target × multiple.
+    Hold begins only after that clock has run for `hours`. CPA at or under
+    the line clears the clock.
+    """
+    try:
+        line = float(target) * float(multiple)
+        limit = float(hours)
+    except (TypeError, ValueError):
+        return False, "", False
+    if float(target or 0) <= 0 or actual_cpa is None or line <= 0:
+        return False, since or "", False
+    if float(actual_cpa) <= line:
+        return False, "", False
+    text = (since or "").strip()
+    if not text:
+        text = now.replace(microsecond=0).isoformat()
+    try:
+        started = datetime.fromisoformat(text.replace("Z", "+00:00"))
+        if started.tzinfo is None:
+            started = started.replace(tzinfo=timezone.utc)
+    except ValueError:
+        started = now
+        text = now.replace(microsecond=0).isoformat()
+    elapsed = (now - started).total_seconds() / 3600.0
+    if elapsed + 1e-9 >= limit:
+        return True, text, True
+    return False, text, False
 
 
 def propose_ratio(current, base, target_cpa, actual_cpa, spend, prev_spend, lo, hi) -> tuple[float, str]:
@@ -2384,9 +2460,23 @@ def run_smart_ratios(conn, fetch=None, now=None) -> list:
                 spend, err = fetch_tiktok_spend(token or "", creds.get("tiktok_advertiser_id") or "", adgroup, moment)
             else:
                 err = "unsupported_platform"
+            sl_mult = group.get("stoploss_multiple_override")
+            if sl_mult is None:
+                sl_mult = acct.get("stoploss_multiple") if acct.get("stoploss_multiple") is not None else 1.5
+            sl_hours = group.get("stoploss_hours_override")
+            if sl_hours is None:
+                sl_hours = acct.get("stoploss_hours") if acct.get("stoploss_hours") is not None else 24
+            sl_since = group.get("stoploss_since") or ""
+            sl_active = bool(int(group.get("stoploss_active") or 0))
+            hold = False
             if err or spend is None:
-                reason = err or "fetch_failed"
-                new_ratio = base
+                if sl_active:
+                    reason = STOPLOSS_REASON
+                    new_ratio = current
+                    hold = True
+                else:
+                    reason = err or "fetch_failed"
+                    new_ratio = base
             else:
                 if real <= 0:
                     actual = None if float(spend or 0) <= 0 else float(spend) * 1000
@@ -2395,9 +2485,14 @@ def run_smart_ratios(conn, fetch=None, now=None) -> list:
                 target = group.get("target_cpa_override")
                 if target is None:
                     target = acct.get("target_cpa") or 0
-                new_ratio, reason = propose_ratio(current, base, target, actual, spend, group.get("prev_spend") or 0, lo, hi)
-                if real <= 0 and float(spend or 0) > 0:
-                    reason = "step_up_cpa" if new_ratio >= current else reason
+                sl_active, sl_since, hold = evaluate_stoploss(sl_since, moment, actual, target, sl_mult, sl_hours)
+                if hold:
+                    new_ratio = current
+                    reason = STOPLOSS_REASON
+                else:
+                    new_ratio, reason = propose_ratio(current, base, target, actual, spend, group.get("prev_spend") or 0, lo, hi)
+                    if real <= 0 and float(spend or 0) > 0:
+                        reason = "step_up_cpa" if new_ratio >= current else reason
             last = group.get("last_adjusted_at") or ""
             changed = abs(float(new_ratio) - float(current)) >= 0.5
             recent = False
@@ -2409,18 +2504,19 @@ def run_smart_ratios(conn, fetch=None, now=None) -> list:
                     recent = (moment - prev).total_seconds() < 6 * 3600
                 except ValueError:
                     recent = False
-            if err or spend is None:
+            if err or spend is None or hold:
                 recent = False
-            if changed and recent:
+            if changed and recent and not hold:
                 new_ratio = current
                 reason = "held_" + reason
             cpa = (float(spend) / real) if (spend is not None and real > 0) else 0.0
             conn.execute(
-                "insert into ad_groups (acct, adgroup, platform, effective_ratio, reason, spend, prev_spend, real_orders, sent_orders, cpa, last_adjusted_at, updated_at) "
-                "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+                "insert into ad_groups (acct, adgroup, platform, effective_ratio, reason, spend, prev_spend, real_orders, sent_orders, cpa, last_adjusted_at, updated_at, stoploss_since, stoploss_active) "
+                "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
                 "on conflict(acct, adgroup) do update set platform = excluded.platform, effective_ratio = excluded.effective_ratio, "
                 "reason = excluded.reason, prev_spend = ad_groups.spend, spend = excluded.spend, real_orders = excluded.real_orders, "
                 "sent_orders = excluded.sent_orders, cpa = excluded.cpa, "
+                "stoploss_since = excluded.stoploss_since, stoploss_active = excluded.stoploss_active, "
                 "last_adjusted_at = case when abs(excluded.effective_ratio - coalesce(ad_groups.effective_ratio, excluded.effective_ratio)) >= 0.5 "
                 "then excluded.last_adjusted_at else ad_groups.last_adjusted_at end, updated_at = excluded.updated_at",
                 (
@@ -2436,6 +2532,8 @@ def run_smart_ratios(conn, fetch=None, now=None) -> list:
                     float(cpa or 0),
                     moment.replace(microsecond=0).isoformat() if changed and not recent else (last or ""),
                     _now(),
+                    sl_since or "",
+                    1 if sl_active else 0,
                 ),
             )
             _record_ratio(conn, code, adgroup, new_ratio, reason, spend or 0, real, sent, cpa)
