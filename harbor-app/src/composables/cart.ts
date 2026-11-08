@@ -24,7 +24,7 @@ const state = reactive({
   syncing: false,
   shipLine: '',
   progress: 0,
-  freeShipThreshold: 19,
+  freeShipThreshold: 0,
   shipMet: false,
   lastError: '',
 })
@@ -33,7 +33,7 @@ function applySnapshot(snap: CartSnapshot) {
   state.live = snap.live
   state.shipLine = snap.shipLine
   state.progress = snap.progress
-  state.freeShipThreshold = snap.freeShipThreshold || 19
+  state.freeShipThreshold = snap.freeShipThreshold || 0
   state.shipMet = snap.shipMet
   state.lines = snap.lines.map((l) => ({
     code: l.sku,
@@ -73,7 +73,7 @@ export function useCart() {
   )
   const freeShipProgress = computed(() => {
     if (state.progress > 0) return Math.min(1, state.progress / 100)
-    const t = state.freeShipThreshold || 19
+    const t = state.freeShipThreshold || 0
     return Math.min(1, subtotal.value / t)
   })
 

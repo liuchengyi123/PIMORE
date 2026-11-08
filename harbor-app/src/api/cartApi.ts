@@ -54,10 +54,13 @@ function decodeEntities(s: string): string {
 function thresholdFromGap(gapTitle: string, shipLine: string): number {
   const blob = `${gapTitle} ${shipLine}`
   const m =
-    blob.match(/free shipping[^\d]*\$?\s*([0-9]+(?:\.[0-9]+)?)/i) ||
-    blob.match(/\(\s*<em[^>]*>\s*\$([0-9.]+)\s*<\/em>\s*\)/i) ||
-    blob.match(/at\s+\$([0-9.]+)/i)
-  return m ? Number(m[1]) : 19
+    blob.match(/minimum(?:\s+order)?[^\d]*\$?\s*([0-9]+(?:\.[0-9]+)?)/i) ||
+    blob.match(/below the[^\d]*\$?\s*([0-9]+(?:\.[0-9]+)?)/i) ||
+    blob.match(/checkout from[^\d]*\$?\s*([0-9]+(?:\.[0-9]+)?)/i) ||
+    blob.match(/最低(?:下单|訂單|结算|結算)?[^\d]*\$?\s*([0-9]+(?:\.[0-9]+)?)/) ||
+    blob.match(/(?:away from free shipping|below the)[\s\S]{0,40}\$?\s*([0-9]+(?:\.[0-9]+)?)/i) ||
+    blob.match(/free shipping[^\d]*\$?\s*([0-9]+(?:\.[0-9]+)?)/i)
+  return m ? Number(m[1]) : 0
 }
 
 function fromAddJson(data: Record<string, unknown>): CartSnapshot {
@@ -142,11 +145,11 @@ function parseCartHtml(html: string): CartSnapshot {
   })
 
   const subtotal = unique.reduce((n, l) => n + l.price * l.qty, 0)
-  let threshold = 19
-  const away = html.match(/\$([0-9.]+)\s*<\/em>\s*away from free shipping[\s\S]{0,80}\$([0-9.]+)/i)
+  let threshold = 0
+  const away = html.match(/\$([0-9.]+)\s*<\/em>\s*(?:away from free shipping|below the)[\s\S]{0,80}\$([0-9.]+)/i)
   if (away) threshold = Number(away[2]) || threshold
   else {
-    const t = html.match(/unlock free shipping at \$([0-9.]+)/i)
+    const t = html.match(/(?:unlock free shipping at|minimum order|checkout from|最低下单金额)\s*\$?([0-9.]+)/i)
     if (t) threshold = Number(t[1])
   }
   const progress = threshold > 0 ? Math.min(100, Math.round((subtotal * 100) / threshold)) : 0
@@ -161,9 +164,11 @@ function parseCartHtml(html: string): CartSnapshot {
     progress,
     shipMet: subtotal >= threshold && unique.length > 0,
     shipLine: unique.length
-      ? subtotal >= threshold
-        ? 'Free shipping unlocked'
-        : `Add $${Math.max(0, threshold - subtotal).toFixed(2)} for free shipping`
+      ? threshold <= 0
+        ? 'Free shipping on this order'
+        : subtotal >= threshold
+          ? 'Minimum met · free shipping'
+          : `Add $${Math.max(0, threshold - subtotal).toFixed(2)} to reach minimum order`
       : '',
     freeShipThreshold: threshold,
   }

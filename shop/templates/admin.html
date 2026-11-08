@@ -1416,22 +1416,23 @@
 </script>
 </div><!-- /AD22-split -->
 {% elif panel == 'promos' %}
-<header class="page-head" data-figma="AD21"><div><h1>满减运费</h1><p class="muted">金额一律按美元填写。</p></div></header>
+<header class="page-head" data-figma="AD21"><div><h1>满减 / 最低下单</h1><p class="muted">金额一律按美元填写。</p></div></header>
 <div class="card">
   <h2>当前规则摘要</h2>
   <div class="pad">
-    <p>包邮满 ${{ '%.2f'|format(promos.free_shipping_cents / 100) }} · 满减 {% for tier in promos.tiers %}${{ '%.2f'|format(tier[0] / 100) }}/${{ '%.2f'|format(tier[1] / 100) }}{% if not loop.last %} · {% endif %}{% endfor %} · 新人 ${{ '%.2f'|format(first_coupon.threshold_cents / 100) }}/${{ '%.2f'|format(first_coupon.amount_cents / 100) }} · 运费美加 ${{ '%.2f'|format(promos.shipping.USCA / 100) }} / 欧 ${{ '%.2f'|format(promos.shipping.EU / 100) }} / 日 ${{ '%.2f'|format(promos.shipping.JP / 100) }} / 墨巴 ${{ '%.2f'|format(promos.shipping.MXBR / 100) }}</p>
+    <p>全场包邮 · 最低下单 ${{ '%.2f'|format((guarantees.checkout_min_cents if guarantees else 0) / 100) }} · 满减 {% for tier in promos.tiers %}${{ '%.2f'|format(tier[0] / 100) }}/${{ '%.2f'|format(tier[1] / 100) }}{% if not loop.last %} · {% endif %}{% endfor %} · 新人 ${{ '%.2f'|format(first_coupon.threshold_cents / 100) }}/${{ '%.2f'|format(first_coupon.amount_cents / 100) }} · 运费美加 ${{ '%.2f'|format(promos.shipping.USCA / 100) }} / 欧 ${{ '%.2f'|format(promos.shipping.EU / 100) }} / 日 ${{ '%.2f'|format(promos.shipping.JP / 100) }} / 墨巴 ${{ '%.2f'|format(promos.shipping.MXBR / 100) }}</p>
   </div>
 </div>
 {% if is_admin_role %}
 <div class="growth-split" data-figma="AD21-edit">
   <div class="stack-col">
     <div class="card">
-      <h2>编辑满减 / 包邮</h2>
+      <h2>编辑满减 / 最低下单</h2>
       <form class="pad fields" method="post" action="/admin/promos">
         <input type="hidden" name="section" value="free">
-        <label>包邮门槛 <input name="free_shipping_dollars" value="{{ '%.2f'|format(promos.free_shipping_cents / 100) }}" inputmode="decimal"></label>
-        <div class="wide"><button class="btn" type="submit">保存包邮</button></div>
+        <p class="muted small">全场包邮已开启；前台门槛请用下方「最低下单金额」。此字段仅保留兼容，不再作为满额包邮展示。</p>
+        <label>旧包邮门槛（停用） <input name="free_shipping_dollars" value="{{ '%.2f'|format(promos.free_shipping_cents / 100) }}" inputmode="decimal"></label>
+        <div class="wide"><button class="btn" type="submit">保存</button></div>
       </form>
       <form class="pad fields" method="post" action="/admin/promos">
         <input type="hidden" name="section" value="first">
@@ -1471,7 +1472,7 @@
         <input type="hidden" name="section" value="guarantees">
         <label>迟到赔付 <input name="late_credit_dollars" value="{{ '%.2f'|format((guarantees.late_delivery_credit_cents if guarantees else 500) / 100) }}" inputmode="decimal"></label>
         <label>退货天 <input name="return_days" value="{{ guarantees.return_days if guarantees else 30 }}" inputmode="numeric"></label>
-        <label>起订（美元，0=不限） <input name="checkout_min_dollars" value="{{ '%.2f'|format((guarantees.checkout_min_cents if guarantees else 0) / 100) }}" inputmode="decimal"></label>
+        <label>最低下单金额（美元，0=不限） <input name="checkout_min_dollars" value="{{ '%.2f'|format((guarantees.checkout_min_cents if guarantees else 0) / 100) }}" inputmode="decimal"></label>
         <p class="muted small">迟到赔付显示在首页信任条、结算与商品页。</p>
         <div class="wide"><button class="btn" type="submit">保存</button></div>
       </form>

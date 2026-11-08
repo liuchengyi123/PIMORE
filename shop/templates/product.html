@@ -17,12 +17,6 @@
 </nav>
 <div class="stage">
 
-  <div class="fn-pdp-overlay">
-    <a class="fn-pdp-ov fn-pdp-back" href="{{ href('/c/' ~ item.category, country) }}" aria-label="{{ t.back }}"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></a>
-    <div class="fn-pdp-ov-right">
-      <button class="fn-pdp-ov" type="submit" form="wish-form" aria-label="{{ t.wishlist }}"><svg class="fn-wish-ico" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></button>
-      <button class="fn-pdp-ov" type="button" id="fn-pdp-share" aria-label="Share">↗</button>
-    </div>
   </div>
   <figure class="gallery">
     <div class="gallery-strip" id="gallery">
@@ -250,9 +244,9 @@
     {% endif %}
 
     <div class="buy-actions">
-      <button class="fn-pdp-save fn-pdp-save-desk" type="submit" form="wish-form" aria-label="{{ t.wishlist }}">
-        <span class="fn-pdp-save-ico" aria-hidden="true">♡</span>
-        <span>{{ t.save if t.save is defined else 'Save' }}</span>
+      <button class="fn-pdp-save fn-pdp-save-desk" type="button" id="fn-pdp-save" data-sku="{{ item.sku|e }}" aria-label="{{ t.wishlist }}" aria-pressed="false">
+        <span class="fn-pdp-save-ico" aria-hidden="true">&#9825;</span>
+        <span class="fn-pdp-save-label">{{ t.save if t.save is defined else 'Save' }}</span>
       </button>
       <a class="fn-pdp-cs-slot" href="{% if h5_origin %}{{ h5_origin }}/chat{% else %}/chat{% endif %}?sku={{ item.sku|urlencode }}&name={{ item.name|urlencode }}&price={{ item.price|urlencode }}{% if item.image_phone or item.image %}&image={{ (item.image_phone or item.image)|urlencode }}{% endif %}" aria-label="{{ t.support }}">
         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 0 1 8-8h0a8 8 0 0 1 8 8"/><path d="M4 12v3.5A2.5 2.5 0 0 0 6.5 18H8"/><path d="M20 12v3.5a2.5 2.5 0 0 1-2.5 2.5H15"/><path d="M15 18v1a2 2 0 0 1-2 2h-1"/></svg>
@@ -303,7 +297,51 @@
 <script>
   (function () {
 
-    var shareBtn = document.getElementById("fn-pdp-share");
+
+(function () {
+  var saveBtn = document.getElementById("fn-pdp-save");
+  var wishForm = document.getElementById("wish-form");
+  if (!saveBtn || !wishForm) return;
+  var sku = saveBtn.getAttribute("data-sku") || "";
+  var label = saveBtn.querySelector(".fn-pdp-save-label");
+  var ico = saveBtn.querySelector(".fn-pdp-save-ico");
+  var saveText = {{ (t.save if t.save is defined else 'Save')|tojson }};
+  var savedText = {{ (t.saved if t.saved is defined else 'Saved')|tojson }};
+  function cookieWish() {
+    var raw = (document.cookie.match(/(?:^|; )wishlist=([^;]*)/) || [])[1] || "";
+    try { raw = decodeURIComponent(raw); } catch (e) {}
+    return raw.split(",").map(function (s) { return s.trim(); }).filter(Boolean);
+  }
+  function paint(on) {
+    saveBtn.classList.toggle("is-saved", !!on);
+    saveBtn.setAttribute("aria-pressed", on ? "true" : "false");
+    if (ico) ico.textContent = on ? "\u2713" : "\u2661";
+    if (label) label.textContent = on ? savedText : saveText;
+  }
+  paint(cookieWish().indexOf(sku) >= 0);
+  saveBtn.addEventListener("click", function (ev) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    var fd = new FormData(wishForm);
+    fd.set("ajax", "1");
+    if (sku) fd.set("sku", sku);
+    saveBtn.disabled = true;
+    fetch(wishForm.getAttribute("action") || "/wishlist", {
+      method: "POST",
+      body: fd,
+      credentials: "same-origin",
+      headers: { "X-Harbor-Ajax": "1", "Accept": "application/json" }
+    }).then(function (r) { return r.json().catch(function () { return null; }); })
+      .then(function (data) {
+        if (data && data.ok) paint(!!data.wished);
+        else paint(cookieWish().indexOf(sku) >= 0);
+      })
+      .catch(function () { paint(cookieWish().indexOf(sku) >= 0); })
+      .finally(function () { saveBtn.disabled = false; });
+  });
+})();
+
+        var shareBtn = document.getElementById("fn-pdp-share");
     if (shareBtn) {
       shareBtn.addEventListener("click", function () {
         var url = location.href;
@@ -493,8 +531,10 @@
     var buyForm = document.getElementById("buy-form");
     if (buyForm) {
       buyForm.addEventListener("click", function (event) {
-        var button = event.target.closest(".buy-actions button, .fn-pdp-buy-now, .fn-pdp-atc");
+        var button = event.target.closest(".fn-pdp-buy-now, .fn-pdp-atc");
         if (!button) return;
+        // Save / wishlist must not open the add-to-cart sheet
+        if (button.classList.contains("fn-pdp-save") || button.getAttribute("form") === "wish-form") return;
         var isBuy = button.classList.contains("fn-pdp-buy-now") || button.getAttribute("data-buy-now") === "1" || button.hasAttribute("data-cart");
         // Desktop buy-now: go to /buy (checkout), do not toast-ATC
         if (isBuy && !phoneQuery.matches) {

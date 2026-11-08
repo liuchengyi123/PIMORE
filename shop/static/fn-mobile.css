@@ -1100,6 +1100,18 @@
     padding: 0 !important;
   }
   .fn-pdp-save-ico { font-size: 16px !important; line-height: 1 !important; }
+
+  .fn-pdp-save.is-saved {
+    color: #16A34A !important;
+  }
+  .fn-pdp-save.is-saved .fn-pdp-save-ico {
+    color: #16A34A !important;
+    font-weight: 700 !important;
+  }
+  body.fn-pdp-page .fn-pdp-save.is-saved {
+    color: #16A34A !important;
+  }
+
   .fn-pdp .buy-actions .btn.fn-pdp-atc,
   .fn-pdp .buy-actions .fn-pdp-atc {
     flex: 1.1 !important;

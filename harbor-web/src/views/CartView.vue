@@ -30,10 +30,13 @@
       </div>
     </div>
 
-    <div v-if="lines.length" class="ship-card">
-      <div class="ship-row"><span>Free shipping progress</span><span class="tiny">{{ money(Math.max(0, 49 - subtotal)) }} more</span></div>
-      <div class="ship-bar"><i :style="{ width: Math.min(100, Math.round(subtotal / 49 * 100)) + '%' }"></i></div>
-      <div class="tiny">Spend $49 for free tracked shipping</div>
+    <div v-if="lines.length && minOrder > 0" class="ship-card">
+      <div class="ship-row"><span>Minimum order</span><span class="tiny">{{ money(Math.max(0, minOrder - subtotal)) }} more</span></div>
+      <div class="ship-bar"><i :style="{ width: Math.min(100, Math.round(subtotal / minOrder * 100)) + '%' }"></i></div>
+      <div class="tiny">{{ subtotal >= minOrder ? 'Minimum met · free shipping' : ('Minimum order ' + money(minOrder) + ' · free shipping') }}</div>
+    </div>
+    <div v-else-if="lines.length" class="ship-card">
+      <div class="tiny">Free shipping on this order</div>
     </div>
     <div v-if="lines.length" class="footer">
       <div class="sum">合计 <b>{{ money(subtotal) }}</b></div>
@@ -58,6 +61,8 @@ const cart = useCart()
 const router = useRouter()
 const lines = computed(() => cart.lines.value)
 const subtotal = computed(() => cart.subtotal.value)
+/** Minimum checkout amount from live cart snapshot; 0 = no minimum. */
+const minOrder = computed(() => Number(cart.minOrderAmount?.value ?? cart.freeShipThreshold?.value ?? 0) || 0)
 
 function bump(line: LocalCartLine, delta: number) {
   cart.setQty(line.sku, line.offer || '', line.qty + delta)

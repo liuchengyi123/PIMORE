@@ -109,10 +109,10 @@
     <div class="fn-widget">
       <h4>{{ t.free_shipping }}</h4>
       <div class="tiny">{% if promise_line %}{{ promise_line }}{% endif %}{% if deal_line %} · {{ deal_line }}{% endif %}</div>
-      {% set free_cents = promos.free_shipping_cents if promos is defined and promos and promos.free_shipping_cents else 0 %}
+      {% set min_cents = checkout_min_cents|default(0) %}
       {% set spent = cart_cents|default(0) %}
-      {% if free_cents %}
-      <div class="bar"><i style="width:{{ [100, (spent * 100 / free_cents)|int]|min }}%"></i></div>
+      {% if min_cents %}
+      <div class="bar"><i style="width:{{ [100, (spent * 100 / min_cents)|int]|min }}%"></i></div>
       {% endif %}
       {% if cart_gap %}<div class="tiny">{{ cart_gap }}</div>{% endif %}
     </div>

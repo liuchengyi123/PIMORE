@@ -8637,6 +8637,12 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             items = [item for item in items if item != sku]
         else:
             items = [sku, *items]
+        wished = bool(sku and sku in items)
+        ajax = str(form.get("ajax") or "") == "1" or (request.headers.get("X-Harbor-Ajax") or "") == "1"
+        if ajax:
+            response = JSONResponse({"ok": True, "wished": wished, "sku": sku})
+            response.set_cookie("wishlist", write_skus(items, 36), max_age=31536000, path="/")
+            return response
         nxt = str(form.get("next") or "/account/wishlist")
         if not nxt.startswith("/") or nxt.startswith("//"):
             nxt = "/account/wishlist"

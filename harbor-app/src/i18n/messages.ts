@@ -262,6 +262,7 @@ export type MessageKey =
   | 'cart_empty_body'
   | 'cart_shop'
   | 'cart_free_shipping'
+  | 'cart_min_order'
   | 'cart_subtotal'
   | 'cart_checkout'
   | 'me_sign_in'
@@ -402,6 +403,7 @@ export const messages: Record<LocaleId, MessageDict> = {
     cart_empty_body: 'Quiet finds for the home, waiting for you.',
     cart_shop: 'Shop Harbor',
     cart_free_shipping: 'Free shipping',
+    cart_min_order: 'Minimum order',
     cart_subtotal: 'Subtotal',
     cart_checkout: 'Checkout · {amount}',
     me_sign_in: 'Sign in on Harbor',
@@ -766,6 +768,7 @@ export const messages: Record<LocaleId, MessageDict> = {
     cart_empty_body: 'Hallazgos tranquilos para el hogar, esperándote.',
     cart_shop: 'Comprar en Harbor',
     cart_free_shipping: 'Envío gratis',
+    cart_min_order: 'Pedido mínimo',
     cart_subtotal: 'Subtotal',
     cart_checkout: 'Pagar · {amount}',
     me_sign_in: 'Iniciar sesión en Harbor',
@@ -1130,6 +1133,7 @@ export const messages: Record<LocaleId, MessageDict> = {
     cart_empty_body: 'Des trouvailles tranquilles pour la maison vous attendent.',
     cart_shop: 'Acheter sur Harbor',
     cart_free_shipping: 'Livraison gratuite',
+    cart_min_order: 'Commande minimum',
     cart_subtotal: 'Sous-total',
     cart_checkout: 'Payer · {amount}',
     me_sign_in: 'Se connecter sur Harbor',
@@ -1494,6 +1498,7 @@ export const messages: Record<LocaleId, MessageDict> = {
     cart_empty_body: 'Achados calmos para a casa, à sua espera.',
     cart_shop: 'Comprar na Harbor',
     cart_free_shipping: 'Envio grátis',
+    cart_min_order: 'Pedido mínimo',
     cart_subtotal: 'Subtotal',
     cart_checkout: 'Checkout · {amount}',
     me_sign_in: 'Iniciar sessão na Harbor',
@@ -1858,6 +1863,7 @@ export const messages: Record<LocaleId, MessageDict> = {
     cart_empty_body: 'Тихие находки для дома ждут вас.',
     cart_shop: 'В магазин Harbor',
     cart_free_shipping: 'Бесплатная доставка',
+    cart_min_order: 'Минимальный заказ',
     cart_subtotal: 'Итого',
     cart_checkout: 'Оформить · {amount}',
     me_sign_in: 'Войти на Harbor',
@@ -2222,6 +2228,7 @@ export const messages: Record<LocaleId, MessageDict> = {
     cart_empty_body: 'مقتنيات هادئة للمنزل بانتظارك.',
     cart_shop: 'تسوق Harbor',
     cart_free_shipping: 'شحن مجاني',
+    cart_min_order: 'Minimum order',
     cart_subtotal: 'المجموع الفرعي',
     cart_checkout: 'الدفع · {amount}',
     me_sign_in: 'تسجيل الدخول إلى Harbor',
@@ -2586,6 +2593,7 @@ export const messages: Record<LocaleId, MessageDict> = {
     cart_empty_body: '집을 위한 고요한 발견이 기다립니다.',
     cart_shop: 'Harbor 쇼핑',
     cart_free_shipping: '무료 배송',
+    cart_min_order: '최소 주문',
     cart_subtotal: '소계',
     cart_checkout: '결제 · {amount}',
     me_sign_in: 'Harbor에 로그인',
@@ -2950,6 +2958,7 @@ export const messages: Record<LocaleId, MessageDict> = {
     cart_empty_body: '安静的家居发现，在等你。',
     cart_shop: '去 Harbor 逛逛',
     cart_free_shipping: '包邮',
+    cart_min_order: '最低下单金额',
     cart_subtotal: '小计',
     cart_checkout: '结算 · {amount}',
     me_sign_in: '登录 Harbor',
@@ -3314,6 +3323,7 @@ export const messages: Record<LocaleId, MessageDict> = {
     cart_empty_body: '安靜的家居發現，在等你。',
     cart_shop: '去 Harbor 逛逛',
     cart_free_shipping: '免運',
+    cart_min_order: '最低下單金額',
     cart_subtotal: '小計',
     cart_checkout: '結帳 · {amount}',
     me_sign_in: '登入 Harbor',

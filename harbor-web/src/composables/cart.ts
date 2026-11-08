@@ -27,6 +27,9 @@ const state = reactive({
   live: false,
   syncing: false,
   lastError: '',
+  freeShipThreshold: 0,
+  shipLine: '',
+  progress: 0,
 })
 
 const CART_KEY = 'harbor_web_cart_local'
@@ -54,6 +57,9 @@ load()
 
 function applySnapshot(snap: CartSnapshot) {
   state.live = snap.live
+  state.freeShipThreshold = Number(snap.freeShipThreshold || 0)
+  state.shipLine = snap.shipLine || ''
+  state.progress = Number(snap.progress || 0)
   state.lines = snap.lines.map((l) => ({
     sku: l.productSku,
     offer: l.sku.includes('~') ? l.sku.split('~')[1] : '',
@@ -163,6 +169,9 @@ export function useCart() {
   }
 
   return {
+    freeShipThreshold: computed(() => state.freeShipThreshold),
+    minOrderAmount: computed(() => state.freeShipThreshold),
+    shipLine: computed(() => state.shipLine),
     lines: computed(() => state.lines),
     count,
     subtotal,

@@ -51,6 +51,19 @@ function decodeEntities(s: string): string {
     .replace(/&nbsp;/g, ' ')
 }
 
+
+function thresholdFromGap(gapTitle: string, shipLine: string): number {
+  const blob = `${gapTitle} ${shipLine}`
+  const m =
+    blob.match(/minimum(?:\s+order)?[^\d]*\$?\s*([0-9]+(?:\.[0-9]+)?)/i) ||
+    blob.match(/below the[^\d]*\$?\s*([0-9]+(?:\.[0-9]+)?)/i) ||
+    blob.match(/checkout from[^\d]*\$?\s*([0-9]+(?:\.[0-9]+)?)/i) ||
+    blob.match(/最低(?:下单|訂單|结算|結算)?[^\d]*\$?\s*([0-9]+(?:\.[0-9]+)?)/) ||
+    blob.match(/Mindestbestellwert[^\d]*\$?\s*([0-9]+(?:\.[0-9]+)?)/i) ||
+    blob.match(/pedido m[ií]nimo[^\d]*\$?\s*([0-9]+(?:\.[0-9]+)?)/i)
+  return m ? Number(m[1]) : 0
+}
+
 function fromAddJson(data: Record<string, unknown>): CartSnapshot {
   const railRaw = Array.isArray(data.rail) ? (data.rail as Record<string, unknown>[]) : []
   const lines: CartRailItem[] = railRaw.map((row) => {
@@ -79,7 +92,7 @@ function fromAddJson(data: Record<string, unknown>): CartSnapshot {
     progress: Number(data.progress || 0),
     shipMet: Boolean(data.ship_met),
     shipLine: decodeEntities(String(data.ship_line || '').replace(/<[^>]+>/g, '')),
-    freeShipThreshold: 19,
+    freeShipThreshold: thresholdFromGap(String(data.gap_title || ''), String(data.ship_line || '')),
     message: String(data.message || ''),
   }
 }
@@ -178,7 +191,7 @@ export async function fetchCartServer(): Promise<CartSnapshot> {
     progress: 0,
     shipMet: false,
     shipLine: '',
-    freeShipThreshold: 19,
+    freeShipThreshold: 0, // legacy name; value is minimum order $
   }
 }
 

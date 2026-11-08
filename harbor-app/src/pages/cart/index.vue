@@ -37,18 +37,18 @@
         </view>
       </view>
 
-      <view class="ship">
+      <view class="ship" v-if="freeShipThreshold > 0 || shipLine">
         <view class="ship-row">
-          <text class="ship-title">{{ t('cart_free_shipping') }}</text>
+          <text class="ship-title">{{ t('cart_min_order') }}</text>
           <text class="ship-left">
-            {{ shipMet ? t('cart_unlocked') : t('cart_to_go', { amount: money(remainingToFreeShip) }) }}
+            {{ (freeShipThreshold > 0 && remainingToFreeShip <= 0) || shipMet ? t('cart_unlocked') : t('cart_to_go', { amount: money(remainingToFreeShip) }) }}
           </text>
         </view>
-        <view class="bar">
+        <view class="bar" v-if="freeShipThreshold > 0">
           <view class="fill" :style="{ width: freeShipProgress * 100 + '%' }" />
         </view>
         <text class="ship-note">
-          {{ shipLine || ('Unlocks at ' + money(freeShipThreshold)) }}
+          {{ shipLine || (freeShipThreshold > 0 ? (t('cart_min_order') + ' ' + money(freeShipThreshold) + ' · ' + t('cart_free_shipping')) : t('cart_free_shipping')) }}
         </text>
       </view>
 
