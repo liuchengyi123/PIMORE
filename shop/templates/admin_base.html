@@ -41,6 +41,7 @@
       <a class="{% if request.url.path.startswith('/admin/ads') %}on{% endif %}" href="/admin/ads"><i></i>站点广告</a>
       <a class="{% if request.url.path.startswith('/admin/traffic') %}on{% endif %}" href="/admin/traffic"><i></i>投放回传</a>
       <a class="{% if request.url.path.startswith('/admin/launch') %}on{% endif %}" href="/admin/launch"><i></i>投放落地页</a>
+      <a class="{% if request.url.path.startswith('/admin/reco') %}on{% endif %}" href="/admin/reco"><i></i>推荐规则</a>
       <a class="{% if request.url.path.startswith('/admin/conversions') %}on{% endif %}" href="/admin/conversions"><i></i>转化日志</a>
 
       {% if is_admin_role %}
@@ -80,6 +81,7 @@
             {% elif request.url.path.startswith('/admin/campaigns') %}活动
             {% elif request.url.path.startswith('/admin/promos') %}满减运费
             {% elif request.url.path.startswith('/admin/withdrawals') %}提现
+            {% elif request.url.path.startswith('/admin/reco') %}推荐规则
             {% elif request.url.path.startswith('/admin/launch') %}投放落地页
             {% elif request.url.path.startswith('/admin/conversions') %}转化日志
             {% elif request.url.path.startswith('/admin/traffic') %}投放回传
@@ -112,6 +114,9 @@
         {% elif flash == "payout_need_note" %}<span class="error">请填写打款备注/流水号。</span>
         {% elif flash == "ship_fail" %}<span class="error">发货失败：需承运商和运单号，且订单为已支付。</span>
         {% elif flash == "coupon_bad" %}<span class="error">请检查金额（美元）。</span>
+        {% elif flash == "reco_saved" %}<span class="ok">推荐规则已保存，前台约 30 秒内按新规则排。</span>
+        {% elif flash == "reco_reset" %}<span class="ok">推荐规则已恢复默认。</span>
+        {% elif flash == "reco_bad" %}<span class="error">推荐规则没有保存，请看页面上的说明。</span>
         {% elif flash == "staff_self" %}<span class="error">不能停用当前登录账号。</span>
         {% elif flash == "staff_pwd" %}<span class="error">新密码至少 8 位。</span>
         {% else %}<span class="ok">已保存。</span>

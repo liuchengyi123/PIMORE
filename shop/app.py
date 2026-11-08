@@ -78,8 +78,6 @@ from shop.lp_links import (
     preview_path as lp_preview_path,
 )
 from shop.lp_modules import (
-    IMPULSE_MAX_CENTS,
-    IMPULSE_MIN_CENTS,
     SKINS as LP_SKINS,
     TEMPLATES as LP_TEMPLATES,
     LpChoiceError,
@@ -210,7 +208,21 @@ from shop.image_gen import (
 from shop.images import card_image, phone_image, save_image_bytes, save_remote_image
 from shop.package import PackageError, describe_preview, is_jushuitan_sheet, preview_sheets, read_package
 from shop.net import outbound_proxy, remembered_proxy
-from shop.ops import board, product_interest_count, record
+from shop.ops import board, record
+from shop.reco import (
+    DEFAULTS as RECO_DEFAULTS,
+    RecoConfigError,
+    assortment_heat,
+    browse_share_for,
+    click_count,
+    click_counts,
+    heat_points,
+    load_rules as load_reco_rules,
+    mix_price_bands,
+    parse_form as parse_reco_form,
+    save_rules as save_reco_rules,
+    select_lp_rows,
+)
 from shop.translate import LANGS, fill_from_english, fill_languages, has_cjk, translate_fields, translator_from_env
 from shop.writer import CURSOR_LANES, ai_from_env, ai_pair, cursor_product, prepare_cursor_lanes, supplier_link
 from shop.address_format import compose_street, formats_for, label_lines
@@ -2553,7 +2565,43 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         forget_public()
 
     def heat(row, country):
+        """Amazon title-match score. HOT badge only — not 关注热度."""
         return int((app.state.hot.get(country) or {}).get(row["sku"], 0))
+
+    def cached_reco_rules():
+        now = time.monotonic()
+        hit = app.state.memo.get("reco_rules")
+        if isinstance(hit, tuple) and now - hit[0] < 30:
+            return hit[1]
+        data = load_reco_rules(conn)
+        app.state.memo["reco_rules"] = (now, data)
+        return data
+
+    def cached_click_counts():
+        now = time.monotonic()
+        hit = app.state.memo.get("click_counts")
+        if isinstance(hit, tuple) and now - hit[0] < 45:
+            return hit[1]
+        data = click_counts(conn)
+        app.state.memo["click_counts"] = (now, data)
+        return data
+
+    def bust_reco_cache():
+        app.state.memo.pop("reco_rules", None)
+        app.state.memo.pop("click_counts", None)
+        _home_pools.clear()
+        _cart_pick_cache.clear()
+
+    def shown_heat(sku):
+        rules = cached_reco_rules()
+        counts = cached_click_counts()
+        return heat_points(counts.get(str(sku or ""), 0), rules["heat_per_click"])
+
+    def shelf_heat(rows, country):
+        """Click heat plus the external hot-list boost, for ranking only."""
+        rules = cached_reco_rules()
+        scores = (app.state.hot.get(country) or {}) if rules.get("hot_boost") else {}
+        return rules, assortment_heat(rows, cached_click_counts(), scores, rules)
 
     def reload_hot():
         grouped = {}
@@ -2744,11 +2792,15 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 fixed.append(offer)
             item["offers"] = fixed
         try:
-            _heat = int(heat(row, ctx["country"]) or 0)
+            amazon = int(heat(row, ctx["country"]) or 0)
         except Exception:
-            _heat = 0
-        item["heat"] = _heat
-        item["hot"] = _heat > 0
+            amazon = 0
+        try:
+            shown = int(shown_heat(row["sku"]) or 0)
+        except Exception:
+            shown = 0
+        item["heat"] = shown
+        item["hot"] = amazon > 0
         left, fake = scarcity_left(row["sku"], row["stock"])
         item["only_left"] = left
         item["only_left_fake"] = fake
@@ -3171,16 +3223,20 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             by_sku = {row["sku"]: row for row in catalog}
             cart_skus = [line["sku"].split("~", 1)[0] for line in load_lines(request.cookies.get("cart"))]
             interest = interest_profile(request, by_sku=by_sku, cart_skus=cart_skus)
-            rows = personal_order(
+            taste = read_taste(request.cookies.get("taste"))
+            rules, row_heat = shelf_heat(rows, ctx["country"])
+            rows = blend_order(
                 rows,
                 interest=interest,
                 catalog=catalog,
                 cart_skus=cart_skus,
-                taste=read_taste(request.cookies.get("taste")),
+                taste=taste,
                 salt=rec_salt(request),
-                heat={row["sku"]: heat(row, ctx["country"]) for row in rows},
+                heat=row_heat,
                 prior={row["sku"]: rank(row, ctx["country"]) for row in rows},
                 boost={sku: 4.0 for sku in promoted},
+                browse_share=browse_share_for(interest, taste, rules),
+                heat_unit=rules["heat_per_click"],
             )
         else:
             rows.sort(key=lambda row: 0 if row["sku"] in promoted else 1)
@@ -3349,26 +3405,47 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
     def home_candidate_pool(country, lang):
         """Ordered shelf inputs for one country/language, reused for about a minute.
 
-        The per-request salt only shuffles within that cached order.
+        Rank heat is clicks × heat_per_click plus the hot-list boost. Card image
+        URLs are resolved here so a request only shuffles or re-ranks that cache.
         """
         country = str(country or "US")
         lang = str(lang or "en")
         catalog_list_rows()
-        key = (country, lang, int(app.state.catalog_token), int(app.state.hot_token))
+
+        def pool_key():
+            rules = cached_reco_rules()
+            clicks = cached_click_counts()
+            return (
+                country,
+                lang,
+                int(app.state.catalog_token),
+                int(app.state.hot_token),
+                id(rules),
+                id(clicks),
+            )
+
+        def fresh(hit, now):
+            return bool(hit) and now - hit[0] < 60
+
+        key = pool_key()
         now = time.monotonic()
         hit = _home_pools.get(key)
-        if hit and now - hit[0] < 60:
+        if fresh(hit, now):
             return hit[1]
-        lock = _home_pool_locks.setdefault(key, threading.Lock())
+        lock = _home_pool_locks.setdefault((country, lang), threading.Lock())
         with lock:
             now = time.monotonic()
-            key = (country, lang, int(app.state.catalog_token), int(app.state.hot_token))
+            key = pool_key()
             hit = _home_pools.get(key)
-            if hit and now - hit[0] < 60:
+            if fresh(hit, now):
                 return hit[1]
             rows = list(catalog_list_rows())
             by_sku = {row["sku"]: row for row in rows}
-            heat_map = {row["sku"]: heat(row, country) for row in rows}
+            rules, heat_map = shelf_heat(rows, country)
+            key = pool_key()
+            hit = _home_pools.get(key)
+            if fresh(hit, time.monotonic()):
+                return hit[1]
             prior_map = {row["sku"]: rank(row, country) for row in rows}
             images = {row["sku"]: card_src(row, lang) for row in rows}
             rails = {}
@@ -3385,6 +3462,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 heat=heat_map,
                 prior=prior_map,
                 boost={},
+                heat_unit=rules["heat_per_click"],
             )
             light = [
                 {
@@ -3406,6 +3484,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 "stocked": stocked or list(rows),
                 "diverse": diverse,
                 "light": light,
+                "rules": rules,
             }
             _home_pools[key] = (time.monotonic(), data)
             if len(_home_pools) > 24:
@@ -3442,52 +3521,48 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         page = max(1, int(page or 1))
         page_size = max(4, min(48, int(page_size or 20)))
         feed_exclude = {str(sku) for sku in (exclude or ()) if sku}
+        rules = pool["rules"]
+        share = browse_share_for(interest, taste, rules)
         heat_map = pool["heat_map"]
         prior_map = pool["prior_map"]
-        personalized = bool(interest or taste or cart_skus or needle)
         if tab in CATEGORIES:
-            base = pool["rails"].get(tab) or [row for row in rows if row.get("category") == tab]
             if needle:
-                base = [row for row in base if row in rows or row.get("sku") in {item["sku"] for item in rows}]
-            salt = (salt ^ (sum(ord(ch) for ch in tab) * 131)) & 0xFFFFFFFF
-            if personalized:
-                ordered = personal_order(
-                    base,
-                    interest=interest,
-                    catalog=catalog,
-                    cart_skus=cart_skus,
-                    taste=taste,
-                    salt=salt,
-                    heat=heat_map,
-                    prior=prior_map,
-                    boost={sku: 4.0 for sku in promoted},
-                )
+                base = [row for row in rows if row.get("category") == tab]
             else:
-                ordered = light_shuffle(base, salt)
+                base = list(pool["rails"].get(tab) or [])
+                if not base:
+                    base = [row for row in rows if row.get("category") == tab]
+            salt = (salt ^ (sum(ord(ch) for ch in tab) * 131)) & 0xFFFFFFFF
+        else:
+            base = list(rows)
+        # Cold visitors reuse the cached click-heat order and only shuffle it.
+        # Search, a cart, or enough browse signals re-rank with the admin share.
+        cold = share <= 0 and not needle and not cart_skus
+        if cold and tab not in CATEGORIES:
+            ordered = light_shuffle(pool["diverse"], salt)
+            if promoted:
+                ordered.sort(key=lambda row: 0 if row["sku"] in promoted else 1)
+            if feed_exclude:
+                ordered = [row for row in ordered if str(row.get("sku") or "") not in feed_exclude]
+        elif cold:
+            ordered = light_shuffle(base, salt)
             if feed_exclude:
                 ordered = [row for row in ordered if str(row.get("sku") or "") not in feed_exclude]
         else:
-            base = list(rows)
-            if personalized:
-                ordered = blend_order(
-                    base,
-                    interest=interest,
-                    catalog=catalog,
-                    cart_skus=cart_skus,
-                    taste=taste,
-                    salt=salt,
-                    heat=heat_map,
-                    prior=prior_map,
-                    boost={sku: 4.0 for sku in promoted},
-                    browse_share=BROWSE_SHARE,
-                    exclude=feed_exclude,
-                )
-            else:
-                ordered = light_shuffle(pool["diverse"], salt)
-                if promoted:
-                    ordered.sort(key=lambda row: 0 if row["sku"] in promoted else 1)
-                if feed_exclude:
-                    ordered = [row for row in ordered if str(row.get("sku") or "") not in feed_exclude]
+            ordered = blend_order(
+                base,
+                interest=interest,
+                catalog=catalog,
+                cart_skus=cart_skus,
+                taste=taste,
+                salt=salt,
+                heat=heat_map,
+                prior=prior_map,
+                boost={sku: 4.0 for sku in promoted},
+                browse_share=share,
+                exclude=feed_exclude,
+                heat_unit=rules["heat_per_click"],
+            )
         start = (page - 1) * page_size
         slice_rows = ordered[start : start + page_size]
         has_more = start + page_size < len(ordered)
@@ -3517,6 +3592,9 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             return (with_photo or stocked_rows)[:limit]
 
         salt = rec_salt(request)
+        rules = shelf["rules"]
+        heat_map = shelf["heat_map"]
+        prior_map = shelf["prior_map"]
         rail_rows = {}
         for key in CATEGORIES:
             ordered = shelf["rails"].get(key) or []
@@ -3524,34 +3602,38 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             if picked:
                 random.Random((salt ^ (sum(ord(ch) for ch in key) * 17)) & 0xFFFFFFFF).shuffle(picked)
                 rail_rows[key] = picked
-        deal_rows = pictured(shelf["deals"], 8)
-        if deal_rows:
-            random.Random((salt ^ 0xD1A1) & 0xFFFFFFFF).shuffle(deal_rows)
+        deal_rows = mix_price_bands(
+            shelf["deals"],
+            heat_map,
+            limit=8,
+            under_cents=300,
+            under_cap=min(3, int(rules["lp_under3_cap"])),
+            salt=salt,
+            heat_unit=rules["heat_per_click"],
+            shuffle=True,
+        )
         cart_skus = [line["sku"].split("~", 1)[0] for line in load_lines(request.cookies.get("cart"))]
         interest = interest_profile(request, by_sku=by_sku, cart_skus=cart_skus)
         seen = read_skus(request.cookies.get("history"), 24) or [sku for sku in interest if sku in by_sku]
         recent_rows = [by_sku[sku] for sku in seen if sku in by_sku][:8]
         light = shelf["light"]
-        heat_map = shelf["heat_map"]
-        prior_map = shelf["prior_map"]
+        taste = read_taste(request.cookies.get("taste"))
+        share = browse_share_for(interest, taste, rules)
         boost_map = {sku: 4.0 for sku in promoted}
         stocked = shelf["stocked"]
         # In the shop: system random only — no browse interest, cross-category.
         # Skip recently viewed SKUs so this strip does not echo what they just opened.
         recent_skus = set(seen[:16])
-
-        def take_diverse(salt_bits, exclude, limit):
-            ordered = light_shuffle(shelf["diverse"], salt_bits)
-            out = []
-            for row in ordered:
-                if row["sku"] in exclude:
-                    continue
-                out.append(row)
-                if len(out) >= limit:
-                    break
-            return out
-
-        shop_pick_rows = take_diverse((salt ^ 0x11111111) & 0xFFFFFFFF, recent_skus, 12)
+        shop_pick_rows = diverse_order(
+            stocked or rows,
+            salt=(salt ^ 0x11111111) & 0xFFFFFFFF,
+            exclude=recent_skus,
+            heat=heat_map,
+            prior=prior_map,
+            boost=boost_map,
+            heat_unit=rules["heat_per_click"],
+            limit=12,
+        )
         shop_skus = {row["sku"] for row in shop_pick_rows}
         # Recommended feed first so Featured / For you can exclude its SKUs.
         feed_rows_cards, feed_has_more, _tab = home_feed_cards(
@@ -3581,25 +3663,34 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             feed_rows_cards = replaced
             feed_skus = {item["sku"] for item in feed_rows_cards}
         # Featured sidebar: avoid In the shop + Recommended so rails do not collide.
-        featured_rows = take_diverse((salt ^ 0x22222222) & 0xFFFFFFFF, shop_skus | feed_skus | recent_skus, 8)
+        featured_rows = diverse_order(
+            stocked or rows,
+            salt=(salt ^ 0x22222222) & 0xFFFFFFFF,
+            exclude=shop_skus | feed_skus | recent_skus,
+            heat=heat_map,
+            prior=prior_map,
+            boost=boost_map,
+            heat_unit=rules["heat_per_click"],
+            limit=8,
+        )
         featured_skus = {row["sku"] for row in featured_rows}
         # For you: separate salt pool + exclude shop/feed (and featured when stock allows).
         you_exclude = shop_skus | feed_skus | featured_skus
-        if interest:
-            you_rows = [
-                by_sku[item["sku"]]
-                for item in ranked_for_you(
-                    light,
-                    interest,
-                    limit=12,
-                    salt=(salt ^ 0x33333333) & 0xFFFFFFFF,
-                    browse_share=BROWSE_SHARE,
-                    exclude=you_exclude,
-                )
-                if item["sku"] in by_sku
-            ]
-        else:
-            you_rows = take_diverse((salt ^ 0x33333333) & 0xFFFFFFFF, you_exclude, 12)
+        you_rows = [
+            by_sku[item["sku"]]
+            for item in ranked_for_you(
+                light,
+                interest,
+                taste,
+                limit=12,
+                salt=(salt ^ 0x33333333) & 0xFFFFFFFF,
+                browse_share=share,
+                exclude=you_exclude,
+                heat=heat_map,
+                heat_unit=rules["heat_per_click"],
+            )
+            if item["sku"] in by_sku
+        ]
         # If catalog is too small after excludes, refill without featured so the rail is not empty.
         if len(you_rows) < 8:
             extra = [
@@ -3607,10 +3698,13 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 for item in ranked_for_you(
                     light,
                     interest,
+                    taste,
                     limit=12,
                     salt=(salt ^ 0x44444444) & 0xFFFFFFFF,
-                    browse_share=BROWSE_SHARE,
+                    browse_share=share,
                     exclude=shop_skus | feed_skus | {row["sku"] for row in you_rows},
+                    heat=heat_map,
+                    heat_unit=rules["heat_per_click"],
                 )
                 if item["sku"] in by_sku
             ]
@@ -4081,15 +4175,22 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 and int(row.get("published") or 0) == 1
                 and row["sku"] not in seen
             ]
+            _ship_rules, ship_heat = shelf_heat(stocked, ctx["country"])
             if seg:
                 stocked.sort(
                     key=lambda row: (
                         -seg_match_score(row, seg, ctx.get("lang") or "en"),
-                        int(row.get("price_cents") or 0),
+                        -float(ship_heat.get(row["sku"], 0) or 0),
+                        str(row.get("sku") or ""),
                     )
                 )
             else:
-                stocked.sort(key=lambda row: int(row.get("price_cents") or 0))
+                stocked.sort(
+                    key=lambda row: (
+                        -float(ship_heat.get(row["sku"], 0) or 0),
+                        str(row.get("sku") or ""),
+                    )
+                )
             for row in stocked:
                 card = present_card(row, ctx)
                 if int(card.get("price_cents") or 0) <= 0:
@@ -4689,23 +4790,54 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 limit=8,
                 salt=salt,
             )
-        personal = ranked_for_you(shelf, interest, limit=8, salt=salt)
-        if personal:
-            return personal
-        return ranked_for_you(shelf, {}, limit=8, salt=salt)
+        rules, heat_map = shelf_heat(shelf, ctx["country"])
+        taste = read_taste(request.cookies.get("taste"))
+        picked = ranked_for_you(
+            shelf,
+            interest,
+            taste,
+            limit=8,
+            salt=salt,
+            browse_share=browse_share_for(interest, taste, rules),
+            heat=heat_map,
+            heat_unit=rules["heat_per_click"],
+        )
+        if picked:
+            return picked
+        return ranked_for_you(shelf, {}, limit=8, salt=salt, heat=heat_map, heat_unit=rules["heat_per_click"])
 
     def empty_cart_picks(request, ctx, shelf):
-        """At most 12 cards from three categories, reused briefly across empty carts."""
-        key = (ctx["country"], ctx["lang"], int(app.state.catalog_token), int(app.state.hot_token))
+        """At most 12 cards from three categories, ranked by click heat, reused briefly."""
+        rules = cached_reco_rules()
+        clicks = cached_click_counts()
+        key = (
+            ctx["country"],
+            ctx["lang"],
+            int(app.state.catalog_token),
+            int(app.state.hot_token),
+            id(rules),
+            id(clicks),
+        )
         now = time.monotonic()
         hit = _cart_pick_cache.get(key)
         if not hit or now - hit[0] >= 45:
+            _rules, heat_map = shelf_heat(shelf, ctx["country"])
             chosen = []
             cats = 0
             for cat in CATEGORIES:
-                rows = [item for item in shelf if item.get("category") == cat and int(item.get("stock") or 0) > 0]
+                rows = [
+                    item
+                    for item in shelf
+                    if item.get("category") == cat and int(item.get("stock") or 0) > 0
+                ]
                 if not rows:
                     continue
+                rows.sort(
+                    key=lambda item: (
+                        -float(heat_map.get(item.get("sku"), 0) or 0),
+                        str(item.get("sku") or ""),
+                    )
+                )
                 chosen.extend(rows[:4])
                 cats += 1
                 if cats >= 3 or len(chosen) >= 12:
@@ -4713,6 +4845,10 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             cards = cards_for(ctx, [{"sku": item["sku"]} for item in chosen[:12]])
             _cart_pick_cache[key] = (time.monotonic(), cards)
             hit = _cart_pick_cache[key]
+            if len(_cart_pick_cache) > 24:
+                oldest = min(_cart_pick_cache, key=lambda item: _cart_pick_cache[item][0])
+                if oldest != key:
+                    _cart_pick_cache.pop(oldest, None)
         cards = list(hit[1])[:12]
         random.Random(rec_salt(request) & 0xFFFFFFFF).shuffle(cards)
         return cards
@@ -6342,6 +6478,37 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             return flash_redirect("/admin/coefficients", "coef_bad")
         save_coefficients(conn, mapping)
         return flash_redirect("/admin/coefficients", "coef_saved")
+
+    @app.get("/admin/reco", response_class=HTMLResponse)
+    def admin_reco(request: Request):
+        require_admin(request)
+        rules = load_reco_rules(conn)
+        return render(
+            request,
+            "admin_reco.html",
+            rules=rules,
+            reco_error=str(request.query_params.get("error") or ""),
+            flash=str(request.query_params.get("flash") or ""),
+        )
+
+    @app.post("/admin/reco")
+    async def admin_reco_save(request: Request):
+        require_admin(request)
+        form = await request.form()
+        if str(form.get("reset") or "") == "1":
+            save_reco_rules(conn, dict(RECO_DEFAULTS))
+            bust_reco_cache()
+            return flash_redirect("/admin/reco", "reco_reset")
+        try:
+            save_reco_rules(conn, parse_reco_form(form))
+        except RecoConfigError as exc:
+            from urllib.parse import quote
+            return RedirectResponse(
+                "/admin/reco?flash=reco_bad&error=" + quote(exc.message),
+                status_code=303,
+            )
+        bust_reco_cache()
+        return flash_redirect("/admin/reco", "reco_saved")
 
     @app.get("/admin/staff", response_class=HTMLResponse)
     def admin_staff(request: Request):
@@ -8176,15 +8343,12 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         parent = str(sku or "").split("~", 1)[0][:80]
         if not parent or "/" in parent:
             return JSONResponse({"sku": "", "count": 0}, status_code=404)
-        vid = (getattr(request.state, "visitor", None) or request.cookies.get("harbor_vid") or "").strip()
-        try:
-            picked = country_for(request)
-            lang, _currency = resolve(picked)
-            if vid:
-                record(conn, "product", sku=parent, country=picked, lang=lang, visitor=vid)
-        except Exception:
-            pass
-        return {"sku": parent, "count": product_interest_count(conn, parent)}
+        # The product HTML view already writes one visits.kind='product' row.
+        # This endpoint only reads 关注热度 so one open stays one click.
+        rules = cached_reco_rules()
+        clicks = click_count(conn, parent)
+        points = heat_points(clicks, rules["heat_per_click"])
+        return {"sku": parent, "count": points, "clicks": clicks, "heat": points}
 
 
     @app.get("/api/ad/deal")
@@ -8530,8 +8694,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
     def _lp_cards(request, category, preview):
         ctx = view(request)
         market = _lp_market(request, ctx, preview)
-        picked = []
-        fallback = []
+        rows = []
         for row in catalog_rows():
             if str(row.get("category") or "") != category:
                 continue
@@ -8539,16 +8702,23 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 continue
             if int(row.get("stock") or 0) <= 0:
                 continue
-            cents = int(row.get("price_cents") or 0)
-            if IMPULSE_MIN_CENTS <= cents <= IMPULSE_MAX_CENTS:
-                picked.append(row)
-            else:
-                fallback.append(row)
-        rows = picked or fallback
-        rows.sort(key=lambda row: (int(row.get("price_cents") or 0), str(row.get("sku") or "")))
-        cards = []
+            rows.append(row)
+        rules = cached_reco_rules()
         country = market["country"]
-        for row in rows[:24]:
+        title_scores = (app.state.hot.get(country) or {}) if rules.get("hot_boost") else {}
+        # Short bucket so a refresh can move near-ties, without a new order on every asset request.
+        bucket = int(time.time()) // 45
+        seed = lp_visitor_seed(request)
+        salt = (hash(f"{seed}|{bucket}|{category}") & 0xFFFFFFFF)
+        chosen = select_lp_rows(
+            rows,
+            clicks=cached_click_counts(),
+            title_scores=title_scores,
+            salt=salt,
+            rules=rules,
+        )
+        cards = []
+        for row in chosen:
             card = present_card(row, market)
             sku = card["sku"]
             card["grab_href"] = f"/api/ad/deal?sku={sku}&country={country}&to=/p/{sku}"

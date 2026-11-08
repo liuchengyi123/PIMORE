@@ -178,7 +178,16 @@ def test_preview_resolves_each_template_skin_and_category_pool():
         "/lp/ad/preview",
         params={"template": "hero_headline", "category": "kitchen", "skin": "kitchen"},
     )
-    assert 'data-lp-hero="sink-strainer"' in hero.text
+    import re
+    hero_sku = re.search(r'data-lp-hero="([^"]+)"', hero.text)
+    assert hero_sku
+    # Head card is a mid-band kitchen SKU ($3–$8), not whichever row is cheapest.
+    assert hero_sku.group(1) in {
+        "sink-strainer",
+        "measuring-spoons",
+        "silicone-spatula",
+        "oil-sprayer",
+    }
     waterfall = client.get(
         "/lp/ad/preview",
         params={"template": "price_waterfall", "category": "kitchen", "skin": "kitchen"},

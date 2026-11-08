@@ -223,12 +223,18 @@ def _interleave_browse(
     return out[:limit]
 
 
-def diverse_order(items, *, salt=0, exclude=(), heat=None, prior=None, boost=None, limit=None):
-    """System random across categories. No browse interest. Stable for a given salt."""
+def diverse_order(items, *, salt=0, exclude=(), heat=None, prior=None, boost=None, limit=None, heat_unit=None):
+    """System random across categories. No browse interest. Stable for a given salt.
+
+    ``heat_unit`` is the admin click multiplier. When it is set, heat is the
+    click×multiplier score (plus any hot-list points) and a little jitter can
+    swap near ties. When it is omitted, the old small Amazon-score nudge stays.
+    """
     exclude = {str(sku) for sku in (exclude or ()) if sku}
     heat = heat or {}
     prior = prior or {}
     boost = boost or {}
+    unit = None if heat_unit is None else max(float(heat_unit), 1.0)
     buckets = {}
     for item in items:
         sku = item.get("sku")
@@ -244,10 +250,16 @@ def diverse_order(items, *, salt=0, exclude=(), heat=None, prior=None, boost=Non
                 continue
             buckets.setdefault(item.get("category") or "", []).append(item)
     for cat, pool_items in list(buckets.items()):
+        def _heat_key(item):
+            hot = float(heat.get(item["sku"], 0) or 0)
+            if unit is None:
+                return -min(hot, 100.0) * 0.04
+            return -(hot + _jitter(item["sku"], salt) * unit * 0.35)
+
         pool_items.sort(
             key=lambda item: (
                 -float(boost.get(item["sku"], 0) or 0),
-                -min(float(heat.get(item["sku"], 0) or 0), 100.0) * 0.04,
+                _heat_key(item),
                 int(prior.get(item["sku"], 1) or 0),
                 _jitter(item["sku"], salt),
                 str(item.get("sku") or ""),
@@ -294,6 +306,7 @@ def blend_order(
     boost=None,
     browse_share=BROWSE_SHARE,
     exclude=(),
+    heat_unit=None,
 ):
     """~browse_share from personal ranking; the rest diversify across categories."""
     exclude = {str(sku) for sku in (exclude or ()) if sku}
@@ -311,6 +324,7 @@ def blend_order(
         heat=heat,
         prior=prior,
         boost=boost,
+        heat_unit=heat_unit,
     )
     interest_cats = _interest_categories(interest, catalog or pool, taste)
     heavy = _heavy_categories(interest, catalog or pool, taste, top=2)
@@ -321,6 +335,7 @@ def blend_order(
         heat=heat,
         prior=prior,
         boost=boost,
+        heat_unit=heat_unit,
     )
     filler = diverse_order(
         pool,
@@ -328,6 +343,7 @@ def blend_order(
         heat=heat,
         prior=prior,
         boost=boost,
+        heat_unit=heat_unit,
     )
     # Full shelf order: enforce share over a rolling window via interleave, then append remainder.
     head = _interleave_browse(
@@ -355,6 +371,8 @@ def ranked_for_you(
     pool=24,
     browse_share=BROWSE_SHARE,
     exclude=(),
+    heat=None,
+    heat_unit=None,
 ):
     """Browse-weighted picks (~browse_share) mixed with cross-category random fill."""
     exclude = {str(sku) for sku in (exclude or ()) if sku}
@@ -389,12 +407,16 @@ def ranked_for_you(
         salt=(int(salt) ^ 0x51515151) & 0xFFFFFFFF,
         exclude=used,
         limit=max(limit * 3, limit),
+        heat=heat,
+        heat_unit=heat_unit,
     )
     filler = diverse_order(
         stocked,
         salt=(int(salt) ^ 0xC3C3C3C3) & 0xFFFFFFFF,
         exclude=used,
         limit=max(limit * 3, limit),
+        heat=heat,
+        heat_unit=heat_unit,
     )
     out = _interleave_browse(
         personal,
@@ -405,7 +427,14 @@ def ranked_for_you(
         filler=filler,
     )
     if len(out) < limit:
-        extra = diverse_order(stocked, salt=salt, exclude={item["sku"] for item in out}, limit=limit - len(out))
+        extra = diverse_order(
+            stocked,
+            salt=salt,
+            exclude={item["sku"] for item in out},
+            limit=limit - len(out),
+            heat=heat,
+            heat_unit=heat_unit,
+        )
         out.extend(extra)
     return out[:limit]
 
@@ -431,7 +460,7 @@ def category_weights(interest, catalog, taste=None):
             continue
     return weights
 
-def personal_order(items, *, interest=None, catalog=(), cart_skus=(), taste=None, salt=0, heat=None, prior=None, boost=None):
+def personal_order(items, *, interest=None, catalog=(), cart_skus=(), taste=None, salt=0, heat=None, prior=None, boost=None, heat_unit=None):
     """Every item stays in the list. Liked category, subcategory, and price come first.
     The order depends only on salt, so page 2 continues page 1.
     """
@@ -488,12 +517,17 @@ def personal_order(items, *, interest=None, catalog=(), cart_skus=(), taste=None
         if not str(item.get("image_url") or "").strip():
             score -= 1.5
         hot = float(heat.get(sku, 0) or 0)
-        score += min(hot, 100.0) * 0.04
+        if heat_unit is None:
+            score += min(hot, 100.0) * 0.04
+            score += _jitter(sku, salt) * 0.3
+        else:
+            unit = max(float(heat_unit), 1.0)
+            # One click (heat_unit points) outranks jitter, but not a real category hit (×20).
+            score += (hot + _jitter(sku, salt) * unit * 0.35) * 0.01
         rank_n = int(prior.get(sku, 1) or 0)
         if rank_n <= 0:
             score += 1.0
         score += float(boost.get(sku, 0) or 0)
-        score += _jitter(sku, salt) * 0.3
         return score
     decorated = []
     for item in items:

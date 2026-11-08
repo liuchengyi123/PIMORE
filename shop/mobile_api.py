@@ -100,7 +100,7 @@ def _interest(item: dict) -> str:
     except (TypeError, ValueError):
         heat = 0
     if heat > 0:
-        return f"有人在看 · {heat}"
+        return f"关注热度 · {heat}"
     stock = item.get("stock")
     try:
         if stock is not None and int(stock) <= 0:

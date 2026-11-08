@@ -113,7 +113,11 @@ def resolve_module(template_id, category, skin_id=""):
 
 
 def band_groups(cards):
-    """Split already-priced cards into the $1–$10 waterfall. Overflow is separate."""
+    """Group an already chosen LP list into the $1–$10 waterfall.
+
+    Order inside each band follows ``cards``. This only changes layout.
+    Do not sort by price here — selection happens before this split.
+    """
     groups = []
     used = set()
     for band in BANDS:
