@@ -285,11 +285,14 @@ body { background: var(--fn-sand) !important; }
   }
 }
 
-/* Country control in header */
+/* Country control in header. The closed pill is one country · currency label.
+   The select is a language menu only and must not paint a second copy. */
 .fn-country {
   display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--fn-ink);
 }
+.fn-country .fn-locale-pill { white-space: nowrap; }
 .fn-country select {
+  position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0;
   border: 0; background: transparent; font: inherit; font-weight: 600; color: var(--fn-ink); cursor: pointer;
 }
 

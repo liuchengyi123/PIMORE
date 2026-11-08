@@ -13,6 +13,8 @@ from typing import Callable, Iterable, Optional
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
+from shop.i18n import heat_line
+
 
 # Android chip labels (MockCatalog) <-> shop CATEGORIES keys.
 LABEL_FOR = {
@@ -87,7 +89,7 @@ def _categories_for(db_category: str) -> list:
     return labels
 
 
-def _interest(item: dict) -> str:
+def _interest(item: dict, copy: dict | None = None) -> str:
     left = item.get("only_left")
     try:
         left_n = int(left) if left not in (None, "", False) else 0
@@ -100,7 +102,7 @@ def _interest(item: dict) -> str:
     except (TypeError, ValueError):
         heat = 0
     if heat > 0:
-        return f"关注热度 · {heat}"
+        return heat_line(copy, heat)
     stock = item.get("stock")
     try:
         if stock is not None and int(stock) <= 0:
@@ -110,7 +112,7 @@ def _interest(item: dict) -> str:
     return "In stock"
 
 
-def product_json(item: dict, *, detail: bool = False) -> dict:
+def product_json(item: dict, *, detail: bool = False, copy: dict | None = None) -> dict:
     """Map present_card / present() dict to Android CatalogRepository fields."""
     sku = str(item.get("sku") or item.get("id") or "")
     title = str(item.get("name") or item.get("title") or sku)
@@ -145,7 +147,7 @@ def product_json(item: dict, *, detail: bool = False) -> dict:
         "image": image,
         "imageUrl": image,
         "images": images,
-        "interest": _interest(item),
+        "interest": _interest(item, copy),
         "stock": item.get("stock"),
         "shipping": "Free shipping" if item.get("free_shipping") else (item.get("shipping") or "Shipping calculated at checkout"),
         "stockLabel": "In stock" if int(item.get("stock") or 0) > 0 else "Out of stock",
@@ -289,6 +291,9 @@ def mount_mobile_api(
         wanted = set(keys)
         return [row for row in rows if str(row.get("category") or "") in wanted]
 
+    def _copy(ctx):
+        return ui.get((ctx or {}).get("lang") or "en") or ui.get("en") or {}
+
     @app.get("/api/legal")
     def api_legal(request: Request):
         """Canonical compliance URLs for native apps + H5."""
@@ -315,8 +320,8 @@ def mount_mobile_api(
         cards, _more, _tab = home_feed_cards(
             request, ctx, tab="recommended", page=1, page_size=24
         )
-        products = [product_json(card) for card in cards]
-        copy = (ui.get(ctx.get("lang") or "en") or ui.get("en") or {})
+        copy = _copy(ctx)
+        products = [product_json(card, copy=copy) for card in cards]
         promo = {
             "eyebrow": copy.get("hero_kicker") or "THIS WEEK",
             "title": copy.get("hero_title") or "Kitchen refresh · up to 30% off",
@@ -360,7 +365,7 @@ def mount_mobile_api(
         stocked = [row for row in rows if int(row.get("stock") or 0) > 0]
         pool = stocked or list(rows)
         slice_rows = pool[offset : offset + limit]
-        products = [product_json(present_card(row, ctx)) for row in slice_rows]
+        products = [product_json(present_card(row, ctx), copy=_copy(ctx)) for row in slice_rows]
         return JSONResponse(
             {
                 "ok": True,
@@ -389,7 +394,7 @@ def mount_mobile_api(
         item["heat"] = card.get("heat")
         item["only_left"] = card.get("only_left")
         item["free_shipping"] = card.get("free_shipping")
-        detail = product_json(item, detail=True)
+        detail = product_json(item, detail=True, copy=_copy(ctx))
         return JSONResponse({"ok": True, "product": detail, **detail})
 
     @app.post("/api/auth/social")

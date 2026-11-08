@@ -236,7 +236,8 @@ def test_settings_round_trip_and_the_product_heat_number():
     assert body["heat"] == 196
     home = client.get("/")
     assert home.status_code == 200
-    assert "关注热度" in home.text
+    assert "Interest · " in home.text
+    assert "关注热度" not in home.text
 
     save_staff(db, "admin", "secret-pass", "admin")
     client.post("/admin/login", data={"username": "admin", "password": "secret-pass"})

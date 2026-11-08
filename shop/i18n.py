@@ -2811,3 +2811,28 @@ LP_UI = {
 }
 for _lang, _extra in LP_UI.items():
     UI[_lang].update(_extra)
+
+# Card heat line (关注热度 · N). Follows storefront language, not ship-to country.
+HEAT_UI = {
+    "en": {"heat_label": "Interest · {n}"},
+    "es": {"heat_label": "Interés · {n}"},
+    "de": {"heat_label": "Interesse · {n}"},
+    "fr": {"heat_label": "Intérêt · {n}"},
+    "pt": {"heat_label": "Interesse · {n}"},
+    "ja": {"heat_label": "注目度 · {n}"},
+    "zh": {"heat_label": "关注热度 · {n}"},
+    "zh-Hant": {"heat_label": "關注熱度 · {n}"},
+}
+for _lang, _extra in HEAT_UI.items():
+    UI[_lang].update(_extra)
+
+
+def heat_line(texts, heat) -> str:
+    """Short card/API heat label for one storefront language."""
+    try:
+        n = int(heat or 0)
+    except (TypeError, ValueError):
+        n = 0
+    pack = texts or UI["en"]
+    template = pack.get("heat_label") or UI["en"]["heat_label"]
+    return template.format(n=n)

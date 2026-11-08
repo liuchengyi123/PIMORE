@@ -224,6 +224,43 @@ def test_buyer_pages_open_and_admin_requires_password(client):
     assert "Page not found" in missing.text
 
 
+def test_english_heat_label_and_single_locale_pill(client):
+    from shop.i18n import UI, heat_line
+    from shop.mobile_api import _interest
+
+    page = client.get("/c/kitchen?country=CN&lang=en")
+    assert page.status_code == 200
+    assert "Interest · " in page.text
+    assert "关注热度" not in page.text
+    assert page.text.count('class="fn-locale-pill"') == 1
+    assert 'class="fn-locale-pill">CN · CNY<' in page.text
+    assert "US · USD" not in page.text
+    assert ">English</option>" in page.text
+    assert ">CN · CNY</option>" not in page.text
+    home = client.get("/?country=CN&lang=en")
+    assert "关注热度" not in home.text
+    assert "Interest · " in home.text
+    assert home.text.count('class="fn-locale-pill"') == 1
+    zh = client.get("/c/kitchen?country=CN&lang=zh")
+    assert "关注热度 · " in zh.text
+    assert "Interest ·" not in zh.text
+    assert 'class="fn-locale-pill">CN · CNY<' in zh.text
+    product = client.get("/p/drain-rack?country=CN&lang=en")
+    assert "关注热度" not in product.text
+    assert 'data-tpl="Watching heat {n}"' in product.text
+    assert heat_line(UI["en"], 12) == "Interest · 12"
+    assert heat_line(UI["zh"], 12) == "关注热度 · 12"
+    assert heat_line(UI["zh-Hant"], 4) == "關注熱度 · 4"
+    assert _interest({"heat": 15, "stock": 20}, UI["ja"]) == "注目度 · 15"
+    assert "关注" not in _interest({"heat": 15, "stock": 20}, UI["en"])
+    for code in ("en", "es", "de", "fr", "pt", "ja", "zh", "zh-Hant"):
+        assert "{n}" in UI[code]["heat_label"]
+        if not code.startswith("zh"):
+            rendered = heat_line(UI[code], 8)
+            assert "关注" not in rendered
+            assert "有人" not in rendered
+
+
 def test_visual_rules_in_stylesheet(client):
     css = client.get("/static/shop.css").text
     assert "font-size: 16px" in css
