@@ -18,6 +18,8 @@
   {% if notice == "link_built" %}<p class="ok">链接已生成（含 acct），可复制到广告后台。</p>{% endif %}
   {% if notice == "code_taken" %}<p class="error">账户代码已被占用，请换一个。</p>{% endif %}
   {% if notice == "error" %}<p class="error">操作失败，请重试。</p>{% endif %}
+  {% if notice == "smart_ok" %}<p class="ok">已按最新消耗重算广告组回传比例。拉取失败的组会保持基础比例，并记在下方历史里。</p>{% endif %}
+  {% if notice == "smart_fail" %}<p class="error">智能扣量没有跑完，基础比例未改。看下方历史里的原因。</p>{% endif %}
 
   <div class="card">
     <div class="pad">
@@ -99,6 +101,7 @@
         </fieldset>
         <fieldset class="wide">
           <legend>Pixel / 回传凭证</legend>
+          <p class="muted small">浏览器像素和服务器回传都用这一组 Pixel。test_event_code 有值时，服务器事件会带到平台的测试事件页；正式投放留空。密钥只存在这个账户上，落地页不能改。</p>
           <div class="fields">
           {% for key, title, secret in platform_fields %}
             {% if secret %}
@@ -116,11 +119,59 @@
         </fieldset>
         <fieldset class="wide">
           <legend>扣量</legend>
-          <div class="fields">
-            <label>回传比例 % <input name="send_ratio_pct" type="number" min="0" max="100" step="1" value="{{ active_acct.send_ratio_pct }}"></label>
-            <label>金额系数 <input name="value_multiplier" type="number" min="0" max="2" step="0.05" value="{{ active_acct.value_multiplier }}"></label>
+          <div class="pad" style="border:1px solid #E2E6EE;border-radius:8px;padding:10px 12px;margin:8px 0 12px">
+            <strong>扣量规则说明</strong>
+            <ul class="muted small" style="margin:8px 0 0 18px;line-height:1.55">
+              <li>真实 CPA = 消耗 ÷ 后台真实成交。平台看到的 CPA = 消耗 ÷ 回传单数。少回传会让平台看到的成本更高。</li>
+              <li>智能关：只按基础比例（或该广告组的比例覆盖）扣。比例上下限、目标 CPA、止损都不生效。例：基础 70%，每 10 单回传 7 单，均匀错开。</li>
+              <li>智能开，目标 CPA 以 $8 为例。真实 CPA 远低于目标（如 $4）→ 下调回传，让平台看到的成本靠近 $8，既能放量又不跑飞。接近目标（约 $7–$9）→ 回到基础比例。偏高（约 $9 以上，到止损线之前）→ 往上拉，最高 100%，避免扣量把成本再放大。</li>
+              <li>真实 CPA 超过目标 × 止损倍数，并连续达到止损时长 → 停止上调，也不再下调，比例停在当前值，广告组标红，原因写「止损：真实CPA持续超标」。CPA 回到线以下后自动解除。例：倍数 1.5、时长 24 小时，目标 $8，则超过 $12 并持续 24 小时触发。</li>
+              <li>学习期或当日保底单：一律按 100% 回传，智能开或关都一样。</li>
+              <li>每次最多调 5–10 个点，每 6 小时最多一次，智能开启时始终落在比例上下限内。</li>
+              <li>浏览器 Purchase 和服务端用同一次决定：扣掉的单两边都不发。漏斗仍按全额记录每一单。</li>
+            </ul>
           </div>
-          <p class="muted small" style="margin-top:10px">仅作用于本账户服务端回传；浏览器 Purchase 跟随本账户。内部漏斗仍记全量。</p>
+          <div class="fields">
+            <label>基础回传比例 %
+              <input name="send_ratio_pct" type="number" min="0" max="100" step="1" value="{{ active_acct.send_ratio_pct }}">
+              <span class="muted small">智能关时实际使用的回传比例。70 表示每 10 单回传 7 单、每 100 单回传 70 单，并且错开，不是连续前 70 单。</span>
+            </label>
+            <label>金额系数
+              <input name="value_multiplier" type="number" min="0" max="2" step="0.05" value="{{ active_acct.value_multiplier }}">
+              <span class="muted small">只乘在回传出去的订单金额上。1 是原价，1.2 是回传金额多 20%。被扣掉的单不回传。漏斗里的成交额不乘这个系数。</span>
+            </label>
+            <label>学习期阈值
+              <input name="learning_min" type="number" min="0" max="10000" step="1" value="{{ active_acct.learning_min }}">
+              <span class="muted small">该广告组近 7 日真实成交少于此数时，回传比例强制 100%，不扣量。默认 50。填 0 表示没有学习期。</span>
+            </label>
+            <label>每日保底单量
+              <input name="daily_floor" type="number" min="0" max="1000" step="1" value="{{ active_acct.daily_floor }}">
+              <span class="muted small">每个广告组、每个上海日的前 K 单一律回传。默认 5。用在学习期结束之后。填 0 表示不保底。</span>
+            </label>
+            <label>比例下限 %
+              <input name="ratio_min" type="number" min="0" max="100" step="1" value="{{ active_acct.ratio_min }}">
+              <span class="muted small">只在智能开启时生效。自动下调不会低于这个数。默认 60。智能关时不限制基础比例。</span>
+            </label>
+            <label>比例上限 %
+              <input name="ratio_max" type="number" min="0" max="100" step="1" value="{{ active_acct.ratio_max }}">
+              <span class="muted small">只在智能开启时生效。自动上调不会高于这个数，最高可到 100。智能关时不限制基础比例。</span>
+            </label>
+            <label>目标 CPA
+              <input name="target_cpa" type="number" min="0" step="0.01" value="{{ active_acct.target_cpa }}">
+              <span class="muted small">只在智能开启时生效，单位与广告账户消耗一致。例：$8。真实 CPA 约 $4 会少回传，约 $7–$9 回到基础比例，再高则往 100% 拉。</span>
+            </label>
+            <label>止损倍数
+              <input name="stoploss_multiple" type="number" min="1" step="0.1" value="{{ active_acct.stoploss_multiple }}">
+              <span class="muted small">只在智能开启且已填目标 CPA 时生效。默认 1.5。目标 $8 时，真实 CPA 超过 $12 开始计时。</span>
+            </label>
+            <label>止损时长（小时）
+              <input name="stoploss_hours" type="number" min="0" step="1" value="{{ active_acct.stoploss_hours }}">
+              <span class="muted small">超过止损线并连续达到此时长后，停止上调也不再下调，比例停住并标红。默认 24 小时。CPA 回到线以下自动解除。</span>
+            </label>
+            <label class="check"><input type="checkbox" name="smart_enabled" value="1" {% if active_acct.smart_enabled %}checked{% endif %}> 智能调比例（默认关）
+              <span class="muted small">关掉：只按基础比例扣，上下限、目标 CPA、止损都不参与。打开：每 6 小时按消耗和真实成交改一次该广告组的比例，每次 5 或 10 个点。</span>
+            </label>
+          </div>
         </fieldset>
         <div class="wide actions">
           <button class="btn" type="submit">保存此账户</button>
@@ -174,12 +225,121 @@
       </div>
     </div>
   </div>
+
+  <div class="card">
+    <h2>广告组扣量</h2>
+    <div class="pad">
+      <p class="muted small">没有广告组 ID 的成交归到账户桶（adgroup 为空）。覆盖留空表示跟随账户上的对应设置。比例覆盖在智能关时就是该组的基础比例。</p>
+      <form method="post" action="/admin/traffic/smart" style="margin:8px 0">
+        <input type="hidden" name="platform" value="{{ platform }}">
+        <input type="hidden" name="acct" value="{{ active_acct.code }}">
+        <button class="btn ghost sm" type="submit">立即拉取消耗并调整</button>
+        <span class="muted small">用该账户的 token 拉近 7 日消耗。失败则保持基础比例并写入历史；已在止损中的组保持当前比例。</span>
+      </form>
+      {% if is_admin_role %}
+      <form class="fields" method="post" action="/admin/traffic/group/save">
+        <input type="hidden" name="account_id" value="{{ active_acct.id }}">
+        <input type="hidden" name="platform" value="{{ platform }}">
+        <label>广告组 ID
+          <input name="adgroup" placeholder="Meta adset / TikTok AID，空=账户桶" maxlength="64">
+          <span class="muted small">对应链接里的 adset.id 或 __AID__。留空表示没有广告组 ID 的成交。</span>
+        </label>
+        <label>比例覆盖 %
+          <input name="ratio_override" type="number" min="0" max="100" step="1" placeholder="空=跟随账户">
+          <span class="muted small">该组自己的基础比例。智能关时直接用它扣量；智能开时作为自动调节要回到的基础。空=用账户基础比例。</span>
+        </label>
+        <label>目标 CPA 覆盖
+          <input name="target_cpa_override" type="number" min="0" step="0.01" placeholder="空=跟随账户">
+          <span class="muted small">只在智能开时替代账户目标 CPA。例：这组目标 $6，其他组仍用账户的 $8。空=跟随账户。</span>
+        </label>
+        <label>止损倍数覆盖
+          <input name="stoploss_multiple_override" type="number" min="1" step="0.1" placeholder="空=跟随账户">
+          <span class="muted small">只在智能开时替代账户止损倍数。空=跟随账户，默认 1.5。</span>
+        </label>
+        <label>止损时长覆盖（小时）
+          <input name="stoploss_hours_override" type="number" min="0" step="1" placeholder="空=跟随账户">
+          <span class="muted small">只在智能开时替代账户止损时长。空=跟随账户，默认 24 小时。</span>
+        </label>
+        <div class="wide actions"><button class="btn sm" type="submit">保存覆盖</button></div>
+      </form>
+      {% endif %}
+      <div class="table-wrap" style="margin-top:12px">
+        <table>
+          <thead>
+            <tr>
+              <th>广告组<br><span class="muted small">空桶=没有广告组 ID 的成交</span></th>
+              <th>当前比例<br><span class="muted small">智能开时是调完的比例；关时显示基础。实际扣量还要再看学习期和保底</span></th>
+              <th>原因<br><span class="muted small">最近一次调整。止损时固定为「止损：真实CPA持续超标」</span></th>
+              <th>消耗<br><span class="muted small">平台近 7 日花费，拉取失败时为上次成功值或 0</span></th>
+              <th>真实单<br><span class="muted small">近 7 日后台成交，含被扣掉的单</span></th>
+              <th>已回传<br><span class="muted small">近 7 日实际发给平台的 Purchase</span></th>
+              <th>CPA<br><span class="muted small">真实 CPA = 消耗 ÷ 真实单。平台看到的是消耗 ÷ 已回传</span></th>
+              <th>覆盖比例<br><span class="muted small">该组基础比例。空=跟随账户</span></th>
+              <th>覆盖 CPA<br><span class="muted small">该组目标 CPA。空=跟随账户</span></th>
+              <th>止损覆盖<br><span class="muted small">倍数 / 小时。空=跟随账户</span></th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for g in ad_groups %}
+            <tr {% if g.stoploss_active %}style="background:#fde8e8;color:#9b1c1c"{% endif %}>
+              <td><code>{{ g.adgroup or "（账户桶）" }}</code></td>
+              <td>{{ g.effective_ratio if g.effective_ratio is not none else "基础" }}</td>
+              <td>{{ g.reason or "—" }}</td>
+              <td>{{ g.spend or 0 }}</td>
+              <td>{{ g.real_orders or 0 }}</td>
+              <td>{{ g.sent_orders or 0 }}</td>
+              <td>{{ g.cpa or 0 }}</td>
+              <td>{{ g.ratio_override if g.ratio_override is not none else "—" }}</td>
+              <td>{{ g.target_cpa_override if g.target_cpa_override is not none else "—" }}</td>
+              <td>{% if g.stoploss_multiple_override is not none or g.stoploss_hours_override is not none %}{{ g.stoploss_multiple_override if g.stoploss_multiple_override is not none else "—" }} / {{ g.stoploss_hours_override if g.stoploss_hours_override is not none else "—" }}{% else %}—{% endif %}</td>
+            </tr>
+          {% else %}
+            <tr><td class="empty" colspan="10">还没有广告组成交。链接里的广告组宏进站后会出现在这里。</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if ad_ratio_history %}
+      <details class="help" style="margin-top:10px">
+        <summary>比例历史</summary>
+        <div class="table-wrap" style="margin-top:8px">
+          <table>
+            <thead><tr>
+              <th>时间（上海）<br><span class="muted small">写入时刻</span></th>
+              <th>广告组<br><span class="muted small">被调整的组</span></th>
+              <th>比例<br><span class="muted small">这次决定后的回传比例</span></th>
+              <th>原因<br><span class="muted small">下调、靠近目标、上调、止损或拉取失败</span></th>
+              <th>消耗<br><span class="muted small">当时读到的花费</span></th>
+              <th>真实单<br><span class="muted small">当时的真实成交</span></th>
+              <th>已回传<br><span class="muted small">当时已回传单数</span></th>
+              <th>CPA<br><span class="muted small">当时的真实 CPA</span></th>
+            </tr></thead>
+            <tbody>
+            {% for h in ad_ratio_history %}
+              <tr>
+                <td>{{ h.created_at_sh or h.created_at }}</td>
+                <td><code>{{ h.adgroup or "（账户桶）" }}</code></td>
+                <td>{{ h.ratio }}</td>
+                <td>{{ h.reason }}</td>
+                <td>{{ h.spend }}</td>
+                <td>{{ h.real_orders }}</td>
+                <td>{{ h.sent_orders }}</td>
+                <td>{{ h.cpa }}</td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </details>
+      {% endif %}
+    </div>
+  </div>
   {% endif %}
 
   <div class="card">
     <h2>投放漏斗</h2>
     <div class="pad">
-      <p class="muted small">落地 / 点商品 / 成交（全量，不受扣量影响）。</p>
+      <p class="muted small">落地 / 点商品 / 成交都按全量记，不受扣量影响，金额也不乘回传系数。</p>
       {% set f = ad_funnel if ad_funnel is defined else none %}
       {% if f %}
       <div class="traffic-map-card ad24-map" aria-hidden="true">
@@ -193,7 +353,12 @@
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>账户 acct</th><th>落地</th><th>点击</th><th>成交</th></tr></thead>
+          <thead><tr>
+            <th>账户 acct<br><span class="muted small">链接上的账户代码</span></th>
+            <th>落地<br><span class="muted small">打开落地页的次数，全量</span></th>
+            <th>点击<br><span class="muted small">从落地页点进商品，全量</span></th>
+            <th>成交<br><span class="muted small">真实支付成功，含被扣掉没回传的单</span></th>
+          </tr></thead>
           <tbody>
           {% for row in f.by_acct %}
             <tr><td><code>{{ row.acct }}</code></td><td>{{ row.land }}</td><td>{{ row.deal_click }}</td><td>{{ row.purchase }}</td></tr>
@@ -224,20 +389,21 @@
     <h2>最近回传</h2>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>时间</th><th>平台</th><th>事件</th><th>订单</th><th>event_id</th><th>结果</th><th>详情</th></tr></thead>
+        <thead><tr><th>时间（上海）</th><th>acct</th><th>平台</th><th>事件</th><th>event_id</th><th>HTTP</th><th>结果</th><th>响应</th></tr></thead>
         <tbody>
         {% for row in ad_logs %}
           <tr>
-            <td>{{ row.created_at }}</td>
+            <td>{{ row.created_at_sh or row.created_at }}</td>
+            <td><code>{{ row.acct or "—" }}</code></td>
             <td>{{ row.platform }}</td>
             <td>{{ row.event_name }}</td>
-            <td>{{ row.order_id }}</td>
             <td class="mono">{{ row.event_id }}</td>
+            <td>{{ row.http_status or "—" }}</td>
             <td>{% if row.ok %}<span class="badge ok">OK</span>{% else %}<span class="badge warn">SKIP</span>{% endif %}</td>
             <td class="mono">{{ row.detail }}</td>
           </tr>
         {% else %}
-          <tr><td class="empty" colspan="7">暂无回传记录。</td></tr>
+          <tr><td class="empty" colspan="8">暂无回传记录。</td></tr>
         {% endfor %}
         </tbody>
       </table>

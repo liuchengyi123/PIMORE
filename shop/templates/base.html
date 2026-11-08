@@ -49,7 +49,6 @@
   t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,"script",
   "https://connect.facebook.net/en_US/fbevents.js");
   fbq("init", {{ ad_pixels.meta_pixel_id|tojson }});
-  fbq("track", "PageView");
   </script>
   {% endif %}
   {% if ad_pixels.google_ok %}
@@ -66,7 +65,6 @@
   <script>
   !function(w,d,t){w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript",o.async=!0,o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};
   ttq.load({{ ad_pixels.tiktok_pixel_id|tojson }});
-  ttq.page();
   }(window,document,"ttq");
   </script>
   {% endif %}
@@ -1179,66 +1177,80 @@ var hold = document.getElementById("pop-hold");
         var n = Number(cents || 0);
         return Math.round(n) / 100;
       }
-      function track(name, payload, eventId) {
+      function track(name, payload, eventId, custom) {
         payload = payload || {};
         try {
           if (pixels.meta_ok && typeof fbq === "function") {
-            var metaPayload = Object.assign({}, payload);
-            if (eventId) fbq("track", name, metaPayload, {eventID: eventId});
-            else fbq("track", name, metaPayload);
+            var opts = eventId ? {eventID: eventId} : undefined;
+            if (custom) fbq("trackCustom", name, payload, opts);
+            else fbq("track", name, payload, opts);
           }
         } catch (e) {}
         try {
-          if (pixels.google_ok && typeof gtag === "function") {
-            var gName = name === "Purchase" ? "purchase" : (name === "AddToCart" ? "add_to_cart" : (name === "InitiateCheckout" ? "begin_checkout" : (name === "ViewContent" ? "view_item" : name)));
+          if (pixels.google_ok && typeof gtag === "function" && !custom && name !== "PageView" && name !== "EnterStore") {
+            var gName = name === "Purchase" ? "purchase" : (name === "AddToCart" ? "add_to_cart" : (name === "InitiateCheckout" ? "begin_checkout" : (name === "ViewContent" ? "view_item" : (name === "AddPaymentInfo" ? "add_payment_info" : (name === "AddToWishlist" ? "add_to_wishlist" : (name === "Search" ? "search" : name))))));
             gtag("event", gName, Object.assign({}, payload, eventId ? {event_id: eventId} : {}));
           }
         } catch (e) {}
         try {
-          if (pixels.tiktok_ok && window.ttq && typeof ttq.track === "function") {
-            var tName = name === "Purchase" ? "CompletePayment" : (name === "AddToCart" ? "AddToCart" : (name === "InitiateCheckout" ? "InitiateCheckout" : (name === "ViewContent" ? "ViewContent" : name)));
-            ttq.track(tName, payload, eventId ? {event_id: eventId} : undefined);
+          if (pixels.tiktok_ok && window.ttq) {
+            var top = eventId ? {event_id: eventId} : undefined;
+            if (name === "PageView" && typeof ttq.page === "function") ttq.page({}, top);
+            else if (typeof ttq.track === "function") ttq.track(name, payload, top);
           }
         } catch (e) {}
       }
-      window.harborTrack = track;
-      // Persist fbp/ttp into harbor_ad cookie for CAPI.
+      window.harborTrack = function (name, payload, eventId, custom) {
+        track(name, payload, eventId, !!custom);
+      };
+      function fireOnce(ev) {
+        if (!ev || !ev.name) return;
+        var eventId = ev.event_id || "";
+        if (eventId) {
+          var key = "harbor-ad-fired:" + eventId;
+          try {
+            if (localStorage.getItem(key)) return;
+            localStorage.setItem(key, "1");
+          } catch (e) {}
+        }
+        track(ev.name, ev.params || {}, eventId, !!ev.custom || ev.name === "EnterStore");
+      }
       try {
         var raw = document.cookie || "";
         var fbp = (raw.match(/(?:^|; )_fbp=([^;]*)/) || [])[1];
+        var fbc = (raw.match(/(?:^|; )_fbc=([^;]*)/) || [])[1];
         var ttp = (raw.match(/(?:^|; )_ttp=([^;]*)/) || [])[1];
-        if (fbp || ttp) {
+        if (fbp || fbc || ttp) {
           var cur = {};
           try { cur = JSON.parse(decodeURIComponent((raw.match(/(?:^|; )harbor_ad=([^;]*)/) || [])[1] || "%7B%7D")); } catch (e) { cur = {}; }
           if (fbp) cur.fbp = decodeURIComponent(fbp);
+          if (fbc) cur.fbc = decodeURIComponent(fbc);
           if (ttp) cur.ttp = decodeURIComponent(ttp);
           document.cookie = "harbor_ad=" + encodeURIComponent(JSON.stringify(cur)) + ";path=/;max-age=" + (90*86400) + ";SameSite=Lax";
         }
+        var queued = (raw.match(/(?:^|; )harbor_ad_px=([^;]*)/) || [])[1];
+        if (queued) {
+          document.cookie = "harbor_ad_px=;path=/;max-age=0;SameSite=Lax";
+          var parsed = [];
+          try { parsed = JSON.parse(decodeURIComponent(queued)); } catch (e) { parsed = []; }
+          if (!Array.isArray(parsed)) parsed = parsed ? [parsed] : [];
+          parsed.forEach(fireOnce);
+        }
       } catch (e) {}
-      var path = location.pathname || "";
-      if (/\/p\//.test(path)) {
-        var sku = (path.split("/p/")[1] || "").split(/[/?#]/)[0];
-        if (sku) track("ViewContent", {content_ids: [sku], content_type: "product", currency: cfg.currency || "USD"}, eid("vc", sku));
-      }
-      if (path.indexOf("/checkout") === 0) {
-        track("InitiateCheckout", {currency: cfg.currency || "USD"}, eid("ic", Date.now()));
-      }
-      if (path.indexOf("/cart") === 0 && /added=1|cart_add=1/.test(location.search)) {
-        track("AddToCart", {currency: cfg.currency || "USD"}, eid("atc", Date.now()));
-      }
       var paid = document.body.getAttribute("data-paid");
       var orderId = document.body.getAttribute("data-order") || "";
-      if (paid === "1" && orderId) {
+      if (paid === "1" && orderId && document.body.getAttribute("data-ad-send") !== "0") {
         var value = Number(document.body.getAttribute("data-order-value") || "0");
         var currency = document.body.getAttribute("data-order-currency") || cfg.currency || "USD";
-        var sendFlag = document.body.getAttribute("data-ad-send");
         var mult = Number((pixels && pixels.value_multiplier != null) ? pixels.value_multiplier : 1);
-        if (sendFlag === "0") {
-          /* 扣量：与服务端一致，跳过浏览器 Purchase */
-        } else {
-          if (mult !== 1 && isFinite(mult)) value = Math.round(value * mult * 100) / 100;
-          track("Purchase", {value: value, currency: currency, content_type: "product"}, "purchase_" + orderId);
+        if (mult !== 1 && isFinite(mult)) value = Math.round(value * mult * 100) / 100;
+        var ids = (document.body.getAttribute("data-content-ids") || "").split(",").filter(Boolean);
+        var params = {value: value, currency: currency, content_type: "product"};
+        if (ids.length) {
+          params.content_ids = ids;
+          params.contents = ids.map(function (id) { return {id: id, content_id: id, quantity: 1}; });
         }
+        fireOnce({name: "Purchase", event_id: "purchase_" + orderId, params: params});
       }
     })();
 
@@ -1593,8 +1605,10 @@ var hold = document.getElementById("pop-hold");
         return;
       }
       paintRail(data);
-      if (window.harborTrack) {
-        try { window.harborTrack("AddToCart", {currency: (window.harborCfg || {}).currency || "USD"}); } catch (e) {}
+      if (data.ad_event && window.harborTrack) {
+        try {
+          window.harborTrack(data.ad_event.name, data.ad_event.params || {}, data.ad_event.event_id, !!data.ad_event.custom);
+        } catch (e) {}
       }
       var sheet = document.getElementById("sku-sheet");
       if (sheet) {

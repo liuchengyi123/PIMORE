@@ -1,0 +1,32 @@
+{% extends "admin_base.html" %}
+{% block body %}
+<header class="page-head">
+  <div>
+    <h1>转化日志</h1>
+    <p class="muted">服务端回传记录。时间是 Asia/Shanghai。响应已去掉 token、邮箱和电话。</p>
+  </div>
+</header>
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>时间（上海）</th><th>acct</th><th>平台</th><th>事件</th><th>event_id</th><th>HTTP</th><th>结果</th><th>响应</th></tr></thead>
+      <tbody>
+      {% for row in ad_logs %}
+        <tr>
+          <td>{{ row.created_at_sh or row.created_at }}</td>
+          <td><code>{{ row.acct or "—" }}</code></td>
+          <td>{{ row.platform }}</td>
+          <td>{{ row.event_name }}</td>
+          <td class="mono">{{ row.event_id }}</td>
+          <td>{{ row.http_status or "—" }}</td>
+          <td>{% if row.ok %}<span class="badge ok">OK</span>{% else %}<span class="badge warn">SKIP</span>{% endif %}</td>
+          <td class="mono">{{ row.detail }}</td>
+        </tr>
+      {% else %}
+        <tr><td class="empty" colspan="8">暂无回传记录。</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

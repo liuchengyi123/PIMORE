@@ -9,7 +9,6 @@
 
 {% if launch_notice == "built" %}<p class="ok">链接已生成（含所选账户 acct），可复制到广告后台。右侧预览与公开页同一套模板。</p>{% endif %}
 {% if launch_notice == "test_ok" %}<p class="ok">测试回传已发送，请到 Meta Events Manager / TikTok Events 查看；下方「最近回传」也会刷新。</p>{% endif %}
-{% if launch_notice == "pixel_saved" %}<p class="ok">Pixel / 回传密钥已保存到当前账户。</p>{% endif %}
 {% if launch_notice == "test_fail" %}<p class="error">测试回传失败：先到「投放回传」配好该账户 Pixel / CAPI，再回来测。</p>{% endif %}
 {% if launch_error %}<p class="error">{{ launch_error }}</p>{% endif %}
 
@@ -77,45 +76,17 @@
     </div>
   </form>
   <div class="card" id="launch-pixel">
-    <h2>广告 Pixel / 回传</h2>
+    <h2>当前账户 Pixel</h2>
     <div class="pad">
+      <p class="muted small">Pixel / CAPI 只配在投放账户上。一个投放账户对应一个 Pixel。受众差很多的类目请分开建账户（例如 meta_home 和 meta_beauty），即使它们投在同一个 Meta/TikTok 广告账户里。</p>
       {% if active_acct %}
-      <div class="status-list rowish" style="margin:0 0 10px">
-        <span class="badge {% if active_acct.status.pixel %}ok{% else %}missing{% endif %}">
-          <span class="dot {% if active_acct.status.pixel %}on{% else %}off{% endif %}"></span>
-          Pixel {% if active_acct.status.pixel %}已配置{% else %}未配置{% endif %}
-        </span>
-        <span class="badge {% if active_acct.status.capi %}ok{% else %}missing{% endif %}">
-          <span class="dot {% if active_acct.status.capi %}on{% else %}off{% endif %}"></span>
-          服务端回传 {% if active_acct.status.capi %}就绪{% else %}缺密钥{% endif %}
-        </span>
-        <span class="muted small"><code>{{ active_acct.code }}</code> · {{ active_acct.name }}</span>
-      </div>
-      <form class="fields" method="post" action="/admin/launch/account/save">
-        <input type="hidden" name="account_id" value="{{ active_acct.id }}">
-        <input type="hidden" name="platform" value="{{ form_state.platform }}">
-        {% for key, title, secret in platform_fields %}
-          {% if secret %}
-          <label class="wide">{{ title }}
-            <input name="{{ key }}" value="{% if active_acct.credentials.get(key) %}********{% endif %}"
-                   placeholder="{{ ad_masked.get(key) or '•••' }}" autocomplete="off">
-          </label>
-          {% else %}
-          <label class="wide">{{ title }}
-            <input name="{{ key }}" value="{{ active_acct.credentials.get(key) or '' }}" autocomplete="off">
-          </label>
-          {% endif %}
-        {% endfor %}
-        <div class="wide actions" style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn" type="submit">保存 Pixel</button>
-        </div>
-      </form>
-      <form method="post" action="/admin/launch/test" style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-        <input type="hidden" name="account_id" value="{{ active_acct.id }}">
-        <input type="hidden" name="platform" value="{{ form_state.platform }}">
-        <input type="hidden" name="acct" value="{{ active_acct.code }}">
-        <button class="btn ghost sm" type="submit">发送测试回传</button>
-      </form>
+      <dl class="fields" id="lp-pixel-status" style="margin-top:10px">
+        <div><dt>平台</dt><dd id="lp-st-platform">{{ active_public.platform_label or active_acct.platform }}<br><span class="muted small">这条链接只加载该平台的 Pixel。换平台会换成那个平台的账户。</span></dd></div>
+        <div><dt>Pixel ID</dt><dd id="lp-st-pixel" class="mono">{{ active_public.pixel_masked or "未配置" }}<br><span class="muted small">浏览器像素和服务器回传都用这个 ID。这里只显示打码后的值，完整 ID 在投放回传里改。</span></dd></div>
+        <div><dt>CAPI / Events Token</dt><dd id="lp-st-capi">{{ "已设置" if active_public.capi_set else "未设置" }}<br><span class="muted small">已设置才会发服务器事件。未设置时浏览器像素仍可工作，服务器日志记为未配置。</span></dd></div>
+        <div><dt>test_event_code</dt><dd id="lp-st-test">{{ "已设置" if active_public.test_code_set else "未设置" }}<br><span class="muted small">有值时每次服务器事件都带测试码，到 Meta / TikTok 的测试事件里核对。正式投放请留空。</span></dd></div>
+      </dl>
+      <p style="margin-top:10px"><a id="lp-st-edit" href="/admin/traffic?platform={{ active_acct.platform }}&amp;acct={{ active_acct.code }}">编辑此账户的 Pixel</a><br><span class="muted small">Pixel、密钥、回传比例和止损都在投放回传里改，落地页只看状态。</span></p>
       {% else %}
       <p class="error">该平台还没有广告账户。请先到 <a href="/admin/traffic?platform={{ form_state.platform }}">投放回传</a> 添加账户。</p>
       {% endif %}
@@ -133,7 +104,7 @@
 <div class="card" id="launch-postback">
   <h2>回传联调</h2>
   <div class="pad">
-    <p class="muted small">生成的投放链接会带上上面的 <code>acct</code>；落地写 cookie，成交走该账户 Pixel / CAPI。Pixel 填在左侧「广告 Pixel / 回传」。完整账户管理仍可打开 <a href="/admin/traffic">投放回传</a>。</p>
+    <p class="muted small">生成的投放链接带上所选账户的 <code>acct</code>，以及平台的广告组宏（Meta <code>{{ "{{adset.id}}" }}</code>，TikTok <code>__AID__</code>）。落地页写入 cookie，进店、商品、加购和成交都走该账户的 Pixel。密钥在 <a href="/admin/traffic">投放回传</a> 修改。完整日志见 <a href="/admin/conversions">转化日志</a>。</p>
     {% if active_acct %}
     <div class="status-list rowish" style="margin:10px 0">
       <span class="badge {% if active_acct.status.pixel %}ok{% else %}missing{% endif %}">
@@ -169,19 +140,21 @@
   <h2 style="margin-top:8px">最近回传</h2>
   <div class="table-wrap">
     <table>
-      <thead><tr><th>时间</th><th>平台</th><th>事件</th><th>订单</th><th>结果</th><th>详情</th></tr></thead>
+      <thead><tr><th>时间（上海）</th><th>acct</th><th>平台</th><th>事件</th><th>event_id</th><th>HTTP</th><th>结果</th><th>响应</th></tr></thead>
       <tbody>
       {% for row in ad_logs %}
         <tr>
-          <td>{{ row.created_at }}</td>
+          <td>{{ row.created_at_sh or row.created_at }}</td>
+          <td><code>{{ row.acct or "—" }}</code></td>
           <td>{{ row.platform }}</td>
           <td>{{ row.event_name }}</td>
-          <td>{{ row.order_id }}</td>
+          <td class="mono">{{ row.event_id }}</td>
+          <td>{{ row.http_status or "—" }}</td>
           <td>{% if row.ok %}<span class="badge ok">OK</span>{% else %}<span class="badge warn">SKIP</span>{% endif %}</td>
           <td class="mono">{{ row.detail }}</td>
         </tr>
       {% else %}
-        <tr><td class="empty" colspan="6">暂无回传记录。配好密钥后点「发送测试回传」。</td></tr>
+        <tr><td class="empty" colspan="8">暂无回传记录。配好密钥后点「发送测试回传」。</td></tr>
       {% endfor %}
       </tbody>
     </table>
@@ -242,7 +215,35 @@
       || list.find(function (a) { return a.enabled; })
       || list[0];
     acctEl.value = prefer ? (prefer.code || "") : "";
+    paintStatus(prefer || null);
   }
+  function paintStatus(a) {
+    var plat = document.getElementById("lp-st-platform");
+    var pixel = document.getElementById("lp-st-pixel");
+    var capi = document.getElementById("lp-st-capi");
+    var test = document.getElementById("lp-st-test");
+    var edit = document.getElementById("lp-st-edit");
+    if (!plat) return;
+    if (!a) {
+      plat.textContent = "—";
+      if (pixel) pixel.textContent = "未配置";
+      if (capi) capi.textContent = "未设置";
+      if (test) test.textContent = "未设置";
+      return;
+    }
+    plat.textContent = a.platform_label || a.platform || "";
+    if (pixel) pixel.textContent = a.pixel_masked || "未配置";
+    if (capi) capi.textContent = a.capi_set ? "已设置" : "未设置";
+    if (test) test.textContent = a.test_code_set ? "已设置" : "未设置";
+    if (edit) edit.href = "/admin/traffic?platform=" + encodeURIComponent(a.platform || "") + "&acct=" + encodeURIComponent(a.code || "");
+  }
+  if (acctEl) acctEl.addEventListener("change", function () {
+    var plat = platformEl ? platformEl.value : "meta";
+    var list = (accountsByPlat && accountsByPlat[plat]) || [];
+    var found = null;
+    list.forEach(function (a) { if (a.code === acctEl.value) found = a; });
+    paintStatus(found);
+  });
   if (platformEl) platformEl.addEventListener("change", function () {
     rebuildAcct();
     var src = form.querySelector("[name=utm_source]");

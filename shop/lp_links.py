@@ -68,7 +68,13 @@ def share_path(row):
     acct = row.get("acct") or ""
     if acct:
         query["acct"] = acct
-    return f"/lp/ad/{row['code']}?{urlencode(query)}"
+    path = f"/lp/ad/{row['code']}?{urlencode(query)}"
+    platform = (row.get("platform") or "").lower()
+    if platform == "meta":
+        path += "&adset_id={{adset.id}}&campaign_id={{campaign.id}}&ad_id={{ad.id}}"
+    elif platform == "tiktok":
+        path += "&adgroup_id=__AID__&campaign_id=__CAMPAIGN_ID__&ad_id=__CID__"
+    return path
 
 
 def absolute_url(path):
