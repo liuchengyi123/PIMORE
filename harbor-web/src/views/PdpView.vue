@@ -10,28 +10,24 @@
     </div>
 
     <div class="body">
+      <h1 class="title">{{ product.name }}</h1>
+      <p class="blurb top">{{ product.blurb || t('pdp_blurb_default') }}</p>
       <div class="price-row">
         <span class="price" :class="{ oos: isOos }">{{ money(displayPrice) }}</span>
         <span v-if="displayCompare" class="was">{{ money(displayCompare) }}</span>
-        <span v-if="discount" class="pill amber">-{{ discount }}%</span>
+        <span v-if="discount" class="off">-{{ discount }}%</span>
       </div>
-      <h1 class="title">{{ product.name }}</h1>
       <p v-if="interestCount > 0" class="interest">{{ t('pdp_interest', { n: interestCount }) }}</p>
-      <div class="ship-pills">
-        <span class="pill ok">{{ t('pdp_ship_tracked') }}</span>
-        <span class="pill info">{{ product.shipsIn || t('pdp_ships_default') }}</span>
-        <span class="pill" :class="isOos ? 'bad' : ''">{{ isOos ? t('out_of_stock') || 'Sold out' : (t('in_stock') || 'In stock') }}</span>
-      </div>
+      <div class="ship-bar">{{ t('pdp_ship_tracked') }} · {{ product.shipsIn || t('pdp_ships_default') }}</div>
       <button type="button" class="sku-row" @click="sheetOpen = true">
         <span class="sku-k">{{ t('common_option') }}</span>
         <span class="sku-v">{{ sizeSummary }} · Qty {{ qty }}</span>
         <ChevronRight :size="18" :stroke-width="1.7" class="chev" />
       </button>
       <div class="reviews-box">
-        <div class="rev-head"><strong>{{ t('reviews') || 'Reviews' }}</strong><span class="tiny">Write a review after delivery</span></div>
-        <div class="rev-empty">No reviews yet</div>
+        <div class="rev-head"><strong>{{ t('reviews') || '评价' }}</strong></div>
+        <div class="rev-empty">{{ t('reviews_empty') || '暂无评价' }}</div>
       </div>
-      <p class="blurb">{{ product.blurb || t('pdp_blurb_default') }}</p>
       <div class="cta-spacer" />
     </div>
 
@@ -317,7 +313,9 @@ async function notifyMe() {
 .price.oos { color: #9CA3AF; }
 .was { font-size: 13px; color: #9CA3AF; text-decoration: line-through; margin-left: 6px; }
 .interest { color: $hb-deep !important; font-size: 12px; font-weight: 600; margin-top: 8px; }
-.ship-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.ship-bar { margin-top: 12px; background: #FFF1EC; color: #C2410C; border-radius: 12px; padding: 10px 12px; font-size: 13px; font-weight: 650; }
+.off { background: #FFF1EC; color: #F96141; border-radius: 999px; padding: 2px 8px; font-size: 12px; font-weight: 800; }
+.blurb.top { margin-top: 4px; color: #8E949C; }
 .pill { display: inline-flex; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; background: #F3F4F6; color: #374151; }
 .pill.ok { background: #ECFDF5; color: #047857; }
 .pill.info { background: #E0F2FE; color: #0E7490; }

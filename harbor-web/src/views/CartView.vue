@@ -2,8 +2,11 @@
   <div class="fn-page page" data-figma="M23">
     <header class="sticky">
       <div class="head">
-        <h1>{{ t('cart_title') }} <small v-if="cart.syncing">sync…</small></h1>
-        <button v-if="lines.length" type="button" class="clear" @click="clear">清空</button>
+        <div>
+          <h1>{{ t('cart_title') }} <small v-if="cart.syncing">…</small></h1>
+          <p v-if="lines.length" class="count">{{ lines.length }}</p>
+        </div>
+        <button v-if="lines.length" type="button" class="clear" @click="clear">{{ t('cart_clear') || '清空' }}</button>
       </div>
       <AppSearchBar compact navigate-on-focus />
     </header>
@@ -26,6 +29,7 @@
           <button type="button" @click="bump(line, -1)" aria-label="minus"><Minus :size="14" :stroke-width="2" /></button>
           <span>{{ line.qty }}</span>
           <button type="button" @click="bump(line, 1)" aria-label="plus"><Plus :size="14" :stroke-width="2" /></button>
+          <button type="button" class="trash" @click="bump(line, -line.qty)" aria-label="remove">×</button>
         </div>
       </div>
     </div>
@@ -89,6 +93,8 @@ onMounted(() => {
 .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 h1 { margin: 0; font-size: 24px; color: $hb-ink; font-weight: 780; }
 h1 small { font-size: 12px; color: $hb-muted; font-weight: 600; }
+.count { margin: 2px 0 0; font-size: 13px; color: $hb-muted; }
+.trash { border: 0; background: transparent; color: #9AA0A8; font-size: 18px; cursor: pointer; }
 .clear { border: 0; background: transparent; color: $hb-muted; cursor: pointer; font-weight: 650; }
 .empty { text-align: center; padding: 64px 12px; color: $hb-muted; }
 .empty-ico { color: $hb-muted; opacity: 0.55; margin-bottom: 10px; }

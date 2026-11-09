@@ -2,13 +2,13 @@
   <div class="page" data-figma="M12">
     <header class="head">
       <button type="button" class="back" @click="$router.back()" aria-label="back"><ChevronLeft :size="22" :stroke-width="1.75" /></button>
-      <h1>Checkout</h1>
+      <h1>{{ zh ? '结算' : 'Checkout' }}</h1>
     </header>
 
     <div class="card ship">
       <div class="row between">
-        <div class="sec">Ship to</div>
-        <button type="button" class="link" @click="focusShip">Change</button>
+        <div class="sec">{{ zh ? '收货地址' : 'Ship to' }}</div>
+        <button type="button" class="link" @click="focusShip">{{ zh ? '修改' : 'Change' }}</button>
       </div>
       <div class="addr" v-if="form.name">
         {{ form.name }}<br />
@@ -42,7 +42,7 @@
 
       <div class="card">
         <div class="row between">
-          <div class="sec">Coupon</div>
+          <div class="sec">{{ zh ? '优惠券' : 'Coupon' }}</div>
           <span class="link">Select ›</span>
         </div>
         <div class="tiny" v-if="form.coupon_code">{{ form.coupon_code }}</div>
@@ -51,7 +51,7 @@
 
       <div class="card">
         <div class="row between">
-          <div class="sec">Use balance</div>
+          <div class="sec">{{ zh ? '使用余额' : 'Use balance' }}</div>
           <button type="button" class="toggle" :class="{ on: form.use_balance }" @click="form.use_balance = !form.use_balance" aria-label="toggle balance">
             <span class="knob" />
           </button>
@@ -60,7 +60,7 @@
       </div>
 
       <div class="card">
-        <div class="sec" style="margin-bottom:10px">Pay with</div>
+        <div class="sec" style="margin-bottom:10px">{{ zh ? '支付方式' : 'Pay with' }}</div>
         <label class="pay" :class="{ on: form.pay_method === 'paypal' }">
           <input v-model="form.pay_method" type="radio" value="paypal" /> PayPal
         </label>
@@ -75,7 +75,7 @@
       <div class="card totals">
         <div class="row between tiny-row"><span class="tiny">Items</span><span>{{ money(subtotal) }}</span></div>
         <div class="row between tiny-row"><span class="tiny">Shipping</span><span>Tracked</span></div>
-        <div class="row between total-row"><span class="sec">Total</span><span class="price">{{ money(subtotal) }}</span></div>
+        <div class="row between total-row"><span class="sec">{{ zh ? '合计' : 'Total' }}</span><span class="price">{{ money(subtotal) }}</span></div>
         <div class="tiny" style="margin-top:8px">Tracked shipping · Est. 7–12 days</div>
       </div>
 
@@ -85,7 +85,7 @@
 
     <div class="dock">
       <div class="price">{{ money(subtotal) }}</div>
-      <button type="button" class="place" :disabled="!lines.length || busy" @click="place">{{ busy ? '…' : 'Place order' }}</button>
+      <button type="button" class="place" :disabled="!lines.length || busy" @click="place">{{ busy ? '…' : (zh ? '提交订单' : 'Place order') }}</button>
     </div>
   </div>
 </template>
@@ -98,7 +98,8 @@ import { useCart } from '@/composables/cart'
 import { useI18n } from '@/composables/i18n'
 import { checkoutUrl, submitCheckoutForm } from '@/api/accountApi'
 
-const { t } = useI18n()
+const { t, lang } = useI18n()
+const zh = computed(() => String(lang.value).startsWith('zh'))
 const cart = useCart()
 const router = useRouter()
 const lines = computed(() => cart.lines.value)
