@@ -2,15 +2,15 @@
   <div class="page">
     <header class="head">
       <button type="button" class="back" @click="$router.back()" aria-label="back">‹</button>
-      <h1 class="title">Sale</h1>
+      <h1 class="title">{{ zh ? '特卖' : 'Sale' }}</h1>
     </header>
     <section class="hero">
-      <div class="eyebrow">Limited time</div>
-      <div class="hl">Flash deals</div>
+      <div class="eyebrow">{{ zh ? '限时' : 'Limited time' }}</div>
+      <div class="hl">{{ zh ? '闪购' : 'Flash deals' }}</div>
       <div v-if="saleEnds" class="ends">Ends {{ saleEnds }}</div>
     </section>
     <div v-if="loading" class="state">Loading…</div>
-    <div v-else-if="!products.length" class="state">No sale items right now.</div>
+    <div v-else-if="!products.length" class="state">{{ zh ? '暂无特卖' : 'No sale items right now.' }}</div>
     <div v-else class="grid">
       <article v-for="p in products" :key="p.sku" class="card" @click="go(p)">
         <div class="thumb" :style="ph(p)">
@@ -29,12 +29,13 @@
   </div>
 </template>
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { listSaleProducts, fetchDealEnds, type Product } from '@/api/products'
 import { useCart } from '@/composables/cart'
 import AppTabBar from '@/components/AppTabBar.vue'
 const cart = useCart()
+const zh = computed(() => String(navigator.language || '').toLowerCase().startsWith('zh'))
 const router = useRouter()
 const products = ref<Product[]>([])
 const loading = ref(true)

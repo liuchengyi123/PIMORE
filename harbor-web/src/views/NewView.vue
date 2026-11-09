@@ -2,11 +2,11 @@
   <div class="page">
     <header class="head">
       <button type="button" class="back" @click="$router.back()" aria-label="back">‹</button>
-      <h1 class="title">New In</h1>
+      <h1 class="title">{{ zh ? '新品' : 'New In' }}</h1>
     </header>
     <section class="hero">
-      <div class="eyebrow">Just landed this week</div>
-      <div class="hl">Fresh finds. Everyday essentials.</div>
+      <div class="eyebrow">{{ zh ? '本周刚到' : 'Just landed this week' }}</div>
+      <div class="hl">{{ zh ? '新鲜家居小物。' : 'Fresh finds. Everyday essentials.' }}</div>
     </section>
     <div v-if="loading" class="state">Loading…</div>
     <div v-else-if="!products.length" class="state">No new arrivals yet.</div>
@@ -29,12 +29,13 @@
   </div>
 </template>
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { listNewProducts, type Product } from '@/api/products'
 import { useCart } from '@/composables/cart'
 import AppTabBar from '@/components/AppTabBar.vue'
 const cart = useCart()
+const zh = computed(() => String(navigator.language || '').toLowerCase().startsWith('zh'))
 const router = useRouter()
 const products = ref<Product[]>([])
 const loading = ref(true)

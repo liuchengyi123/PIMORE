@@ -2,43 +2,44 @@
   <div class="page" data-figma="M15">
     <header class="head">
       <button type="button" class="back" @click="$router.back()" aria-label="back"><ChevronLeft :size="22" :stroke-width="1.75" /></button>
-      <h1>Order #{{ id }}</h1>
+      <h1>{{ zh ? '订单' : 'Order' }} #{{ id }}</h1>
     </header>
     <div v-if="loading" class="state">{{ t('pdp_loading') }}</div>
     <div v-else-if="!detail.ok" class="state">{{ detail.rawHint || 'Not found' }}</div>
     <template v-else>
       <div class="card track">
         <div class="steps">
-          <span :class="{ on: true }">Paid</span>
-          <span :class="{ on: /ship|deliver/i.test(detail.status) }">● Shipped</span>
-          <span :class="{ on: /deliver/i.test(detail.status) }">Delivered</span>
+          <span :class="{ on: true }">{{ zh ? '已支付' : 'Paid' }}</span>
+          <span :class="{ on: /ship|deliver/i.test(detail.status) }">● {{ zh ? '已发货' : 'Shipped' }}</span>
+          <span :class="{ on: /deliver/i.test(detail.status) }">{{ zh ? '已送达' : 'Delivered' }}</span>
         </div>
         <div class="bar"><i :style="{ width: /deliver/i.test(detail.status) ? '100%' : (/ship/i.test(detail.status) ? '66%' : '33%') }" /></div>
         <div class="meta" v-if="detail.tracking">Carrier {{ detail.carrier || '—' }} · {{ detail.tracking }}</div>
         <div class="meta" v-else>Status · {{ detail.status }}</div>
       </div>
       <div class="card">
-        <div class="row"><span>Status</span><b>{{ detail.status }}</b></div>
-        <div class="row"><span>Due</span><b class="due">{{ detail.due || '—' }}</b></div>
-        <div v-if="detail.arrives" class="row"><span>Arrives</span><b>{{ detail.arrives }}</b></div>
+        <div class="row"><span>{{ zh ? '状态' : 'Status' }}</span><b>{{ detail.status }}</b></div>
+        <div class="row"><span>{{ zh ? '应付' : 'Due' }}</span><b class="due">{{ detail.due || '—' }}</b></div>
+        <div v-if="detail.arrives" class="row"><span>{{ zh ? '送达' : 'Arrives' }}</span><b>{{ detail.arrives }}</b></div>
       </div>
       <div v-if="detail.summary.length" class="card">
         <div v-for="(s, i) in detail.summary" :key="i" class="sum">{{ s }}</div>
       </div>
-      <router-link v-if="id" class="btn soft" :to="{ path: '/invoice', query: { id } }">Invoice</router-link>
+      <router-link v-if="id" class="btn soft" :to="{ path: '/invoice', query: { id } }">{{ zh ? '发票' : 'Invoice' }}</router-link>
       <button type="button" class="btn" @click="askCs">{{ t('chat_entry') }}</button>
     </template>
   </div>
 </template>
 <script setup lang="ts">
 import { ChevronLeft } from 'lucide-vue-next'
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { fetchOrderDetail, type OrderDetail } from '@/api/accountApi'
 import { buildOrderBody } from '@/api/supportApi'
 import { useI18n } from '@/composables/i18n'
 
-const { t } = useI18n()
+const { t, lang } = useI18n()
+const zh = computed(() => String(lang.value).startsWith('zh'))
 const route = useRoute()
 const router = useRouter()
 const id = String(route.params.id || '')

@@ -14,10 +14,10 @@
         @search="onSearch"
       />
     </div>
-    <h1 v-if="!searched" class="search-title">Search</h1>
-    <p v-if="!searched" class="search-sub">Find cute home goods, everyday essentials and more.</p>
+    <h1 v-if="!searched" class="search-title">{{ zh ? '搜索' : 'Search' }}</h1>
+    <p v-if="!searched" class="search-sub">{{ zh ? '找家居好物和日常小物。' : 'Find cute home goods, everyday essentials and more.' }}</p>
     <div v-if="!q && !loading && !searched" class="hints">
-      <div class="hint-title">Recent searches</div>
+      <div class="hint-title">{{ zh ? '最近搜索' : 'Recent searches' }}</div>
       <div class="hint-row">
         <button v-for="h in hints" :key="h" type="button" class="hint" @click="quick(h)">{{ h }}</button>
       </div>
@@ -25,7 +25,7 @@
     <div v-if="loading" class="state">{{ t('search_searching') }}</div>
     <div v-else-if="searched && !products.length" class="empty-block">
       <h2>{{ t('search_no_results') }} “{{ q }}”</h2>
-      <p class="hint-sub">Try kitchen, storage, or cleaning</p>
+      <p class="hint-sub">{{ zh ? '试试厨房、收纳或清洁' : 'Try kitchen, storage, or cleaning' }}</p>
       <div class="hint-row" style="justify-content:center;margin-top:16px">
         <button v-for="h in hints" :key="'e'+h" type="button" class="hint" @click="quick(h)">{{ h }}</button>
       </div>
@@ -33,10 +33,10 @@
     </div>
     <div v-else>
       <div class="sort-chips" v-if="products.length">
-        <button type="button" class="hint on">Best</button>
-        <button type="button" class="hint">Price ↑</button>
-        <button type="button" class="hint">Price ↓</button>
-        <button type="button" class="hint">Newest</button>
+        <button type="button" class="hint on">{{ zh ? '综合' : 'Best' }}</button>
+        <button type="button" class="hint">{{ zh ? '价格↑' : 'Price ↑' }}</button>
+        <button type="button" class="hint">{{ zh ? '价格↓' : 'Price ↓' }}</button>
+        <button type="button" class="hint">{{ zh ? '最新' : 'Newest' }}</button>
       </div>
       <div class="grid">
         <ProductCard v-for="p in products" :key="p.sku" :product="p" />
@@ -57,6 +57,7 @@ import AppSearchBar from '@/components/AppSearchBar.vue'
 import AppTabBar from '@/components/AppTabBar.vue'
 
 const { t, lang } = useI18n()
+const zh = computed(() => String(lang.value).startsWith('zh'))
 const route = useRoute()
 const router = useRouter()
 const q = ref('')
