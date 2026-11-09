@@ -50,7 +50,8 @@
       "path": "pages/search/index",
       "style": {
         "navigationBarTitleText": "Search",
-        "navigationBarBackgroundColor": "#F7F6F3",
+        "navigationStyle": "custom",
+        "navigationBarBackgroundColor": "#F7F8FB",
         "navigationBarTextStyle": "black"
       }
     },
@@ -58,7 +59,8 @@
       "path": "pages/categories/index",
       "style": {
         "navigationBarTitleText": "Categories",
-        "navigationBarBackgroundColor": "#F7F6F3",
+        "navigationStyle": "custom",
+        "navigationBarBackgroundColor": "#F7F8FB",
         "navigationBarTextStyle": "black"
       }
     },
@@ -66,7 +68,8 @@
       "path": "pages/category/index",
       "style": {
         "navigationBarTitleText": "Category",
-        "navigationBarBackgroundColor": "#F7F6F3",
+        "navigationStyle": "custom",
+        "navigationBarBackgroundColor": "#F7F8FB",
         "navigationBarTextStyle": "black"
       }
     },

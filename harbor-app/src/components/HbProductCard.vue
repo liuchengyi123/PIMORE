@@ -1,9 +1,10 @@
 ﻿<template>
-  <view class="card" @click="go">
+  <view class="card" :class="variant" @click="go">
     <view class="thumb" :style="thumbStyle">
       <image v-if="product.image" class="thumb-img" :src="product.image" mode="aspectFill" />
+      <view v-if="variant === 'plp' && plpBadge" class="plp-badge"><text>{{ plpBadge }}</text></view>
       <view v-if="variant === 'browse'" class="heart" :class="{ on: saved }" @click.stop="saved = !saved" />
-      <view v-if="showBand && variant !== 'browse'" class="band"><text>$1–$10</text></view>
+      <view v-if="showBand && variant === 'shelf'" class="band"><text>$1–$10</text></view>
       <view v-else-if="imageBadge" class="img-badge" :class="imageBadge.tone">
         <text>{{ imageBadge.label }}</text>
       </view>
@@ -19,8 +20,9 @@
         <text v-if="!plain && variant !== 'browse' && product.compareAt" class="was">{{ money(product.compareAt) }}</text>
         <text v-if="!plain && variant !== 'browse' && offPct" class="off-badge">{{ t('badge_off_pct', { pct: offPct }) }}</text>
         <view v-if="variant === 'browse'" class="add-text" @click.stop="go">Add +</view>
-        <view v-else class="add" @click.stop="go"><view class="add-ico" /></view>
+        <view v-else-if="variant !== 'plp'" class="add" @click.stop="go"><view class="add-ico" /></view>
       </view>
+      <view v-if="variant === 'plp'" class="plp-add" @click.stop="addNow">Add</view>
     </view>
   </view>
 </template>
@@ -30,11 +32,25 @@ import { computed, ref } from 'vue'
 import type { Product } from '@/api/products'
 import { money } from '@/api/products'
 import { useI18n } from '@/composables/i18n'
+import { useCart } from '@/composables/cart'
 
 const { t } = useI18n()
-const props = withDefaults(defineProps<{ product: Product; plain?: boolean; variant?: 'shelf' | 'browse' }>(), {
+const props = withDefaults(defineProps<{ product: Product; plain?: boolean; variant?: 'shelf' | 'browse' | 'plp' }>(), {
   variant: 'shelf',
 })
+const { add } = useCart()
+const plpBadge = computed(() => {
+  const tag = props.product.tag
+  if (tag === 'New') return 'New'
+  if (tag === 'Deal' || tag === 'Flash' || tag === 'Staff') return 'Best Seller'
+  if (props.product.compareAt && props.product.compareAt > props.product.price) return 'On Sale'
+  return ''
+})
+async function addNow() {
+  const size = props.product.sizes?.[0] || props.product.offers?.[0]?.label || 'default'
+  const res = await add(props.product, size, 1)
+  uni.showToast({ title: res.message || 'Added', icon: 'none' })
+}
 const saved = ref(false)
 const showBand = computed(() => props.product.price > 0 && props.product.price <= 10)
 
@@ -209,6 +225,17 @@ function go() {
 .heart.on::before { background: $hb-coral; border-color: $hb-coral; }
 .add-text {
   margin-left: auto; color: $hb-coral; font-size: 13px; font-weight: 700; flex: none;
+}
+.card.plp { padding: 8px; border-radius: 16px; }
+.card.plp .thumb { border-radius: 12px; }
+.plp-badge {
+  position: absolute; left: 8px; top: 8px; z-index: 2;
+  background: #fff; color: #1B2B4A; font-size: 10px; font-weight: 800;
+  border-radius: 8px; padding: 3px 7px;
+}
+.plp-add {
+  margin-top: 8px; height: 34px; border-radius: 10px; background: $hb-coral; color: #fff;
+  font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center;
 }
 .add-ico::before {
   content: '';
