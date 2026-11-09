@@ -8682,6 +8682,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             "offer_id": "—",
             "url": "",
             "cost": 0,
+            "supplier": "",
         }
         if product is None:
             return found
@@ -8703,6 +8704,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         found["offer_id"] = listing.get("offer_id") or "—"
         found["url"] = supplier_link(listing)
         found["cost"] = int((offer or {}).get("source_cents") or 0)
+        found["supplier"] = str(listing.get("supplier") or source.get("supplier") or "").strip()
         return found
 
     def purchase_rows():
@@ -8739,17 +8741,29 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         rows = purchase_rows()
         grouped = {}
         for row in rows:
-            key = row.get("url") or "未关联供应商"
+            name = (row.get("supplier") or "").strip()
+            if not name:
+                name = "1688 供应商" if row.get("url") else "未关联供应商"
+            key = name + "\n" + (row.get("url") or "")
             bucket = grouped.setdefault(key, {
-                "name": "1688 供应商" if row.get("url") else "未关联供应商",
+                "name": name,
                 "url": row.get("url") or "",
                 "lines": 0,
                 "qty": 0,
                 "cost": 0,
+                "goods": [],
             })
+            qty = int(row.get("qty") or 0)
+            cost = int(row.get("cost") or 0)
             bucket["lines"] += 1
-            bucket["qty"] += int(row.get("qty") or 0)
-            bucket["cost"] += int(row.get("cost") or 0) * int(row.get("qty") or 0)
+            bucket["qty"] += qty
+            bucket["cost"] += cost * qty
+            bucket["goods"].append({
+                "title": row.get("title") or row.get("sku") or "商品",
+                "spec": row.get("spec") or "",
+                "qty": qty,
+                "cost": cost,
+            })
         suppliers = sorted(grouped.values(), key=lambda item: (-item["lines"], item["name"]))
         return render(
             request,

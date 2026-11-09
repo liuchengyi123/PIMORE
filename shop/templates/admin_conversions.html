@@ -23,7 +23,7 @@
   </div>
 </header>
 <div class="card log-filters">
-  <div class="pad log-filter-row">
+  <div class="log-filter-row">
     <label>渠道
       <select id="log-plat">
         <option value="">全部渠道</option>
@@ -32,19 +32,28 @@
         <option value="google">Google</option>
       </select>
     </label>
-    <label>事件
+    <label>事件类型
       <select id="log-event">
-        <option value="">全部事件</option>
+        <option value="">全部事件类型</option>
       </select>
     </label>
-    <label>结果
+    <label>状态
       <select id="log-ok">
-        <option value="">全部</option>
+        <option value="">全部状态</option>
         <option value="1">成功</option>
-        <option value="0">失败 / 跳过</option>
+        <option value="0">失败</option>
       </select>
     </label>
-    <button class="btn" type="button" id="log-reset">重置</button>
+    <label>时间
+      <span class="log-dates">
+        <input type="date" id="log-from" aria-label="开始日期">
+        <input type="date" id="log-to" aria-label="结束日期">
+      </span>
+    </label>
+    <div class="log-filter-actions">
+      <button class="btn" type="button" id="log-query">查询</button>
+      <button class="btn ghost" type="button" id="log-reset">重置</button>
+    </div>
   </div>
 </div>
 <div class="card">
@@ -53,14 +62,14 @@
       <thead><tr><th>时间（上海）</th><th>事件</th><th>渠道</th><th>acct</th><th>event_id</th><th>HTTP</th><th>状态</th><th>响应</th></tr></thead>
       <tbody id="log-body">
       {% for row in ad_logs %}
-        <tr data-plat="{{ (row.platform or '')|lower }}" data-event="{{ row.event_name }}" data-ok="{{ 1 if row.ok else 0 }}">
+        <tr data-plat="{{ (row.platform or '')|lower }}" data-event="{{ row.event_name }}" data-ok="{{ 1 if row.ok else 0 }}" data-day="{{ (row.created_at_sh or row.created_at or '')[:10] }}">
           <td>{{ row.created_at_sh or row.created_at }}</td>
           <td><span class="evt">{{ row.event_name }}</span></td>
           <td><span class="chan {{ (row.platform or '')|lower }}">{{ row.platform }}</span></td>
           <td><code>{{ row.acct or "—" }}</code></td>
           <td class="mono">{{ row.event_id }}</td>
           <td>{{ row.http_status or "—" }}</td>
-          <td>{% if row.ok %}<span class="badge ok">成功</span>{% else %}<span class="badge warn">跳过</span>{% endif %}</td>
+          <td>{% if row.ok %}<span class="log-pill ok">成功</span>{% else %}<span class="log-pill bad">失败</span>{% endif %}</td>
           <td class="mono">{{ row.detail }}</td>
         </tr>
       {% else %}
@@ -93,23 +102,31 @@
     var plat = document.getElementById('log-plat').value;
     var ev = eventSel.value;
     var ok = document.getElementById('log-ok').value;
+    var from = document.getElementById('log-from').value;
+    var to = document.getElementById('log-to').value;
     var n = 0;
     rows.forEach(function (row) {
+      var day = row.getAttribute('data-day') || '';
       var show = (!plat || row.getAttribute('data-plat').indexOf(plat) >= 0)
         && (!ev || row.getAttribute('data-event') === ev)
-        && (!ok || row.getAttribute('data-ok') === ok);
+        && (!ok || row.getAttribute('data-ok') === ok)
+        && (!from || (day && day >= from))
+        && (!to || (day && day <= to));
       row.hidden = !show;
       if (show) n += 1;
     });
-    document.getElementById('log-count').textContent = '显示 ' + n + ' / ' + rows.length + ' 条';
+    document.getElementById('log-count').textContent = '共 ' + n + ' 条记录';
   }
-  ['log-plat', 'log-event', 'log-ok'].forEach(function (id) {
+  document.getElementById('log-query').addEventListener('click', apply);
+  ['log-plat', 'log-event', 'log-ok', 'log-from', 'log-to'].forEach(function (id) {
     document.getElementById(id).addEventListener('change', apply);
   });
   document.getElementById('log-reset').addEventListener('click', function () {
     document.getElementById('log-plat').value = '';
     eventSel.value = '';
     document.getElementById('log-ok').value = '';
+    document.getElementById('log-from').value = '';
+    document.getElementById('log-to').value = '';
     apply();
   });
 })();

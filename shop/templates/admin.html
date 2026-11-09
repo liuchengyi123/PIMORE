@@ -1312,20 +1312,67 @@
   </script>
 </div>
 <aside class="buy-side card">
-  <h2>供应商</h2>
-  <div class="pad">
+  <div class="sup-head"><h2>供应商信息</h2></div>
+  {% if suppliers %}
+  {% if suppliers|length > 1 %}
+  <div class="sup-switch" role="tablist">
     {% for sup in suppliers %}
-    <div class="sup-card">
-      <b>{{ sup.name }}</b>
-      <p class="muted">{{ sup.lines }} 条 · 数量 {{ sup.qty }}{% if sup.cost %} · 成本 {{ sup.cost }}{% endif %}</p>
-      {% if sup.url %}<a class="badge-1688" href="{{ sup.url }}" target="_blank" rel="noopener">打开 1688</a>{% endif %}
-    </div>
-    {% else %}
-    <p class="muted">当前没有待采购供应商。</p>
+    <button type="button" class="{% if loop.first %}on{% endif %}" data-sup="{{ loop.index0 }}">{{ sup.name }}</button>
     {% endfor %}
-    <p class="muted small">点 1688 下单后，在左侧勾选并标记已采购。</p>
   </div>
+  {% endif %}
+  {% for sup in suppliers %}
+  <article class="sup-panel" data-sup="{{ loop.index0 }}" {% if not loop.first %}hidden{% endif %}>
+    <div class="sup-hero">
+      <span class="sup-mark" aria-hidden="true">供</span>
+      <div>
+        <b>{{ sup.name }}</b>
+        {% if sup.url %}<span class="tag shipped">合作中</span>{% else %}<span class="tag">未关联</span>{% endif %}
+      </div>
+    </div>
+    <div class="sup-stats">
+      <div><span>待采条数</span><b>{{ sup.lines }}</b></div>
+      <div><span>数量</span><b>{{ sup.qty }}</b></div>
+      <div><span>成本</span><b>{% if sup.cost %}¥{{ '%.0f'|format(sup.cost / 100) }}{% else %}—{% endif %}</b></div>
+    </div>
+    <div class="sup-goods-head"><b>供应商商品</b><span>{{ sup.goods|length }}</span></div>
+    <ul class="sup-goods">
+      {% for item in sup.goods[:6] %}
+      <li>
+        <span class="sup-thumb" aria-hidden="true">{{ item.title[:1] }}</span>
+        <div>
+          <b>{{ item.title }}</b>
+          <small>{{ item.spec }} · ×{{ item.qty }}{% if item.cost %} · ¥{{ '%.2f'|format(item.cost / 100) }}{% endif %}</small>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% if sup.url %}
+    <a class="btn sup-contact" href="{{ sup.url }}" target="_blank" rel="noopener">联系供应商</a>
+    {% else %}
+    <p class="muted small">这条还没有 1688 链接。下单后在左侧标记已采购。</p>
+    {% endif %}
+  </article>
+  {% endfor %}
+  {% else %}
+  <p class="muted pad">当前没有待采购供应商。</p>
+  {% endif %}
 </aside>
+<script>
+(function () {
+  var buttons = document.querySelectorAll(".sup-switch button");
+  if (!buttons.length) return;
+  buttons.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var key = btn.getAttribute("data-sup");
+      buttons.forEach(function (node) { node.classList.toggle("on", node === btn); });
+      document.querySelectorAll(".sup-panel").forEach(function (panel) {
+        panel.hidden = panel.getAttribute("data-sup") !== key;
+      });
+    });
+  });
+})();
+</script>
 </div>
 </section>
 
