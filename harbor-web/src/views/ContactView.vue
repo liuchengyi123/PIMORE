@@ -79,7 +79,7 @@ async function send() {
   font-family: inherit;
 }
 .send {
-  width: 100%; height: 46px; border-radius: 999px; border: 0; background: #F96141;
+  width: 100%; height: var(--fn-cta-48); border-radius: 999px; border: 0; background: #F96141;
   color: #fff; font-size: 14px; font-weight: 700; cursor: pointer;
 }
 .msg { font-size: 12px; color: #0E7490; margin: 0 0 10px; }

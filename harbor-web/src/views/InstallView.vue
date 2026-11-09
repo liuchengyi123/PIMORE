@@ -39,7 +39,7 @@ async function install() {
 h1 { margin: 16px 0 0; font-size: 22px; font-weight: 700; }
 p { margin: 10px auto 0; max-width: 334px; font-size: 14px; line-height: 1.5; color: #6B7280; }
 .primary {
-  display: block; width: 100%; max-width: 334px; margin: 24px auto 0; height: 46px; border: 0; border-radius: 999px;
+  display: block; width: 100%; max-width: 334px; margin: 24px auto 0; height: var(--fn-cta-48); border: 0; border-radius: 999px;
   background: #F96141; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer;
 }
 .later {

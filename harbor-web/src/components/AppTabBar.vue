@@ -54,14 +54,14 @@ function go(path: string) {
 
 <style lang="scss" scoped>
 @import '@/styles/theme.scss';
-.tab-spacer { height: 72px; }
+.tab-spacer { height: calc(#{$hb-tab-h} + env(safe-area-inset-bottom)); }
 .tab-bar {
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
   width: min(100vw, 768px);
   bottom: 0;
-  height: calc(58px + env(safe-area-inset-bottom));
+  height: calc(#{$hb-tab-h} + env(safe-area-inset-bottom));
   padding-bottom: env(safe-area-inset-bottom);
   border-radius: 0;
   background: $hb-white;

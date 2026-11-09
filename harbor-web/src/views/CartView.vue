@@ -182,14 +182,14 @@ h1 small { font-size: 12px; color: $hb-muted; font-weight: 600; }
 .footer {
   position: fixed; left: 50%; transform: translateX(-50%);
   width: min(100vw, 768px);
-  bottom: calc(58px + env(safe-area-inset-bottom));
+  bottom: calc(#{$hb-tab-h} + env(safe-area-inset-bottom));
   background: #fff; border-top: 1px solid #E8EAF0; padding: 10px 16px;
   display: flex; align-items: center; gap: 10px; z-index: 90; color: #1C2430;
 }
 .sum { flex: 1; font-size: 13px; color: #8B919A; }
 .sum b { color: #F96141; font-size: 20px; }
 .checkout {
-  border: 0; height: 44px; padding: 0 18px; border-radius: 999px; background: #F96141; color: #fff;
+  border: 0; height: $hb-cta-44; padding: 0 18px; border-radius: 999px; background: #F96141; color: #fff;
   font-weight: 740; cursor: pointer;
 }
 .ship-card {

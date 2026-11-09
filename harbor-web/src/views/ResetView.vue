@@ -71,7 +71,7 @@ h1 { margin: 18px 0 6px; font-size: 28px; }
 form { display: flex; flex-direction: column; gap: 12px; }
 label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700; color: #8B919A; }
 input { border: 1.5px solid #E8EAF0; border-radius: 16px; padding: 14px 16px; font-size: 15px; background: #fff; color: #1C2430; }
-.btn { height: 52px; border: 0; border-radius: 999px; background: #F96141; color: #fff; font-weight: 700; cursor: pointer; }
+.btn { height: var(--fn-cta-48); border: 0; border-radius: 999px; background: #F96141; color: #fff; font-weight: 700; cursor: pointer; }
 .err { color: #E11D2E; margin: 0; font-size: 13px; }
 .ok { color: #128A5E; margin: 0; font-size: 13px; }
 </style>

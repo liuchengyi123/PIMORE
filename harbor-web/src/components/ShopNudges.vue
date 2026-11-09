@@ -154,7 +154,7 @@ h2 { margin: 0 0 6px; font-size: var(--fn-type-20, 20px); letter-spacing: -0.02e
 p { margin: 0 0 14px; color: var(--fn-muted, #8B919A); line-height: 1.45; font-size: var(--fn-type-14, 14px); }
 .ok, .later, .row {
   display: flex; align-items: center; justify-content: center; width: 100%;
-  height: 46px; border-radius: 999px; font-weight: 700; cursor: pointer; text-decoration: none;
+  height: var(--fn-cta-48, 48px); border-radius: 999px; font-weight: 700; cursor: pointer; text-decoration: none;
 }
 .ok { border: 0; background: var(--fn-coral, #F96141); color: #fff; }
 .ok:hover { background: var(--fn-coral-hot, #FF6B4A); }

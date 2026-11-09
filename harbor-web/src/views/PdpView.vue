@@ -355,7 +355,7 @@ async function notifyMe() {
 .opt-lab { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
 .page-qty { margin-top: 14px; }
 .btn {
-  height: 52px; border-radius: 999px; font-weight: 740; cursor: pointer; flex: 1; font-size: 15px;
+  height: var(--fn-cta-48); border-radius: 999px; font-weight: 740; cursor: pointer; flex: 1; font-size: $hb-type-16;
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   &.outline { background: #fff; color: #F96141; border: 1.5px solid #F96141; }
   &.solid { background: #F96141; color: #fff; border: 0; }
@@ -382,7 +382,7 @@ async function notifyMe() {
 .qty-lab { font-size: 14px; font-weight: 650; color: #5C6570; }
 .qty-ctrl { display: flex; align-items: center; gap: 14px; font-size: 16px; font-weight: 700; }
 .qty-ctrl button { width: 36px; height: 36px; border: 0; border-radius: 12px; background: #F7F8FA; cursor: pointer; }
-.sheet-ok { width: 100%; height: 52px; border: 0; border-radius: 999px; background: #F96141; color: #fff; font-weight: 740; cursor: pointer; }
+.sheet-ok { width: 100%; height: var(--fn-cta-48); border: 0; border-radius: 999px; background: #F96141; color: #fff; font-weight: 740; cursor: pointer; }
 .body { background: #fff; border-radius: 20px 20px 0 0; margin-top: -16px; position: relative; padding-top: 14px; }
 .price { font-size: 28px; font-weight: 800; color: $hb-price; letter-spacing: -0.03em; }
 .price.oos { color: #9CA3AF; }

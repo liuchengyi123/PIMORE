@@ -111,7 +111,7 @@ onMounted(() => {
   color: #fff;
   font-size: $hb-type-13;
   font-weight: 700;
-  height: 32px;
+  height: $hb-cta-36;
   padding: 0 12px;
   border-radius: $hb-radius-pill;
   cursor: pointer;

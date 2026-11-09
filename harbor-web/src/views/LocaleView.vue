@@ -82,7 +82,7 @@ async function save() {
 .radio { font-size: 16px; color: #1C2430; }
 .msg { font-size: 12px; color: #0E7490; margin: 8px 0; }
 .cta {
-  width: 100%; height: 46px; border: 0; border-radius: 999px; background: #F96141; color: #fff;
+  width: 100%; height: var(--fn-cta-48); border: 0; border-radius: 999px; background: #F96141; color: #fff;
   font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 8px;
 }
 .cta:disabled { opacity: 0.7; }

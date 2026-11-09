@@ -30,6 +30,11 @@
   --fn-type-20: 20px;
   --fn-type-24: 24px;
   --fn-sheet-radius: 12px;
+  --fn-tab-h: 56px;
+  --fn-cta-36: 36px;
+  --fn-cta-40: 40px;
+  --fn-cta-44: 44px;
+  --fn-cta-48: 48px;
 }
 
 .fn-page {
@@ -58,12 +63,15 @@
 }
 
 /* —— Buttons —— */
+.hb-cta-36 { height: var(--fn-cta-36); border-radius: 999px; }
+.hb-cta-40 { height: var(--fn-cta-40); border-radius: 999px; }
+.hb-cta-44,
 .hb-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  height: 44px;
+  height: var(--fn-cta-44);
   padding: 0 16px;
   border: 0;
   border-radius: 999px;
@@ -74,6 +82,8 @@
   cursor: pointer;
   text-decoration: none;
 }
+
+.hb-cta-48 { height: var(--fn-cta-48); border-radius: 999px; }
 
 .hb-btn:hover {
   background: var(--fn-coral-hot);

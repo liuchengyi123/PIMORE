@@ -45,6 +45,6 @@ input, textarea {
   border: 1.5px solid #E8EAF0; border-radius: 16px; padding: 12px 14px;
   font-size: 15px; color: #1C2430; background: #fff;
 }
-.btn { height: 52px; border: 0; border-radius: 999px; background: #F96141; color: #fff; font-weight: 700; cursor: pointer; }
+.btn { height: var(--fn-cta-48); border: 0; border-radius: 999px; background: #F96141; color: #fff; font-weight: 700; cursor: pointer; }
 .err { color: #E11D2E; margin: 0; font-size: 13px; }
 </style>

@@ -63,7 +63,7 @@ async function submit() {
 .hint { font-size: 11px; color: #6B7280; line-height: 1.45; margin: 0 0 14px; }
 .msg { font-size: 12px; color: #0E7490; margin: 0 0 10px; }
 .cta {
-  width: 100%; height: 46px; border: 0; border-radius: 999px; background: #F96141; color: #fff;
+  width: 100%; height: var(--fn-cta-48); border: 0; border-radius: 999px; background: #F96141; color: #fff;
   font-size: 14px; font-weight: 600; cursor: pointer;
 }
 .cta:disabled { opacity: 0.7; }

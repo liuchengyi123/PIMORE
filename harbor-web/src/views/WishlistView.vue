@@ -78,5 +78,5 @@ function add(p: Product) {
 .body { padding: 10px; }
 .nm { font-size: 13px; font-weight: 600; color: #1C2430; line-height: 1.3; min-height: 34px; }
 .price { margin-top: 6px; font-size: 16px; font-weight: 700; color: #F96141; }
-.add { margin-top: 8px; width: 100%; height: 34px; border-radius: 999px; border: 0; background: #F96141; color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; }
+.add { margin-top: 8px; width: 100%; height: var(--fn-cta-36); border-radius: 999px; border: 0; background: #F96141; color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; }
 </style>

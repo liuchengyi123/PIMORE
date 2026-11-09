@@ -33,7 +33,7 @@ h1 { margin: 28px 0 8px; font-size: 26px; }
 .sub { margin: 0 auto 16px; max-width: 36ch; color: #8B919A; }
 .amt { font-size: 20px; font-weight: 800; color: #F96141; }
 .btn, .ghost {
-  display: flex; align-items: center; justify-content: center; height: 52px; margin: 12px auto 0;
+  display: flex; align-items: center; justify-content: center; height: var(--fn-cta-48); margin: 12px auto 0;
   width: min(100%, 420px); border-radius: 16px; font-weight: 700;
 }
 .btn { border: 0; background: #F96141; color: #fff; cursor: pointer; }

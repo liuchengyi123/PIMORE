@@ -186,7 +186,7 @@ h1 { margin: 16px 0 0; font-size: 22px; letter-spacing: -0.03em; font-weight: 80
 .pr { display: flex; align-items: center; margin-top: 8px; }
 .pr b { font-size: 16px; }
 .add {
-  margin-left: auto; height: 34px; padding: 0 14px; border: 0; border-radius: 999px;
+  margin-left: auto; height: var(--fn-cta-36); padding: 0 14px; border: 0; border-radius: 999px;
   background: #F96141; color: #fff; font-weight: 700; cursor: pointer;
 }
 .state { text-align: center; color: #8E949C; padding: 24px 0; }

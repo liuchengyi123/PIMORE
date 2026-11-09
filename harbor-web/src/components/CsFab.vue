@@ -45,7 +45,7 @@ const to = computed(() => {
 .cs-fab {
   position: fixed;
   right: max(14px, env(safe-area-inset-right));
-  bottom: calc(78px + env(safe-area-inset-bottom));
+  bottom: calc(#{$hb-tab-h} + 16px + env(safe-area-inset-bottom));
   z-index: 40;
   display: inline-flex;
   align-items: center;

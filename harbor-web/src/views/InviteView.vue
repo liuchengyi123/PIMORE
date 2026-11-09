@@ -68,7 +68,7 @@ async function share() {
 }
 .code-box strong { letter-spacing: 0.08em; }
 .primary {
-  width: 100%; height: 46px; border: 0; border-radius: 999px; background: #F96141; color: #fff;
+  width: 100%; height: var(--fn-cta-48); border: 0; border-radius: 999px; background: #F96141; color: #fff;
   font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 10px;
 }
 .secondary {

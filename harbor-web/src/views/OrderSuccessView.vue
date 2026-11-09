@@ -33,7 +33,7 @@ h1 { margin: 0; font-size: 28px; font-weight: 800; color: #1C2430; }
 .sub { margin: 10px auto 0; max-width: 320px; font-size: 14px; color: #8B919A; line-height: 1.45; }
 .btn {
   display: flex; align-items: center; justify-content: center; margin: 16px auto 0; width: min(420px, 100%);
-  height: 52px; border-radius: 999px; background: #F96141; color: #fff; font-weight: 700; text-decoration: none;
+  height: var(--fn-cta-48); border-radius: 999px; background: #F96141; color: #fff; font-weight: 700; text-decoration: none;
 }
 .btn.soft { background: #fff; color: #F96141; border: 1.5px solid #F96141; }
 </style>

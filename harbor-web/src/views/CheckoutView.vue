@@ -240,7 +240,7 @@ h1 { margin: 0; font-size: 22px; font-weight: 800; color: $hb-ink; letter-spacin
 }
 .dock .price { font-size: 20px; }
 .place {
-  flex: 1; height: 52px; border: 0; border-radius: 999px; background: #F96141; color: #fff;
+  flex: 1; height: var(--fn-cta-48); border: 0; border-radius: 999px; background: #F96141; color: #fff;
   font-weight: 700; font-size: 16px; cursor: pointer;
 }
 .place:disabled { opacity: .5; }

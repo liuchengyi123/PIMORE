@@ -60,7 +60,7 @@ h1 { margin: 32px 0 6px; font-size: 26px; text-align: center; letter-spacing: -0
 .form { display: flex; flex-direction: column; gap: 12px; background: transparent; padding: 0; }
 label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700; color: $hb-muted; }
 input { border: 1.5px solid #E8EAF0; border-radius: 16px; padding: 14px 16px; font-size: 15px; color: $hb-ink; background: #fff; }
-.btn { border: 0; height: 52px; border-radius: 999px; background: #F96141; color: #fff; font-weight: 740; cursor: pointer; margin-top: 4px; }
+.btn { border: 0; height: var(--fn-cta-48); border-radius: 999px; background: #F96141; color: #fff; font-weight: 740; cursor: pointer; margin-top: 4px; }
 .err { color: #E11D2E; font-size: 13px; margin: 0; }
 .auth-links { display: flex; justify-content: space-between; margin-top: 16px; color: #F96141; font-weight: 700; font-size: 14px; }
 
