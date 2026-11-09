@@ -242,7 +242,7 @@ function productHtml(p) {
   if (!p || !p.sku) return '<div class="product-card empty-card">暂无当前商品</div>';
   const img = p.image
     ? `<img src="${esc(mediaUrl(p.image))}" alt="" />`
-    : '<div style="width:72px;height:72px;border-radius:8px;background:#F7F8FA"></div>';
+    : '<div class="ph"></div>';
   return `<div class="product-card" data-sku="${esc(p.sku)}">${img}<div class="body"><div class="pname">${esc(p.name || p.sku)}</div><div class="price">${esc(p.price || '')}</div><div class="muted small">SKU ${esc(p.sku)}</div></div><div class="send-row"><button type="button" class="btn-send-prod" data-send-sku="${esc(p.sku)}">发送给用户</button></div></div>`;
 }
 
@@ -257,7 +257,7 @@ function renderHistory(list) {
     .map((it) => {
       const img = it.image ? `<img src="${esc(mediaUrl(it.image))}" alt="" />` : '<div></div>';
       const sku = it.sku || '';
-      return `<div class="history-item" data-sku="${esc(sku)}">${img}<div class="t"><div>${esc(it.name || it.sku)}</div><div class="muted">${esc(it.price || '')}</div></div><button type="button" class="btn-send-mini" data-send-sku="${esc(sku)}">发送</button></div>`;
+      return `<div class="history-item" data-sku="${esc(sku)}">${img}<div class="t"><div class="hn">${esc(it.name || it.sku)}</div><div class="price">${esc(it.price || '')}</div></div><button type="button" class="btn-send-mini" data-send-sku="${esc(sku)}">发送</button></div>`;
     })
     .join('');
 }
@@ -674,7 +674,7 @@ function renderVisitor(room) {
   visitorInfo.innerHTML = `
     <div class="visitor-card">
       <div class="visitor-head">
-        <span class="avatar lg" id="visitorAvatar">${esc(String(title).trim().slice(0, 1) || '访')}</span>
+        <span class="avatar" id="visitorAvatar">${esc(String(title).trim().slice(0, 1) || '访')}</span>
         <div>
           <strong>${esc(title)}</strong>
           <div class="presence ${live ? '' : 'off'}">${live ? '进行中' : '已关闭'}</div>
@@ -689,9 +689,9 @@ function renderVisitor(room) {
       <button type="button" id="inviteCart" ${count ? '' : 'disabled'}>邀请下单</button>
     </div>
     <div class="ctx-jumps">
-      <button type="button" data-jump="sku">当前商品 / 发送其他商品 <span>›</span></button>
-      <button type="button" data-jump="orders">订单 / 物流 <span>›</span></button>
-      <button type="button" data-jump="history">浏览足迹 <span>›</span></button>
+      <button type="button" data-jump="sku">商品</button>
+      <button type="button" data-jump="orders">订单</button>
+      <button type="button" data-jump="history">足迹</button>
     </div>
   `;
   paintAvatar(document.getElementById('visitorAvatar'), title);
@@ -735,7 +735,6 @@ function renderOrders(orders) {
     const carrier = o.carrier || o.shipping_carrier || '';
     return `<div class="order-item" data-id="${esc(id)}">
       <div class="row"><strong>订单号 ${esc(id)}</strong><span class="pill">${esc(st)}</span></div>
-      <div class="muted small">${esc(o.email || '')}</div>
       <div class="muted small">${track ? '物流 ' + esc(carrier ? carrier + ' ' : '') + esc(track) : '暂无物流'}</div>
       <div class="order-actions">
         <button type="button" class="btn ghost sm" data-order-view="${esc(id)}">详情</button>
@@ -1475,7 +1474,7 @@ if (skuSearch && skuSearchResults) {
       }
       skuSearchResults.innerHTML = items.slice(0, 12).map((it) => {
         const img = it.image ? `<img src="${esc(mediaUrl(it.image))}" alt="" />` : '<div></div>';
-        return `<div class="sku-search-item">${img}<div class="t"><div>${esc(it.name || it.sku)}</div><div class="muted small">${esc(it.sku)} · ${esc(it.price || '')}</div></div><button type="button" data-send-sku="${esc(it.sku)}">发送</button></div>`;
+        return `<div class="sku-search-item">${img}<div class="t"><div class="hn">${esc(it.name || it.sku)}</div><div class="sub">SKU ${esc(it.sku)}</div><div class="price">${esc(it.price || '')}</div></div><button type="button" data-send-sku="${esc(it.sku)}">发送</button></div>`;
       }).join('');
     }, 280);
   });
