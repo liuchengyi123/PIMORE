@@ -1,132 +1,184 @@
 ﻿<template>
-  <div class="fn-page page" data-figma="M26">
-    <header class="sticky">
-      <h1>{{ t('browse_title') || 'Departments' }}</h1>
-      <p class="sub">{{ t('browse_all_categories') || 'Shop by category' }}</p>
-      <AppSearchBar compact navigate-on-focus />
+  <div class="browse" data-figma="1:2">
+    <header class="top">
+      <div>
+        <div class="logo">Harbor <span>/ Pimo</span></div>
+        <div class="tag">HOME GOODS FOR A BRIGHTER EVERYDAY</div>
+      </div>
+      <div class="tools">
+        <router-link to="/search" aria-label="Search"><Search :size="22" /></router-link>
+        <router-link class="bag" to="/cart" aria-label="Cart">
+          <ShoppingBag :size="22" />
+          <i v-if="count">{{ count > 9 ? '9+' : count }}</i>
+        </router-link>
+      </div>
     </header>
 
-    <div class="dept-grid">
-      <button
-        v-for="c in categories"
-        :key="c.id"
-        type="button"
-        class="dept-card"
-        @click="openCat(c.id)"
-      >
-        <span class="dept-ico" :style="{ background: tone(c.id).bg, color: tone(c.id).fg }">{{ tone(c.id).emoji }}</span>
-        <span class="dept-copy">
-          <strong>{{ catLabel(c.id) || c.name }}</strong>
-          <small>{{ tone(c.id).hint }}</small>
-        </span>
-      </button>
+    <div class="search-wrap">
+      <AppSearchBar placeholder="Search home goods, decor, kitchen..." navigate-on-focus />
     </div>
 
     <div class="chips">
-      <button type="button" class="chip" :class="{ on: !activeCat }" @click="pick('')">{{ t('cat_all') || 'For you' }}</button>
-      <button
-        v-for="c in categories"
-        :key="'chip-'+c.id"
-        type="button"
-        class="chip"
-        :class="{ on: activeCat === c.id }"
-        @click="pick(c.id)"
-      >{{ catLabel(c.id) || c.name }}</button>
+      <button type="button" class="chip" :class="{ on: !activeCat }" @click="pick('')"><Home :size="14" /> All</button>
+      <button v-for="c in chips" :key="c.id" type="button" class="chip" :class="{ on: activeCat === c.id }" @click="pick(c.id)">
+        {{ c.label }}
+      </button>
     </div>
+
+    <h1>Everyday essentials</h1>
+    <p class="sub">Thoughtful home goods. Better living.</p>
 
     <div v-if="loading" class="state">{{ t('pdp_loading') }}</div>
     <div v-else class="grid">
-      <ProductCard v-for="p in products" :key="p.sku" :product="p" />
+      <article v-for="(item, i) in shown" :key="item.sku" class="card">
+        <div class="shot" @click="open(item, i)">
+          <img :src="item.image" alt="" />
+          <button type="button" class="heart" aria-label="Save" @click.stop="wish(item)">♡</button>
+        </div>
+        <div class="nm" @click="open(item, i)">{{ item.name }}</div>
+        <div class="cat">{{ item.cat }}</div>
+        <div class="pr">
+          <b>${{ item.price }}</b>
+          <button type="button" class="add" @click.stop="add(item)">Add +</button>
+        </div>
+      </article>
     </div>
-    <AppTabBar active="browse" />
+    <AppTabBar active="browse" variant="wish" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ALL_CATEGORIES, listByCategory, type Product } from '@/api/products'
+import { Home, Search, ShoppingBag } from 'lucide-vue-next'
+import { listByCategory, type Product } from '@/api/products'
 import { useI18n } from '@/composables/i18n'
-import ProductCard from '@/components/ProductCard.vue'
+import { useCart } from '@/composables/cart'
 import AppTabBar from '@/components/AppTabBar.vue'
 import AppSearchBar from '@/components/AppSearchBar.vue'
+import b1 from '@/assets/browse/b1.jpg'
+import b2 from '@/assets/browse/b2.jpg'
+import b3 from '@/assets/browse/b3.jpg'
+import b4 from '@/assets/browse/b4.jpg'
+import b5 from '@/assets/browse/b5.jpg'
+import b6 from '@/assets/browse/b6.jpg'
 
-const { t, catLabel } = useI18n()
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
-const categories = ALL_CATEGORIES
-const products = ref<Product[]>([])
+const cart = useCart()
+const count = computed(() => cart.count.value)
+const live = ref<Product[]>([])
 const activeCat = ref('')
 const loading = ref(false)
 
-const tones: Record<string, { bg: string; fg: string; emoji: string; hint: string }> = {
-  kitchen: { bg: '#FEF3C7', fg: '#B45309', emoji: '🍳', hint: 'Tools · prep · gadgets' },
-  cleaning: { bg: '#D1FAE5', fg: '#047857', emoji: '🧹', hint: 'Cloths · brushes' },
-  storage: { bg: '#E0F2FE', fg: '#0E7490', emoji: '📦', hint: 'Bins · shelves' },
-  pet: { bg: '#FCE7F3', fg: '#9D174D', emoji: '🐾', hint: 'Bowls · care' },
-  personal: { bg: '#EDE9FE', fg: '#5B21B6', emoji: '🧴', hint: 'Oral · bath' },
-  office: { bg: '#E2E8F0', fg: '#334155', emoji: '📎', hint: 'Lamps · organizers' },
-}
+const chips = [
+  { id: 'bedding', label: 'Bedding' },
+  { id: 'decor', label: 'Decor' },
+  { id: 'kitchen', label: 'Kitchen' },
+  { id: 'bath', label: 'Bath' },
+]
 
-function tone(id: string) {
-  const key = String(id || '').toLowerCase()
-  return tones[key] || { bg: '#F3F4F6', fg: '#0F2744', emoji: '•', hint: '' }
-}
+const catalog = [
+  { sku: 'stoneware-mug', name: 'Stoneware Mug', cat: 'Kitchen', price: 8, image: b1 },
+  { sku: 'linen-pillow', name: 'Linen Throw Pillow', cat: 'Decor', price: 12, image: b2 },
+  { sku: 'waffle-throw', name: 'Waffle Weave Throw', cat: 'Bedding', price: 15, image: b3 },
+  { sku: 'ceramic-planter', name: 'Ceramic Planter', cat: 'Decor', price: 10, image: b4 },
+  { sku: 'bamboo-board', name: 'Bamboo Cutting Board', cat: 'Kitchen', price: 6, image: b5 },
+  { sku: 'bath-towels', name: 'Bath Towel Set', cat: 'Bath', price: 13, image: b6 },
+]
 
-async function load(cat = '') {
-  activeCat.value = cat
+const shown = computed(() => {
+  if (activeCat.value && live.value.length) {
+    return live.value.slice(0, 8).map((p) => ({
+      sku: p.sku,
+      name: p.name,
+      cat: p.category || activeCat.value,
+      price: Math.round(p.price),
+      image: p.image || b1,
+      live: p,
+    }))
+  }
+  const id = activeCat.value
+  const rows = id ? catalog.filter((c) => c.cat.toLowerCase() === id) : catalog
+  return rows.map((c) => ({ ...c, live: undefined as Product | undefined }))
+})
+
+async function pick(id: string) {
+  activeCat.value = id
   loading.value = true
   try {
-    products.value = await listByCategory(cat || 'All')
+    live.value = id ? await listByCategory(id) : []
+  } catch {
+    live.value = []
   } finally {
     loading.value = false
   }
+  router.replace({ path: '/browse', query: id ? { cat: id } : {} })
 }
-function pick(id: string) {
-  load(id)
+
+function open(item: { sku: string; live?: Product }, _i: number) {
+  const sku = item.live?.sku || ''
+  if (sku && live.value.length) router.push({ path: '/pdp', query: { sku } })
+  else router.push('/pdp')
 }
-function openCat(id: string) {
-  pick(id)
-  router.replace({ path: '/browse', query: { cat: id } })
+
+function add(item: { sku: string; name: string; price: number; image: string; live?: Product }) {
+  if (item.live) cart.add(item.live)
+  else cart.add({ id: item.sku, sku: item.sku, name: item.name, price: item.price, category: 'home', image: item.image })
 }
+
+function wish(item: { sku: string }) {
+  router.push({ path: '/wishlist', query: { sku: item.sku } })
+}
+
 onMounted(() => {
   const cat = route.query.cat ? String(route.query.cat) : ''
-  load(cat)
+  if (cat) pick(cat)
 })
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/theme.scss';
-.page { min-height: 100vh; background: $hb-paper; padding: 0 16px; }
-.sticky {
-  position: sticky; top: 0; z-index: 20;
-  background: rgba(247,244,239,0.94); backdrop-filter: blur(14px);
-  padding: calc(12px + env(safe-area-inset-top)) 0 10px;
+.browse {
+  min-height: 100vh; background: #fff; color: #1C2430; padding: 14px 16px 0;
+  font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
-h1 { margin: 0; font-size: 28px; font-weight: 800; color: #1C2430; letter-spacing: -0.03em; }
-.sub { margin: 4px 0 10px; color: $hb-muted; font-size: 13px; }
-.dept-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 14px; }
-.dept-card {
-  display: flex; gap: 12px; align-items: center; text-align: left;
-  background: #fff; border: 1px solid $hb-line; border-radius: 16px; padding: 12px;
-  cursor: pointer; width: 100%;
+.top { display: flex; justify-content: space-between; align-items: flex-start; }
+.logo { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; }
+.logo span { color: #F96141; }
+.tag { margin-top: 2px; font-size: 10px; letter-spacing: 0.08em; color: #9AA0A8; font-weight: 650; }
+.tools { display: flex; gap: 14px; align-items: center; color: #1C2430; }
+.bag { position: relative; }
+.bag i {
+  position: absolute; top: -6px; right: -8px; min-width: 16px; height: 16px; border-radius: 99px;
+  background: #F96141; color: #fff; font-style: normal; font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
 }
-.dept-ico {
-  width: 52px; height: 52px; border-radius: 14px; flex-shrink: 0;
-  display: inline-flex; align-items: center; justify-content: center; font-size: 22px;
-}
-.dept-copy { display: flex; flex-direction: column; gap: 2px; }
-.dept-copy strong { font-size: 15px; color: $hb-ink; }
-.dept-copy small { font-size: 12px; color: $hb-muted; }
-.chips { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 12px; scrollbar-width: none; }
+.search-wrap { margin-top: 12px; }
+.chips { display: flex; gap: 8px; overflow-x: auto; margin-top: 14px; scrollbar-width: none; }
 .chips::-webkit-scrollbar { display: none; }
 .chip {
-  flex: 0 0 auto; border: 1px solid $hb-line; background: #fff; border-radius: 999px;
-  padding: 8px 13px; font-size: 13px; font-weight: 650; cursor: pointer; color: $hb-ink;
-  &.on { background: #F96141; color: #fff; border-color: #F96141; }
+  flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px;
+  height: 34px; padding: 0 12px; border-radius: 999px; border: 0; background: #F4F1EE;
+  color: #1C2430; font-weight: 650; font-size: 13px; cursor: pointer;
+  &.on { background: #F96141; color: #fff; }
 }
-.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding-bottom: 8px; }
-.state { text-align: center; color: $hb-muted; padding: 40px 8px; }
-
-.fn-page { --ink:#0F2744; --teal:#0E7490; --amber:#B45309; --sand:#F7F4EF; }
+h1 { margin: 16px 0 0; font-size: 22px; letter-spacing: -0.03em; }
+.sub { margin: 4px 0 12px; color: #8E949C; font-size: 13px; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 12px; }
+.shot { position: relative; border-radius: 16px; overflow: hidden; background: #F6F3F0; aspect-ratio: 1.15; cursor: pointer; }
+.shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.heart {
+  position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; border: 0; border-radius: 99px;
+  background: rgba(255,255,255,0.92); color: #1C2430; cursor: pointer;
+}
+.nm { margin-top: 8px; font-size: 14px; font-weight: 750; }
+.cat { margin-top: 2px; font-size: 12px; color: #9AA0A8; }
+.pr { display: flex; align-items: center; margin-top: 8px; }
+.pr b { font-size: 16px; }
+.add {
+  margin-left: auto; height: 32px; padding: 0 12px; border: 0; border-radius: 999px;
+  background: #F96141; color: #fff; font-weight: 700; cursor: pointer;
+}
+.state { text-align: center; color: #8E949C; padding: 24px 0; }
 </style>

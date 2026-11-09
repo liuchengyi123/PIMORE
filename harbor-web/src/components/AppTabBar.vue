@@ -1,6 +1,6 @@
 <template>
   <div class="tab-spacer" />
-  <nav class="tab-bar" aria-label="main">
+  <nav class="tab-bar" :class="variant || 'shop'" aria-label="main">
     <button
       v-for="t in tabs"
       :key="t.id"
@@ -19,23 +19,33 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { Home, Search, ShoppingBag, UserRound } from 'lucide-vue-next'
+import { Home, Search, ShoppingBag, UserRound, Compass, Heart } from 'lucide-vue-next'
 import { useI18n } from '@/composables/i18n'
 import { useCart } from '@/composables/cart'
 
-defineProps<{ active: 'home' | 'browse' | 'cart' | 'me' }>()
+const props = defineProps<{ active: 'home' | 'browse' | 'cart' | 'me' | 'wishlist'; variant?: 'shop' | 'wish' }>()
 
 const router = useRouter()
 const { t } = useI18n()
 const cart = useCart()
 const cartCount = computed(() => cart.count.value)
 
-const tabs = computed(() => [
-  { id: 'home' as const, label: t('tab_home'), path: '/home', icon: Home },
-  { id: 'browse' as const, label: t('tab_browse'), path: '/browse', icon: Search },
-  { id: 'cart' as const, label: t('tab_cart'), path: '/cart', icon: ShoppingBag },
-  { id: 'me' as const, label: t('tab_me'), path: '/me', icon: UserRound },
-])
+const tabs = computed(() => {
+  if (props.variant === 'wish') {
+    return [
+      { id: 'home' as const, label: t('tab_home'), path: '/home', icon: Home },
+      { id: 'browse' as const, label: t('tab_browse'), path: '/browse', icon: Compass },
+      { id: 'wishlist' as const, label: 'Wishlist', path: '/wishlist', icon: Heart },
+      { id: 'me' as const, label: 'Profile', path: '/me', icon: UserRound },
+    ]
+  }
+  return [
+    { id: 'home' as const, label: t('tab_home'), path: '/home', icon: Home },
+    { id: 'browse' as const, label: t('tab_browse'), path: '/browse', icon: Search },
+    { id: 'cart' as const, label: t('tab_cart'), path: '/cart', icon: ShoppingBag },
+    { id: 'me' as const, label: t('tab_me'), path: '/me', icon: UserRound },
+  ]
+})
 
 function go(path: string) {
   router.push(path)
@@ -65,6 +75,10 @@ function go(path: string) {
   color: #9AA0A8;
   display: flex; flex-direction: column; align-items: center; gap: 2px;
   &.on { color: $hb-coral; }
+}
+.tab-bar.wish .tab.on::after {
+  content: ""; position: absolute; left: 22%; right: 22%; bottom: 2px; height: 2px;
+  background: $hb-coral; border-radius: 2px;
 }
 .ico { display: block; }
 .label { display: block; font-size: 11px; font-weight: 650; letter-spacing: 0; }
