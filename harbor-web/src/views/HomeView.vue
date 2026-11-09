@@ -231,7 +231,7 @@ onMounted(async () => {
 }
 .hero {
   margin-top: 14px; position: relative; min-height: 196px;
-  border-radius: 22px; overflow: hidden; color: #fff;
+  border-radius: 20px; overflow: hidden; color: #fff;
   background: linear-gradient(105deg, #F97855 0%, #F96141 42%, #F7B39A 100%);
 }
 .hero-copy { position: relative; z-index: 1; padding: 20px 18px 18px; max-width: 56%; }
@@ -246,12 +246,13 @@ onMounted(async () => {
 .dots i { width: 6px; height: 6px; border-radius: 99px; background: rgba(255,255,255,0.45); display: block; }
 .dots i.on { width: 14px; background: #fff; }
 .hero-photo {
-  position: absolute; right: 0; top: 0; height: 100%; width: 50%;
-  object-fit: cover; object-position: 70% center;
+  position: absolute; right: 0; top: 0; height: 100%; width: auto; max-width: 46%;
+  object-fit: contain; object-position: right center;
+  mask-image: linear-gradient(90deg, transparent, #000 18%);
 }
 .cats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 14px; }
 .cat {
-  background: #fff; border-radius: 18px; padding: 14px 4px 12px;
+  background: #fff; border-radius: 16px; padding: 14px 4px 12px;
   display: flex; flex-direction: column; align-items: center; gap: 8px;
   border: 0; box-shadow: 0 6px 16px rgba(28,36,48,0.05); color: #1C2430;
   font-size: 12px; font-weight: 650;
@@ -270,7 +271,7 @@ onMounted(async () => {
   display: flex; align-items: center; gap: 4px; color: #F96141;
   background: transparent; padding: 0;
 }
-.clock span { display: flex; flex-direction: column; align-items: center; line-height: 1; background: #FFF1EC; border-radius: 8px; min-width: 32px; padding: 4px 5px; }
+.clock span { display: flex; flex-direction: column; align-items: center; line-height: 1; background: #FFF1EC; border-radius: 10px; min-width: 32px; padding: 4px 5px; }
 .clock b { font-size: 12px; font-weight: 800; }
 .clock small { font-size: 8px; letter-spacing: 0.04em; color: #C47A68; margin-top: 1px; }
 .row { display: flex; gap: 12px; overflow-x: auto; margin-top: 12px; padding-bottom: 4px; scrollbar-width: none; }

@@ -175,7 +175,7 @@ onMounted(() => {
 h1 { margin: 14px 0 0; font-size: 24px; letter-spacing: -0.03em; font-weight: 800; line-height: 1.15; }
 .sub { margin: 2px 0 14px; color: #8E949C; font-size: 13px; line-height: 1.35; }
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 12px; }
-.shot { position: relative; border-radius: 16px; overflow: hidden; background: #F6F3F0; aspect-ratio: 4 / 3; cursor: pointer; border: 0; box-shadow: 0 8px 18px rgba(28,36,48,0.06); }
+.shot { position: relative; border-radius: 18px; overflow: hidden; background: #F6F3F0; aspect-ratio: 4 / 3; cursor: pointer; border: 0; box-shadow: 0 8px 18px rgba(28,36,48,0.06); }
 .shot img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
 .heart {
   position: absolute; top: 8px; right: 8px; width: 32px; height: 32px; border: 0; border-radius: 99px;
