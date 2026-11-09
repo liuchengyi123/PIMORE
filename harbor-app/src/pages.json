@@ -104,7 +104,8 @@
       "path": "pages/ship-lp/index",
       "style": {
         "navigationBarTitleText": "Flash",
-        "navigationBarBackgroundColor": "#F7F6F3",
+        "navigationStyle": "custom",
+        "navigationBarBackgroundColor": "#FCFBF8",
         "navigationBarTextStyle": "black"
       }
     },
