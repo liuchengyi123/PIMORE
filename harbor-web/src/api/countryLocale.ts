@@ -6,7 +6,7 @@ export type UiLang = 'zh' | 'zh-Hant' | 'en' | 'de' | 'fr' | 'es' | 'pt' | 'ja'
 
 /** Storefront countries shown in locale / shipping pickers. */
 export const STORE_COUNTRIES = [
-  'US', 'CN', 'TW', 'HK', 'GB', 'CA', 'DE', 'FR', 'ES', 'PT', 'BR', 'MX', 'JP',
+  'US', 'CN', 'TW', 'HK', 'GB', 'CA', 'AU', 'DE', 'FR', 'ES', 'PT', 'BR', 'MX', 'JP',
 ] as const
 
 export type StoreCountry = (typeof STORE_COUNTRIES)[number]
@@ -45,6 +45,7 @@ export function currencyForCountry(country: string): string {
   if (code === 'BR') return 'BRL'
   if (code === 'MX') return 'MXN'
   if (code === 'CA') return 'CAD'
+  if (code === 'AU') return 'AUD'
   if (code === 'TW') return 'TWD'
   if (code === 'HK') return 'HKD'
   if (code === 'CN' || code === 'MO') return 'CNY'
@@ -58,7 +59,7 @@ export function currencyMark(country: string): string {
   const cur = currencyForCountry(country)
   const marks: Record<string, string> = {
     USD: '$', CNY: '¥', TWD: 'NT$', HKD: 'HK$', GBP: '£', CAD: 'CA$',
-    EUR: '€', BRL: 'R$', MXN: 'MX$', JPY: '円',
+    AUD: 'A$', EUR: '€', BRL: 'R$', MXN: 'MX$', JPY: '円',
   }
   return marks[cur] || cur
 }
