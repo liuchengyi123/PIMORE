@@ -3,8 +3,8 @@
 <div class="fn-support-shell">
 <header class="page-head">
   <div>
-    <h1>网页客服台</h1>
-    <p class="muted">/admin/support 精简台；完整能力见 Electron 桌面台 30/31。未读 {{ unread_n }} · 进行中 {{ open_n }}</p>
+    <h1>客服收件箱</h1>
+    <p class="muted">未读 {{ unread_n }} · 进行中 {{ open_n }}。转交和 AI 仍以桌面客服台为准。</p>
   </div>
 </header>
 <p class="warn-banner"><span class="pill">说明</span> 转交/AI/SKU 发送以桌面台为准。</p>
@@ -13,22 +13,24 @@
   <aside class="cs-inbox">
     <div class="pad" style="padding:10px">
       <div class="status-tabs">
-        <a class="{% if (support_status or 'open') == 'open' %}on{% endif %}" href="/admin/support?status=open">进行中</a>
+        <a class="{% if (support_status or 'open') == 'open' %}on{% endif %}" href="/admin/support?status=open">进行中 {{ open_n }}</a>
         <a class="{% if support_status == 'closed' %}on{% endif %}" href="/admin/support?status=closed">已关闭</a>
       </div>
       <form method="get" action="/admin/support" style="margin:0">
         <input type="hidden" name="status" value="{{ support_status or 'open' }}">
-        <input type="search" name="q" value="{{ support_q or '' }}" placeholder="搜索" style="width:100%;height:30px;border:1px solid #E2E6EE;border-radius:8px;padding:0 10px;font-size:12px">
+        <input type="search" name="q" value="{{ support_q or '' }}" placeholder="搜索客户 / 会话" style="width:100%;height:30px;border:1px solid #E8EAF0;border-radius:8px;padding:0 10px;font-size:12px">
       </form>
     </div>
     <div class="cs-list" id="cs-inbox" style="padding:0 10px 10px">
       {% for r in rooms %}
+      {% set who = r.current.name or r.email or r.visitor_id[:8] %}
       <a class="cs-item {% if room and room.id == r.id %}on{% endif %}" href="/admin/support/{{ r.id }}" data-updated="{{ r.updated_at }}">
-        <div class="cs-item-top">
-          <b>{{ r.current.name or r.email or r.visitor_id[:8] }}</b>
-          {% if r.unread_staff %}<span class="nav-badge">{{ r.unread_staff }}</span>{% endif %}
-        </div>
-        <div class="cs-item-sub">{{ r.current.sku or '无商品' }} · {{ r.updated_at }}</div>
+        <span class="cs-av" aria-hidden="true">{{ who[:1] }}</span>
+        <span class="cs-item-main">
+          <span class="cs-item-top"><b>{{ who }}</b><time>{{ r.updated_at }}</time></span>
+          <span class="cs-item-sub">{{ r.current.sku or '无商品' }}</span>
+        </span>
+        {% if r.unread_staff %}<span class="nav-badge">{{ r.unread_staff }}</span>{% endif %}
       </a>
       {% else %}
       <p class="muted pad">暂无会话。用户从 App 商品页点「客服」后会出现在这里。</p>
@@ -38,43 +40,16 @@
 
   <section class="cs-thread card">
     {% if room %}
+    {% set ticket = room.current.name or room.email or '会话' %}
     <div class="cs-thread-head">
-      <div>
-        <h2>{{ room.current.name or '会话' }}</h2>
-        <p class="muted">#{{ room.id[:10] }} · {{ room.email or room.visitor_id }} · {{ room.status }}</p>
+      <span class="cs-av lg" aria-hidden="true">{{ ticket[:1] }}</span>
+      <div class="cs-ticket">
+        <h2>{{ ticket }} {% if room.status == 'closed' %}<span class="cs-state">已关闭</span>{% else %}<span class="cs-state on">进行中</span>{% endif %}</h2>
+        <p class="muted">会话 {{ room.id[:10] }} · {{ room.email or room.visitor_id }}</p>
       </div>
       <form method="post" action="/admin/support/{{ room.id }}/close">
         <button class="btn ghost sm" type="submit">关闭会话</button>
       </form>
-    </div>
-
-    <div class="cs-context">
-      <div class="cs-product">
-        {% if room.current.image %}
-        <img src="{{ room.current.image }}" alt="">
-        {% endif %}
-        <div>
-          <b>{{ room.current.name or '未附商品' }}</b>
-          <div class="muted">{{ room.current.sku }} {% if room.current.price %}· {{ room.current.price }}{% endif %}</div>
-          {% if room.current.sku %}
-          <a class="btn ghost sm" href="/admin/products/{{ room.current.sku }}" target="_blank">后台商品</a>
-          <a class="btn ghost sm" href="/p/{{ room.current.sku }}" target="_blank">前台详情</a>
-          {% endif %}
-        </div>
-      </div>
-      <div class="cs-history">
-        <h3>浏览足迹</h3>
-        <ul>
-          {% for h in room.history %}
-          <li>
-            <a href="/p/{{ h.sku }}" target="_blank">{{ h.name or h.sku }}</a>
-            <span class="muted">{{ h.sku }}</span>
-          </li>
-          {% else %}
-          <li class="muted">暂无足迹</li>
-          {% endfor %}
-        </ul>
-      </div>
     </div>
 
     <div class="cs-msgs" id="cs-msgs" data-room="{{ room.id }}">
@@ -89,9 +64,16 @@
       {% endfor %}
     </div>
 
-    <form class="cs-composer" class="cs-compose" method="post" action="/admin/support/{{ room.id }}/reply" id="cs-reply-form">
-      <textarea name="body" rows="3" placeholder="输入回复，回车发送…" required></textarea>
-      <button class="btn" type="submit">发送</button>
+    <form class="cs-composer" method="post" action="/admin/support/{{ room.id }}/reply" id="cs-reply-form">
+      <div class="cs-quick">
+        <button type="button" data-phrase="您好，感谢您的咨询！">您好</button>
+        <button type="button" data-phrase="请提供订单号，我帮您查一下。">要订单号</button>
+        <button type="button" data-phrase="已收到，我们马上处理。">已收到</button>
+      </div>
+      <div class="cs-compose-row">
+        <textarea name="body" rows="2" placeholder="输入消息…" required></textarea>
+        <button class="btn" type="submit">发送</button>
+      </div>
     </form>
     {% else %}
     <div class="cs-empty">
@@ -106,6 +88,36 @@
     </div>
     {% endif %}
   </section>
+
+  <aside class="cs-context-pane">
+    <div class="cs-rail-stats">
+      <div><b>{{ open_n }}</b><span>进行中</span></div>
+      <div><b>{{ unread_n }}</b><span>未读</span></div>
+    </div>
+    <h3>当前商品</h3>
+    {% if room and room.current %}
+    <div class="cs-side-product">
+      {% if room.current.image %}<img src="{{ room.current.image }}" alt="">{% else %}<span class="cs-av">商</span>{% endif %}
+      <div>
+        <b>{{ room.current.name or '未附商品' }}</b>
+        <small>{{ room.current.sku or '—' }}{% if room.current.price %} · {{ room.current.price }}{% endif %}</small>
+      </div>
+    </div>
+    {% if room.current.sku %}
+    <p class="cs-side-links"><a href="/admin/products/{{ room.current.sku }}" target="_blank">后台商品</a> · <a href="/p/{{ room.current.sku }}" target="_blank">前台详情</a></p>
+    {% endif %}
+    <h3>浏览足迹</h3>
+    <ul class="cs-side-history">
+      {% for h in room.history %}
+      <li><a href="/p/{{ h.sku }}" target="_blank">{{ h.name or h.sku }}</a></li>
+      {% else %}
+      <li class="muted">暂无足迹</li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="muted">选择一条会话后，这里显示商品和足迹。</p>
+    {% endif %}
+  </aside>
 </div>
 
 <style>
@@ -174,26 +186,20 @@
       .catch(function(){})
       .finally(function(){ setTimeout(pollInbox, 800); });
   }
+  var reply = document.getElementById('cs-reply-form');
+  if (reply) {
+    reply.querySelectorAll('[data-phrase]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var box = reply.querySelector('textarea');
+        if (!box) return;
+        box.value = btn.getAttribute('data-phrase') || '';
+        box.focus();
+      });
+    });
+  }
   pollInbox();
 })();
 </script>
-
-  <aside class="cs-context-pane">
-    <div class="cs-rail-stats">
-      <div><b>{{ open_n }}</b><span>进行中</span></div>
-      <div><b>{{ unread_n }}</b><span>未读</span></div>
-    </div>
-    <p class="muted" style="font-size:11px;margin:10px 0 8px">当前商品</p>
-    {% if room and room.current %}
-    <div style="display:flex;gap:8px;align-items:center">
-      {% if room.current.image %}<img src="{{ room.current.image }}" alt="" style="width:32px;height:32px;border-radius:7px;object-fit:cover">{% else %}<div style="width:32px;height:32px;border-radius:7px;background:linear-gradient(145deg,#bae6fd,#0369a1)"></div>{% endif %}
-      <b style="font-size:14px">{{ room.current.name or '—' }}</b>
-    </div>
-    <p class="muted" style="font-size:11px;margin-top:8px">浏览足迹 {{ room.current.sku or '' }}</p>
-    {% else %}
-    <p class="muted" style="font-size:11px">选择会话后显示商品。</p>
-    {% endif %}
-  </aside>
 
 </div>
 {% endblock %}
