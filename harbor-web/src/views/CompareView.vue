@@ -17,26 +17,22 @@
         <router-link class="go" to="/browse">{{ zh ? '去逛逛' : 'Browse products' }}</router-link>
       </div>
       <template v-else>
-        <div class="scroller">
-          <div class="cols" :style="{ gridTemplateColumns: shown.length > 3 ? `repeat(${shown.length}, 148px)` : `repeat(${shown.length}, minmax(0, 1fr))` }">
-            <article v-for="p in shown" :key="p.sku" class="card">
+        <div class="board">
+          <div class="cols" :style="colStyle">
+            <article v-for="(p, i) in shown" :key="p.sku" class="card" :style="{ gridColumn: i + 2 }">
               <div class="shot" @click="open(p)"><img v-if="p.image" :src="p.image" :alt="p.name" /></div>
               <div class="nm" @click="open(p)">{{ p.name }}</div>
               <div class="price">{{ money(p.price) }}</div>
               <button type="button" class="add" @click="add(p)">{{ zh ? '加入购物车' : 'Add to cart' }}</button>
             </article>
           </div>
-          <table>
-            <tbody>
-              <tr v-for="row in rows" :key="row.key">
-                <th>
-                  <component :is="row.icon" :size="14" />
-                  {{ row.label }}
-                </th>
-                <td v-for="p in shown" :key="row.key + p.sku">{{ row.cell(p) }}</td>
-              </tr>
-            </tbody>
-          </table>
+          <div v-for="row in rows" :key="row.key" class="srow" :class="row.key" :style="colStyle">
+            <div class="lab">
+              <component :is="row.icon" :size="16" />
+              <span>{{ row.label }}</span>
+            </div>
+            <div v-for="p in shown" :key="row.key + p.sku" class="val">{{ row.cell(p) }}</div>
+          </div>
         </div>
         <div class="note">
           <span class="house" aria-hidden="true"><Home :size="16" /></span>
@@ -67,7 +63,10 @@ const cart = useCart()
 const router = useRouter()
 const products = ref<Product[]>([])
 const loading = ref(true)
-const shown = computed(() => products.value.slice(0, 4))
+const shown = computed(() => products.value.slice(0, 3))
+const colStyle = computed(() => ({
+  gridTemplateColumns: `52px repeat(${Math.max(shown.value.length, 1)}, minmax(0, 1fr))`,
+}))
 
 const rows = computed(() => {
   const list = [
@@ -109,29 +108,33 @@ onMounted(async () => {
 }
 .back { border: 0; background: transparent; color: #fff; width: 40px; height: 36px; cursor: pointer; }
 h1 { margin: 0; text-align: center; font-size: 17px; font-weight: 800; }
-.body { padding: 16px; }
-h2 { margin: 0; font-size: 20px; letter-spacing: -0.03em; }
-.lead { margin: 6px 0 0; color: #8B919A; font-size: 13px; line-height: 1.45; }
+.body { padding: 14px 12px 8px; }
+h2 { margin: 0; font-size: 18px; letter-spacing: -0.03em; line-height: 1.2; }
+.lead { margin: 4px 0 0; color: #8B919A; font-size: 13px; line-height: 1.35; }
 .state { text-align: center; color: #8B919A; padding: 36px 8px; }
 .go { display: inline-block; margin-top: 10px; color: #F96141; font-weight: 700; }
-.scroller { overflow-x: auto; margin-top: 16px; }
-.cols { display: grid; gap: 10px; min-width: 100%; }
+.board { margin-top: 12px; }
+.cols, .srow { display: grid; column-gap: 8px; }
 .card { min-width: 0; }
-.shot { aspect-ratio: 1; border-radius: 14px; overflow: hidden; background: #F6F4F2; cursor: pointer; }
+.shot { aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: #F6F4F2; cursor: pointer; }
 .shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.nm { margin-top: 8px; font-size: 12px; font-weight: 700; line-height: 1.35; min-height: 2.6em; cursor: pointer; }
-.price { margin-top: 4px; color: #F96141; font-size: 16px; font-weight: 800; }
+.nm { margin-top: 6px; font-size: 12px; font-weight: 700; line-height: 1.3; min-height: 2.6em; cursor: pointer; }
+.price { margin-top: 2px; color: #F96141; font-size: 15px; font-weight: 800; letter-spacing: -0.02em; }
 .add {
-  margin-top: 8px; width: 100%; height: 34px; border: 0; border-radius: 999px;
+  margin-top: 6px; margin-bottom: 8px; width: 100%; height: 32px; border: 0; border-radius: 999px;
   background: #F96141; color: #fff; font-weight: 750; font-size: 12px; cursor: pointer;
   padding: 0 4px; white-space: nowrap;
 }
-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-th, td { border-bottom: 1px solid #F1EEEA; padding: 12px 8px; font-size: 12px; text-align: center; vertical-align: middle; }
-th { text-align: left; color: #5C6570; font-weight: 700; white-space: nowrap; }
-th :deep(svg) { color: #F96141; vertical-align: -2px; margin-right: 4px; }
+.srow { align-items: center; border-top: 1px solid #F1EEEA; min-height: 48px; padding: 6px 0; }
+.lab {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  color: #8B919A; font-size: 10px; font-weight: 700; line-height: 1.1; text-align: center;
+}
+.lab :deep(svg) { color: #B0B6BE; }
+.val { text-align: center; font-size: 11px; line-height: 1.3; font-weight: 650; color: #1C2430; }
+.srow.price .val { color: #F96141; font-weight: 800; font-size: 13px; }
 .note {
-  margin-top: 16px; background: #FFF6F3; border-radius: 16px; padding: 12px;
+  margin-top: 12px; background: #FFF6F3; border-radius: 16px; padding: 10px 12px;
   display: flex; gap: 10px; align-items: center;
 }
 .house {
