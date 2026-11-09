@@ -1505,7 +1505,13 @@ td.empty { text-align: center; padding: 28px 12px; }
   height: 40px !important; border: 1px solid #E2E6EE !important; border-radius: 10px !important;
   padding: 0 12px !important; font-size: 14px !important; color: #0F2744 !important;
 }
-.login-submit { width: 100% !important; height: 48px !important; margin-top: 6px !important; background: #F96141 !important; border: 0 !important; border-radius: 12px !important; color: #fff !important; }
+.login-wrap { padding: 28px !important; gap: 20px !important; }
+.login-card { padding: 24px 22px 18px !important; border-radius: 16px !important; }
+.login-card h1 { font-size: 22px !important; }
+.login-card .lead { margin: 0 0 14px !important; }
+.login-submit { width: 100% !important; height: 44px !important; margin-top: 4px !important; background: #F96141 !important; border: 0 !important; border-radius: 999px !important; color: #fff !important; }
+.page-head { margin-bottom: 8px; }
+.kpi-grid { gap: 8px; }
 .login-foot { margin: 14px 0 0 !important; font-size: 12px !important; color: #8B93A0 !important; }
 
 /* AD29 / S02 web CS desk */
