@@ -1,3 +1,27 @@
+"""Checkout pricing shared by place_order and POST /api/checkout/quote.
+
+Gift fields are three different things. Do not merge them:
+
+gift_sku
+    Cookie ``gift_sku`` (set by add-to-cart when ``gift=1``). A catalog line
+    that ``priced_lines`` prices at 0 only when qty is 1 and the list price
+    is between 50 and 200 cents inclusive. It is not a message and not
+    wrapping. Cleared after a successful checkout. The quote prices this
+    cookie; a gift_sku in the JSON body is ignored so a client cannot zero
+    an arbitrary line.
+
+gift_message
+    Note stored on ``orders.gift_message`` (max 200 characters). The HTML
+    checkout form still posts it as ``gift``. The quote body field is
+    ``gift_message`` (``gift`` is accepted as a fallback). No price effect.
+    Never write gift_wrap or gift_sku into this column.
+
+gift_wrap
+    Boolean the shopper toggles for wrapping. No fee in this version
+    (0 cents) and no orders column. The quote echoes it so the client can
+    keep the toggle. It does not change gift_message or gift_sku.
+"""
+
 import hashlib
 import json
 import secrets
@@ -7,9 +31,9 @@ from datetime import datetime, timedelta, timezone
 
 from shop.address_format import required_keys
 from shop.campaigns import price_for
-from shop.locale import shipping_tier
 from shop.pricing import quote
 from shop.rewards import rebate
+from shop.tax import estimate_tax_cents
 
 _LOCKS = {}
 _LOCKS_GUARD = threading.Lock()
@@ -93,23 +117,100 @@ def merge_line(lines, sku, qty):
     return updated
 
 
-def build_quote(promos, *, merchandise_cents, ship_country, units, currency, minor_units, coupon_cents=0, coupon_threshold_cents=0, balance_cents=0, use_balance=False, lucky_off_cents=0):
-    # Always-free shipping policy: charge $0 shipping regardless of threshold/country.
-    # UI copy must match (no "free over $X" when under threshold).
+# Merchandise cents by delivery speed. standard and economy stay 0 so an
+# order that omits speed (stored as standard) keeps the always-free policy
+# build_quote already charges. express is a flat upgrade equal to the seeded
+# USCA promo shipping figure. Country promo shipping is not added on top.
+SPEED_SHIP_CENTS = {
+    "express": 600,
+    "standard": 0,
+    "economy": 0,
+}
+
+_TRUE_VALUES = {"1", "true", "yes", "on"}
+
+
+def normalize_speed(speed):
+    text = str(speed or "").strip().lower()
+    if text in SPEED_SHIP_CENTS:
+        return text
+    return "standard"
+
+
+def as_bool(value):
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return int(value) != 0
+    return str(value or "").strip().lower() in _TRUE_VALUES
+
+
+def build_quote(promos, *, merchandise_cents, ship_country, units, currency, minor_units, coupon_cents=0, coupon_threshold_cents=0, balance_cents=0, use_balance=False, lucky_off_cents=0, speed="standard"):
+    # Standard and economy follow the always-free policy (threshold 0).
+    # A positive express fee must sit above quote()'s free-shipping waiver,
+    # which zeroes shipping whenever merchandise >= free_shipping_cents.
     _ = (ship_country, promos.get("free_shipping_cents"), promos.get("shipping"))
+    ship = int(SPEED_SHIP_CENTS.get(normalize_speed(speed)) or 0)
+    if ship:
+        free_threshold = 10**12
+        shipping_cents = ship
+    else:
+        free_threshold = 0
+        shipping_cents = 0
     return quote(
         merchandise_cents=merchandise_cents,
         tiers=promos["tiers"],
         coupon_cents=coupon_cents,
         coupon_threshold_cents=coupon_threshold_cents,
-        free_shipping_cents=0,
-        shipping_cents=0,
+        free_shipping_cents=free_threshold,
+        shipping_cents=shipping_cents,
         balance_cents=balance_cents,
         use_balance=use_balance,
         units_per_usd=units,
         minor_units=minor_units,
         lucky_off_cents=lucky_off_cents,
     )
+
+
+def settle_checkout(
+    promos,
+    *,
+    merchandise_cents,
+    ship_country,
+    region,
+    units,
+    currency,
+    minor_units,
+    coupon,
+    balance_cents,
+    use_balance,
+    lucky_off_cents,
+    speed,
+):
+    """One money path for place_order and the quote API.
+
+    Taxable base is goods after discounts and coupons, plus shipping.
+    tax_cents is not folded into due_cents (see shop.tax).
+    """
+    speed = normalize_speed(speed)
+    bill = build_quote(
+        promos,
+        merchandise_cents=merchandise_cents,
+        ship_country=ship_country,
+        units=units,
+        currency=currency,
+        minor_units=minor_units,
+        coupon_cents=coupon["amount_cents"] if coupon else 0,
+        coupon_threshold_cents=coupon["threshold_cents"] if coupon else 0,
+        balance_cents=balance_cents,
+        use_balance=use_balance,
+        lucky_off_cents=lucky_off_cents,
+        speed=speed,
+    )
+    goods_after = max(0, int(merchandise_cents) - int(bill.discount_cents) - int(bill.coupon_cents))
+    taxable = goods_after + int(bill.shipping_cents)
+    tax = estimate_tax_cents(taxable, ship_country, region)
+    return bill, taxable, tax, speed
 
 
 def live_offers(row):
@@ -240,6 +341,66 @@ def best_coupon(coupons):
     )
 
 
+def coupon_id_from_code(conn, code):
+    text = str(code or "").strip()
+    if not text:
+        return None
+    row = conn.execute(
+        """
+        select id from coupons
+        where enabled = 1 and (lower(name) = lower(?) or lower(kind) = lower(?))
+        order by id
+        limit 1
+        """,
+        (text, text),
+    ).fetchone()
+    return int(row["id"]) if row else None
+
+
+def resolve_coupon_request(conn, coupon_id, coupon_code):
+    """Return (coupon_id, requested).
+
+    None means the shopper did not ask. -1 means they asked for something
+    that does not resolve, which place_order treats like a bad id and then
+    falls through to the best eligible coupon.
+    """
+    code = str(coupon_code or "").strip()
+    raw = "" if coupon_id is None else str(coupon_id).strip()
+    asked = bool(raw) or bool(code)
+    if raw:
+        try:
+            return int(coupon_id), True
+        except (TypeError, ValueError):
+            return -1, True
+    if code:
+        found = coupon_id_from_code(conn, code)
+        return (found if found else -1), True
+    return None, asked
+
+
+def select_coupon(conn, email, merchandise, coupon_id, lucky_off_cents, coupon_requested):
+    """Same coupon choice as place_order.
+
+    A live lucky discount suppresses coupons. When the shopper still sent
+    one, the quote reports ``coupon_blocked_by_lucky`` and charges no coupon.
+    """
+    if lucky_off_cents:
+        blockers = ["coupon_blocked_by_lucky"] if coupon_requested else []
+        return None, blockers
+    eligible = list_coupons(conn, email, merchandise)
+    coupon = None
+    if coupon_id:
+        try:
+            coupon = allowed_coupon(conn, email, merchandise, coupon_id)
+        except CheckoutError as exc:
+            if exc.code != "coupon":
+                raise
+            coupon = None
+    if coupon is None:
+        coupon = best_coupon(eligible)
+    return coupon, []
+
+
 def list_coupons(conn, email, merchandise):
     rows = conn.execute("select * from coupons where enabled = 1").fetchall()
     open_orders = 0
@@ -264,6 +425,196 @@ def list_coupons(conn, email, merchandise):
             if granted:
                 found.append(coupon)
     return found
+
+
+def _available_balance(conn, email):
+    if not email:
+        return 0
+    row = conn.execute(
+        "select available_cents from balances where email = ?",
+        (email,),
+    ).fetchone()
+    return int(row["available_cents"]) if row else 0
+
+
+def _gift_message(value):
+    return str(value or "")[:200]
+
+
+def _parent_need(priced):
+    needed = {}
+    for line in priced:
+        parent = stock_parent(line["sku"])
+        needed[parent] = needed.get(parent, 0) + line["qty"]
+    return needed
+
+
+def _short_parent(conn, needed):
+    for parent, qty in needed.items():
+        row = conn.execute("select stock from products where sku = ?", (parent,)).fetchone()
+        if row is None or row["stock"] < qty:
+            return parent
+    return ""
+
+
+def _quote_payload(
+    *,
+    ok,
+    currency,
+    speed,
+    lines,
+    blockers,
+    gift_message,
+    gift_wrap,
+    gift_sku,
+    merchandise=0,
+    shipping=0,
+    discount=0,
+    coupon_cents=0,
+    tax=0,
+    taxable=0,
+    balance=0,
+    due=0,
+    due_local=0,
+    coupon_id=None,
+    sku="",
+):
+    body = {
+        "ok": bool(ok),
+        "subtotal": int(merchandise),
+        "merchandise_cents": int(merchandise),
+        "shipping_cents": int(shipping),
+        "discount_cents": int(discount),
+        "coupon_cents": int(coupon_cents),
+        "tax_cents": int(tax),
+        "taxable_cents": int(taxable),
+        # Estimate only. due_cents / total are the amount charged today.
+        "tax_estimate": True,
+        "tax_included_in_due": False,
+        "balance_cents": int(balance),
+        "total": int(due),
+        "due_cents": int(due),
+        "due_local": int(due_local),
+        "currency": currency or "USD",
+        "speed": normalize_speed(speed),
+        "lines": lines,
+        "blockers": list(blockers),
+        "gift_message": _gift_message(gift_message),
+        "gift_wrap": bool(gift_wrap),
+        "gift_sku": gift_sku or "",
+        "coupon_id": int(coupon_id) if coupon_id else None,
+    }
+    if sku:
+        body["sku"] = sku
+    return body
+
+
+def preview_checkout_quote(
+    conn,
+    promos,
+    *,
+    lines,
+    email="",
+    ship_country="",
+    region="",
+    currency="USD",
+    units=1,
+    minor_units=2,
+    speed="standard",
+    coupon_id=None,
+    coupon_code="",
+    use_balance=False,
+    gift_sku="",
+    gift_message="",
+    gift_wrap=False,
+    returning=False,
+    hold=None,
+    lucky_off_cents=0,
+):
+    """Price the cart the way place_order will, without writing an order.
+
+    ``lines`` are the cart cookie lines (same source as POST /checkout).
+    ``gift_sku`` is that cookie, not a body field. ``gift_message`` and
+    ``gift_wrap`` are echoed and do not change the totals.
+    """
+    email = (email or "").strip().lower()
+    ship_country = (ship_country or "").strip().upper()
+    gift_sku = gift_sku or ""
+    gift_message = _gift_message(gift_message)
+    gift_wrap = as_bool(gift_wrap)
+    use_balance = as_bool(use_balance)
+    speed = normalize_speed(speed)
+    common = dict(
+        currency=currency,
+        speed=speed,
+        gift_message=gift_message,
+        gift_wrap=gift_wrap,
+        gift_sku=gift_sku,
+    )
+    if units is None:
+        return _quote_payload(ok=False, lines=[], blockers=["rate"], **common)
+    if not lines:
+        return _quote_payload(ok=False, lines=[], blockers=["empty"], **common)
+    try:
+        priced, merchandise = priced_lines(
+            conn, lines, gift_sku=gift_sku, email=email, returning=returning, hold=hold
+        )
+    except CheckoutError as exc:
+        return _quote_payload(
+            ok=False, lines=[], blockers=[exc.code or "stock"], sku=exc.sku or "", **common
+        )
+    short = _short_parent(conn, _parent_need(priced))
+    if short:
+        return _quote_payload(ok=False, lines=[], blockers=["stock"], sku=short, **common)
+    requested_id, requested = resolve_coupon_request(conn, coupon_id, coupon_code)
+    try:
+        coupon, blockers = select_coupon(
+            conn, email, merchandise, requested_id, lucky_off_cents, requested
+        )
+    except CheckoutError as exc:
+        return _quote_payload(
+            ok=False, lines=[], blockers=[exc.code or "coupon"], sku=exc.sku or "", **common
+        )
+    available = _available_balance(conn, email) if use_balance else 0
+    bill, taxable, tax, speed = settle_checkout(
+        promos,
+        merchandise_cents=merchandise,
+        ship_country=ship_country,
+        region=region,
+        units=units,
+        currency=currency,
+        minor_units=minor_units,
+        coupon=coupon,
+        balance_cents=available,
+        use_balance=use_balance,
+        lucky_off_cents=lucky_off_cents,
+        speed=speed,
+    )
+    shown = [
+        {
+            "sku": line["sku"],
+            "qty": line["qty"],
+            "price_cents": line["price_cents"],
+            "line_cents": int(line["price_cents"]) * int(line["qty"]),
+        }
+        for line in priced
+    ]
+    return _quote_payload(
+        ok=True,
+        lines=shown,
+        blockers=blockers,
+        merchandise=merchandise,
+        shipping=bill.shipping_cents,
+        discount=bill.discount_cents,
+        coupon_cents=bill.coupon_cents,
+        tax=tax,
+        taxable=taxable,
+        balance=bill.balance_cents,
+        due=bill.due_cents,
+        due_local=bill.due_local,
+        coupon_id=coupon["id"] if coupon else None,
+        **common,
+    )
 
 
 def _lock_balance(conn, email):
@@ -325,6 +676,7 @@ def place_order(
     hold=None,
     lucky_off_cents=0,
     lucky_token="",
+    speed="standard",
 ):
     email = (email or "").strip().lower()
     ship_country = (ship_country or "").strip().upper()
@@ -360,39 +712,32 @@ def place_order(
             priced, merchandise = priced_lines(
                 conn, lines, gift_sku=gift_sku, email=email, returning=returning, hold=hold
             )
-            needed = {}
-            for line in priced:
-                parent = stock_parent(line["sku"])
-                needed[parent] = needed.get(parent, 0) + line["qty"]
-            for parent, qty in needed.items():
-                row = conn.execute("select stock from products where sku = ?", (parent,)).fetchone()
-                if row is None or row["stock"] < qty:
-                    raise CheckoutError("stock", sku=parent)
-            coupon = None
-            if not lucky_off_cents:
-                eligible = list_coupons(conn, email, merchandise)
-                if coupon_id:
-                    try:
-                        coupon = allowed_coupon(conn, email, merchandise, coupon_id)
-                    except CheckoutError as exc:
-                        if exc.code != "coupon":
-                            raise
-                        coupon = None
-                if coupon is None:
-                    coupon = best_coupon(eligible)
+            needed = _parent_need(priced)
+            short = _short_parent(conn, needed)
+            if short:
+                raise CheckoutError("stock", sku=short)
+            coupon, _coupon_blockers = select_coupon(
+                conn,
+                email,
+                merchandise,
+                coupon_id,
+                lucky_off_cents,
+                bool(coupon_id),
+            )
             available = _lock_balance(conn, email) if use_balance else 0
-            bill = build_quote(
+            bill, _taxable, tax, _speed = settle_checkout(
                 promos,
                 merchandise_cents=merchandise,
                 ship_country=ship_country,
+                region=region,
                 units=units,
                 currency=currency,
                 minor_units=minor_units,
-                coupon_cents=coupon["amount_cents"] if coupon else 0,
-                coupon_threshold_cents=coupon["threshold_cents"] if coupon else 0,
+                coupon=coupon,
                 balance_cents=available,
                 use_balance=use_balance,
                 lucky_off_cents=lucky_off_cents,
+                speed=speed,
             )
             bound = _bind_referrer(conn, email, referrer)
             base = max(0, merchandise - bill.discount_cents - bill.coupon_cents)
@@ -429,16 +774,16 @@ def place_order(
                 insert into orders (
                     submit_id, email, status, currency, units_per_usd,
                     merchandise_cents, discount_cents, coupon_cents, coupon_id,
-                    shipping_cents, balance_cents, due_cents, due_local,
+                    shipping_cents, tax_cents, balance_cents, due_cents, due_local,
                     ship_country, ship_name, address, city, region, postal, phone,
                     referrer_email, self_rebate_cents, direct_rebate_cents, created_at
-                ) values (?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) values (?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     submit_id, email, currency, units,
                     merchandise, bill.discount_cents, bill.coupon_cents,
                     coupon["id"] if coupon else None,
-                    bill.shipping_cents, bill.balance_cents, bill.due_cents, bill.due_local,
+                    bill.shipping_cents, tax, bill.balance_cents, bill.due_cents, bill.due_local,
                     ship_country, name.strip(), address.strip(), city.strip(),
                     region.strip(), postal.strip(), phone.strip(),
                     bound, own, direct, datetime.now(timezone.utc).isoformat(),

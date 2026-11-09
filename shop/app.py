@@ -140,6 +140,8 @@ from shop.checkout import (
     list_coupons,
     load_lines,
     merge_line,
+    normalize_speed,
+    preview_checkout_quote,
     _bind_referrer,
     place_order,
     verify_password,
@@ -5593,6 +5595,57 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 who = row["email"]
         return smash(conn, who, order_id)
 
+    @app.post("/api/checkout/quote")
+    async def api_checkout_quote(request: Request):
+        content_type = (request.headers.get("content-type") or "").lower()
+        if "application/json" in content_type:
+            try:
+                parsed = await request.json()
+            except Exception:
+                parsed = {}
+            body = parsed if isinstance(parsed, dict) else {}
+        else:
+            form = await request.form()
+            body = {key: form.get(key) for key in form.keys()}
+        return await asyncio.to_thread(_api_checkout_quote, request, body)
+
+    def _api_checkout_quote(request, body):
+        ctx = view(request)
+        lines = load_lines(request.cookies.get("cart"))
+        email = str(body.get("email") or buyer_email(request) or "")
+        gift_sku = request.cookies.get("gift_sku") or ""
+        _line_ctx, _shown, viewed = line_views(request, lines)
+        # Lucky base matches POST /checkout, which asks line_views before place_order.
+        lucky_off = lucky_off_for(request, email, viewed) if lines else 0
+        region = body.get("region")
+        if region is None or str(region).strip() == "":
+            region = body.get("state") or ""
+        message = body.get("gift_message")
+        if message is None:
+            message = body.get("gift") or ""
+        payload = preview_checkout_quote(
+            conn,
+            ctx["promos"],
+            lines=lines,
+            email=email,
+            ship_country=str(body.get("ship_country") or ctx["country"] or ""),
+            region=str(region or ""),
+            currency=ctx["currency"],
+            units=ctx["units"],
+            minor_units=MINOR.get(ctx["currency"], 2),
+            speed=body.get("speed") or "standard",
+            coupon_id=body.get("coupon_id"),
+            coupon_code=str(body.get("coupon_code") or ""),
+            use_balance=body.get("use_balance"),
+            gift_sku=gift_sku,
+            gift_message=message,
+            gift_wrap=body.get("gift_wrap", False),
+            returning=request.cookies.get("harbor_bought") == "1",
+            hold=parse_hold(request.cookies.get("harbor_hold")),
+            lucky_off_cents=lucky_off,
+        )
+        return payload
+
     @app.get("/checkout", response_class=HTMLResponse)
     def checkout(request: Request):
         cart_lines = load_lines(request.cookies.get("cart"))
@@ -5704,6 +5757,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 hold=parse_hold(request.cookies.get("harbor_hold")),
                 lucky_off_cents=lucky_off,
                 lucky_token=spun_token,
+                speed=normalize_speed(form.get("speed")),
             )
         except CheckoutError as exc:
             return checkout_page(
@@ -5717,7 +5771,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 submit_id=submit_id,
             )
         gift = str(form.get("gift") or "")[:200]
-        speed = "standard"
+        speed = normalize_speed(form.get("speed"))
         offered = list(app.state.pay_status.get("shown") or [])
         picked_pay = str(form.get("pay_method") or "")
         if picked_pay == "card":

@@ -95,6 +95,7 @@ create table if not exists orders (
     coupon_cents integer not null default 0,
     coupon_id integer,
     shipping_cents integer not null default 0,
+    tax_cents integer not null default 0,
     balance_cents integer not null default 0,
     due_cents integer not null,
     due_local integer not null,
@@ -371,6 +372,7 @@ def migrate(conn):
         ("pay_method", "alter table orders add column pay_method text not null default 'card'"),
         ("speed", "alter table orders add column speed text not null default 'standard'"),
         ("refund_reason", "alter table orders add column refund_reason text not null default ''"),
+        ("tax_cents", "alter table orders add column tax_cents integer not null default 0"),
     ):
         if column not in orders:
             conn.execute(ddl)

@@ -21,8 +21,13 @@ _DATA = None
 def divisions():
     global _DATA
     if _DATA is None:
-        with _PATH.open(encoding="utf-8") as handle:
-            _DATA = json.load(handle)
+        # Address library is optional at runtime. Checkout quote and order
+        # placement still run when the file was not shipped with the tree.
+        if not _PATH.is_file():
+            _DATA = {}
+        else:
+            with _PATH.open(encoding="utf-8") as handle:
+                _DATA = json.load(handle)
     return _DATA
 
 
