@@ -93,21 +93,65 @@ def _pct(curr, prev):
     return round((curr - prev) * 100.0 / prev, 1)
 
 
-def _combo_chart(points, line_key, bar_key):
-    """Geometry for a combo chart: bars (money) + line (counts)."""
-    width, height = 640, 210
-    pad_l, pad_r, pad_t, pad_b = 8, 8, 18, 26
+def _nice_ceiling(value):
+    value = int(value or 0)
+    if value <= 0:
+        return 1
+    exp = 0
+    probe = value
+    while probe >= 10:
+        probe //= 10
+        exp += 1
+    base = 10 ** exp
+    for mult in (1, 2, 2.5, 5, 10):
+        ceiling = mult * base
+        if ceiling >= value:
+            return int(ceiling)
+    return value
+
+
+def _money_tick(cents):
+    dollars = int(cents or 0) / 100
+    if dollars >= 1000:
+        text = f"{dollars / 1000:.1f}".rstrip("0").rstrip(".")
+        return f"${text}k"
+    if dollars >= 100 or dollars == 0:
+        return f"${dollars:.0f}"
+    return f"${dollars:.2f}"
+
+
+def _combo_chart(points, line_key, bar_key, *, money="right", show_line=True):
+    """Geometry for a combo chart: bars plus an optional line, with axis ticks."""
+    width, height = 720, 248
+    pad_l = 46
+    pad_r = 52 if money == "right" else 14
+    pad_t, pad_b = 12, 30
     count = max(len(points), 1)
     inner_w = width - pad_l - pad_r
     inner_h = height - pad_t - pad_b
-    max_line = max((int(p.get(line_key) or 0) for p in points), default=0) or 1
-    max_bar = max((int(p.get(bar_key) or 0) for p in points), default=0) or 1
+    raw_line = max((int(p.get(line_key) or 0) for p in points), default=0)
+    raw_bar = max((int(p.get(bar_key) or 0) for p in points), default=0)
+    max_line = _nice_ceiling(raw_line)
+    max_bar = _nice_ceiling(raw_bar)
     baseline = pad_t + inner_h
+    grids = []
+    for step in range(5):
+        y = baseline - (step / 4) * inner_h
+        line_value = max_line * step / 4
+        bar_value = max_bar * step / 4
+        if money == "left":
+            left = _money_tick(bar_value)
+            right = ""
+        else:
+            left = str(int(round(line_value)))
+            right = _money_tick(bar_value)
+        grids.append({"y": round(y, 1), "left": left, "right": right})
     bars = []
     dots = []
+    label_every = 1 if count <= 8 else 2 if count <= 16 else 5
     for index, point in enumerate(points):
         slot = inner_w / count
-        bar_w = max(8, slot * 0.46)
+        bar_w = min(22, max(5, slot * 0.36))
         x = pad_l + slot * index + (slot - bar_w) / 2
         value = int(point.get(bar_key) or 0)
         bar_h = 0 if value <= 0 else max(2, (value / max_bar) * inner_h)
@@ -119,23 +163,53 @@ def _combo_chart(points, line_key, bar_key):
         })
         cx = pad_l + slot * index + slot / 2
         line_v = int(point.get(line_key) or 0)
-        cy = baseline - (line_v / max_line) * inner_h
+        cy = baseline if not show_line else baseline - (line_v / max_line) * inner_h
         dots.append({
             "x": round(cx, 1),
             "y": round(cy, 1),
             "label": point.get("label") or "",
+            "show": index % label_every == 0 or index == count - 1,
         })
     return {
         "w": width,
         "h": height,
-        "baseline": baseline,
+        "baseline": round(baseline, 1),
+        "plot_left": pad_l,
+        "plot_right": width - pad_r,
+        "grids": grids,
         "bars": bars,
         "dots": dots,
         "poly": " ".join(f"{dot['x']},{dot['y']}" for dot in dots),
-        "max_line": max_line if any(int(p.get(line_key) or 0) for p in points) else 0,
-        "max_bar": max_bar if any(int(p.get(bar_key) or 0) for p in points) else 0,
-        "empty": not any(int(p.get(line_key) or 0) or int(p.get(bar_key) or 0) for p in points),
+        "show_line": show_line,
+        "max_line": raw_line,
+        "max_bar": raw_bar,
+        "empty": raw_line == 0 and raw_bar == 0,
     }
+
+
+def _group_trend(trend, mode):
+    if mode == "day":
+        return trend
+    groups = {}
+    order = []
+    for point in trend:
+        day = datetime.strptime(point["day"], "%Y-%m-%d").date()
+        if mode == "week":
+            year, week, _weekday = day.isocalendar()
+            key = f"{year}-W{week:02d}"
+            label = point["label"]
+        else:
+            key = day.strftime("%Y-%m")
+            label = f"{day.month}月"
+        bucket = groups.get(key)
+        if bucket is None:
+            bucket = {"day": point["day"], "label": label, "n": 0, "orders": 0, "sales": 0}
+            groups[key] = bucket
+            order.append(key)
+        bucket["n"] += int(point.get("n") or 0)
+        bucket["orders"] += int(point.get("orders") or 0)
+        bucket["sales"] += int(point.get("sales") or 0)
+    return [groups[key] for key in order]
 
 
 def board(conn, days):
@@ -195,10 +269,14 @@ def board(conn, days):
             "sales": sale["cents"],
         })
     line_key = "orders" if any(point["orders"] for point in trend) else "n"
-    chart = _combo_chart(trend, line_key, "sales")
+    chart = _combo_chart(trend, line_key, "sales", money="right", show_line=True)
     chart["line_name"] = "订单数" if line_key == "orders" else "访问"
     chart["bar_name"] = "销售额"
-    bars_only = _combo_chart(trend, "sales", "sales")
+    dist = {
+        mode: _combo_chart(_group_trend(trend, mode), "sales", "sales", money="left", show_line=False)
+        for mode in ("day", "week", "month")
+    }
+    bars_only = dist["day"]
     last = trend[-1] if trend else {"n": 0, "orders": 0, "sales": 0}
     prev = trend[-2] if len(trend) > 1 else {"n": 0, "orders": 0, "sales": 0}
     deltas = {
@@ -315,5 +393,6 @@ def board(conn, days):
         "refund_rate": "—" if sales == 0 else f"{refunds * 100 / sales:.2f}%",
         "chart": chart,
         "bars": bars_only,
+        "dist": dist,
         "deltas": deltas,
     }

@@ -880,16 +880,23 @@
     {% if gen_error %}<p class="error">{{ gen_error }}</p>{% endif %}
     {% if gen_job.error and not gen_job.running %}<p class="error">{{ gen_job.error }}</p>{% endif %}
     <aside class="studio-queue">
-    <h3>任务队列</h3>
-    <p class="note">队列里 {{ gen_queue.pending }} 件。会打接口的 {{ gen_queue.calling }} 件，合计 {{ gen_queue.shots }} 张。另外 {{ gen_queue.idle }} 件不用打接口，点继续后直接收尾。每页 10 条。个数装、同色写两遍已从要出的张数里拿掉。</p>
+    <div class="queue-head">
+      <h3>任务队列</h3>
+      <span>共 {{ gen_queue.pending }} 个任务</span>
+    </div>
+    <p class="queue-note">会打接口 {{ gen_queue.calling }} 件 / {{ gen_queue.shots }} 张，跳过 {{ gen_queue.idle }} 件。</p>
     {% if gen_queue.pages > 1 %}
     <p class="note">第 {{ gen_queue.page }} / {{ gen_queue.pages }} 页</p>
     {% endif %}
     <ul class="gen-compare" id="gen-queue">
       {% for item in gen_queue["items"] %}
-      <li class="note">
-        <b>{{ item.sku }}</b>
-        规格图 {{ item.note }}{% if item.generate %}（待出）{% else %}（跳过）{% endif %}
+      <li class="q-row {% if item.generate %}run{% else %}skip{% endif %}">
+        <span class="q-av" aria-hidden="true">{{ (item.sku or '?')[:1] }}</span>
+        <div class="q-body">
+          <div class="q-top"><b>{{ item.sku }}</b>{% if item.generate %}<em>待出</em>{% else %}<em class="muted">跳过</em>{% endif %}</div>
+          <small>{{ item.note }}</small>
+          {% if item.generate %}<i class="q-track" aria-hidden="true"><i></i></i>{% endif %}
+        </div>
       </li>
       {% else %}
       <li class="note">队列里没有待生成的商品。</li>
@@ -904,17 +911,20 @@
     {% endif %}
     </aside>
     <section class="studio-gallery">
-    <h3>出图列表</h3>
-    <p class="note">一页 10 条。右边只显示这件主图第 4 张白底图。没有这张，就不会拿原图或规格图来冒充。</p>
+    <div class="gallery-bar">
+      <h3>出图列表</h3>
+      <span>{% if gen_compare.total %}共 {{ gen_compare.total }} 张{% else %}暂无成图{% endif %}</span>
+    </div>
+    <p class="queue-note">每张卡片左边是原图，右边是生成后的白底主图。没有新图时不会拿原图冒充。</p>
     {% if gen_compare.total %}
     <p class="note">共 {{ gen_compare.total }} 条，第 {{ gen_compare.page }} / {{ gen_compare.pages }} 页</p>
     {% endif %}
     <ul class="gen-compare" id="gen-list">
       {% for item in gen_compare["items"] %}
-      <li>
+      <li class="shot-card">
         <div class="who">
           <b>{{ item.sku }}</b>
-          {% if item.status == 'running' %}正在出图{% elif item.fresh %}已换成新图{% elif item.status == 'done' %}还是原图{% else %}没出成{% endif %}
+          {% if item.status == 'running' %}<em class="run">生成中</em>{% elif item.fresh %}<em class="ok">完成</em>{% elif item.status == 'done' %}<em>原图</em>{% else %}<em class="bad">失败</em>{% endif %}
           {% if item.error %}<span class="error">{{ item.error }}</span>{% endif %}
         </div>
         <figure class="gen-shot">

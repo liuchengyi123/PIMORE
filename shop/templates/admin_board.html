@@ -49,6 +49,27 @@
   </div>
 </div>
 
+{% macro chart_svg(chart, solid=false) %}
+<svg class="trend-svg" viewBox="0 0 {{ chart.w }} {{ chart.h }}" role="img">
+  {% for grid in chart.grids %}
+  <line x1="{{ chart.plot_left }}" y1="{{ grid.y }}" x2="{{ chart.plot_right }}" y2="{{ grid.y }}" class="grid"></line>
+  <text x="{{ chart.plot_left - 8 }}" y="{{ grid.y + 3 }}" text-anchor="end" class="ytick">{{ grid.left }}</text>
+  {% if grid.right %}<text x="{{ chart.plot_right + 8 }}" y="{{ grid.y + 3 }}" class="ytick">{{ grid.right }}</text>{% endif %}
+  {% endfor %}
+  {% for bar in chart.bars %}
+  <rect x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar.w }}" height="{{ bar.h }}" rx="3" class="bar{% if solid %} solid{% endif %}"></rect>
+  {% endfor %}
+  {% if chart.show_line %}
+  <polyline points="{{ chart.poly }}" class="line"></polyline>
+  {% for dot in chart.dots %}
+  <circle cx="{{ dot.x }}" cy="{{ dot.y }}" r="3.4" class="dot"></circle>
+  {% endfor %}
+  {% endif %}
+  {% for dot in chart.dots if dot.show %}
+  <text x="{{ dot.x }}" y="{{ chart.h - 8 }}" text-anchor="middle" class="tick">{{ dot.label }}</text>
+  {% endfor %}
+</svg>
+{% endmacro %}
 <div class="zh-charts">
   <div class="card chart-card">
     <div class="chart-head">
@@ -59,43 +80,42 @@
       </div>
     </div>
     <div class="pad chart-pad">
-      {% set chart = board.chart %}
-      <svg class="trend-svg" viewBox="0 0 {{ chart.w }} {{ chart.h }}" role="img" aria-label="趋势图">
-        <line x1="8" y1="{{ chart.baseline }}" x2="{{ chart.w - 8 }}" y2="{{ chart.baseline }}" class="axis"></line>
-        {% for bar in chart.bars %}
-        <rect x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar.w }}" height="{{ bar.h }}" rx="4" class="bar"></rect>
-        {% endfor %}
-        {% if chart.poly %}
-        <polyline points="{{ chart.poly }}" class="line"></polyline>
-        {% for dot in chart.dots %}
-        <circle cx="{{ dot.x }}" cy="{{ dot.y }}" r="3.5" class="dot"></circle>
-        <text x="{{ dot.x }}" y="{{ chart.h - 6 }}" text-anchor="middle" class="tick">{{ dot.label }}</text>
-        {% endfor %}
-        {% endif %}
-      </svg>
-      {% if chart.empty %}<p class="muted chart-empty">这段还没有访问或成交，坐标轴已留好。</p>{% endif %}
+      {{ chart_svg(board.chart) }}
+      {% if board.chart.empty %}<p class="muted chart-empty">这段还没有访问或成交，坐标轴已留好。</p>{% endif %}
     </div>
   </div>
   <div class="card chart-card">
     <div class="chart-head">
       <h2>销售额分布</h2>
-      <div class="chart-legend"><span>按天</span></div>
+      <div class="chart-tabs" role="tablist">
+        <button type="button" class="on" data-dist="day">按天</button>
+        <button type="button" data-dist="week">按周</button>
+        <button type="button" data-dist="month">按月</button>
+      </div>
     </div>
     <div class="pad chart-pad">
-      {% set bars = board.bars %}
-      <svg class="trend-svg" viewBox="0 0 {{ bars.w }} {{ bars.h }}" role="img" aria-label="销售额分布">
-        <line x1="8" y1="{{ bars.baseline }}" x2="{{ bars.w - 8 }}" y2="{{ bars.baseline }}" class="axis"></line>
-        {% for bar in bars.bars %}
-        <rect x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar.w }}" height="{{ bar.h }}" rx="4" class="bar solid"></rect>
-        {% endfor %}
-        {% for dot in bars.dots %}
-        <text x="{{ dot.x }}" y="{{ bars.h - 6 }}" text-anchor="middle" class="tick">{{ dot.label }}</text>
-        {% endfor %}
-      </svg>
-      <p class="muted chart-note">柱高按当日支付金额。最高 {{ format_money(bars.max_bar, 'USD') }}。</p>
+      <div class="dist-pane" data-pane="day">{{ chart_svg(board.dist.day, true) }}</div>
+      <div class="dist-pane" data-pane="week" hidden>{{ chart_svg(board.dist.week, true) }}</div>
+      <div class="dist-pane" data-pane="month" hidden>{{ chart_svg(board.dist.month, true) }}</div>
+      <p class="muted chart-note">柱高按支付金额。按天最高 {{ format_money(board.dist.day.max_bar, 'USD') }}。</p>
     </div>
   </div>
 </div>
+<script>
+(function () {
+  var tabs = document.querySelectorAll(".chart-tabs button");
+  if (!tabs.length) return;
+  tabs.forEach(function (tab) {
+    tab.addEventListener("click", function () {
+      var key = tab.getAttribute("data-dist");
+      tabs.forEach(function (node) { node.classList.toggle("on", node === tab); });
+      document.querySelectorAll(".dist-pane").forEach(function (pane) {
+        pane.hidden = pane.getAttribute("data-pane") !== key;
+      });
+    });
+  });
+})();
+</script>
 
 <div class="card">
   <div class="chart-head">
