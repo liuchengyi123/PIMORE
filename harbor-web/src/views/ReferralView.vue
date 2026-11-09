@@ -2,10 +2,10 @@
   <div class="fn-page page" data-figma="M37">
     <header class="head">
       <button type="button" class="back" @click="$router.back()" aria-label="back"><ChevronLeft :size="22" :stroke-width="1.75" /></button>
-      <div><div class="title">邀请码</div><div class="sub">{{ code || 'Invite link' }}</div></div>
+      <div><div class="title">邀请码</div><div class="sub">{{ code || '还没有邀请码' }}</div></div>
     </header>
     <div class="card">
-      <div class="kicker">Referral code</div>
+      <div class="kicker">邀请码</div>
       <div class="code">{{ code || '—' }}</div>
       <p class="note">打开店铺领取页，把邀请绑定到账号。</p>
       <a v-if="code" class="btn coral" :href="shopPath('/r/' + encodeURIComponent(code))" target="_blank" rel="noopener">领取邀请</a>
@@ -37,7 +37,8 @@ const code = computed(() => String(route.query.code || route.params.code || ''))
 .shop { display: block; margin-top: 12px; text-align: center; color: $hb-forest; font-weight: 680; font-size: 13px; }
 
 .kicker { font-size: 11px; color: $hb-muted; letter-spacing: 1px; text-transform: uppercase; font-weight: 650; }
-.code { margin-top: 10px; font-size: 28px; font-weight: 780; color: $hb-forest; letter-spacing: 1px; }
+.code { margin-top: 10px; font-size: 28px; font-weight: 780; color: #F96141; letter-spacing: 1px; }
+.kicker { text-transform: none; letter-spacing: 0; }
 .note { margin-top: 10px; font-size: 13px; color: $hb-muted; line-height: 1.4; }
 
 .fn-page { --ink:#1C2430; --teal:#0E7490; --amber:#F96141; --sand:#FCFAF8; }

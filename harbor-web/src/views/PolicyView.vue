@@ -7,6 +7,7 @@
     <div class="tabs">
       <button type="button" class="tab" :class="{ on: kind === 'shipping' }" @click="switchKind('shipping')">物流</button>
       <button type="button" class="tab" :class="{ on: kind === 'privacy' }" @click="switchKind('privacy')">隐私</button>
+      <button type="button" class="tab" :class="{ on: kind === 'terms' }" @click="switchKind('terms')">条款</button>
     </div>
     <div v-if="loading" class="state">加载中…</div>
     <div v-for="(b, i) in blocks" :key="i" class="pd">
@@ -28,9 +29,9 @@ const blocks = ref<{ title: string; body: string }[]>([])
 const loading = ref(false)
 async function load() {
   loading.value = true
-  title.value = kind.value === 'privacy' ? '隐私政策' : '物流政策'
+  title.value = kind.value === 'privacy' ? '隐私政策' : kind.value === 'terms' ? '服务条款' : '物流政策'
   try {
-    const path = kind.value === 'privacy' ? '/policies/privacy' : '/policies/shipping'
+    const path = kind.value === 'privacy' ? '/policies/privacy' : kind.value === 'terms' ? '/policies/terms' : '/policies/shipping'
     blocks.value = parsePolicyBlocks(await fetchHtmlPath(path))
   } finally { loading.value = false }
 }
@@ -40,11 +41,11 @@ function switchKind(k: string) {
   load()
 }
 onMounted(() => {
-  kind.value = route.query.kind === 'privacy' ? 'privacy' : 'shipping'
+  kind.value = route.query.kind === 'privacy' ? 'privacy' : route.query.kind === 'terms' ? 'terms' : 'shipping'
   load()
 })
 watch(() => route.query.kind, (v) => {
-  kind.value = v === 'privacy' ? 'privacy' : 'shipping'
+  kind.value = v === 'privacy' ? 'privacy' : v === 'terms' ? 'terms' : 'shipping'
   load()
 })
 </script>
