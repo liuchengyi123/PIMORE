@@ -504,12 +504,15 @@ async function notifyMe() {
   display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
   box-shadow: 0 4px 14px rgba(28,36,48,0.12);
 }
-.thumbs { display: flex; gap: 8px; padding: 12px 16px 0; overflow-x: auto; }
-.thumbs button {
-  flex: 0 0 56px; width: 56px; height: 56px; padding: 0; border-radius: 12px;
-  border: 1.5px solid #E8E4DC; overflow: hidden; background: #F6F4F2; cursor: pointer;
+.thumbs {
+  display: flex; gap: 6px; padding: 6px 16px 0; overflow-x: auto; scrollbar-width: none;
 }
-.thumbs button.on { border: 2px solid #F96141; }
+.thumbs::-webkit-scrollbar { display: none; }
+.thumbs button {
+  flex: 0 0 48px; width: 48px; height: 48px; padding: 0; border-radius: 10px;
+  border: 1px solid #E6E1DA; overflow: hidden; background: #F6F4F2; cursor: pointer;
+}
+.thumbs button.on { border-color: #F96141; box-shadow: 0 0 0 1px #F96141; }
 .thumbs img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .body { padding: 16px 16px 8px; }
 .title { margin: 2px 0 0; font-size: 22px; line-height: 1.2; letter-spacing: -0.03em; font-weight: 800; }

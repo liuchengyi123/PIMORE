@@ -84,11 +84,11 @@ function retry() {
   min-height: calc(100vh - 180px); display: flex; flex-direction: column; align-items: center; justify-content: center;
   text-align: center; padding: 24px 12px 12px;
 }
-.wifi { width: 168px; height: 142px; }
-h1 { margin: 8px 0 0; font-size: 28px; letter-spacing: -0.03em; font-weight: 800; }
-p { margin: 10px 0 0; max-width: 280px; color: #8B919A; font-size: 14px; line-height: 1.5; }
+.wifi { width: 132px; height: 112px; }
+h1 { margin: 10px 0 0; font-size: 26px; letter-spacing: -0.03em; font-weight: 800; line-height: 1.15; }
+p { margin: 6px 0 0; max-width: 260px; color: #8B919A; font-size: 13px; line-height: 1.4; }
 .btn {
-  margin-top: 22px; min-width: 220px; height: 48px; border: 0; border-radius: 999px;
+  margin-top: 14px; width: min(100%, 260px); height: 46px; border: 0; border-radius: 999px;
   background: #F96141; color: #fff; font-weight: 750; font-size: 16px; cursor: pointer;
 }
 </style>
