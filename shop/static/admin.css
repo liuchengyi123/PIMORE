@@ -1769,13 +1769,17 @@ body.admin-launch .content {
 /* ZH admin — dashboard, orders, catalog, and the rest of the shell */
 body { background: #F4F6FB; color: #1C2430; }
 .work, .content { background: #F4F6FB; }
-.kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
 .kpi-card {
-  background: #fff; border: 1px solid #E8EAF0; border-radius: 16px;
-  padding: 16px; box-shadow: 0 8px 24px rgba(28,36,48,0.04);
+  background: #fff; border: 1px solid #E8EAF0; border-radius: 12px;
+  padding: 12px 14px; box-shadow: none; min-height: 0;
 }
+.kpi-card.compact { min-height: 0; padding: 10px 12px; }
 .kpi-label { color: #8B919A; font-size: 12px; font-weight: 650; }
-.kpi-val { display: block; margin-top: 6px; font-size: 28px; letter-spacing: -0.03em; color: #1C2430; }
+.kpi-val { display: block; margin-top: 2px; font-size: 22px; font-weight: 800; letter-spacing: -0.03em; color: #1C2430; }
+.kpi-card.compact .kpi-val { font-size: 18px; }
+.funnel-kpi { background: #fff; border: 1px solid #E8EAF0; padding: 10px 12px; }
+.funnel-kpi b { color: #F96141; font-size: 18px; }
 .ranges a { border-radius: 999px; }
 .ranges a.on { background: #F96141; color: #fff; }
 .content .btn, .content button[type="submit"] {
