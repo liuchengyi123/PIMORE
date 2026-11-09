@@ -288,7 +288,8 @@ input:focus, textarea:focus { outline: 2px solid rgba(224,82,46,0.35); border-co
   overflow: hidden;
   margin-bottom: 18px;
 }
-.product-card img { width: 100%; aspect-ratio: 1; object-fit: cover; background: #0b1612; display: block; }
+.product-card { background: #fff; border: 1px solid #E8EAF0; border-radius: 14px; overflow: hidden; }
+.product-card img { width: 100%; aspect-ratio: 1; object-fit: cover; background: #F4F6FB; display: block; }
 .product-card .body { padding: 10px 12px; display: grid; gap: 6px; }
 .product-card .price { color: var(--coral); font-weight: 700; }
 .empty-card { padding: 16px; color: var(--muted); }
@@ -379,10 +380,13 @@ input:focus, textarea:focus { outline: 2px solid rgba(224,82,46,0.35); border-co
 }
 .sku-opt:hover { border-color: var(--coral); }
 .sku-opt img { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; }
+.bubble-product, .bubble-order {
+  background: #fff; border: 1px solid #E8EAF0; border-radius: 12px; padding: 8px;
+}
 .bubble-product {
   display: grid; grid-template-columns: 64px 1fr; gap: 10px; align-items: center;
-  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 10px; padding: 8px; max-width: 280px;
+  background: #fff; border: 1px solid #E8EAF0;
+  border-radius: 12px; padding: 8px; max-width: 280px;
 }
 .bubble-product img { width: 64px; height: 64px; border-radius: 8px; object-fit: cover; }
 .bubble-product .tip { font-size: 11px; color: var(--coral); margin-top: 4px; }
@@ -391,8 +395,8 @@ input:focus, textarea:focus { outline: 2px solid rgba(224,82,46,0.35); border-co
 
 .bubble-order {
   display: flex; flex-direction: column; gap: 4px; max-width: 280px;
-  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 10px; padding: 10px;
+  background: #fff; border: 1px solid #E8EAF0;
+  border-radius: 12px; padding: 10px;
 }
 .bubble-order .ord-title { font-weight: 700; }
 .bubble-order .ord-status { color: var(--coral); font-size: 12px; font-weight: 650; }
@@ -425,7 +429,7 @@ input:focus, textarea:focus { outline: 2px solid rgba(224,82,46,0.35); border-co
   border-radius: 16px 16px 16px 4px;
 }
 .chat-bubble.staff {
-  background: #0F2744;
+  background: #F96141;
   color: #fff;
   border-radius: 16px 16px 4px 16px;
 }
