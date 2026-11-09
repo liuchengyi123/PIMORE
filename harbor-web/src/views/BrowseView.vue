@@ -2,7 +2,7 @@
   <div class="browse" data-figma="1:2">
     <header class="top">
       <div>
-        <div class="logo">Harbor <span>/ Pimo</span></div>
+        <div class="logo"><span class="ink">Harbor</span> <span class="slash">/</span> <span class="pimo">Pimo</span></div>
         <div class="tag">{{ zh ? '家居好物，照亮每一天' : 'HOME GOODS FOR A BRIGHTER EVERYDAY' }}</div>
       </div>
       <div class="tools">
@@ -21,7 +21,7 @@
     <div class="chips">
       <button type="button" class="chip" :class="{ on: !activeCat }" @click="pick('')"><Home :size="14" /> {{ zh ? '全部' : 'All' }}</button>
       <button v-for="c in chips" :key="c.id" type="button" class="chip" :class="{ on: activeCat === c.id }" @click="pick(c.id)">
-        {{ zh ? c.zh : c.label }}
+        <component :is="c.icon" :size="14" /> {{ zh ? c.zh : c.label }}
       </button>
     </div>
 
@@ -33,12 +33,12 @@
       <article v-for="(item, i) in shown" :key="item.sku" class="card">
         <div class="shot" @click="open(item, i)">
           <img :src="item.image" alt="" />
-          <button type="button" class="heart" aria-label="Save" @click.stop="wish(item)">♡</button>
+          <button type="button" class="heart" aria-label="Save" @click.stop="wish(item)"><Heart :size="16" :stroke-width="1.75" /></button>
         </div>
         <div class="nm" @click="open(item, i)">{{ item.name }}</div>
         <div class="cat">{{ item.cat }}</div>
         <div class="pr">
-          <b>{{ money(item.price) }}</b>
+          <b>{{ priceLabel(item.price) }}</b>
           <button type="button" class="add" @click.stop="add(item)">{{ zh ? '加入' : 'Add' }} +</button>
         </div>
       </article>
@@ -50,7 +50,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Home, Search, ShoppingBag } from 'lucide-vue-next'
+import { Bath, Bed, Coffee, Heart, Home, Lamp, Search, ShoppingBag } from 'lucide-vue-next'
 import { listByCategory, money, type Product } from '@/api/products'
 import { useI18n } from '@/composables/i18n'
 import { useCart } from '@/composables/cart'
@@ -74,11 +74,15 @@ const activeCat = ref('')
 const loading = ref(false)
 
 const chips = [
-  { id: 'bedding', label: 'Bedding', zh: '床品' },
-  { id: 'decor', label: 'Decor', zh: '装饰' },
-  { id: 'kitchen', label: 'Kitchen', zh: '厨房' },
-  { id: 'bath', label: 'Bath', zh: '卫浴' },
+  { id: 'bedding', label: 'Bedding', zh: '床品', icon: Bed },
+  { id: 'decor', label: 'Decor', zh: '装饰', icon: Lamp },
+  { id: 'kitchen', label: 'Kitchen', zh: '厨房', icon: Coffee },
+  { id: 'bath', label: 'Bath', zh: '卫浴', icon: Bath },
 ]
+function priceLabel(n: number) {
+  if (!Number.isFinite(n)) return '$0'
+  return Number.isInteger(n) ? `$${n}` : money(n)
+}
 
 const catalog = [
   { sku: 'stoneware-mug', name: 'Stoneware Mug', cat: 'Kitchen', price: 8, image: b1 },
@@ -145,8 +149,10 @@ onMounted(() => {
   font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 .top { display: flex; justify-content: space-between; align-items: flex-start; }
-.logo { font-size: 24px; font-weight: 800; letter-spacing: -0.04em; }
-.logo span { color: #F96141; }
+.logo { font-size: 22px; font-weight: 800; letter-spacing: -0.04em; }
+.logo .ink { color: #1C2430; }
+.logo .slash { color: #C5C9CE; font-weight: 600; margin: 0 2px; }
+.logo .pimo { color: #F96141; }
 .tag { margin-top: 2px; font-size: 10px; letter-spacing: 0.08em; color: #9AA0A8; font-weight: 650; }
 .tools { display: flex; gap: 14px; align-items: center; color: #1C2430; }
 .bag { position: relative; }
@@ -156,6 +162,7 @@ onMounted(() => {
   display: flex; align-items: center; justify-content: center;
 }
 .search-wrap { margin-top: 12px; }
+.search-wrap :deep(.search-bar) { border-radius: 999px; background: #F6F4F2; border: 0; box-shadow: none; min-height: 44px; }
 .chips { display: flex; gap: 8px; overflow-x: auto; margin-top: 14px; scrollbar-width: none; }
 .chips::-webkit-scrollbar { display: none; }
 .chip {
@@ -170,8 +177,9 @@ h1 { margin: 18px 0 0; font-size: 24px; letter-spacing: -0.03em; }
 .shot { position: relative; border-radius: 16px; overflow: hidden; background: #F6F3F0; aspect-ratio: 1.05; cursor: pointer; box-shadow: 0 8px 20px rgba(28,36,48,0.05); }
 .shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .heart {
-  position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; border: 0; border-radius: 99px;
-  background: rgba(255,255,255,0.92); color: #1C2430; cursor: pointer;
+  position: absolute; top: 8px; right: 8px; width: 32px; height: 32px; border: 0; border-radius: 99px;
+  background: rgba(255,255,255,0.94); color: #1C2430; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
 }
 .nm { margin-top: 8px; font-size: 14px; font-weight: 750; }
 .cat { margin-top: 2px; font-size: 12px; color: #9AA0A8; }

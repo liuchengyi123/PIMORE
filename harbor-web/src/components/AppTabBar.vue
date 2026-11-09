@@ -35,8 +35,8 @@ const tabs = computed(() => {
     return [
       { id: 'home' as const, label: t('tab_home'), path: '/home', icon: Home },
       { id: 'browse' as const, label: t('tab_browse'), path: '/browse', icon: Compass },
-      { id: 'wishlist' as const, label: 'Wishlist', path: '/wishlist', icon: Heart },
-      { id: 'me' as const, label: 'Profile', path: '/me', icon: UserRound },
+      { id: 'wishlist' as const, label: t('wishlist_title'), path: '/wishlist', icon: Heart },
+      { id: 'me' as const, label: t('tab_me'), path: '/me', icon: UserRound },
     ]
   }
   return [
