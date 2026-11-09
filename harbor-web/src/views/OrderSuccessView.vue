@@ -12,7 +12,7 @@
     <div class="hero">
       <span class="confetti c1" /><span class="confetti c2" /><span class="confetti c3" />
       <span class="confetti c4" /><span class="confetti c5" /><span class="confetti c6" />
-      <div class="ok" aria-hidden="true"><Check :size="36" :stroke-width="2.75" /></div>
+      <div class="ok" aria-hidden="true"><Check :size="30" :stroke-width="2.75" /></div>
       <h1>{{ zh ? '支付成功' : 'Order placed!' }}</h1>
       <p class="sub">{{ zh ? '感谢购买，订单已收到，正在安排发货。' : 'Thanks for your purchase! Your order has been received and is on its way.' }}</p>
       <div v-if="orderId" class="pill">
@@ -110,52 +110,52 @@ onMounted(async () => {
 @import '@/styles/theme.scss';
 .page {
   min-height: 100vh; background: #FFF9F6; color: $hb-ink; position: relative; overflow: hidden;
-  padding: calc(14px + env(safe-area-inset-top)) 20px 150px; text-align: center;
+  padding: calc(8px + env(safe-area-inset-top)) 16px 96px; text-align: center;
 }
-.head { display: grid; grid-template-columns: 36px 1fr 36px; align-items: start; }
+.head { display: grid; grid-template-columns: 32px 1fr 32px; align-items: start; }
 .brand { grid-column: 2; }
 .mark {
-  width: 28px; height: 28px; margin: 0 auto 2px; border-radius: 8px; background: $hb-coral; color: #fff;
+  width: 24px; height: 24px; margin: 0 auto 1px; border-radius: 7px; background: $hb-coral; color: #fff;
   display: grid; place-items: center;
 }
-.brand b { display: block; color: $hb-coral; font-size: 26px; font-weight: 800; letter-spacing: -0.04em; line-height: 1; }
-.brand small { display: block; margin-top: 4px; color: $hb-muted; font-size: 10px; letter-spacing: 0.12em; font-weight: 700; }
-.bag { grid-column: 3; color: $hb-ink; display: grid; place-items: center; height: 36px; }
-.hero { position: relative; margin-top: 28px; }
+.brand b { display: block; color: $hb-coral; font-size: 22px; font-weight: 800; letter-spacing: -0.04em; line-height: 1; }
+.brand small { display: block; margin-top: 2px; color: $hb-muted; font-size: 9px; letter-spacing: 0.12em; font-weight: 700; }
+.bag { grid-column: 3; color: $hb-ink; display: grid; place-items: center; height: 28px; }
+.hero { position: relative; margin-top: 14px; }
 .ok {
-  width: 84px; height: 84px; margin: 0 auto 16px; border-radius: 50%; background: $hb-coral; color: #fff;
-  display: grid; place-items: center; box-shadow: 0 12px 28px rgba(249, 97, 65, 0.35);
+  width: 68px; height: 68px; margin: 0 auto 8px; border-radius: 50%; background: $hb-coral; color: #fff;
+  display: grid; place-items: center; box-shadow: 0 8px 18px rgba(249, 97, 65, 0.32);
   position: relative; z-index: 1;
 }
-h1 { margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.03em; position: relative; z-index: 1; }
-.sub { margin: 10px auto 0; max-width: 32ch; color: #5C6570; font-size: 14px; line-height: 1.5; position: relative; z-index: 1; }
+h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; position: relative; z-index: 1; }
+.sub { margin: 6px auto 0; max-width: 30ch; color: #5C6570; font-size: 13px; line-height: 1.35; position: relative; z-index: 1; }
 .pill {
-  position: relative; z-index: 1; display: inline-flex; flex-direction: column; margin-top: 16px;
-  background: #FFF1EC; color: $hb-coral; border-radius: 999px; padding: 8px 22px;
+  position: relative; z-index: 1; display: inline-flex; flex-direction: column; margin-top: 10px;
+  background: #FFF1EC; color: $hb-coral; border-radius: 999px; padding: 5px 16px;
 }
-.pill span { font-size: 10px; letter-spacing: 0.12em; font-weight: 750; }
-.pill b { font-size: 16px; }
+.pill span { font-size: 9px; letter-spacing: 0.12em; font-weight: 750; line-height: 1.2; }
+.pill b { font-size: 14px; line-height: 1.2; }
 .card {
-  position: relative; z-index: 1; margin-top: 18px; background: #fff; border-radius: 18px;
-  padding: 14px; text-align: left; box-shadow: $hb-shadow-soft;
+  position: relative; z-index: 1; margin-top: 12px; background: #fff; border-radius: 16px;
+  padding: 10px 12px 4px; text-align: left; box-shadow: $hb-shadow-soft;
 }
-.kicker { font-size: 11px; letter-spacing: 0.12em; color: $hb-muted; font-weight: 750; margin-bottom: 6px; }
+.kicker { font-size: 10px; letter-spacing: 0.12em; color: $hb-muted; font-weight: 750; margin-bottom: 2px; }
 .line {
-  display: flex; align-items: center; gap: 12px; padding: 10px 0; color: inherit; text-decoration: none;
+  display: flex; align-items: center; gap: 10px; padding: 7px 0; color: inherit; text-decoration: none;
 }
 .line + .line { border-top: 1px solid $hb-line; }
 .bubble {
-  width: 36px; height: 36px; border-radius: 50%; background: $hb-coral-soft; color: $hb-coral;
+  width: 30px; height: 30px; border-radius: 50%; background: $hb-coral-soft; color: $hb-coral;
   display: grid; place-items: center; flex: 0 0 auto;
 }
 .copy { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.copy small { color: $hb-muted; font-size: 10px; letter-spacing: 0.08em; font-weight: 750; }
-.copy b { font-size: 15px; margin-top: 2px; }
-.copy em { font-style: normal; color: $hb-muted; font-size: 12px; margin-top: 2px; }
+.copy small { color: $hb-muted; font-size: 9px; letter-spacing: 0.08em; font-weight: 750; line-height: 1.2; }
+.copy b { font-size: 14px; margin-top: 1px; line-height: 1.2; }
+.copy em { font-style: normal; color: $hb-muted; font-size: 11px; margin-top: 1px; line-height: 1.2; }
 .line :deep(svg:last-child), .line > svg:last-child { color: $hb-muted; }
 .btn {
-  position: relative; z-index: 1; margin-top: 14px; height: 52px; border-radius: 999px; background: $hb-coral; color: #fff;
-  display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 750; text-decoration: none;
+  position: relative; z-index: 1; margin-top: 8px; height: 46px; border-radius: 999px; background: $hb-coral; color: #fff;
+  display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 750; font-size: 15px; text-decoration: none;
 }
 .btn.ghost { background: #fff; color: $hb-coral; border: 1.5px solid $hb-coral; }
 .confetti { position: absolute; width: 10px; height: 16px; border-radius: 2px; }
@@ -166,13 +166,13 @@ h1 { margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.03em; posi
 .c5 { left: 10%; top: 70px; background: #FFD3C6; transform: rotate(40deg); }
 .c6 { right: 8%; top: 78px; background: #F7B7A8; transform: rotate(-36deg); }
 .waves {
-  position: absolute; left: 0; right: 0; bottom: 0; height: 120px; pointer-events: none;
+  position: absolute; left: 0; right: 0; bottom: 0; height: 84px; pointer-events: none;
   background:
     radial-gradient(80% 90% at 15% 120%, #FFE4DA 0%, transparent 70%),
     radial-gradient(70% 90% at 85% 130%, #FFD0C2 0%, transparent 68%);
 }
 .waves p {
-  position: absolute; right: 22px; bottom: 28px; margin: 0; color: $hb-coral;
-  font-family: "Segoe Script", "Comic Sans MS", cursive; font-size: 16px; transform: rotate(-8deg);
+  position: absolute; right: 16px; bottom: 16px; margin: 0; color: $hb-coral;
+  font-family: "Segoe Script", "Comic Sans MS", cursive; font-size: 14px; transform: rotate(-8deg);
 }
 </style>

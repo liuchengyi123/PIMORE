@@ -8,13 +8,13 @@
     </header>
 
     <div class="brand">
-      <span class="mark" aria-hidden="true"><Home :size="18" :stroke-width="2.25" /></span>
+      <span class="mark" aria-hidden="true"><Home :size="15" :stroke-width="2.25" /></span>
       <b>Harbor</b>
       <p>{{ zh ? '跨境家居，更好价格。' : 'Everyday home goods. Better value.' }}</p>
     </div>
 
     <section class="bal">
-      <span class="wallet"><Wallet :size="20" :stroke-width="1.75" /></span>
+      <span class="wallet"><Wallet :size="18" :stroke-width="1.75" /></span>
       <div>
         <div class="k">{{ zh ? '可提现余额' : 'Available balance' }}</div>
         <div class="v">{{ balance }}</div>
@@ -40,7 +40,7 @@
         <span class="radio" :class="{ on: method === 'paypal' }" />
       </button>
       <button type="button" class="opt" :class="{ on: method === 'bank' }" @click="method = 'bank'">
-        <span class="bank"><Landmark :size="18" :stroke-width="1.75" /></span>
+        <span class="bank"><Landmark :size="16" :stroke-width="1.75" /></span>
         <span class="copy"><b>{{ zh ? '银行转账' : 'Bank transfer' }}</b><small>{{ zh ? '通常 1–3 个工作日' : 'Typically takes 1–3 business days' }}</small></span>
         <span class="radio" :class="{ on: method === 'bank' }" />
       </button>
@@ -51,7 +51,7 @@
     </div>
 
     <section class="note">
-      <Info :size="16" :stroke-width="1.75" />
+      <Info :size="15" :stroke-width="1.75" />
       <div>
         <b>{{ zh ? '提现说明' : 'Withdrawal note' }}</b>
         <p>{{ noteText }}</p>
@@ -140,71 +140,72 @@ async function submit() {
 @import '@/styles/theme.scss';
 .page {
   min-height: 100vh; background: $hb-paper; color: $hb-ink;
-  padding: calc(8px + env(safe-area-inset-top)) 16px 28px;
+  padding: calc(6px + env(safe-area-inset-top)) 16px 20px;
 }
-.head { display: grid; grid-template-columns: 36px 1fr 36px; align-items: center; margin-bottom: 8px; }
-.back { width: 36px; height: 36px; border: 0; background: transparent; color: $hb-ink; cursor: pointer; display: grid; place-items: center; }
-h1 { margin: 0; text-align: center; font-size: 18px; font-weight: 800; }
-.brand { text-align: center; margin: 8px 0 16px; }
+.head { display: grid; grid-template-columns: 32px 1fr 32px; align-items: center; margin-bottom: 2px; }
+.back { width: 32px; height: 32px; border: 0; background: transparent; color: $hb-ink; cursor: pointer; display: grid; place-items: center; }
+h1 { margin: 0; text-align: center; font-size: 17px; font-weight: 800; line-height: 1.2; }
+.brand { text-align: center; margin: 2px 0 10px; }
 .mark {
-  width: 36px; height: 36px; margin: 0 auto 4px; border-radius: 10px; background: $hb-coral; color: #fff;
+  width: 28px; height: 28px; margin: 0 auto 2px; border-radius: 8px; background: $hb-coral; color: #fff;
   display: grid; place-items: center;
 }
-.brand b { color: $hb-coral; font-size: 28px; letter-spacing: -0.04em; }
-.brand p { margin: 4px 0 0; color: $hb-muted; font-size: 13px; }
+.brand b { color: $hb-coral; font-size: 24px; letter-spacing: -0.04em; line-height: 1; }
+.brand p { margin: 2px 0 0; color: $hb-muted; font-size: 12px; line-height: 1.3; }
 .bal {
-  display: flex; align-items: center; gap: 12px; background: $hb-coral-soft; border-radius: 18px; padding: 16px;
+  display: flex; align-items: center; gap: 10px; background: #FFF1EC; border-radius: 14px; padding: 10px 12px;
 }
 .wallet {
-  width: 48px; height: 48px; border-radius: 16px; background: #fff; color: $hb-coral;
+  width: 40px; height: 40px; border-radius: 12px; background: #fff; color: $hb-coral;
   display: grid; place-items: center; flex: 0 0 auto;
 }
-.k { font-size: 13px; color: #5C6570; }
-.v { font-size: 28px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; }
-.need { margin: 2px 0 0; font-size: 12px; color: $hb-muted; }
-.block { display: block; margin-top: 16px; }
-.lab { display: block; font-size: 15px; font-weight: 800; margin-bottom: 8px; }
-.sub { margin: -4px 0 8px; color: $hb-muted; font-size: 12px; }
+.k { font-size: 12px; color: #5C6570; line-height: 1.2; }
+.v { font-size: 24px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; }
+.need { margin: 1px 0 0; font-size: 11px; color: $hb-muted; line-height: 1.3; }
+.block { display: block; margin-top: 12px; }
+.lab { display: block; font-size: 14px; font-weight: 800; margin-bottom: 6px; line-height: 1.2; }
+.sub { margin: 0 0 6px; color: $hb-muted; font-size: 11px; line-height: 1.3; }
 .amt {
-  display: flex; align-items: center; gap: 8px; height: 48px; padding: 0 12px;
-  background: #fff; border: 1px solid $hb-line; border-radius: 14px;
+  display: flex; align-items: center; gap: 8px; height: 42px; padding: 0 12px;
+  background: #fff; border: 1px solid $hb-line; border-radius: 12px;
 }
 .cur { color: $hb-muted; font-weight: 700; }
-.amt input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font-size: 15px; color: $hb-ink; }
-.range { color: $hb-muted; font-size: 12px; white-space: nowrap; }
+.amt input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font-size: 14px; color: $hb-ink; }
+.range { color: $hb-muted; font-size: 11px; white-space: nowrap; }
 .opt {
-  width: 100%; margin-top: 8px; border: 1.5px solid $hb-line; background: #fff; border-radius: 14px;
-  padding: 12px; display: flex; align-items: center; gap: 10px; text-align: left; cursor: pointer; color: $hb-ink;
+  width: 100%; margin-top: 6px; border: 1.5px solid $hb-line; background: #fff; border-radius: 12px;
+  padding: 8px 10px; display: flex; align-items: center; gap: 8px; text-align: left; cursor: pointer; color: $hb-ink;
+  min-height: 48px;
 }
 .opt.on { border-color: $hb-coral; background: #FFF8F5; }
-.copy { flex: 1; display: flex; flex-direction: column; }
-.copy b { font-size: 14px; }
-.copy small { color: $hb-muted; font-size: 12px; margin-top: 2px; }
+.copy { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.copy b { font-size: 13.5px; line-height: 1.2; }
+.copy small { color: $hb-muted; font-size: 11px; margin-top: 1px; line-height: 1.2; }
 .pp, .bank {
-  width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; flex: 0 0 auto;
-  background: #F4F7FB; color: #003087; font-weight: 800;
+  width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; flex: 0 0 auto;
+  background: #F4F7FB; color: #003087; font-weight: 800; font-size: 13px;
 }
 .bank { color: $hb-ink; }
 .radio {
-  width: 18px; height: 18px; border-radius: 50%; border: 2px solid #D9D3CB; box-sizing: border-box;
+  width: 16px; height: 16px; border-radius: 50%; border: 2px solid #D9D3CB; box-sizing: border-box; flex: 0 0 auto;
 }
 .radio.on { border-color: $hb-coral; background: $hb-coral; box-shadow: inset 0 0 0 3px #fff; }
-.acct { display: block; margin-top: 10px; }
-.acct span { display: block; font-size: 12px; color: $hb-muted; font-weight: 650; margin-bottom: 6px; }
+.acct { display: block; margin-top: 8px; }
+.acct span { display: block; font-size: 11px; color: $hb-muted; font-weight: 650; margin-bottom: 4px; }
 .acct input {
-  width: 100%; height: 44px; border-radius: 12px; border: 1px solid $hb-line; padding: 0 12px;
+  width: 100%; height: 40px; border-radius: 12px; border: 1px solid $hb-line; padding: 0 12px;
   background: #fff; color: $hb-ink; font-size: 14px;
 }
 .note {
-  margin-top: 14px; background: $hb-coral-soft; border-radius: 16px; padding: 12px; display: flex; gap: 8px; color: $hb-coral;
+  margin-top: 10px; background: #FFF1EC; border-radius: 14px; padding: 10px; display: flex; gap: 8px; color: $hb-coral;
 }
-.note b { display: block; font-size: 13px; }
-.note p { margin: 4px 0 0; color: #5C6570; font-size: 12px; line-height: 1.45; }
-.msg { margin: 12px 0 0; font-size: 13px; color: $hb-success; }
+.note b { display: block; font-size: 12.5px; line-height: 1.2; }
+.note p { margin: 2px 0 0; color: #5C6570; font-size: 11.5px; line-height: 1.35; }
+.msg { margin: 8px 0 0; font-size: 13px; color: $hb-success; }
 .msg.bad { color: #B91C1C; }
 .cta {
-  width: 100%; height: 52px; margin-top: 16px; border: 0; border-radius: 14px; background: $hb-coral; color: #fff;
-  font-size: 16px; font-weight: 750; cursor: pointer;
+  width: 100%; height: 46px; margin-top: 12px; border: 0; border-radius: 12px; background: $hb-coral; color: #fff;
+  font-size: 15px; font-weight: 750; cursor: pointer;
 }
 .cta:disabled { opacity: 0.55; }
 </style>
