@@ -45,10 +45,10 @@
           <div class="oid">{{ displayId(o.id) }}</div>
           <div class="status-wrap">
             <div class="status" :class="tone(o)">
-              <component :is="toneIcon(o)" :size="14" :stroke-width="2.2" />
+              <component :is="toneIcon(o)" :size="12" :stroke-width="2.2" />
               <span>{{ statusText(o) }}</span>
             </div>
-            <ChevronRight :size="18" :stroke-width="2" class="chev" />
+            <ChevronRight :size="16" :stroke-width="2" class="chev" />
           </div>
         </div>
         <div class="sub">{{ metaLine(o) }}</div>
@@ -241,38 +241,39 @@ h1 { margin: 18px 0 0; font-size: 28px; font-weight: 800; letter-spacing: -0.03e
   white-space: nowrap;
   &.on { background: #F96141; color: #fff; }
 }
-.list { display: flex; flex-direction: column; gap: 14px; padding: 4px 16px 0; }
+.list { display: flex; flex-direction: column; gap: 10px; padding: 0 16px; }
 .card {
-  background: #fff; border-radius: 22px; padding: 16px 16px 14px;
-  box-shadow: 0 10px 28px rgba(28, 36, 48, 0.06); cursor: pointer;
+  background: #fff; border-radius: 16px; padding: 12px 12px 10px;
+  box-shadow: 0 6px 16px rgba(28, 36, 48, 0.05); cursor: pointer;
 }
-.top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.oid { font-size: 17px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.2; }
-.status-wrap { display: inline-flex; align-items: center; gap: 2px; flex: 0 0 auto; }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.oid { font-size: 15px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; }
+.status-wrap { display: inline-flex; align-items: center; gap: 1px; flex: 0 0 auto; }
 .status {
-  display: inline-flex; align-items: center; gap: 5px; height: 28px; padding: 0 12px;
-  border-radius: 999px; font-size: 13px; font-weight: 700; letter-spacing: -0.01em;
+  display: inline-flex; align-items: center; gap: 3px; height: 24px; padding: 0 8px;
+  border-radius: 999px; font-size: 12px; font-weight: 700; letter-spacing: -0.01em;
   background: #FFF1EC; color: #F96141;
 }
 .status.paid { background: #E7F8EE; color: #1B9A52; }
 .status.return { background: #F3F4F6; color: #8B919A; }
 .chev { color: #C5CAD1; flex: 0 0 auto; }
-.sub { margin-top: 6px; font-size: 13px; line-height: 1.3; color: #9AA1A9; }
-.body { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 14px; }
-.thumbs { display: flex; gap: 10px; min-width: 0; }
+.sub { margin-top: 2px; font-size: 12px; line-height: 1.2; color: #9AA1A9; }
+.body { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; }
+.thumbs { display: flex; gap: 6px; min-width: 0; }
 .thumbs img, .ph {
-  width: 68px; height: 68px; border-radius: 14px; object-fit: cover; background: #F6F1EC; flex: 0 0 auto;
+  width: 56px; height: 56px; border-radius: 10px; object-fit: cover; background: #F6F1EC; flex: 0 0 auto;
 }
-.ph { display: flex; align-items: flex-end; padding: 8px; color: #8B919A; font-size: 12px; font-weight: 700; }
+.ph { display: flex; align-items: flex-end; padding: 6px; color: #8B919A; font-size: 11px; font-weight: 700; }
 .sum { text-align: right; flex: 0 0 auto; }
-.sum-lab { font-size: 12px; line-height: 1.2; color: #9AA1A9; }
-.price { margin-top: 4px; font-size: 22px; font-weight: 800; letter-spacing: -0.04em; line-height: 1; color: #1C2430; }
-.actions { display: flex; justify-content: flex-end; margin-top: 12px; }
+.sum-lab { font-size: 11px; line-height: 1.15; color: #9AA1A9; }
+.price { margin-top: 2px; font-size: 18px; font-weight: 800; letter-spacing: -0.03em; line-height: 1; color: #1C2430; }
+.actions { display: flex; justify-content: flex-end; margin-top: 8px; }
 .btn {
-  height: 40px; padding: 0 22px; border: 0; border-radius: 999px; background: #F96141; color: #fff;
-  font-size: 15px; font-weight: 700; letter-spacing: -0.01em; cursor: pointer; text-decoration: none;
+  height: 32px; padding: 0 14px; border: 0; border-radius: 999px; background: #F96141; color: #fff;
+  font-size: 13px; font-weight: 700; letter-spacing: -0.01em; cursor: pointer; text-decoration: none;
   display: inline-flex; align-items: center;
 }
+.blank .btn, .state .btn { height: 40px; padding: 0 22px; font-size: 15px; }
 .state { text-align: center; color: #8B919A; padding: 48px 16px; }
 .state .btn { margin-top: 12px; }
 .blank {
