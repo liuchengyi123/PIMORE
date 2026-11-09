@@ -315,16 +315,13 @@ function renderRooms() {
       const preview = r.last_body || r.last_message || r.preview || (r.current && (r.current.name || r.current.sku)) || '未关联商品';
       const badge = unread > 0 ? `<span class="unread-dot">${unread > 99 ? '99+' : unread}</span>` : '';
       const ai = Number(r.ai_mode || 0) === 1;
-      const statusClass = r.status === 'closed' ? '' : ai ? 'ai' : 'open';
-      const statusLabel = r.status === 'closed' ? '已关闭' : ai ? 'AI' : '进行中';
+      const flag = r.status === 'closed'
+        ? '<span class="room-status">已关闭</span>'
+        : (ai ? '<span class="room-status ai">AI</span>' : '');
       const initial = String(title).trim().slice(0, 1) || '访';
-      return `<button type="button" class="room-item ${active}" data-id="${esc(r.id)}"><span class="avatar">${esc(initial)}</span><span class="room-main"><span class="row"><span class="name">${esc(title)}</span><span class="time">${esc(shortTime(r.updated_at))}</span></span><span class="row"><span class="preview">${esc(preview)}</span>${badge}</span><span class="room-status ${statusClass}">${statusLabel}</span></span></button>`;
+      return `<button type="button" class="room-item ${active}" data-id="${esc(r.id)}"><span class="avatar">${esc(initial)}</span><span class="room-main"><span class="row"><span class="name">${esc(title)}</span>${flag}<span class="time">${esc(shortTime(r.updated_at))}</span></span><span class="row"><span class="preview">${esc(preview)}</span>${badge}</span></span></button>`;
     })
     .join('') + (more > 0 ? `<div class="page-more muted small">还有 ${more} 个会话</div>` : '');
-  roomList.querySelectorAll('.room-item .avatar').forEach((el) => {
-    const name = el.parentElement && el.parentElement.querySelector('.name');
-    paintAvatar(el, name ? name.textContent : el.textContent);
-  });
 }
 
 
