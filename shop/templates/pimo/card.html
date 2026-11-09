@@ -1,0 +1,30 @@
+{% from "shot.html" import shot %}
+<article class="pimo-card">
+  <div class="pimo-card-media">
+    <a href="{{ href('/p/' ~ item.sku, country) }}">
+      <img src="{{ shot(item.image) }}" alt="" width="480" height="480" {% if eager %}fetchpriority="high"{% else %}loading="lazy"{% endif %} decoding="async">
+    </a>
+    {% if currency == 'USD' and item.price_cents and item.price_cents <= 1000 %}
+    <span class="pimo-band">$1–$10</span>
+    {% elif item.off_pct %}
+    <span class="pimo-band">-{{ item.off_pct }}%</span>
+    {% endif %}
+    <form class="pimo-add" method="post" action="/cart/add">
+      <input type="hidden" name="sku" value="{{ item.sku }}">
+      <input type="hidden" name="qty" value="1">
+      <input type="hidden" name="country" value="{{ country }}">
+      <input type="hidden" name="ajax" value="1">
+      <button type="submit" aria-label="{{ t.cart }}">
+        <span class="pimo-plus" aria-hidden="true">+</span>
+        <span class="pimo-bag" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12l-1 12H7L6 7z"/><path d="M9 7V6a3 3 0 0 1 6 0v1"/></svg>
+        </span>
+      </button>
+    </form>
+  </div>
+  <a class="pimo-card-body" href="{{ href('/p/' ~ item.sku, country) }}">
+    <h3>{{ item.name }}</h3>
+    <p class="pimo-price"><b>{{ item.price }}</b>{% if item.original and item.higher %}<s>{{ item.original }}</s>{% endif %}</p>
+    <p class="pimo-stars" aria-hidden="true"><span>★★★★☆</span></p>
+  </a>
+</article>

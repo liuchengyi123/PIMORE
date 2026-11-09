@@ -15,8 +15,11 @@
 </script>
 {% if products %}<link rel="preload" as="image" href="{{ shot(products[0].image) }}" fetchpriority="high">{% endif %}
 {% endblock %}
-{% block body_class %} fn-home-page{% endblock %}
+{% block body_class %} fn-home-page{% if storefront_theme == 'pimo' %} is-pimo-home{% endif %}{% endblock %}
 {% block body %}
+{% if storefront_theme == 'pimo' %}
+{% include "pimo/home.html" %}
+{% else %}
 {% set dept_keys = ['kitchen', 'cleaning', 'storage', 'pet', 'tableware', 'textile', 'decor', 'office', 'personal', 'paper'] %}
 {% set icon_bg = { 'kitchen':'#EFEAE2','cleaning':'#EFEAE2','storage':'#EFEAE2','pet':'#EFEAE2','tableware':'#EFEAE2','textile':'#EFEAE2','decor':'#EFEAE2','office':'#EFEAE2','personal':'#EFEAE2','paper':'#EFEAE2' } %}
 
@@ -317,4 +320,5 @@
 })();
 </script>
 
+{% endif %}
 {% endblock %}

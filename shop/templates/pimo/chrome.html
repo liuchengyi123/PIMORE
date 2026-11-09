@@ -1,0 +1,42 @@
+{% set flag = {
+  'US':'🇺🇸','CA':'🇨🇦','MX':'🇲🇽','BR':'🇧🇷','GB':'🇬🇧','UK':'🇬🇧','DE':'🇩🇪','FR':'🇫🇷','ES':'🇪🇸','PT':'🇵🇹',
+  'JP':'🇯🇵','KR':'🇰🇷','CN':'🇨🇳','TW':'🇹🇼','HK':'🇭🇰','AU':'🇦🇺','IT':'🇮🇹','NL':'🇳🇱'
+}.get(country, '') %}
+<header class="pimo-head">
+  <div class="pimo-head-inner">
+    <a class="pimo-logo" href="{{ href('/', country) }}">
+      <span class="pimo-mark" aria-hidden="true">
+        <span class="pimo-mark-p">P</span>
+        <svg class="pimo-mark-house" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.2 12 4l8 7.2V20a1 1 0 0 1-1 1h-5.2v-6.2H10.2V21H5a1 1 0 0 1-1-1v-8.8z"/></svg>
+      </span>
+      <span class="pimo-word">
+        <strong>Pimo</strong>
+        <small>{% if lang == 'en' %}Better Homes. Happier Days.{% else %}{{ t.free_ship_badge }}{% endif %}</small>
+      </span>
+    </a>
+    <nav class="pimo-nav" aria-label="{{ t.home }}">
+      <a class="{% if request.url.path == '/' %}on{% endif %}" href="{{ href('/', country) }}" {% if request.url.path == '/' %}aria-current="page"{% endif %}>Home</a>
+      <a class="{% if request.url.path == '/categories' or request.url.path.startswith('/c/') %}on{% endif %}" href="{{ href('/categories', country) }}">Browse</a>
+      <a class="{% if request.url.path == '/sale' %}on{% endif %}" href="{{ href('/sale', country) }}">Sale</a>
+      <a class="{% if request.url.path == '/flash' %}on{% endif %}" href="{{ href('/flash', country) }}">Flash</a>
+      <a class="{% if request.url.path == '/new' %}on{% endif %}" href="{{ href('/new', country) }}">New</a>
+    </nav>
+    <form class="pimo-search" action="{{ href('/search', country) }}" method="get" role="search">
+      <span class="pimo-search-ico" aria-hidden="true">
+        <span class="pimo-search-emoji">🔍</span>
+        <svg class="pimo-search-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+      </span>
+      <input type="search" name="q" value="{{ q|default('') }}" placeholder="{% if lang == 'en' %}Search home essentials...{% else %}{{ t.search_placeholder }}{% endif %}" aria-label="{{ t.search }}" enterkeyhint="search">
+      <input type="hidden" name="country" value="{{ country }}">
+      <button type="submit">{{ t.search }}</button>
+    </form>
+    <div class="pimo-tools">
+      <a class="pimo-locale" href="{{ href('/locale', country) }}">{{ flag }} {{ country }} ▾</a>
+      <a class="pimo-me" href="{{ href('/account' if signed_in else '/login', country) }}">Me</a>
+      <a class="pimo-cart" href="{{ href('/cart', country) }}" aria-label="{{ t.cart }}">
+        <span aria-hidden="true">🛒</span>
+        <i data-pimo-count {% if not cart_count %}hidden{% endif %}>{{ cart_count }}</i>
+      </a>
+    </div>
+  </div>
+</header>

@@ -147,6 +147,7 @@ from shop.checkout import (
     cheapest_live_offer,
 )
 from shop.db import connect
+from shop.storefront_theme import get_storefront_theme, set_storefront_theme
 from shop.extras import (
     COLORS,
     LOCALES,
@@ -1820,6 +1821,10 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         if _probe_path(request.url.path):
             return Response(status_code=404, content=b"", media_type="text/plain")
         request.state.visitor = request.cookies.get("harbor_vid") or secrets.token_hex(8)
+        try:
+            request.state.storefront_theme = get_storefront_theme(conn)
+        except Exception:
+            request.state.storefront_theme = "legacy"
         existing_ad = parse_ad_cookie(request.cookies.get("harbor_ad"))
         incoming_ad = merge_from_request(existing_ad, request.query_params)
         fwd = (request.headers.get("x-forwarded-for") or "").split(",")[0].strip()
@@ -2277,6 +2282,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             "h5_origin": _public_h5_origin(request),
             "ship_countries": country_choices(),
             "address_formats": formats_for(lang),
+            "storefront_theme": getattr(request.state, "storefront_theme", None) or get_storefront_theme(conn),
         }
         text = UI[lang]
         if units is None:
@@ -2382,6 +2388,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         ctx["cart_ship_met"] = bool(merchandise > 0)
         ctx["free_ship_policy"] = True
         ctx["always_free_shipping"] = True
+        ctx["pimo_flash_ends"] = deal_ends_iso(conn) if ctx.get("storefront_theme") == "pimo" else ""
         guarantees = cached_guarantees()
         ctx["guarantees"] = guarantees
         late_cents = int(guarantees.get("late_delivery_credit_cents") or 0)
@@ -3000,6 +3007,10 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         else:
             for key, value in _storefront_job_defaults().items():
                 ctx.setdefault(key, value)
+        ctx.setdefault(
+            "storefront_theme",
+            getattr(request.state, "storefront_theme", None) or "legacy",
+        )
         ctx.setdefault("ad_pixels", {"meta_ok": False, "google_ok": False, "tiktok_ok": False})
         ctx.setdefault("ad_attrs", {})
         if status_code >= 400:
@@ -7094,6 +7105,22 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         require_staff(request)
         rows = conn.execute("select * from withdrawals order by id desc").fetchall()
         return render(request, "admin.html", panel="withdrawals", withdrawals=rows)
+
+    @app.get("/admin/appearance", response_class=HTMLResponse)
+    def admin_appearance(request: Request):
+        require_admin(request)
+        return render(
+            request,
+            "admin_appearance.html",
+            storefront_theme=get_storefront_theme(conn),
+        )
+
+    @app.post("/admin/appearance")
+    async def admin_appearance_save(request: Request):
+        require_admin(request)
+        form = await request.form()
+        set_storefront_theme(conn, str(form.get("storefront_theme") or ""))
+        return flash_redirect("/admin/appearance", "theme_saved")
 
     @app.get("/admin/lucky", response_class=HTMLResponse)
     def admin_lucky(request: Request):

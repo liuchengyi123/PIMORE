@@ -1,0 +1,23 @@
+{% extends "admin_base.html" %}
+{% block body %}
+<header class="page-head">
+  <div>
+    <h1>店铺外观</h1>
+    <p class="muted">买家看到的店面。legacy 是现在的 Harbor 页面。pimo 用 Figma「Harbor Pimo Full Site Screens」的首页和顶栏（搜索、桌面导航、手机底栏）。运费仍是 $0，没有加急 / 标准 / 经济档。满减和最低下单仍在「满减运费」。</p>
+  </div>
+</header>
+<div class="card">
+  <form class="pad fields" method="post" action="/admin/appearance">
+    <label>店面
+      <select name="storefront_theme">
+        <option value="legacy" {% if storefront_theme != 'pimo' %}selected{% endif %}>legacy · 现有 Harbor 页面</option>
+        <option value="pimo" {% if storefront_theme == 'pimo' %}selected{% endif %}>pimo · Figma 新店面</option>
+      </select>
+    </label>
+    <div class="wide"><button class="btn" type="submit">保存</button></div>
+  </form>
+  <div class="pad">
+    <p class="muted small">保存在 settings.storefront_theme，刷新后前台立刻换。默认 legacy。说明见 docs/storefront-theme.md。</p>
+  </div>
+</div>
+{% endblock %}

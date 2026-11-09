@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0F2744">
+  <meta name="theme-color" content="{% if storefront_theme == 'pimo' %}#FF6B4A{% else %}#0F2744{% endif %}">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Harbor">
@@ -25,6 +25,10 @@
   <script type="application/ld+json">{{ block|tojson }}</script>
   {% endfor %}
   <link rel="stylesheet" href="/static/shop.min.css?v=2">
+  {% if storefront_theme == 'pimo' %}
+  <link rel="stylesheet" href="/static/pimo.css?v=1">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap">
+  {% endif %}
   <link rel="stylesheet" href="/static/fn-mobile.min.css?v=2" media="(max-width: 980px)">
   <link rel="stylesheet" href="/static/fn-desktop.min.css?v=2" media="(min-width: 981px)">
   <link rel="stylesheet" href="/static/harbor-ui.min.css?v=2" media="print" onload="this.media='all'">
@@ -94,11 +98,14 @@
   </script>
 </head>
 {% set _fn_chrome = request.query_params.get('chrome') or request.cookies.get('fn_chrome') %}
-<body class="{% if request.url.path == '/checkout' or request.url.path == '/payment' %}is-checkout{% elif request.url.path == '/cart' %}is-cart{% elif request.url.path.startswith('/orders/') %}is-order{% endif %}{% if cart_count %} has-cart{% endif %}{% block body_class %}{% endblock %}{% if _fn_chrome == 'app' %} fn-app{% endif %}" data-signed="{% if signed_in %}1{% else %}0{% endif %}" data-checked="{% if checked_today %}1{% else %}0{% endif %}" data-cart="{{ cart_count }}" {% block body_attrs %}{% endblock %}>
+<body class="{% if request.url.path == '/checkout' or request.url.path == '/payment' %}is-checkout{% elif request.url.path == '/cart' %}is-cart{% elif request.url.path.startswith('/orders/') %}is-order{% endif %}{% if cart_count %} has-cart{% endif %}{% block body_class %}{% endblock %}{% if _fn_chrome == 'app' %} fn-app{% endif %}{% if storefront_theme == 'pimo' %} theme-pimo{% endif %}" data-theme="{{ storefront_theme|default('legacy') }}" data-signed="{% if signed_in %}1{% else %}0{% endif %}" data-checked="{% if checked_today %}1{% else %}0{% endif %}" data-cart="{{ cart_count }}" {% block body_attrs %}{% endblock %}>
   {% if _fn_chrome == 'app' %}
   <div class="fn-app-status" aria-hidden="true"><span class="fn-app-time">9:41</span><span class="fn-app-sig">●●● 5G</span></div>
   {% endif %}
 
+  {% if storefront_theme == 'pimo' %}
+  {% include "pimo/chrome.html" %}
+  {% else %}
   {% if request.url.path != '/checkout' and request.url.path != '/payment' %}
   {% set note = ads.get('announcement') %}
   {% if note and note['body'] %}
@@ -224,7 +231,8 @@
   </nav>
   </div>
   </header>
-  {% if request.url.path != '/checkout' and request.url.path != '/payment' %}
+  {% endif %}
+  {% if storefront_theme != 'pimo' and request.url.path != '/checkout' and request.url.path != '/payment' %}
   <aside class="pwa-promo" id="pwa-promo" hidden>
     <button class="pwa-promo-hit" type="button" data-pwa-add>
       <span class="pwa-promo-badge" aria-hidden="true">APP</span>
@@ -243,6 +251,9 @@
   <main>
     {% block body %}{% endblock %}
   </main>
+  {% if storefront_theme == 'pimo' %}
+  {% include "pimo/footer.html" %}
+  {% else %}
   <footer class="foot">
     <div class="footgrid">
       <div class="brand">Harbor</div>
@@ -280,8 +291,12 @@
     </div>
     <p class="foot-geo"><a href="https://db-ip.com/" rel="noopener">IP Geolocation by DB-IP</a></p>
   </footer>
+  {% endif %}
   {% include '_auth_modal.html' %}
   <script src="/static/auth-modal.js?v=2" defer></script>
+  {% if storefront_theme == 'pimo' %}
+  {% include "pimo/tabbar.html" %}
+  {% else %}
   <nav class="tabbar fn-tabbar-mob" {% set _path = request.url.path %}{% if _path.startswith('/p/') or _path == '/cart' or _path == '/checkout' or _path == '/payment' or _path.startswith('/orders') %}style="" hidden{% else %}style="display:flex !important;flex-direction:row !important;align-items:stretch !important;justify-content:space-between !important;position:fixed !important;left:16px !important;right:16px !important;{% if _fn_chrome == 'app' %}bottom:22px !important{% else %}bottom:10px !important{% endif %};width:auto !important;max-width:none !important;min-width:0 !important;height:54px !important;box-sizing:border-box !important;padding:0 8px !important;gap:0 !important;overflow:hidden !important;background:#ffffff !important;border-radius:18px !important;box-shadow:0 4px 16px rgba(15,26,41,.12) !important;z-index:40 !important"{% endif %}>
     <a style="flex:1 1 0% !important;width:0 !important;min-width:0 !important;display:flex !important;flex-direction:column !important;align-items:center !important;justify-content:center !important;gap:4px !important;padding:8px 0 6px !important;background:transparent !important;background-image:none !important;border:0 !important;box-shadow:none !important;text-decoration:none !important;box-sizing:border-box !important;overflow:hidden !important" class="{% if request.url.path == '/' %}on{% endif %}" href="{{ href('/', country) }}">
       <svg class="tab-ico" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5.5v-6h-5v6H4a1 1 0 0 1-1-1V10.5z"/></svg>
@@ -301,6 +316,7 @@
       <span>{{ t.me if t.me is defined else 'Me' }}</span>
     </a>
   </nav>
+  {% endif %}
   {% if _fn_chrome == 'app' %}
   <div class="fn-app-home-ind" aria-hidden="true"><i></i></div>
   {% endif %}

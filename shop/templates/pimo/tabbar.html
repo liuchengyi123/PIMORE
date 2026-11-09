@@ -1,0 +1,19 @@
+<nav class="pimo-tab" aria-label="{{ t.home }}">
+  <a class="{% if request.url.path == '/' %}on{% endif %}" href="{{ href('/', country) }}" {% if request.url.path == '/' %}aria-current="page"{% endif %}>
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 11.2 12 4l8 7.2V20a1 1 0 0 1-1 1h-5.2v-6.2H10.2V21H5a1 1 0 0 1-1-1v-8.8z"/></svg>
+    <span>Home</span>
+  </a>
+  <a class="{% if request.url.path == '/categories' or request.url.path.startswith('/c/') or request.url.path == '/search' %}on{% endif %}" href="{{ href('/categories', country) }}">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="6.25"/><path d="m16 16 4 4" stroke-linecap="round"/></svg>
+    <span>Browse</span>
+  </a>
+  <a class="{% if request.url.path == '/cart' %}on{% endif %}" href="{{ href('/cart', country) }}">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6.2 7.2h12.2l-1.1 11.2H7.3L6.2 7.2z"/><path d="M9 7.2V6.2a3 3 0 0 1 6 0v1" stroke-linecap="round"/></svg>
+    <i data-pimo-count {% if not cart_count %}hidden{% endif %}>{{ cart_count }}</i>
+    <span>{{ t.cart if t.cart is defined else 'Cart' }}</span>
+  </a>
+  <a class="{% if request.url.path == '/login' or request.url.path.startswith('/account') %}on{% endif %}" href="{{ href('/account' if signed_in else '/login', country) }}">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="3.1"/><path d="M5.6 19.2c.8-3 3.2-4.6 6.4-4.6s5.6 1.6 6.4 4.6" stroke-linecap="round"/></svg>
+    <span>Me</span>
+  </a>
+</nav>

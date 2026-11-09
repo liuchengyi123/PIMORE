@@ -1,0 +1,833 @@
+/* Pimo storefront. Measures follow Figma Harbor Pimo Full Site Screens
+   (eptrtDM0XUICi87bqapjQb): PC Home 102:2 at 1440, H5 Home 169:2 at 1024,
+   App Home 1:5 phone chrome. */
+
+body.theme-pimo {
+  background: #fff !important;
+  color: #1a1a1a;
+  font-family: Inter, "Segoe UI", sans-serif;
+}
+
+body.theme-pimo .pwa-promo,
+body.theme-pimo .pwa-guide,
+body.theme-pimo .pwa-ios,
+body.theme-pimo .pwa-login,
+body.theme-pimo .fn-app-status,
+body.theme-pimo .fn-app-home-ind {
+  display: none !important;
+}
+
+body.theme-pimo.is-pimo-home main {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.pimo-head,
+.pimo-foot,
+.pimo-home,
+.pimo-tab {
+  font-family: Inter, "Segoe UI", sans-serif;
+}
+
+.pimo-head {
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.pimo-head-inner {
+  max-width: 1440px;
+  height: 72px;
+  margin: 0 auto;
+  padding: 0 48px;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  box-sizing: border-box;
+}
+
+.pimo-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 180px;
+  color: #1a1a1a;
+  text-decoration: none;
+  flex: 0 0 auto;
+}
+
+.pimo-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #ff6b4a;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.pimo-mark-p {
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.pimo-mark-house,
+.pimo-line { display: none; }
+
+.pimo-word {
+  display: flex;
+  flex-direction: column;
+  width: 150px;
+}
+
+.pimo-word strong {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 19.8px;
+  color: #1a1a1a;
+}
+
+.pimo-word small {
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 13px;
+  color: #6b7280;
+}
+
+.pimo-nav {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex: 0 0 auto;
+}
+
+.pimo-nav a {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 17px;
+  color: #6b7280;
+  text-decoration: none;
+}
+
+.pimo-nav a.on { color: #ff6b4a; }
+
+.pimo-search {
+  flex: 486 1 0;
+  max-width: 520px;
+  min-width: 0;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  background: #f7f7f8;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  box-sizing: border-box;
+}
+
+.pimo-search-ico {
+  color: #6b7280;
+  display: flex;
+  flex: 0 0 auto;
+  font-size: 14px;
+  line-height: 1;
+}
+.pimo-search-svg { display: none; }
+
+body.theme-pimo .pimo-search input[type="search"] {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none;
+  width: 100%;
+  min-width: 0;
+  min-height: 0 !important;
+  height: 28px !important;
+  padding: 0 !important;
+  margin: 0;
+  border-radius: 0 !important;
+  font: 400 14px/17px Inter, "Segoe UI", sans-serif !important;
+  color: #1a1a1a;
+}
+
+body.theme-pimo .pimo-search input::placeholder { color: #6b7280; }
+
+.pimo-search button {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+  min-height: 0;
+}
+
+.pimo-search { position: relative; }
+
+.pimo-tools {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 0 0 auto;
+}
+
+.pimo-locale {
+  background: #fff5f2;
+  color: #ff6b4a;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 16px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.pimo-me {
+  color: #1a1a1a;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 16px;
+  text-decoration: none;
+}
+
+.pimo-cart {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #f7f7f8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  text-decoration: none;
+  font-size: 13px;
+  color: #1a1a1a;
+}
+
+.pimo-cart i,
+.pimo-tab i {
+  position: absolute;
+  left: 26px;
+  top: -4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  background: #ff6b4a;
+  color: #fff;
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 18px;
+  text-align: center;
+}
+
+.pimo-tab i {
+  left: auto;
+  right: 18px;
+  top: 2px;
+}
+
+.pimo-home {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 28px 48px 40px;
+  box-sizing: border-box;
+}
+
+.pimo-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: center;
+  min-height: 280px;
+  padding: 36px;
+  border-radius: 24px;
+  background: linear-gradient(167.74deg, #ff6b4a 0%, #ff8a6a 100%);
+  box-sizing: border-box;
+  position: relative;
+}
+
+.pimo-hero-copy { max-width: 520px; }
+
+.pimo-kicker { display: none; }
+
+.pimo-hero h1 {
+  margin: 0;
+  max-width: 520px;
+  color: #fff;
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 46px;
+}
+
+.pimo-h-h5,
+.pimo-h-app,
+.pimo-sub-h5,
+.pimo-sub-app { display: none; }
+
+.pimo-hero-sub {
+  margin: 12px 0 22px;
+  max-width: 460px;
+  color: #fff;
+  opacity: 0.92;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+.pimo-cta {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 22px;
+  border-radius: 999px;
+  background: #fff;
+  color: #ff6b4a;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 16px;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.pimo-hero-art {
+  height: 220px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.18);
+  overflow: hidden;
+}
+
+.pimo-hero-art a { display: none; height: 100%; }
+.pimo-hero-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  max-width: none;
+}
+
+.pimo-dots { display: none; }
+
+.pimo-cats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 28px;
+}
+
+.pimo-cat {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 88px;
+  padding: 18px;
+  border-radius: 18px;
+  background: #f7f7f8;
+  color: #1a1a1a;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.pimo-cat-ico {
+  width: 52px;
+  height: 52px;
+  border-radius: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.pimo-cat-tx { display: flex; flex-direction: column; min-width: 0; }
+
+.pimo-cat-tx strong {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 19px;
+  color: #1a1a1a;
+}
+
+.pimo-cat-sub {
+  display: block;
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 15px;
+  color: #6b7280;
+}
+
+.pimo-sec { margin-top: 28px; }
+
+.pimo-sec-new { margin-top: 18px; }
+
+.pimo-you { margin-top: 18px; }
+
+.pimo-sec-h {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pimo-sec-h h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 27px;
+  color: #1a1a1a;
+}
+
+.pimo-sec-sub { display: none; }
+
+.pimo-clock {
+  display: inline-flex;
+  align-items: center;
+  background: #fff5f2;
+  color: #ff6b4a;
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 16px;
+}
+
+.pimo-clock-ico,
+.pimo-clock-units { display: none; }
+.pimo-clock-stack { display: contents; }
+
+.pimo-more {
+  margin-left: auto;
+  color: #ff6b4a;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 16px;
+  text-decoration: none;
+}
+
+.pimo-aside {
+  margin: 8px 0 0 auto;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 15px;
+}
+
+.pimo-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.pimo-you-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.pimo-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.pimo-card-media {
+  position: relative;
+  height: 180px;
+  background: linear-gradient(180deg, #f3f4f6 0%, #e5e7eb 100%);
+}
+
+.pimo-card-media a { display: block; height: 100%; }
+
+body.theme-pimo .pimo-card-media img {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  display: block;
+}
+
+.pimo-band {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  background: #ff6b4a;
+  color: #fff;
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 13px;
+}
+
+.pimo-add {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  margin: 0;
+}
+
+body.theme-pimo .pimo-add button {
+  width: 36px;
+  height: 36px;
+  min-height: 0 !important;
+  padding: 0 !important;
+  border: 0;
+  border-radius: 12px;
+  background: #ff6b4a;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.pimo-bag { display: none; }
+
+.pimo-card-body {
+  display: block;
+  padding: 14px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.pimo-card-body h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 17px;
+  color: #1a1a1a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pimo-price {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  height: 20px;
+  margin: 6px 0 0;
+}
+
+.pimo-price b {
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 19px;
+  color: #1a1a1a;
+}
+
+.pimo-price s {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 15px;
+  color: #6b7280;
+  text-decoration: line-through;
+}
+
+.pimo-stars {
+  margin: 6px 0 0;
+  min-height: 15px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 15px;
+  color: #f59e0b;
+}
+
+.pimo-foot {
+  background: #fafafa;
+  border-top: 1px solid #e5e7eb;
+}
+
+.pimo-foot-inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 28px 48px;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 24px;
+  box-sizing: border-box;
+}
+
+.pimo-foot b {
+  display: block;
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 16px;
+  color: #1a1a1a;
+}
+
+.pimo-foot p,
+.pimo-foot a {
+  display: block;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.45;
+  color: #6b7280;
+  text-decoration: none;
+}
+
+.pimo-tab { display: none; }
+
+/* H5 tablet — frame 169:2, 1024 wide */
+@media (max-width: 1099px) {
+  .pimo-head-inner {
+    height: 64px;
+    padding: 0 24px;
+    gap: 14px;
+  }
+  .pimo-logo { min-width: 0; gap: 8px; }
+  .pimo-mark { width: 32px; height: 32px; border-radius: 8px; }
+  .pimo-word { width: auto; }
+  .pimo-word strong { font-size: 16px; line-height: 18px; }
+  .pimo-word small { font-size: 12px; line-height: 12px; }
+  .pimo-nav { gap: 12px; }
+  .pimo-nav a { font-size: 13px; line-height: 15px; }
+  .pimo-search { flex: 1 1 180px; max-width: 280px; height: 40px; padding: 0 13px; }
+  .pimo-home { padding: 20px 24px 28px; }
+  .pimo-hero {
+    min-height: 188px;
+    padding: 24px;
+    border-radius: 18px;
+    gap: 16px;
+  }
+  .pimo-hero h1 { font-size: 28px; line-height: 32.5px; }
+  .pimo-sub-pc { display: none; }
+  .pimo-sub-h5 { display: inline; }
+  .pimo-hero-sub { margin: 8px 0 12px; font-size: 13px; }
+  .pimo-cta { height: 35px; padding: 0 16px; }
+  .pimo-hero-art { height: 140px; }
+  .pimo-cats { gap: 10px; margin-top: 18px; }
+  .pimo-cat { min-height: 64px; height: 64px; padding: 12px; gap: 10px; border-radius: 14px; }
+  .pimo-cat-ico { width: 40px; height: 40px; border-radius: 20px; font-size: 16px; }
+  .pimo-cat-sub { display: none; }
+  .pimo-cat-tx strong { font-size: 15px; line-height: 15px; }
+  .pimo-h-pc { display: none; }
+  .pimo-h-h5 { display: inline; }
+  .pimo-sec { margin-top: 18px; }
+  .pimo-sec-h h2 { font-size: 18px; line-height: 22px; }
+  .pimo-grid { gap: 10px; margin-top: 10px; }
+  .pimo-you-grid { gap: 10px; }
+  .pimo-card-media { height: 110px; }
+  .pimo-band { left: 8px; top: 8px; padding: 3px 6px; border-radius: 6px; font-size: 11px; }
+  body.theme-pimo .pimo-add button { width: 28px; height: 28px; border-radius: 8px; font-size: 16px; }
+  .pimo-card-body { padding: 10px; }
+  .pimo-card-body h3 { font-size: 13px; line-height: 15px; }
+  .pimo-price { margin-top: 0; height: 15px; }
+  .pimo-price b { font-size: 13px; line-height: 15px; }
+  .pimo-stars { display: none; }
+  .pimo-foot-inner { padding: 22px 24px; gap: 16px; }
+}
+
+/* App phone — frame 1:5 */
+@media (max-width: 759px) {
+  .pimo-head-inner {
+    height: auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "logo tools" "search search";
+    gap: 10px 12px;
+    padding: 12px 16px 10px;
+    align-items: center;
+  }
+  .pimo-logo { grid-area: logo; }
+  .pimo-tools { grid-area: tools; margin-left: 0; gap: 0; }
+  .pimo-search {
+    grid-area: search;
+    max-width: none;
+    flex: none;
+    width: 100%;
+    height: 44px;
+  }
+  .pimo-nav,
+  .pimo-me,
+  .pimo-cart,
+  .pimo-word small { display: none; }
+  .pimo-search-emoji { display: none; }
+  .pimo-search-svg { display: block; }
+  .pimo-word small { display: block; }
+  .pimo-mark-p { display: none; }
+  .pimo-mark-house { display: block; }
+  .pimo-home { padding: 12px 16px 24px; }
+  .pimo-hero {
+    grid-template-columns: minmax(0, 1.15fr) minmax(108px, 0.85fr);
+    min-height: 0;
+    padding: 18px 16px 28px;
+    border-radius: 22px;
+    gap: 8px;
+    align-items: center;
+  }
+  .pimo-kicker {
+    display: block;
+    margin: 0 0 6px;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 13px;
+  }
+  .pimo-h-h5 { display: none; }
+  .pimo-h-pc { display: none; }
+  .pimo-h-app { display: inline; }
+  .pimo-hero h1 { font-size: 26px; line-height: 30px; }
+  .pimo-sub-h5 { display: none; }
+  .pimo-sub-pc { display: none; }
+  .pimo-sub-app { display: inline; }
+  .pimo-hero-sub { margin: 8px 0 12px; font-size: 13px; line-height: 17px; max-width: none; }
+  .pimo-cta { height: 36px; padding: 0 16px; font-size: 13px; }
+  .pimo-hero-art { height: 132px; border-radius: 16px; align-self: stretch; }
+  .pimo-dots {
+    display: flex;
+    gap: 6px;
+    position: absolute;
+    left: 18px;
+    bottom: 12px;
+  }
+  .pimo-dots a {
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.55);
+  }
+  .pimo-dots a.on { width: 14px; background: #fff; }
+  .pimo-cats { gap: 8px; margin-top: 14px; }
+  .pimo-cat {
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    height: auto;
+    min-height: 92px;
+    padding: 12px 4px;
+    gap: 8px;
+    border-radius: 16px;
+  }
+  .pimo-emoji { display: none; }
+  .pimo-line { display: block; width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .pimo-cat:nth-child(1) .pimo-line { color: #ff6b4a; }
+  .pimo-cat:nth-child(2) .pimo-line { color: #1aa88a; }
+  .pimo-cat:nth-child(3) .pimo-line { color: #3b82f6; }
+  .pimo-cat:nth-child(4) .pimo-line { color: #8b5cf6; }
+  .pimo-cat-tx strong { font-size: 12px; line-height: 14px; }
+  .pimo-h-app { display: inline; }
+  .pimo-sec-sub {
+    display: block;
+    margin: 2px 0 0;
+    color: #6b7280;
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .pimo-aside { display: none; }
+  .pimo-clock {
+    margin-left: auto;
+    border-radius: 14px;
+    padding: 4px 8px;
+    gap: 6px;
+    align-items: center;
+  }
+  .pimo-clock-ico { display: block; flex: 0 0 auto; }
+  .pimo-clock-stack { display: flex; flex-direction: column; align-items: stretch; line-height: 1; }
+  .pimo-clock-units {
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+    margin-top: 1px;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 9px;
+  }
+  .pimo-more { display: none; }
+  .pimo-sec-new .pimo-more { display: inline; }
+  .pimo-hero-art a { display: block; }
+  .pimo-sec-h h2 { font-size: 18px; }
+  .pimo-grid {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    margin-top: 10px;
+    padding-bottom: 2px;
+  }
+  .pimo-card {
+    flex: 0 0 148px;
+    scroll-snap-align: start;
+    border-radius: 16px;
+  }
+  .pimo-you-grid .pimo-card { flex-basis: calc(50% - 5px); }
+  .pimo-card-media { height: 132px; }
+  .pimo-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .pimo-card-media { grid-column: 1 / -1; }
+  .pimo-card-body { grid-column: 1; padding: 8px 4px 8px 8px; }
+  .pimo-add {
+    position: static;
+    grid-column: 2;
+    grid-row: 2;
+    align-self: end;
+    margin: 0 8px 8px 0;
+  }
+  body.theme-pimo .pimo-add button {
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+  }
+  .pimo-plus { display: none; }
+  .pimo-bag { display: flex; }
+  .pimo-you .pimo-stars { display: block; }
+  .pimo-foot { display: none; }
+  .pimo-tab {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    height: auto;
+    min-height: 58px;
+    padding: 6px 4px calc(8px + env(safe-area-inset-bottom));
+    background: #fff;
+    border-top: 1px solid #e5e7eb;
+    justify-content: space-around;
+    align-items: stretch;
+    box-sizing: border-box;
+  }
+  .pimo-tab a {
+    position: relative;
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    color: #6b7280;
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 13px;
+  }
+  .pimo-tab a.on { color: #ff6b4a; }
+  .pimo-tab a.on svg { fill: #ff6b4a; stroke: #ff6b4a; }
+  .pimo-tab svg { stroke: currentColor; fill: none; }
+  body.theme-pimo { padding-bottom: 74px; }
+}

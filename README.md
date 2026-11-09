@@ -27,4 +27,6 @@ cd harbor-web && npm run dev
 
 店铺默认 `http://127.0.0.1:8787`，H5 `http://127.0.0.1:5174`。
 
+买家店面有两套外观，在后台「店铺外观」(`/admin/appearance`) 切换：`legacy`（现有页面）或 `pimo`（Figma 首页和顶栏）。说明见 `docs/storefront-theme.md`。
+
 商品图、sqlite、`.env` 不入库，需本机或服务器另行同步。
