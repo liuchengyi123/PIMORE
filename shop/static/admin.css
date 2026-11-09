@@ -1619,6 +1619,25 @@ td.empty { text-align: center; padding: 28px 12px; }
 }
 .ad11-wizard .import-split .progress > span,
 .ad11-wizard #package-file-progress .bar > i { background: #F96141; }
+.page-coupons, .page-staff { gap: 10px; }
+.page-coupons .card > h2, .page-staff .card > h2 { padding: 10px 12px 0; font-size: 14px; color: #1C2430; }
+.page-coupons .fields, .page-staff .fields { gap: 8px 12px; }
+.page-coupons .fields input, .page-coupons .fields select,
+.page-staff .fields input, .page-staff .fields select {
+  height: 34px; border-radius: 8px; padding: 0 8px; font-size: 13px;
+}
+.page-coupons form.pad, .page-staff form.pad, .page-staff .muted.pad { padding: 8px 12px 12px; }
+.page-coupons .btn:not(.ghost):not(.quiet):not(.danger),
+.page-staff .btn:not(.ghost):not(.quiet):not(.danger) {
+  background: #F96141; border: 0; color: #fff; height: 34px; border-radius: 10px;
+}
+.page-staff table th, .page-staff table td,
+.page-coupons table th, .page-coupons table td {
+  padding: 6px 8px; font-size: 12px; line-height: 1.25; vertical-align: middle;
+}
+.page-staff thead th, .page-coupons thead th {
+  height: 32px; background: #F7F8FA; color: #8B919A; font-size: 11px; font-weight: 700;
+}
 
 /* AD29 / S02 web CS desk */
 .fn-support-shell { margin: 0 !important; }
