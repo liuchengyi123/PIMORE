@@ -379,10 +379,10 @@ watch(kind, (k) => { if (k === 'gift') loadGift() })
 }
 .card.gift { width: min(100%, 328px); padding: 8px 16px 4px; text-align: left; }
 .card.checkin { padding: 14px 18px 4px; }
-.card.invite { padding: 20px 24px 8px; }
+.card.invite { padding: 10px 18px 4px; }
 .card.locale { width: min(100%, 336px); padding: 16px 14px 14px; }
-.card.pwa:not(.ios) { background: #10243A; color: #fff; padding: 22px 24px 8px; border-radius: 20px; }
-.card.ios { width: min(100%, 768px); border-radius: 28px 28px 0 0; padding: 12px 12px calc(12px + env(safe-area-inset-bottom)); text-align: left; }
+.card.pwa:not(.ios) { background: #10243A; color: #fff; width: min(100%, 320px); padding: 12px 18px 4px; border-radius: 18px; }
+.card.ios { width: min(100%, 768px); border-radius: 24px 24px 0 0; padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); text-align: left; }
 .grab { width: 36px; height: 4px; border-radius: 99px; background: #E6E2DC; margin: 2px auto 14px; }
 .x {
   position: absolute; right: 14px; top: 12px; border: 0; background: transparent;
@@ -396,9 +396,12 @@ watch(kind, (k) => { if (k === 'gift') loadGift() })
 .kicker { margin: 10px 0 6px; font-size: 13px; font-weight: 750; letter-spacing: 0.04em; color: #FF6B4A; }
 .kicker.light, .sub.light, .later.light { color: rgba(255,255,255,0.78); }
 h2 { margin: 0 0 8px; font-size: 26px; line-height: 1.22; letter-spacing: -0.03em; font-weight: 800; color: #1C2430; }
-.card.pwa:not(.ios) .kicker { margin-top: 12px; font-size: 13px; font-weight: 600; letter-spacing: 0; }
-.card.pwa:not(.ios) h2 { color: #fff; font-size: 30px; line-height: 1.15; margin: 0 0 10px; }
-.card.pwa:not(.ios) .sub { max-width: 280px; margin: 0 auto 18px; font-size: 15px; line-height: 1.45; }
+.card.pwa:not(.ios) .phone-art { margin: 0; }
+.card.pwa:not(.ios) .phone-art svg { width: 150px; height: 112px; }
+.card.pwa:not(.ios) .kicker { margin: 4px 0 2px; font-size: 12px; font-weight: 650; letter-spacing: 0; }
+.card.pwa:not(.ios) h2 { color: #fff; font-size: 24px; line-height: 1.15; margin: 0 0 4px; }
+.card.pwa:not(.ios) .sub { max-width: 248px; margin: 0 auto 10px; font-size: 14px; line-height: 1.35; }
+.card.pwa:not(.ios) .later { height: 34px; margin-top: 0; }
 .card.checkin .kicker { font-size: 11px; letter-spacing: 0.14em; font-weight: 800; margin: 4px 0 2px; }
 .card.checkin h2 { font-size: 22px; line-height: 1.2; max-width: 220px; margin: 0 auto 8px; }
 .card.checkin .cal-art { margin: 0; }
@@ -407,9 +410,12 @@ h2 { margin: 0 0 8px; font-size: 26px; line-height: 1.22; letter-spacing: -0.03e
 .card.checkin .stamp { width: 22px; height: 22px; border-width: 1.75px; }
 .card.checkin .stamp-badge svg { width: 24px; height: 24px; }
 .card.checkin .later { height: 34px; margin-top: 0; }
-.card.invite .kicker { font-size: 16px; font-weight: 750; letter-spacing: 0; margin: 8px 0 6px; }
-.card.invite h2 { font-size: 24px; line-height: 1.25; margin: 0 0 10px; }
-.card.invite .sub { max-width: 268px; margin: 0 auto 18px; font-size: 15px; line-height: 1.5; }
+.card.invite .invite-art { margin: 0; }
+.card.invite .invite-art svg { width: 164px; height: 84px; }
+.card.invite .kicker { font-size: 14px; font-weight: 750; letter-spacing: 0; margin: 2px 0 2px; }
+.card.invite h2 { font-size: 22px; line-height: 1.2; margin: 0 0 4px; }
+.card.invite .sub { max-width: 248px; margin: 0 auto 10px; font-size: 14px; line-height: 1.4; }
+.card.invite .later { height: 34px; margin-top: 0; }
 .card.gift h2 { font-size: 18px; line-height: 1.25; font-weight: 800; text-align: left; margin: 0 0 2px; letter-spacing: -0.02em; }
 .card.gift .grab { margin: 0 auto 6px; }
 .card.gift .gift-stage { margin: 6px 0 2px; }
@@ -453,13 +459,13 @@ h2 { margin: 0 0 8px; font-size: 26px; line-height: 1.22; letter-spacing: -0.03e
   position: absolute; top: -6px; right: -6px; width: 16px; height: 16px; border-radius: 50%;
   background: #FF6B4A; color: #fff; font-size: 10px; font-weight: 800; display: grid; place-items: center;
 }
-.ios-hero { background: #FF6B4A; color: #fff; border-radius: 22px; padding: 22px 16px 18px; text-align: center; }
-.ios-hero h2 { color: #fff; margin: 0; font-size: 26px; }
-.ios-steps { list-style: none; margin: 12px 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.ios-hero { background: #FF6B4A; color: #fff; border-radius: 18px; padding: 14px 14px 12px; text-align: center; }
+.ios-hero h2 { color: #fff; margin: 0; font-size: 22px; line-height: 1.2; }
+.ios-steps { list-style: none; margin: 8px 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .ios-steps li {
-  background: #fff; border-radius: 16px; min-height: 56px; padding: 12px 14px;
-  display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  box-shadow: 0 6px 16px rgba(28,36,48,0.06); font-weight: 700; color: #1C2430;
+  background: #fff; border-radius: 14px; min-height: 48px; padding: 8px 12px;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  box-shadow: 0 4px 12px rgba(28,36,48,0.05); font-weight: 700; font-size: 14px; color: #1C2430;
 }
 .ios-steps .confirm { align-items: flex-start; flex-direction: column; }
 .ios-ico {
