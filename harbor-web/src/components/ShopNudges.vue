@@ -136,6 +136,7 @@ watch(() => [route.name, route.query.locale], openNext)
 .card {
   width: min(100%, 768px); background: #fff; border-radius: 20px 20px 0 0;
   padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); position: relative;
+  box-shadow: 0 -12px 32px rgba(28,36,48,0.08);
 }
 .x { position: absolute; right: 12px; top: 8px; border: 0; background: transparent; font-size: 22px; cursor: pointer; color: #8B919A; }
 h2 { margin: 8px 0; font-size: 20px; color: #1C2430; }

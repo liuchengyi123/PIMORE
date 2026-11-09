@@ -282,6 +282,7 @@ async function notifyMe() {
 .cta-spacer { height: 12px; }
 .sticky-cta {
   position: fixed; left: 50%; transform: translateX(-50%); width: min(100vw, 768px); bottom: 0; z-index: 40;
+  box-shadow: 0 -8px 24px rgba(28,36,48,0.06);
   display: flex; gap: 8px; align-items: center;
   padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
   background: rgba(255,255,255,0.96); border-top: 1px solid $hb-line;

@@ -232,10 +232,10 @@ input:focus, textarea:focus { outline: 2px solid rgba(224,82,46,0.35); border-co
   overflow: auto;
   margin: 0;
   padding: 10px;
-  background: #152820;
-  border: 1px solid var(--line);
+  background: #fff;
+  border: 1px solid #E8EAF0;
   border-radius: 12px;
-  box-shadow: 0 10px 28px rgba(0,0,0,0.45);
+  box-shadow: 0 10px 28px rgba(28,36,48,0.12);
   z-index: 40;
 }
 .emoji-bar button {
@@ -247,7 +247,7 @@ input:focus, textarea:focus { outline: 2px solid rgba(224,82,46,0.35); border-co
 }
 .emoji-bar button {
   border: 0;
-  background: #1b3228;
+  background: #F7F8FA;
   border-radius: 8px;
   padding: 6px 8px;
   cursor: pointer;
@@ -255,7 +255,7 @@ input:focus, textarea:focus { outline: 2px solid rgba(224,82,46,0.35); border-co
   line-height: 1;
 }
 .emoji-bar button:hover {
-  background: #254536;
+  background: #FFF1EC;
 }
 .image-toggle {
   flex: 0 0 44px;
@@ -501,7 +501,7 @@ input:focus, textarea:focus { outline: 2px solid rgba(224,82,46,0.35); border-co
   height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line);
   background: #F7F4EF; color: var(--ink); font-weight: 600; cursor: pointer;
 }
-.settings-tabs button.on { background: #0F2744; color: #fff; border-color: #0F2744; }
+.settings-tabs button.on { background: #F96141; color: #fff; border-color: #F96141; }
 .stab-body label { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; font-size: 12px; font-weight: 600; }
 .stab-body .chk { flex-direction: row; align-items: center; gap: 8px; font-weight: 500; }
 .transfer-label { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; font-size: 12px; font-weight: 600; }
