@@ -11,13 +11,20 @@
       <section class="card steps">
         <div class="rail" aria-hidden="true"><i :style="{ width: rail }" /></div>
         <div v-for="(step, i) in steps" :key="step.key" class="step" :class="{ on: i <= activeStep, now: i === activeStep }">
-          <span class="dot"><component :is="step.icon" :size="18" :stroke-width="2.25" /></span>
+          <span class="dot"><component :is="step.icon" :size="15" :stroke-width="2.25" /></span>
           <b>{{ step.label }}</b>
-          <small>{{ step.when }}</small>
         </div>
       </section>
 
-      <p v-if="trackLine" class="track">{{ trackLine }}</p>
+      <section class="card ship">
+        <div class="sec">
+          <Truck :size="15" :stroke-width="2.2" />
+          <span>{{ zh ? '物流' : 'Shipment' }}</span>
+        </div>
+        <div class="ship-row"><span>{{ zh ? '承运商' : 'Carrier' }}</span><b>{{ detail.carrier || '—' }}</b></div>
+        <div class="ship-row"><span>{{ zh ? '运单号' : 'Tracking' }}</span><b>{{ detail.tracking || (zh ? '待更新' : 'Pending') }}</b></div>
+        <div class="ship-row"><span>{{ zh ? '预计送达' : 'Arrives' }}</span><b>{{ etaLabel }}</b></div>
+      </section>
 
       <section class="card block">
         <div class="sec">
@@ -145,17 +152,14 @@ const steps = computed(() => {
     key: label,
     label,
     icon: icons[i],
-    when: i === 3 && detail.value.arrives
-      ? (zh.value ? `预计 ${detail.value.arrives} 天` : `Est. ${detail.value.arrives} days`)
-      : '',
   }))
 })
 
 const lines = computed(() => detail.value.lines || [])
-const trackLine = computed(() => {
-  const d = detail.value
-  if (d.tracking) return `${d.carrier ? d.carrier + ' · ' : ''}${d.tracking}`
-  return ''
+const etaLabel = computed(() => {
+  const span = String(detail.value.arrives || '').trim()
+  if (!span) return zh.value ? '待更新' : 'Pending'
+  return zh.value ? `${span} 天` : `${span} days`
 })
 const payLabel = computed(() => {
   const raw = String(detail.value.payMethod || '').toLowerCase()
@@ -275,25 +279,27 @@ h1 { margin: 0; font-size: 18px; font-weight: 800; }
 }
 .steps {
   position: relative; display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;
-  text-align: center; padding: 6px 2px 2px;
+  margin: 10px 16px 0; padding: 8px 4px 8px; border-radius: 16px; text-align: center;
 }
 .rail {
-  position: absolute; left: 12.5%; right: 12.5%; top: 24px; height: 3px; background: #F6D5CB; border-radius: 3px;
+  position: absolute; left: 12.5%; right: 12.5%; top: 23px; height: 2px; background: #F6D5CB; border-radius: 2px;
 }
-.rail i { display: block; height: 100%; background: #F96141; border-radius: 3px; }
-.step { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; color: #C5CAD1; }
-.step b { font-size: 13px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; }
-.step small {
-  min-height: 28px; margin-top: -2px; font-size: 11px; font-weight: 600; line-height: 1.25;
-  color: #9AA1A9; letter-spacing: -0.01em;
-}
+.rail i { display: block; height: 100%; background: #F96141; border-radius: 2px; }
+.step { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #C5CAD1; }
+.step b { font-size: 12px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; }
 .dot {
-  width: 40px; height: 40px; border-radius: 50%; background: #fff; border: 2px solid #E7DFD8;
+  width: 32px; height: 32px; border-radius: 50%; background: #fff; border: 1.5px solid #E7DFD8;
   display: inline-flex; align-items: center; justify-content: center; color: #C5CAD1;
 }
 .step.on { color: #1C2430; }
-.step.on .dot, .step.now .dot { background: #F96141; border-color: #F96141; color: #fff; box-shadow: 0 6px 14px rgba(249, 97, 65, 0.28); }
-.track { margin: 10px 20px 0; font-size: 12px; color: #8B919A; }
+.step.on .dot, .step.now .dot { background: #F96141; border-color: #F96141; color: #fff; }
+.ship { margin: 8px 16px 0; padding: 10px 12px 6px; border-radius: 16px; }
+.ship .sec { font-size: 13px; gap: 6px; }
+.ship-row {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+  padding: 3px 0 3px 21px; font-size: 12px; line-height: 1.3; color: #8B919A;
+}
+.ship-row b { color: #1C2430; font-size: 13px; font-weight: 750; text-align: right; }
 .block { padding-bottom: 8px; }
 .sec { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 800; color: #1C2430; }
 .sec svg { color: #F96141; }
