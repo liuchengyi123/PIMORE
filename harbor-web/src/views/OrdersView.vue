@@ -2,13 +2,14 @@
   <div class="page" data-figma="M14">
     <header class="head">
       <button type="button" class="back" @click="$router.back()" aria-label="back"><ChevronLeft :size="22" :stroke-width="1.75" /></button>
-      <h1>My orders</h1>
+      <h1>{{ zh ? '我的订单' : 'My orders' }}</h1>
     </header>
     <div class="tabs">
-      <button type="button" class="tab" :class="{ on: filter === '' }" @click="filter=''">All</button>
-      <button type="button" class="tab" :class="{ on: filter === 'pending' }" @click="filter='pending'">To pay</button>
-      <button type="button" class="tab" :class="{ on: filter === 'paid' }" @click="filter='paid'">Paid</button>
-      <button type="button" class="tab" :class="{ on: filter === 'shipped' }" @click="filter='shipped'">Shipped</button>
+      <button type="button" class="tab" :class="{ on: filter === '' }" @click="filter=''">{{ zh ? '全部' : 'All' }}</button>
+      <button type="button" class="tab" :class="{ on: filter === 'pending' }" @click="filter='pending'">{{ zh ? '待支付' : 'Unpaid' }}</button>
+      <button type="button" class="tab" :class="{ on: filter === 'shipped' }" @click="filter='shipped'">{{ zh ? '运输中' : 'Shipping' }}</button>
+      <button type="button" class="tab" :class="{ on: filter === 'paid' }" @click="filter='paid'">{{ zh ? '已完成' : 'Completed' }}</button>
+      <button type="button" class="tab" :class="{ on: filter === 'return' }" @click="filter='return'">{{ zh ? '退货' : 'Returns' }}</button>
     </div>
     <div v-if="loading" class="state">{{ t('pdp_loading') }}</div>
     <div v-else-if="loginRequired" class="state">
@@ -24,19 +25,20 @@
         </div>
         <div class="thumbs">
           <img v-if="o.image" :src="o.image" alt="" />
-          <div v-else class="ph">Item</div>
+          <div v-else class="ph">{{ zh ? '商品' : 'Item' }}</div>
         </div>
         <div class="row between meta">
-          <span class="tiny">{{ o.itemCount ? o.itemCount + ' items' : 'Order' }}{{ o.tracking ? ' · ' + o.tracking : '' }}</span>
+          <span class="tiny">{{ o.itemCount ? o.itemCount + (zh ? ' 件' : ' items') : (zh ? '订单' : 'Order') }}{{ o.tracking ? ' · ' + o.tracking : '' }}</span>
           <span class="price">{{ o.due }}</span>
         </div>
         <div class="actions">
-          <button v-if="/ship/i.test(o.status)" type="button" class="btn soft" @click.stop="track(o)">Track</button>
-          <button v-else type="button" class="btn soft" @click.stop="again(o)">Buy again</button>
-          <button type="button" class="btn" @click="$router.push('/orders/' + encodeURIComponent(o.id))">Details</button>
+          <button v-if="/ship/i.test(o.status)" type="button" class="btn soft" @click.stop="track(o)">{{ zh ? '物流' : 'Track' }}</button>
+          <button v-else type="button" class="btn soft" @click.stop="again(o)">{{ zh ? '再买' : 'Buy again' }}</button>
+          <button type="button" class="btn" @click="$router.push('/orders/' + encodeURIComponent(o.id))">{{ zh ? '详情' : 'Details' }}</button>
         </div>
       </article>
     </div>
+    <AppTabBar active="me" />
   </div>
 </template>
 
@@ -45,8 +47,10 @@ import { ChevronLeft } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import { fetchOrders, type OrderRow } from '@/api/accountApi'
 import { useI18n } from '@/composables/i18n'
+import AppTabBar from '@/components/AppTabBar.vue'
 
-const { t } = useI18n()
+const { t, lang } = useI18n()
+const zh = computed(() => String(lang.value).startsWith('zh'))
 const orders = ref<OrderRow[]>([])
 const filter = ref('')
 const visible = computed(() => {
@@ -82,25 +86,29 @@ function again(_o: OrderRow) {
 
 <style lang="scss" scoped>
 @import '@/styles/theme.scss';
-.page { min-height: 100vh; background: $hb-paper; padding: 8px 16px 40px; padding-top: calc(8px + env(safe-area-inset-top)); }
-.head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-.back { width: 36px; height: 36px; border: 0; border-radius: 12px; background: #fff; display: inline-flex; align-items: center; justify-content: center; box-shadow: $hb-shadow-soft; color: $hb-ink; }
-h1 { margin: 0; font-size: 17px; font-weight: 800; color: $hb-ink; }
-.tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
-.tab {
-  height: 31px; padding: 0 12px; border-radius: 999px; border: 1px solid #E8E4DC; background: #fff;
-  font-size: 12px; color: $hb-ink; cursor: pointer;
-  &.on { background: $hb-ink; color: #fff; border-color: $hb-ink; }
+.page { min-height: 100vh; background: #FCFAF8; padding: 0 0 24px; }
+.head {
+  display: flex; align-items: flex-end; gap: 10px; margin-bottom: 12px;
+  background: #F96141; color: #fff; padding: 16px 16px 18px; padding-top: calc(16px + env(safe-area-inset-top));
 }
+.back { width: 36px; height: 36px; border: 0; border-radius: 12px; background: transparent; color: #fff; display: inline-flex; align-items: center; justify-content: center; }
+h1 { margin: 0; font-size: 28px; font-weight: 800; color: #fff; }
+.tabs { display: flex; gap: 8px; overflow: auto; margin: 0 16px 12px; }
+.tab {
+  height: 34px; padding: 0 14px; border-radius: 999px; border: 0; background: #fff;
+  font-size: 13px; color: #1C2430; cursor: pointer; font-weight: 650;
+  &.on { background: #F96141; color: #fff; }
+}
+.list { padding: 0 16px; }
 .list { display: flex; flex-direction: column; gap: 10px; }
-.card { background: #fff; border: 1px solid #E8E4DC; border-radius: 16px; padding: 14px; }
+.card { background: #fff; border: 1px solid #E8E4DC; border-radius: 16px; padding: 12px; }
 .row { display: flex; align-items: center; gap: 8px; }
 .between { justify-content: space-between; }
 .oid { font-size: 11px; color: #6B7280; }
 .pill { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: #F3F4F6; color: $hb-ink; }
 .pill.paid { background: #ECFDF5; color: #047857; }
 .pill.ship { background: #E0F2FE; color: #0E7490; }
-.pill.pend { background: #FEF3C7; color: #B45309; }
+.pill.pend { background: #FEF3C7; color: #F96141; }
 .thumbs { display: flex; gap: 10px; margin-top: 10px; }
 .thumbs img, .ph { width: 64px; height: 64px; border-radius: 10px; object-fit: cover; background: linear-gradient(145deg,#bae6fd,#0369a1); }
 .ph { display: flex; align-items: flex-end; padding: 12px; color: #fff; font-size: 11px; font-weight: 600; box-sizing: border-box; }
@@ -109,7 +117,7 @@ h1 { margin: 0; font-size: 17px; font-weight: 800; color: $hb-ink; }
 .price { font-size: 16px; font-weight: 800; color: $hb-price; }
 .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
 .btn {
-  height: 33px; padding: 0 12px; border-radius: 12px; border: 0; background: $hb-ink; color: #fff;
+  height: 36px; padding: 0 14px; border-radius: 999px; border: 0; background: #F96141; color: #fff;
   font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center;
 }
 .btn.soft { background: #fff; color: $hb-ink; border: 1px solid #E8E4DC; }

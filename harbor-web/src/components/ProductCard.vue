@@ -102,7 +102,7 @@ function go() {
 }
 .price-row { display: flex; align-items: baseline; gap: 6px; margin-top: 7px; flex-wrap: wrap; }
 .ship-line { margin-top: 4px; font-size: 11px; color: \-muted; }
-.price { font-size: 16px; font-weight: 780; color: $hb-ink; letter-spacing: -0.02em; }
+.price { font-size: 16px; font-weight: 780; color: $hb-price; letter-spacing: -0.02em; }
 .was { font-size: 12px; color: $hb-muted; text-decoration: line-through; }
 .off-badge { font-size: 11px; color: $hb-forest; font-weight: 720; background: $hb-soft; padding: 2px 7px; border-radius: 999px; }
 </style>

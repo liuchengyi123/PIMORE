@@ -2,25 +2,25 @@
   <div class="page">
     <header class="head">
       <button type="button" class="back" @click="$router.back()" aria-label="back">‹</button>
-      <h1 class="title">Balance</h1>
+      <h1 class="title">{{ zh ? '余额' : 'Balance' }}</h1>
     </header>
 
     <section class="hero">
-      <div class="label">Available balance</div>
+      <div class="label">{{ zh ? '可用余额' : 'Available balance' }}</div>
       <div class="amt">{{ info.balanceText || '—' }}</div>
       <div class="actions">
-        <router-link class="btn white" to="/withdraw">Withdraw</router-link>
-        <router-link class="btn ghost" to="/rewards">Rewards</router-link>
+        <router-link class="btn white" to="/withdraw">{{ zh ? '提现' : 'Withdraw' }}</router-link>
+        <router-link class="btn ghost" to="/rewards">{{ zh ? '奖励' : 'Rewards' }}</router-link>
       </div>
     </section>
 
     <div v-if="info.message === 'login-required'" class="gate">
-      <router-link class="gate-btn" :to="{ path: '/login', query: { next: '/balance' } }">Sign in</router-link>
+      <router-link class="gate-btn" :to="{ path: '/login', query: { next: '/balance' } }">{{ zh ? '登录' : 'Sign in' }}</router-link>
     </div>
 
     <section class="activity">
-      <h2>Recent activity</h2>
-      <div v-if="!rows.length" class="empty">{{ info.note || 'Invite and reward credits appear here.' }}</div>
+      <h2>{{ zh ? '最近变动' : 'Recent activity' }}</h2>
+      <div v-if="!rows.length" class="empty">{{ info.note || (zh ? '邀请和奖励会记在这里。' : 'Invite and reward credits appear here.') }}</div>
       <div v-for="(r, i) in rows" :key="i" class="row-card">
         <div>
           <div class="nm">{{ r.title }}</div>
@@ -34,6 +34,9 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive } from 'vue'
 import { fetchBalancePanel, type BalanceInfo } from '@/api/accountApi'
+import { useI18n } from '@/composables/i18n'
+const { lang } = useI18n()
+const zh = computed(() => String(lang.value).startsWith('zh'))
 const info = reactive<BalanceInfo>({ ok: false, live: false, signedIn: false, balanceText: '—', note: '' })
 onMounted(async () => { Object.assign(info, await fetchBalancePanel()) })
 const rows = computed(() => {
@@ -50,13 +53,13 @@ const rows = computed(() => {
 })
 </script>
 <style scoped>
-.page { min-height: 100vh; background: #F7F4EF; color: #0F2744; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
+.page { min-height: 100vh; background: #FCFAF8; color: #1C2430; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
 .head { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
-.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #0F2744; }
-.title { font-size: 17px; font-weight: 700; margin: 0; }
+.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #1C2430; }
+.title { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; margin: 0; }
 .hero {
   border-radius: 18px; padding: 20px;
-  background: linear-gradient(163deg, #0F2744 6%, #1A3A5C 94%);
+  background: linear-gradient(163deg, #F96141 6%, #1A3A5C 94%);
   color: #fff;
 }
 .label { font-size: 12px; opacity: 0.8; }
@@ -66,10 +69,10 @@ const rows = computed(() => {
   display: flex; align-items: center; justify-content: center; height: 41px; border-radius: 12px;
   font-size: 14px; font-weight: 600; text-decoration: none;
 }
-.btn.white { background: #fff; color: #0F2744; }
+.btn.white { background: #fff; color: #1C2430; }
 .btn.ghost { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); color: #fff; }
 .gate { margin-top: 14px; text-align: center; }
-.gate-btn { display: inline-flex; background: #0F2744; color: #fff; padding: 12px 18px; border-radius: 999px; text-decoration: none; font-weight: 600; }
+.gate-btn { display: inline-flex; background: #F96141; color: #fff; padding: 12px 18px; border-radius: 999px; text-decoration: none; font-weight: 600; }
 .activity { margin-top: 16px; }
 .activity h2 { font-size: 16px; font-weight: 700; margin: 0 0 10px; }
 .empty { color: #6B7280; font-size: 13px; padding: 8px 0; }

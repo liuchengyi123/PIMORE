@@ -9,7 +9,7 @@
 <body>
   <div id="loginView" class="login-view">
     <form id="loginForm" class="login-card">
-      <div class="brand"><span class="mark">H</span><div><strong>Harbor 客服台</strong><small>独立桌面端 · Desktop</small></div></div>
+      <div class="brand"><span class="mark">H</span><div><strong>Harbor/Pimo</strong><small>客服登录 · CS Desktop</small></div></div>
       <label>店铺地址<input id="baseUrl" name="base" value="http://127.0.0.1:8787" /></label>
       <label>账号<input id="username" name="username" autocomplete="username" autofocus /></label>
       <label>密码<input id="password" name="password" type="password" autocomplete="current-password" /></label>
@@ -61,9 +61,11 @@
             <button type="button" data-chip="unassigned">未分配</button>
             <button type="button" data-chip="hung">挂起</button>
           </div>
+          <p id="chipHint" class="chip-hint">全部进行中会话</p>
         </div>
         <div id="roomList" class="room-list"></div>
         <div id="closedEmpty" class="empty empty-closed" hidden data-figma="S10">
+          <div class="empty-ico">📁</div>
           <strong>没有匹配的已关闭会话</strong>
           <p class="muted small">试试邮箱、商品名或订单号；清空搜索可查看最近关闭会话。</p>
         </div>
@@ -189,6 +191,20 @@
       </div>
     </div>
 
+    <div id="orderDetailModal" class="sku-modal" hidden>
+      <div class="sku-modal-card" role="dialog" aria-modal="true">
+        <div class="sku-modal-head">
+          <strong>订单详情</strong>
+          <button type="button" id="orderDetailClose" class="btn ghost">关闭</button>
+        </div>
+        <div id="orderDetailBody" class="order-detail-body"></div>
+        <div class="sku-modal-head">
+          <span></span>
+          <button type="button" id="orderDetailSend" class="btn primary">发送订单卡</button>
+        </div>
+      </div>
+    </div>
+
     <!-- SKU picker modal -->
     <div id="skuPickerModal" class="sku-modal" hidden>
       <div class="sku-modal-card">
@@ -206,6 +222,16 @@
   <audio id="pingSound" preload="auto">
     <source src="ping.wav" type="audio/wav" />
   </audio>
+  <div id="askModal" class="sku-modal" hidden>
+    <div class="sku-modal-card" role="dialog" aria-modal="true">
+      <div class="sku-modal-head"><strong>请确认</strong></div>
+      <p id="askModalBody" class="muted"></p>
+      <div class="sku-modal-head">
+        <button type="button" id="askModalNo" class="btn ghost">取消</button>
+        <button type="button" id="askModalYes" class="btn primary">确定</button>
+      </div>
+    </div>
+  </div>
   <script src="app.js"></script>
 </body>
 </html>

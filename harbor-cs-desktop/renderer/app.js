@@ -117,7 +117,7 @@ function productHtml(p) {
   if (!p || !p.sku) return '<div class="empty-card">暂无</div>';
   const img = p.image
     ? `<img src="${esc(mediaUrl(p.image))}" alt="" />`
-    : '<div style="aspect-ratio:1;background:#0b1612"></div>';
+    : '<div style="aspect-ratio:1;background:#F4F6FB"></div>';
   return `<div class="product-card" data-sku="${esc(p.sku)}">${img}<div class="body"><div>${esc(p.name || p.sku)}</div><div class="price">${esc(p.price || '')}</div><div class="muted small">SKU ${esc(p.sku)}</div></div><div class="send-row"><button type="button" class="btn-send-prod" data-send-sku="${esc(p.sku)}">发送给用户</button></div></div>`;
 }
 
@@ -221,7 +221,7 @@ function renderBodyHtml(body) {
     const url = b.slice(5).trim().split(/\s+/)[0] || '';
     const src = mediaUrl(url);
     if (!src) return esc(b);
-    return `<img class="bubble-img" src="${esc(src)}" alt="图片" data-full="${esc(src)}" />`;
+    return `<div class="img-bubble"><img class="bubble-img" src="${esc(src)}" alt="图片" data-full="${esc(src)}" /><span class="img-cap">图片</span></div>`;
   }
   const prod = parseProductBody(b);
   if (prod) {
@@ -286,9 +286,9 @@ function renderMessages() {
       if (role === 'system' && rawBody.startsWith('[ops]')) rawBody = rawBody.slice(5);
       const isSpecial = rawBody.startsWith('[img]') || rawBody.startsWith('[product]') || rawBody.startsWith('[order]');
       if (!isSpecial && role === 'user' && m.body_user_original && m.body_user_original !== m.body) {
-        extra = `<div class="orig muted small">原文：${esc(m.body_user_original)}</div>`;
+        extra = `<div class="orig">原文：${esc(m.body_user_original)}</div>`;
       } else if (!isSpecial && role === 'staff' && m.translated && m.body_original && m.lang && m.lang !== 'zh') {
-        extra = `<div class="orig muted small">已译为 ${esc(m.lang)}</div>`;
+        extra = `<div class="orig">已译为 ${esc(m.lang)} · ${esc(m.body_original)}</div>`;
       }
       const showBody = (role === 'system' && String(m.body||'').startsWith('[ops]')) ? String(m.body).slice(5) : m.body;
       return `<div class="bubble ${role}">${renderBodyHtml(showBody)}${extra}<span class="meta">${esc(who)} · ${esc(fmtTime(m.created_at))}</span></div>`;
@@ -549,6 +549,7 @@ function renderOrders(orders) {
       <div class="muted small">${track ? '物流 ' + esc(track) : '暂无物流'}</div>
       <div class="row" style="gap:6px;margin-top:6px">
         <button type="button" class="btn ghost sm" data-order-view="${esc(id)}">详情</button>
+        ${track ? `<button type="button" class="btn ghost sm" data-ship-send="${esc(id)}">发送物流</button>` : ''}
         <button type="button" class="btn sm" data-order-send="${esc(id)}">发送订单卡</button>
       </div>
     </div>`;
@@ -930,9 +931,30 @@ replyBody.addEventListener('keydown', (e) => {
   }
 });
 
+function askConfirm(message) {
+  var modal = document.getElementById('askModal');
+  var body = document.getElementById('askModalBody');
+  var yes = document.getElementById('askModalYes');
+  var no = document.getElementById('askModalNo');
+  body.textContent = message;
+  modal.hidden = false;
+  return new Promise(function (resolve) {
+    function done(ok) {
+      modal.hidden = true;
+      yes.removeEventListener('click', onYes);
+      no.removeEventListener('click', onNo);
+      resolve(ok);
+    }
+    function onYes() { done(true); }
+    function onNo() { done(false); }
+    yes.addEventListener('click', onYes);
+    no.addEventListener('click', onNo);
+  });
+}
+
 document.getElementById('btnCloseRoom').addEventListener('click', async () => {
   if (!state.activeId) return;
-  if (!confirm('确认结束该会话？')) return;
+  if (!(await askConfirm('确认结束该会话？'))) return;
   await window.csDesk.closeRoom(state.activeId);
   state.activeId = null;
   chatPanel.hidden = true;
@@ -1018,8 +1040,22 @@ if (agentStatus) {
 }
 
 ordersList && ordersList.addEventListener('click', async (e) => {
+  const shipBtn = e.target.closest('[data-ship-send]');
   const sendBtn = e.target.closest('[data-order-send]');
   const viewBtn = e.target.closest('[data-order-view]');
+  if (shipBtn && !sendBtn && !viewBtn) {
+    const sid = shipBtn.getAttribute('data-ship-send');
+    const found = (state.orders || []).find((row) => String(row.id ?? row.submit_id ?? '') === String(sid));
+    const track = found && (found.tracking_no || found.tracking || found.logistics_no || '');
+    const carrier = found && (found.carrier || found.shipping_carrier || '');
+    if (!state.activeId) { alert('请先选择会话'); return; }
+    const text = `物流更新 #${sid}${carrier ? ' · ' + carrier : ''}${track ? ' · ' + track : ''}`;
+    const reply = await window.csDesk.reply({ roomId: state.activeId, body: text });
+    if (!reply || !reply.ok) { alert((reply && reply.error) || '发送失败'); return; }
+    await openRoom(state.activeId);
+    refreshInbox();
+    return;
+  }
   const id = (sendBtn && sendBtn.getAttribute('data-order-send'))
     || (viewBtn && viewBtn.getAttribute('data-order-view'))
     || ((e.target.closest('.order-item') || {}).dataset || {}).id;
@@ -1060,22 +1096,44 @@ ordersList && ordersList.addEventListener('click', async (e) => {
     refreshInbox();
     return;
   }
-  const lines = [
-    `订单 #${o.id ?? ''}`,
-    `状态：${o.status || ''}`,
-    `邮箱：${o.email || ''}`,
-    `物流：${o.tracking_no || o.tracking || o.logistics_no || '无'}`,
-    `承运：${o.carrier || o.shipping_carrier || ''}`,
-  ];
-  if (Array.isArray(o.items)) {
-    lines.push('商品：');
-    for (const it of o.items.slice(0, 8)) {
-      lines.push(`- ${it.name || it.sku || ''} x${it.qty || it.quantity || 1}`);
+  const modal = document.getElementById('orderDetailModal');
+  const body = document.getElementById('orderDetailBody');
+  const send = document.getElementById('orderDetailSend');
+  if (modal && body) {
+    const rows = [
+      ['订单', '#' + (o.id ?? '')],
+      ['状态', o.status || '—'],
+      ['邮箱', o.email || '—'],
+      ['物流', o.tracking_no || o.tracking || o.logistics_no || '无'],
+      ['承运', o.carrier || o.shipping_carrier || '—'],
+      ['金额', o.due_text || o.total || o.due || '—'],
+    ];
+    let html = rows.map(([k, v]) => `<div class="line"><span>${esc(k)}</span><b>${esc(String(v))}</b></div>`).join('');
+    if (Array.isArray(o.items) && o.items.length) {
+      html += '<div class="items">' + o.items.slice(0, 8).map((it) => `<div>${esc(it.name || it.sku || '')} ×${esc(String(it.qty || it.quantity || 1))}</div>`).join('') + '</div>';
     }
+    body.innerHTML = html;
+    if (send) send.dataset.orderId = String(o.id ?? id);
+    modal.hidden = false;
+    return;
   }
-  alert(lines.filter(Boolean).join('
-'));
 });
+
+const orderDetailModal = document.getElementById('orderDetailModal');
+const orderDetailClose = document.getElementById('orderDetailClose');
+const orderDetailSend = document.getElementById('orderDetailSend');
+if (orderDetailClose && orderDetailModal) {
+  orderDetailClose.addEventListener('click', () => { orderDetailModal.hidden = true; });
+  orderDetailModal.addEventListener('click', (ev) => { if (ev.target === orderDetailModal) orderDetailModal.hidden = true; });
+}
+if (orderDetailSend && orderDetailModal) {
+  orderDetailSend.addEventListener('click', () => {
+    const oid = orderDetailSend.dataset.orderId || '';
+    const btn = oid && ordersList ? ordersList.querySelector('[data-order-send="' + oid.replace(/"/g, '') + '"]') : null;
+    orderDetailModal.hidden = true;
+    if (btn) btn.click();
+  });
+}
 
 
 const inboxChips = document.getElementById('inboxChips');
@@ -1085,6 +1143,9 @@ if (inboxChips) {
     if (!btn) return;
     state.inboxChip = btn.getAttribute('data-chip') || 'all';
     inboxChips.querySelectorAll('[data-chip]').forEach((el) => el.classList.toggle('on', el === btn));
+    const chipHint = document.getElementById('chipHint');
+    const chipCopy = { all: '全部进行中会话', mine: '只看分配给我的', unassigned: '还没有客服接手', hung: '挂起或 AI 接待中' };
+    if (chipHint) chipHint.textContent = chipCopy[state.inboxChip] || chipCopy.all;
     renderRooms();
   });
 }
@@ -1148,7 +1209,7 @@ if (btnToAi) {
       alert('桌面桥接未更新，请重启客服台');
       return;
     }
-    if (!confirm('确认把当前会话转给 AI 自动接待？\n之后用户发言将由 AI 回复；你再手动回复会接回人工。')) return;
+    if (!(await askConfirm('确认把当前会话转给 AI 自动接待？之后用户发言将由 AI 回复；你再手动回复会接回人工。'))) return;
     btnToAi.disabled = true;
     try {
       const res = await window.csDesk.toAi({ roomId: state.activeId });

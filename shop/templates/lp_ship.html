@@ -9,10 +9,10 @@
 {% block body %}
 <section class="lp" data-lp="ship">
   <header class="lp-top">
-    <a class="lp-brand" href="{{ href('/', country) }}">Harbor<sup>flash</sup></a>
+    <a class="lp-brand" href="{{ href('/', country) }}">Pimo</a>
     <div class="lp-top-actions">
       {% if lp_ends %}
-      <span class="lp-top-cd"><span class="lp-top-cd-lab">Ends</span> <span class="cd cd-ms" data-ends="{{ lp_ends }}" data-cd="ms">--:--:--</span></span>
+      <span class="lp-top-cd"><span class="lp-top-cd-lab">{{ t.lp_ends }}</span> <span class="cd cd-ms" data-ends="{{ lp_ends }}" data-cd="ms">--:--:--</span></span>
       {% endif %}
       <a class="lp-cart" href="{{ href('/cart', country) }}" aria-label="{{ t.cart }}">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 7h15l-1.6 8.2a2 2 0 0 1-2 1.6H9.2a2 2 0 0 1-2-1.6L5 4H3"/><circle cx="9" cy="20" r="1.3"/><circle cx="18" cy="20" r="1.3"/></svg>
@@ -23,34 +23,34 @@
 
   <div class="lp-hero">
     <div class="lp-hero-badges" aria-hidden="true">
-      <span class="lp-pill lp-pill-flash">FLASH SALE</span>
-      <span class="lp-pill lp-pill-hot">LIMITED TIME</span>
+      <span class="lp-pill lp-pill-flash">{{ t.lp_rush_kicker }}</span>
+      <span class="lp-pill lp-pill-hot">{{ t.lp_count_kicker }}</span>
     </div>
-    {% if lp_seg %}<p class="lp-seg-badge">Audience · {{ lp_seg }}</p>{% endif %}
-    <p class="lp-kicker">{% if lp_seg %}Picks for {{ lp_seg }} · ends soon{% else %}Ends soon — tap a deal to open{% endif %}</p>
-    <h1>Flash prices. <em>~10 minutes</em> left.</h1>
-    <p class="lp-sub">Grab a limited deal before it rolls back — tap any pick to open the product page.</p>
+    {% if lp_seg %}<p class="lp-seg-badge">{{ t.lp_fall_kicker }} · {{ lp_seg }}</p>{% endif %}
+    <p class="lp-kicker">{% if lp_seg %}{{ lp_seg }} · {{ t.lp_count_kicker }}{% else %}{{ t.lp_count_sub }}{% endif %}</p>
+    <h1>{{ t.lp_dense_kicker }}</h1>
+    <p class="lp-sub">{{ t.lp_dense_sub }}</p>
     {% if lp_ends %}
     <div class="lp-countdown" role="timer" aria-live="polite">
-      <span class="lp-countdown-lab">Ends in</span>
+      <span class="lp-countdown-lab">{{ t.lp_ends }}</span>
       <strong class="cd cd-ms" data-ends="{{ lp_ends }}" data-cd="ms">--:--:--</strong>
     </div>
     {% endif %}
     <div class="lp-hero-actions">
-      <a class="lp-cta" href="#lp-deals">Shop flash deals</a>
+      <a class="lp-cta" href="#lp-deals">{{ t.lp_enter }}</a>
     </div>
   </div>
 
   <div class="lp-ticker" aria-hidden="true">
     <div class="lp-ticker-track">
-      <span>Flash prices · limited</span>
-      <span>Tap a card → product page</span>
-      <span>Limit 1 at flash price</span>
-      <span>Hot household picks</span>
-      <span>Flash prices · limited</span>
-      <span>Tap a card → product page</span>
-      <span>Limit 1 at flash price</span>
-      <span>Hot household picks</span>
+      <span>{{ t.lp_tick_sell }}</span>
+      <span>{{ t.lp_tick_open }}</span>
+      <span>{{ t.lp_tick_one }}</span>
+      <span>{{ t.lp_ship }}</span>
+      <span>{{ t.lp_tick_sell }}</span>
+      <span>{{ t.lp_tick_open }}</span>
+      <span>{{ t.lp_tick_one }}</span>
+      <span>{{ t.lp_ship }}</span>
     </div>
   </div>
 
@@ -64,12 +64,12 @@
   <section class="lp-strip" id="lp-deals">
     <div class="lp-strip-head">
       <div>
-        <p class="lp-head-kicker">Limited flash</p>
-        <h2>Tap a deal to open</h2>
+        <p class="lp-head-kicker">{{ t.lp_rush_kicker }}</p>
+        <h2>{{ t.lp_count_kicker }}</h2>
       </div>
       <div class="lp-strip-tools">
         {% if lp_ends %}<span class="cd cd-ms lp-strip-cd" data-ends="{{ lp_ends }}" data-cd="ms">--:--:--</span>{% endif %}
-        <a class="lp-reshuffle" href="{{ href('/lp/ship?batch=' ~ (lp_next_batch|default(1)) ~ ('&seg=' ~ lp_seg if lp_seg else ''), country) }}#lp-deals">换一批</a>
+        <a class="lp-reshuffle" href="{{ href('/lp/ship?batch=' ~ (lp_next_batch|default(1)) ~ ('&seg=' ~ lp_seg if lp_seg else ''), country) }}#lp-deals">{{ '换一批' if (lang or '')[:2] == 'zh' else 'Shuffle' }}</a>
       </div>
     </div>
     {% if flash_items %}
@@ -78,7 +78,7 @@
       <a class="lp-deal is-flash" role="listitem" href="/api/ad/deal?sku={{ item.sku }}&amp;country={{ country }}{% if lp_seg %}&amp;seg={{ lp_seg }}{% endif %}">
         <span class="lp-deal-shot">
           <img src="{{ shot(item.image) }}" width="480" height="480" alt="" decoding="async" {% if loop.index <= 2 %}fetchpriority="high"{% else %}loading="lazy"{% endif %}>
-          <span class="lp-deal-badge">FLASH</span>
+          <span class="lp-deal-badge">{{ t.lp_rush_kicker }}</span>
           {% if item.limit_one %}<span class="lp-deal-limit">{{ t.limit_one }}</span>{% endif %}
         </span>
         <span class="lp-deal-copy">
@@ -87,13 +87,13 @@
             <span class="price">{{ item.price }}</span>
             {% if item.original %}<span class="was{% if item.higher %} strike{% endif %}">{{ item.original }}</span>{% endif %}
           </span>
-          <span class="lp-deal-go">View deal</span>
+          <span class="lp-deal-go">{{ t.lp_grab }}</span>
         </span>
       </a>
       {% endfor %}
     </div>
     <div class="lp-reshuffle-row">
-      <a class="lp-reshuffle lp-reshuffle-lg" href="{{ href('/lp/ship?batch=' ~ (lp_next_batch|default(1)) ~ ('&seg=' ~ lp_seg if lp_seg else ''), country) }}#lp-deals">换一批 · more deals</a>
+      <a class="lp-reshuffle lp-reshuffle-lg" href="{{ href('/lp/ship?batch=' ~ (lp_next_batch|default(1)) ~ ('&seg=' ~ lp_seg if lp_seg else ''), country) }}#lp-deals">{{ '换一批' if (lang or '')[:2] == 'zh' else 'Shuffle' }}</a>
     </div>
     {% endif %}
   </section>
@@ -102,8 +102,8 @@
   <section class="lp-strip lp-strip-more">
     <div class="lp-strip-head">
       <div>
-        <p class="lp-head-kicker">More picks</p>
-        <h2>Also hot right now</h2>
+        <p class="lp-head-kicker">{{ t.lp_hero_kicker }}</p>
+        <h2>{{ t.lp_band_more }}</h2>
       </div>
     </div>
     <div class="lp-deals" role="list">
@@ -114,7 +114,7 @@
           {% if item.campaign_kind == 'newcomer' %}
           <span class="lp-deal-badge lp-deal-badge-new">{{ t.new_badge }}</span>
           {% else %}
-          <span class="lp-deal-badge lp-deal-badge-deal">DEAL</span>
+          <span class="lp-deal-badge lp-deal-badge-deal">{{ t.lp_grab }}</span>
           {% endif %}
           {% if item.limit_one %}<span class="lp-deal-limit">{{ t.limit_one }}</span>{% endif %}
         </span>
@@ -124,7 +124,7 @@
             <span class="price">{{ item.price }}</span>
             {% if item.original %}<span class="was{% if item.higher %} strike{% endif %}">{{ item.original }}</span>{% endif %}
           </span>
-          <span class="lp-deal-go">View deal</span>
+          <span class="lp-deal-go">{{ t.lp_grab }}</span>
         </span>
       </a>
       {% endfor %}
@@ -134,7 +134,7 @@
   <p class="lp-empty">{{ t.sale_empty }} <a href="{{ href('/', country) }}">{{ t.back_shop }}</a></p>
   {% endif %}
 
-  <p class="lp-footnote">Picks count toward sitewide free shipping at {{ free_ship_text }} cart — not per item.</p>
+  <p class="lp-footnote">{{ t.lp_ship }} · {{ free_ship_text }}</p>
 
   <footer class="lp-foot">
     <a href="{{ href('/policies/shipping', country) }}">{{ t.shipping_policy }}</a>
@@ -146,10 +146,10 @@
 <aside class="lp-stick">
   <div class="lp-stick-row">
     <div class="lp-stick-copy">
-      <strong>{% if lp_ends %}Flash ends in <span class="cd cd-ms" data-ends="{{ lp_ends }}" data-cd="ms">--:--:--</span>{% else %}Flash deals live now{% endif %}</strong>
-      <span>Tap a deal → product page</span>
+      <strong>{% if lp_ends %}{{ t.lp_ends }} <span class="cd cd-ms" data-ends="{{ lp_ends }}" data-cd="ms">--:--:--</span>{% else %}{{ t.lp_rush_kicker }}{% endif %}</strong>
+      <span>{{ t.lp_tick_one }}</span>
     </div>
-    <a class="lp-stick-go" href="#lp-deals">Shop deals</a>
+    <a class="lp-stick-go" href="#lp-deals">{{ t.lp_enter }}</a>
   </div>
 </aside>
 {% endblock %}

@@ -1,11 +1,11 @@
 /* Harbor Function mobile tokens — visual rebuild */
 :root {
-  --fn-ink: #0F2744;
-  --fn-teal: #0E7490;
-  --fn-amber: #B45309;
-  --fn-sand: #F7F4EF;
-  --fn-line: #E8E4DC;
-  --fn-muted: #6B7280;
+  --fn-ink: #1C2430;
+  --fn-teal: #F96141;
+  --fn-amber: #F96141;
+  --fn-sand: #FCFAF8;
+  --fn-line: #EFEAE4;
+  --fn-muted: #8B919A;
   --fn-surface: #FFFFFF;
 }
 .fn-page {

@@ -1,243 +1,311 @@
 ﻿<template>
-  <div class="fn-page page" data-figma="M01">
-    <header class="sticky-top">
-      <div class="brand-row">
+  <div class="home" data-figma="1:5">
+    <header class="top">
+      <div class="brand">
+        <span class="mark" aria-hidden="true"><Home :size="18" :stroke-width="2.2" /></span>
         <div>
-          <div class="logo">Harbor <span class="sg">small goods</span></div>
-          <div class="tagline">{{ t('home_tagline') || 'Cross-border household essentials' }}</div>
-        </div>
-        <div class="right-actions">
-          <router-link class="locale-pill" to="/locale">{{ localeLabel }}</router-link>
-          <router-link class="icon-btn cart" to="/cart" aria-label="cart">
-            <ShoppingBag :size="18" :stroke-width="1.7" />
-            <span v-if="cartCount > 0" class="badge">{{ cartCount > 99 ? '99+' : cartCount }}</span>
-          </router-link>
+          <div class="logo">Pimo</div>
+          <div class="tagline">{{ zh ? '更好的家，更开心的一天' : 'Better Homes. Happier Days.' }}</div>
         </div>
       </div>
-      <div class="search-wrap">
-        <AppSearchBar :placeholder="searchPh" navigate-on-focus />
-      </div>
+      <router-link class="locale" :to="{ path: '/home', query: { locale: '1' } }">
+        <span>{{ localeFlag }}</span>
+        <span>{{ localeCode }}</span>
+        <ChevronDown :size="14" :stroke-width="2.2" />
+      </router-link>
     </header>
 
+    <div class="search-wrap">
+      <AppSearchBar :placeholder="zh ? '搜索家居好物...' : 'Search home essentials...'" navigate-on-focus />
+    </div>
+
     <section class="hero">
-      <div class="hero-kicker">{{ t('home_curated') || 'THIS WEEK' }}</div>
-      <div class="hero-title">{{ t('home_for_you') || 'Kitchen refresh up to 30% off' }}</div>
-      <router-link class="hero-cta" to="/sale">{{ t('sale_shop') || 'Shop Sale' }} →</router-link>
+      <div class="hero-copy">
+        <div class="kicker">{{ zh ? '限时' : 'LIMITED TIME' }}</div>
+        <h1>{{ zh ? '家居好物最高 5 折' : 'Up to 50% Off Home Essentials' }}</h1>
+        <p>{{ zh ? '把家里刷新一下，少花一点。' : 'Refresh your space, for less.' }}</p>
+        <router-link class="cta" to="/sale">{{ zh ? '去抢购' : 'Shop Sale' }} →</router-link>
+        <div class="dots" aria-hidden="true"><i class="on" /><i /><i /><i /></div>
+      </div>
+      <img class="hero-photo" :src="heroPhoto" alt="" />
     </section>
 
-    <div class="body">
-      <div class="quick">
-        <router-link v-for="q in quickLinks" :key="q.to" class="quick-item" :to="q.to">
-          <span class="q-ico" :style="{ background: q.bg, color: q.fg }">
-            <component :is="q.icon" :size="18" :stroke-width="1.7" />
-          </span>
-          <span class="q-lab">{{ q.label }}</span>
-        </router-link>
-      </div>
+    <div class="cats">
+      <router-link v-for="q in quickLinks" :key="q.to" class="cat" :to="q.to">
+        <span class="bubble" :style="{ background: q.bg, color: q.fg }">
+          <component :is="q.icon" :size="18" :stroke-width="1.9" />
+        </span>
+        <span>{{ q.label }}</span>
+      </router-link>
+    </div>
 
-      <div class="cats">
-        <button type="button" class="cat-pill" :class="{ on: !activeCat }" @click="filterCat('')">{{ t('cat_all') || 'For you' }}</button>
-        <button
-          v-for="c in categories"
-          :key="c.id"
-          type="button"
-          class="cat-pill"
-          :class="{ on: activeCat === c.id }"
-          @click="filterCat(c.id)"
-        >{{ catLabel(c.id) }}</button>
-      </div>
-
-      <div class="sec-head">
-        <div class="section-title">{{ t('recommended') || 'Recommended' }}</div>
-        <div class="tiny">{{ t('personalized_note') || 'Personalized' }}</div>
-      </div>
-
-      <div v-if="loading" class="state">{{ t('pdp_loading') }}</div>
-      <div v-else-if="error" class="state err">{{ error }}</div>
-      <div v-else-if="!products.length" class="state">{{ t('no_products') || 'No products' }}</div>
-      <div v-else class="grid">
-        <ProductCard v-for="p in products" :key="p.sku" :product="p" />
-      </div>
-
-      <div v-if="shopStrip.length" class="shop-strip">
-        <div class="section-title">{{ t('in_the_shop') || 'In the shop' }}</div>
-        <div class="strip">
-          <router-link v-for="p in shopStrip" :key="'s'+p.sku" class="strip-card" :to="'/p/' + p.sku">
-            <div class="strip-thumb" :style="stripBg(p)">
-              <img v-if="p.image" :src="p.image" alt="" />
-            </div>
-            <div class="strip-name">{{ p.name }}</div>
-            <div class="strip-price">{{ money(p.price) }}</div>
-          </router-link>
+    <section class="block">
+      <div class="sec">
+        <div>
+          <div class="sec-title"><Zap :size="16" :stroke-width="2.2" class="zap" /> {{ zh ? '限时特惠' : 'Flash Deals' }}</div>
+          <div class="sec-sub">{{ zh ? '省一笔，时间有限。' : 'Big savings. Limited time.' }}</div>
+        </div>
+        <div class="clock" aria-label="02:18:36">
+          <Clock :size="14" :stroke-width="2" />
+          <span><b>02</b><small>{{ zh ? '时' : 'HRS' }}</small></span>
+          <span><b>18</b><small>{{ zh ? '分' : 'MIN' }}</small></span>
+          <span><b>36</b><small>{{ zh ? '秒' : 'SEC' }}</small></span>
         </div>
       </div>
-    </div>
+      <div class="row">
+        <article v-for="(item, i) in flash" :key="item.name" class="mini" @click="openSlot(i)">
+          <div class="shot">
+            <img :src="item.image" alt="" />
+            <span class="range">$1-$10</span>
+          </div>
+          <div class="nm">{{ item.name }}</div>
+          <div class="pr">
+            <b>{{ money(item.price) }}</b>
+            <button type="button" class="bag" aria-label="Add to cart" @click.stop="addSlot(item, i)"><ShoppingCart :size="14" /></button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="sec">
+        <div>
+          <div class="sec-title"><Sparkles :size="16" class="spark" /> {{ zh ? '新品' : 'New Arrivals' }}</div>
+          <div class="sec-sub">{{ zh ? '刚到的家居好物。' : 'Fresh finds for your home.' }}</div>
+        </div>
+        <router-link class="see" to="/new">{{ zh ? '查看全部' : 'See All' }} →</router-link>
+      </div>
+      <div class="row">
+        <article v-for="(item, i) in arrivals" :key="item.name" class="mini" @click="openSlot(i + 4)">
+          <div class="shot">
+            <img :src="item.image" alt="" />
+            <span class="range">$1-$10</span>
+          </div>
+          <div class="nm">{{ item.name }}</div>
+          <div class="pr">
+            <b>{{ money(item.price) }}</b>
+            <button type="button" class="bag" aria-label="Add to cart" @click.stop="addSlot(item, i + 4)"><ShoppingCart :size="14" /></button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="sec">
+        <div>
+          <div class="sec-title"><UserRound :size="16" class="who" /> {{ zh ? '为你推荐' : 'Just for You' }}</div>
+          <div class="sec-sub">{{ zh ? '按你的喜好挑选。' : 'Based on your interests.' }}</div>
+        </div>
+      </div>
+      <div v-if="error" class="state err">{{ error }}</div>
+      <div class="pair">
+        <article v-for="(item, i) in picks" :key="item.name" class="wide" @click="openSlot(i + 8)">
+          <div class="shot tall">
+            <img :src="item.image" alt="" />
+            <span class="range">$1-$10</span>
+            <span class="sold">{{ zh ? '已售' : 'Sold' }}</span>
+          </div>
+          <div class="nm">{{ item.name }}</div>
+          <div class="stars">★★★★★ <span>({{ item.reviews }})</span></div>
+          <div class="pr">
+            <b>{{ money(item.price) }}</b>
+            <button type="button" class="bag" aria-label="Add to cart" @click.stop="addSlot(item, i + 8)"><ShoppingCart :size="14" /></button>
+          </div>
+        </article>
+      </div>
+    </section>
+
     <AppTabBar active="home" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { ShoppingBag, Percent, Sparkles, Zap, CalendarCheck, Ticket, Wallet, Gift, Heart, Package, LifeBuoy } from 'lucide-vue-next'
-import { CATEGORIES, listProducts, listByCategory, money, type Product } from '@/api/products'
+import { useRouter } from 'vue-router'
+import { Home, ChevronDown, Utensils, Archive, SprayCan, Shirt, Zap, Clock, Sparkles, UserRound, ShoppingCart } from 'lucide-vue-next'
+import { listProducts, listByCategory, money, type Product } from '@/api/products'
 import { useI18n } from '@/composables/i18n'
 import { useCart } from '@/composables/cart'
-import ProductCard from '@/components/ProductCard.vue'
 import AppTabBar from '@/components/AppTabBar.vue'
 import AppSearchBar from '@/components/AppSearchBar.vue'
+import heroPhoto from '@/assets/home/hero-photo.jpg'
+import flash1 from '@/assets/home/flash-1.jpg'
+import flash2 from '@/assets/home/flash-2.jpg'
+import flash3 from '@/assets/home/flash-3.jpg'
+import flash4 from '@/assets/home/flash-4.jpg'
+import neu1 from '@/assets/home/new-1.jpg'
+import neu2 from '@/assets/home/new-2.jpg'
+import neu3 from '@/assets/home/new-3.jpg'
+import neu4 from '@/assets/home/new-4.jpg'
+import just1 from '@/assets/home/just-1.jpg'
+import just2 from '@/assets/home/just-2.jpg'
 
-const { t, catLabel, lang } = useI18n()
+const { t, lang } = useI18n()
+const zh = computed(() => String(lang.value).startsWith('zh'))
 const cart = useCart()
-const cartCount = computed(() => cart.count.value)
-const categories = CATEGORIES
+const router = useRouter()
 const products = ref<Product[]>([])
-const shopStrip = ref<Product[]>([])
-const activeCat = ref('')
-const loading = ref(false)
 const error = ref('')
 
 const searchPh = computed(() =>
-  lang.value === 'en' ? 'Search kitchen, storage, cleaning…' : (t('home_search_ph') || '搜索厨房、收纳、清洁…')
+  lang.value === 'en' ? 'Search home essentials...' : (t('home_search_ph') || '搜索家居好物...')
 )
-
-const localeLabel = computed(() => {
-  const map: Record<string, string> = {
-    en: '🇺🇸 US · USD',
-    zh: '🇨🇳 CN · CNY',
-    ja: '🇯🇵 JP · JPY',
-    de: '🇩🇪 DE · EUR',
-  }
-  return map[lang.value] || '🇺🇸 US · USD'
-})
+const localeFlag = computed(() => ({ en: '🇺🇸', zh: '🇨🇳', 'zh-Hant': '🇹🇼', ja: '🇯🇵', de: '🇩🇪' }[lang.value] || '🇺🇸'))
+const localeCode = computed(() => ({ en: 'US', zh: 'CN', 'zh-Hant': 'TW', ja: 'JP', de: 'DE' }[lang.value] || 'US'))
 
 const quickLinks = computed(() => {
-  const en = lang.value === 'en'
   return [
-    { to: '/sale', label: en ? 'Sale' : '特卖', icon: Percent, bg: '#FEF3C7', fg: '#B45309' },
-    { to: '/new', label: en ? 'New' : '新品', icon: Sparkles, bg: '#D1FAE5', fg: '#047857' },
-    { to: '/ship-lp', label: en ? 'Flash' : '闪购', icon: Zap, bg: '#E0F2FE', fg: '#0E7490' },
-    { to: '/coupons', label: en ? 'Coupons' : '优惠券', icon: Ticket, bg: '#FCE7F3', fg: '#9D174D' },
-    { to: '/checkin', label: en ? 'Check-in' : '签到', icon: CalendarCheck, bg: '#EDE9FE', fg: '#5B21B6' },
-    { to: '/balance', label: en ? 'Balance' : '余额', icon: Wallet, bg: '#FFEDD5', fg: '#B45309' },
-    { to: '/invite', label: en ? 'Invite' : '邀请', icon: Gift, bg: '#CCFBF1', fg: '#0F766E' },
-    { to: '/wishlist', label: en ? 'Wishlist' : '愿望单', icon: Heart, bg: '#F3F4F6', fg: '#0F2744' },
-    { to: '/orders', label: en ? 'Orders' : '订单', icon: Package, bg: '#FEE2E2', fg: '#B91C1C' },
-    { to: '/help', label: en ? 'Help' : '帮助', icon: LifeBuoy, bg: '#E0E7FF', fg: '#3730A3' },
+    { to: '/browse?cat=kitchen', label: zh.value ? '厨房' : 'Kitchen', icon: Utensils, bg: '#FFF1EC', fg: '#F96141' },
+    { to: '/browse?cat=storage', label: zh.value ? '收纳' : 'Storage', icon: Archive, bg: '#E8F8EF', fg: '#1F9D62' },
+    { to: '/browse?cat=cleaning', label: zh.value ? '清洁' : 'Cleaning', icon: SprayCan, bg: '#E7F2FF', fg: '#3B82F6' },
+    { to: '/browse?cat=textile', label: zh.value ? '家纺' : 'Textile', icon: Shirt, bg: '#F3EEFF', fg: '#8B5CF6' },
   ]
 })
 
-function stripBg(p: Product) {
-  if (p.image) return {}
-  return { background: 'linear-gradient(145deg,#BAE6FD,#0369A1)' }
+const flash = [
+  { sku: 'glass-food-storage', name: 'Glass Food Storage Set', price: 6.99, image: flash1 },
+  { sku: 'dish-drying-rack', name: 'Foldable Dish Drying Rack', price: 7.99, image: flash2 },
+  { sku: 'spray-bottles', name: 'Multipurpose Spray Bottles (2)', price: 3.99, image: flash3 },
+  { sku: 'microfiber-cloths', name: 'Microfiber Cleaning Cloths (5)', price: 4.99, image: flash4 },
+]
+const arrivals = [
+  { sku: 'rolling-cart', name: '3-Tier Rolling Cart', price: 8.99, image: neu1 },
+  { sku: 'throw-blanket', name: 'Lightweight Throw Blanket', price: 5.99, image: neu2 },
+  { sku: 'storage-bins', name: 'Stackable Storage Bins (3)', price: 7.49, image: neu3 },
+  { sku: 'utensil-set', name: 'Silicone Utensil Set (5 pcs)', price: 4.99, image: neu4 },
+]
+const picks = [
+  { sku: 'desk-organizer', name: 'Desk Organizer', price: 6.49, image: just1, reviews: 428 },
+  { sku: 'bath-towels', name: 'Quick-Dry Bath Towels', price: 8.99, image: just2, reviews: 612 },
+]
+
+function asProduct(item: { sku: string; name: string; price: number; image: string }, live?: Product): Product {
+  if (live) return live
+  return { id: item.sku, sku: item.sku, name: item.name, price: item.price, category: 'home', image: item.image }
 }
 
-async function loadFeed(cat = '') {
-  loading.value = true
-  error.value = ''
+function openSlot(index: number) {
+  const live = products.value[index]
+  if (live) router.push({ path: '/pdp', query: { sku: live.sku } })
+  else router.push('/browse')
+}
+
+function addSlot(item: { sku: string; name: string; price: number; image: string }, index: number) {
+  cart.add(asProduct(item, products.value[index]))
+}
+
+onMounted(async () => {
   try {
-    products.value = cat ? await listByCategory(cat) : await listProducts()
-    if (!shopStrip.value.length) {
-      const all = products.value.length ? products.value : await listProducts()
-      shopStrip.value = all.slice(0, 8)
-    }
+    products.value = await listProducts()
+    if (!products.value.length) products.value = await listByCategory('')
   } catch (e) {
     error.value = e instanceof Error ? e.message : String(e)
-    products.value = []
-  } finally {
-    loading.value = false
   }
-}
-
-function filterCat(id: string) {
-  activeCat.value = id
-  loadFeed(id)
-}
-
-onMounted(() => loadFeed(''))
+})
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/theme.scss';
-.page { min-height: 100vh; background: $hb-paper; padding-bottom: 28px; }
-.sticky-top {
-  position: sticky; top: 0; z-index: 20;
-  background: rgba(247,244,239,0.94); backdrop-filter: blur(14px);
-  padding: calc(8px + env(safe-area-inset-top)) 16px 4px;
+.home {
+  min-height: 100vh;
+  background: #FDFBF9;
+  color: #1C2430;
+  padding: 16px 16px 8px;
+  font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
-.brand-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-.logo { font-size: 20px; font-weight: 800; color: $hb-ink; letter-spacing: -0.02em; }
-.sg { font-size: 11px; font-weight: 600; color: $hb-deep; vertical-align: super; }
-.tagline { font-size: 11px; color: $hb-muted; margin-top: 2px; }
-.right-actions { display: flex; gap: 8px; align-items: center; }
-.locale-pill {
-  background: #E0F2FE; color: $hb-deep; border-radius: 999px;
-  padding: 6px 10px; font-size: 11px; font-weight: 700; text-decoration: none; white-space: nowrap;
-}
-.icon-btn {
-  position: relative;
-  width: 36px; height: 36px; border-radius: 18px;
-  background: $hb-white; color: $hb-ink; border: 1px solid #E8E4DC;
+.top { display: flex; align-items: center; justify-content: space-between; }
+.brand { display: flex; align-items: center; gap: 8px; }
+.mark {
+  width: 32px; height: 32px; border-radius: 10px; background: #F96141; color: #fff;
   display: inline-flex; align-items: center; justify-content: center;
-  text-decoration: none;
 }
-.badge {
-  position: absolute; top: -2px; right: -2px;
-  min-width: 16px; height: 16px; border-radius: 999px; padding: 0 4px;
-  background: $hb-price; color: #fff; font-size: 10px; font-weight: 700;
-  display: flex; align-items: center; justify-content: center;
+.logo { font-size: 24px; font-weight: 800; letter-spacing: -0.04em; line-height: 1; }
+.tagline { margin-top: 2px; font-size: 11px; color: #8E949C; }
+.locale {
+  display: inline-flex; align-items: center; gap: 4px;
+  height: 32px; padding: 0 10px; border-radius: 999px;
+  background: #fff; border: 1px solid #EEEAE6; color: #1C2430;
+  font-size: 13px; font-weight: 700;
 }
-.search-wrap { margin-top: 12px; }
+.search-wrap { margin-top: 14px; }
+.search-wrap :deep(.search-bar) {
+  min-height: 44px; border-radius: 999px; background: #fff; border: 1px solid #EFEAE4; box-shadow: none;
+}
 .hero {
-  margin: 12px 16px 0; border-radius: 18px; overflow: hidden;
-  background: linear-gradient(120deg, #0F2744 0%, #1A3A5C 45%, #0E7490 100%);
-  color: #fff; padding: 18px;
+  margin-top: 10px; position: relative; min-height: 168px;
+  border-radius: 16px; overflow: hidden; color: #fff;
+  background: linear-gradient(105deg, #F97855 0%, #F96141 42%, #F7B39A 100%);
 }
-.hero-kicker { font-size: 11px; opacity: 0.8; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
-.hero-title { font-size: 22px; font-weight: 800; margin-top: 6px; line-height: 1.2; }
-.hero-cta {
-  display: inline-flex; margin-top: 14px; background: #fff; color: $hb-ink;
-  padding: 8px 14px; border-radius: 999px; font-size: 12px; font-weight: 700; text-decoration: none;
+.hero-copy { position: relative; z-index: 1; padding: 14px 14px 12px; max-width: 58%; }
+.kicker { font-size: 10px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
+.hero h1 { margin: 4px 0 0; font-size: 22px; line-height: 1.1; letter-spacing: -0.03em; font-weight: 800; }
+.hero p { margin: 4px 0 0; font-size: 12px; line-height: 1.3; opacity: 0.95; }
+.cta {
+  display: inline-flex; align-items: center; margin-top: 8px; background: #fff; color: #F96141;
+  height: 32px; border-radius: 999px; padding: 0 12px; font-size: 13px; font-weight: 700;
 }
-.body { padding: 14px 16px 0; }
-.quick {
-  display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px 4px; margin-bottom: 8px;
+.dots { display: flex; gap: 4px; margin-top: 8px; }
+.dots i { width: 6px; height: 6px; border-radius: 99px; background: rgba(255,255,255,0.45); display: block; }
+.dots i.on { width: 14px; background: #fff; }
+.hero-photo {
+  position: absolute; right: 0; top: 0; height: 100%; width: auto; max-width: 46%;
+  object-fit: contain; object-position: right center;
+  mask-image: linear-gradient(90deg, transparent, #000 18%);
 }
-.quick-item {
-  display: flex; flex-direction: column; align-items: center; gap: 6px;
-  color: inherit; text-decoration: none;
+.cats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
+.cat {
+  background: #fff; border-radius: 14px; padding: 8px 4px 8px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  border: 1px solid #F1EEEA; box-shadow: none; color: #1C2430;
+  font-size: 11px; font-weight: 700; line-height: 1.2;
 }
-.q-ico {
-  width: 44px; height: 44px; border-radius: 14px;
+.bubble {
+  width: 36px; height: 36px; border-radius: 999px;
   display: inline-flex; align-items: center; justify-content: center;
 }
-.q-lab { font-size: 10px; font-weight: 600; color: $hb-ink; text-align: center; }
-.cats {
-  display: flex; gap: 8px; overflow-x: auto; padding: 8px 0 12px;
-  -webkit-overflow-scrolling: touch; scrollbar-width: none;
+.block { margin-top: 20px; }
+.sec { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.sec-title { display: flex; align-items: center; gap: 4px; font-size: 18px; font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
+.sec-sub { margin-top: 3px; font-size: 12px; line-height: 1.3; color: #8E949C; }
+.zap, .spark, .who { color: #F96141; }
+.see { color: #F96141; font-size: 13px; font-weight: 700; line-height: 1; padding-top: 0; }
+.clock {
+  display: flex; align-items: center; gap: 3px; color: #F96141;
+  background: transparent; padding: 0;
 }
-.cats::-webkit-scrollbar { display: none; }
-.cat-pill {
-  flex: 0 0 auto; border: 1px solid $hb-line; background: $hb-white;
-  border-radius: 999px; padding: 8px 13px; font-size: 13px; font-weight: 650; color: $hb-ink; cursor: pointer;
-  &.on { background: $hb-ink; color: #fff; border-color: $hb-ink; }
+.clock span {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  line-height: 1; background: #FFF1EC; border-radius: 8px; min-width: 28px; height: 32px; padding: 0 4px;
 }
-.sec-head { display: flex; justify-content: space-between; align-items: end; margin-bottom: 10px; }
-.section-title { font-size: 16px; font-weight: 800; color: $hb-ink; }
-.tiny { font-size: 11px; color: $hb-muted; }
-.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.state { text-align: center; color: $hb-muted; padding: 40px 8px; font-size: 14px; }
-.state.err { color: $hb-coral; }
-.shop-strip { margin-top: 18px; }
-.shop-strip .section-title { margin-bottom: 10px; }
-.strip { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 8px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-.strip::-webkit-scrollbar { display: none; }
-.strip-card { width: 120px; flex-shrink: 0; text-decoration: none; color: inherit; }
-.strip-thumb {
-  height: 100px; border-radius: 12px; overflow: hidden; background: #E2E6EE;
-  img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.clock b { font-size: 13px; font-weight: 800; color: #F96141; letter-spacing: -0.03em; }
+.clock small { font-size: 7px; letter-spacing: 0.02em; color: #F96141; margin-top: 2px; font-weight: 700; }
+.row { display: flex; gap: 12px; overflow-x: auto; margin-top: 10px; padding-bottom: 2px; scrollbar-width: none; }
+.row::-webkit-scrollbar { display: none; }
+.mini, .wide { flex: 0 0 164px; cursor: pointer; }
+.shot { position: relative; border-radius: 16px; overflow: hidden; background: #F4F1EE; aspect-ratio: 1; border: 0; box-shadow: 0 8px 18px rgba(28,36,48,0.06); }
+.shot img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
+.range {
+  position: absolute; left: 10px; top: 10px; height: 18px; display: inline-flex; align-items: center;
+  background: #fff; color: #F96141; font-size: 10px; font-weight: 800; letter-spacing: 0; border-radius: 999px; padding: 0 7px;
 }
-.strip-name { font-size: 12px; font-weight: 600; margin-top: 6px; color: $hb-ink; line-height: 1.3; height: 32px; overflow: hidden; }
-.strip-price { font-size: 13px; font-weight: 700; color: $hb-price; margin-top: 2px; }
-
-.fn-page { --ink:#0F2744; --teal:#0E7490; --amber:#B45309; --sand:#F7F4EF; }
+.sold {
+  position: absolute; left: 10px; bottom: 8px; height: 18px; display: inline-flex; align-items: center;
+  background: #fff; color: #F96141; font-size: 10px; font-weight: 800; border-radius: 999px; padding: 0 7px;
+}
+.nm {
+  margin-top: 8px; font-size: 13px; font-weight: 650; line-height: 1.3; min-height: 2.6em; color: #1C2430;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.pr { display: flex; align-items: center; margin-top: 4px; min-height: 26px; }
+.pr b { color: #F96141; font-size: 16px; font-weight: 800; letter-spacing: -0.03em; }
+.bag {
+  margin-left: auto; width: 26px; height: 26px; border: 0; border-radius: 999px;
+  background: #FFF1EC; color: #F96141; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.wide { flex: none; }
+.shot.tall { aspect-ratio: 334 / 130; }
+.stars { margin-top: 2px; color: #F5B400; font-size: 11px; letter-spacing: 1px; line-height: 1; }
+.stars span { color: #8E949C; letter-spacing: 0; margin-left: 4px; }
+.state { color: #8E949C; font-size: 13px; }
+.state.err { color: #E11D2E; }
 </style>

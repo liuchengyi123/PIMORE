@@ -10,9 +10,9 @@
         <button type="button" class="locale-pill" @click="go('/locale')">{{ localePill }}</button>
       </div>
       <div class="stats">
-        <button type="button" class="stat" @click="go('/balance')"><b>{{ balanceText }}</b><span>Balance</span></button>
-        <button type="button" class="stat" @click="go('/coupons')"><b>{{ couponCount }}</b><span>Coupons</span></button>
-        <button type="button" class="stat" @click="go('/wishlist')"><b>{{ wishCount }}</b><span>Wishlist</span></button>
+        <button type="button" class="stat" @click="go('/balance')"><b>{{ balanceText }}</b><span>{{ lang === 'en' ? 'Wallet' : '钱包' }}</span></button>
+        <button type="button" class="stat" @click="go('/coupons')"><b>{{ couponCount }}</b><span>{{ lang === 'en' ? 'Coupons' : '优惠券' }}</span></button>
+        <button type="button" class="stat" @click="go('/rewards')"><b>{{ pointsText }}</b><span>{{ lang === 'en' ? 'Points' : '积分' }}</span></button>
       </div>
       <div v-if="!acct.signedIn" class="login-row">
         <button type="button" class="login" @click="go('/login', { next: '/me' })">{{ lang === 'en' ? 'Sign in' : '登录' }}</button>
@@ -21,14 +21,14 @@
 
     <section class="orders card">
       <div class="ord-head">
-        <span class="h">My orders</span>
-        <button type="button" class="all" @click="go('/orders')">All ›</button>
+        <span class="h">{{ lang === 'en' ? 'My orders' : '我的订单' }}</span>
+        <button type="button" class="all" @click="go('/orders')">{{ lang === 'en' ? 'All' : '全部' }} ›</button>
       </div>
       <div class="ord-row">
-        <button type="button" class="ost" @click="go('/orders')"><span class="ic">💳</span><span class="ol">To pay</span><b>{{ acct.pending }}</b></button>
-        <button type="button" class="ost" @click="go('/orders')"><span class="ic">📦</span><span class="ol">Paid</span><b>{{ acct.paid }}</b></button>
-        <button type="button" class="ost" @click="go('/orders')"><span class="ic">🚚</span><span class="ol">Shipped</span><b>{{ acct.shipped }}</b></button>
-        <button type="button" class="ost" @click="go('/orders')"><span class="ic">↩</span><span class="ol">Returns</span><b>0</b></button>
+        <button type="button" class="ost" @click="go('/orders')"><span>{{ lang === 'en' ? 'To pay' : '待支付' }}</span><b>{{ acct.pending }}</b></button>
+        <button type="button" class="ost" @click="go('/orders')"><span>{{ lang === 'en' ? 'Paid' : '已支付' }}</span><b>{{ acct.paid }}</b></button>
+        <button type="button" class="ost" @click="go('/orders')"><span>{{ lang === 'en' ? 'Shipped' : '已发货' }}</span><b>{{ acct.shipped }}</b></button>
+        <button type="button" class="ost" @click="go('/return')"><span>{{ lang === 'en' ? 'Returns' : '退货' }}</span><b>0</b></button>
       </div>
     </section>
 
@@ -55,19 +55,32 @@ const { lang } = useI18n()
 const acct = reactive({ signedIn: false, email: '', pending: 0, paid: 0, shipped: 0 })
 const balanceText = ref('$—')
 const couponCount = ref('—')
-const wishCount = ref('—')
+const pointsText = ref('—')
 
-const menu = [
-  { to: '/addresses', label: 'Addresses' },
-  { to: '/payments', label: 'Payment methods' },
-  { to: '/wishlist', label: 'Wishlist' },
-  { to: '/history', label: 'Browsing history' },
-  { to: '/coupons', label: 'Coupons · Check-in · Rewards' },
-  { to: '/invite', label: 'Invite friends' },
-  { to: '/locale', label: 'Country / currency' },
-  { to: '/install', label: 'Install app' },
-  { to: '/help', label: 'Help · Contact · Policies' },
-]
+const menu = computed(() => lang.value === 'en'
+  ? [
+      { to: '/addresses', label: 'Addresses' },
+      { to: '/payments', label: 'Payment methods' },
+      { to: '/wishlist', label: 'Wishlist' },
+      { to: '/history', label: 'Browsing history' },
+      { to: '/coupons', label: 'Coupons · Check-in · Rewards' },
+      { to: '/invite', label: 'Invite friends' },
+      { to: '/locale', label: 'Country / currency' },
+      { to: '/install', label: 'Install app' },
+      { to: '/help', label: 'Help · Contact · Policies' },
+    ]
+  : [
+      { to: '/orders', label: '我的订单' },
+      { to: '/coupons', label: '优惠券' },
+      { to: '/balance', label: '余额' },
+      { to: '/wishlist', label: '愿望单' },
+      { to: '/addresses', label: '收货地址' },
+      { to: '/payments', label: '支付方式' },
+      { to: '/rewards', label: '奖励' },
+      { to: '/invite', label: '邀请好友' },
+      { to: '/help', label: '帮助与客服' },
+      { to: '/locale', label: '国家与货币' },
+    ])
 
 const displayName = computed(() => {
   if (!acct.signedIn) return lang.value === 'en' ? 'Welcome to Harbor' : '欢迎来到 Harbor'
@@ -102,63 +115,58 @@ onMounted(async () => {
     // honest counts only — no invented wishlist/coupon numbers
     if ((s as any).balanceText) balanceText.value = String((s as any).balanceText)
     if ((s as any).coupons != null) couponCount.value = String((s as any).coupons)
-    if ((s as any).wishlist != null) wishCount.value = String((s as any).wishlist)
+    if ((s as any).points != null) pointsText.value = String((s as any).points)
   } catch { /* guest */ }
 })
 </script>
 <style scoped>
-.page { min-height: 100vh; background: #F7F4EF; color: #0F2744; padding-bottom: 90px; }
+.page { min-height: 100vh; background: #FCFAF8; color: #1C2430; padding-bottom: 90px; }
 .hero {
-  padding: 16px 16px 18px; padding-top: calc(16px + env(safe-area-inset-top));
-  background-image: linear-gradient(172deg, #0F2744 8%, #1A3A5C 92%); color: #fff;
-  border-bottom-left-radius: 24px; border-bottom-right-radius: 24px;
+  padding: 12px 16px 4px; padding-top: calc(12px + env(safe-area-inset-top));
+  background: #FCFAF8; color: #1C2430;
 }
-.top { display: flex; align-items: center; gap: 12px; }
+.top { display: flex; align-items: center; gap: 10px; }
 .avatar {
-  width: 52px; height: 52px; border-radius: 26px; background: #0E7490;
-  display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; flex-shrink: 0;
+  width: 52px; height: 52px; border-radius: 26px; background: #F96141; color: #fff;
+  display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; flex-shrink: 0;
 }
 .who { flex: 1; min-width: 0; }
-.name { font-size: 18px; font-weight: 700; }
-.email { margin-top: 2px; font-size: 12px; opacity: 0.75; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.name { font-size: 17px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; }
+.email { margin-top: 2px; font-size: 12px; color: #8B919A; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .locale-pill {
-  border: 0; background: rgba(255,255,255,0.15); color: #fff; font-size: 11px; font-weight: 600;
-  padding: 4px 10px; border-radius: 999px; cursor: pointer; white-space: nowrap;
+  border: 0; background: #FFF1EC; color: #F96141; font-size: 11px; font-weight: 700;
+  height: 28px; padding: 0 10px; border-radius: 999px; cursor: pointer; white-space: nowrap;
 }
-.stats { display: flex; gap: 8px; margin-top: 18px; }
+.stats { display: flex; gap: 6px; margin-top: 8px; }
 .stat {
-  flex: 1; border: 0; background: rgba(255,255,255,0.1); color: #fff; border-radius: 12px; padding: 10px; cursor: pointer;
-  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  flex: 1; min-height: 52px; border: 1px solid #F1EEEA; background: #fff; color: #1C2430;
+  border-radius: 12px; padding: 6px 4px; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
 }
-.stat b { font-size: 16px; }
-.stat span { font-size: 10px; opacity: 0.75; }
-.login-row { margin-top: 12px; }
+.stat b { font-size: 15px; color: #F96141; letter-spacing: -0.02em; line-height: 1.1; }
+.stat span { font-size: 10px; color: #8B919A; }
+.login-row { margin-top: 10px; }
 .login {
-  border: 0; background: #fff; color: #0F2744; font-weight: 700; font-size: 13px;
-  height: 36px; padding: 0 16px; border-radius: 12px; cursor: pointer;
+  border: 0; background: #F96141; color: #fff; font-weight: 700; font-size: 14px;
+  height: 36px; padding: 0 16px; border-radius: 999px; cursor: pointer;
 }
-.card { margin: 14px 16px 0; background: #fff; border: 1px solid #E8E4DC; border-radius: 16px; overflow: hidden; }
-.ord-head { display: flex; justify-content: space-between; align-items: center; padding: 14px 14px 0; }
-.h { font-size: 14px; font-weight: 700; }
-.all { border: 0; background: transparent; color: #6B7280; font-size: 11px; cursor: pointer; }
-.ord-row { display: flex; padding: 12px 4px 14px; }
+.card { margin: 10px 16px 0; background: #fff; border: 1px solid #F1EEEA; border-radius: 14px; overflow: hidden; }
+.ord-head { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px 0; }
+.h { font-size: 14px; font-weight: 800; }
+.all { border: 0; background: transparent; color: #F96141; font-size: 12px; font-weight: 700; cursor: pointer; }
+.ord-row { display: flex; gap: 6px; padding: 8px 10px 10px; }
 .ost {
-  flex: 1; border: 0; background: transparent; cursor: pointer; color: inherit;
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  flex: 1; height: 32px; border: 0; border-radius: 999px; background: #FFF6F3; cursor: pointer; color: #1C2430;
+  display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 3px;
+  font-size: 11px; font-weight: 700; padding: 0 4px;
 }
-.ic { font-size: 18px; }
-.ol { font-size: 11px; color: #6B7280; }
-.ost b { font-size: 11px; color: #0F2744; }
+.ost b { font-size: 12px; color: #F96141; font-weight: 800; }
 .menu .row {
   width: 100%; display: flex; justify-content: space-between; align-items: center;
-  padding: 14px; border: 0; border-bottom: 1px solid #E8E4DC; background: #fff; cursor: pointer;
-  font-size: 14px; color: #0F2744; text-align: left;
+  height: 44px; padding: 0 12px; border: 0; border-bottom: 1px solid #F1EEEA; background: #fff; cursor: pointer;
+  font-size: 14px; font-weight: 700; color: #1C2430; text-align: left;
 }
 .menu .row:last-child { border-bottom: 0; }
-.chev { color: #6B7280; }
-.cs-fab {
-  position: fixed; right: 16px; bottom: 86px; z-index: 40;
-  width: 48px; height: 48px; border-radius: 24px; border: 0; background: #0F2744; color: #fff;
-  font-size: 10px; font-weight: 700; box-shadow: 0 8px 10px rgba(15,39,68,0.25); cursor: pointer;
-}
+.chev { color: #F96141; font-size: 16px; }
+.cs-fab { display: none; }
 </style>

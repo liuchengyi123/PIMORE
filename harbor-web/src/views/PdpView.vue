@@ -7,49 +7,78 @@
         <span v-if="discount" class="pill coral">-{{ discount }}%</span>
       </div>
       <button type="button" class="back" @click="goBack" aria-label="back"><ChevronLeft :size="22" :stroke-width="1.75" /></button>
+      <div class="gtools">
+        <button type="button" @click="doWish" aria-label="save"><Heart :size="18" /></button>
+        <button type="button" @click="share" aria-label="share"><Share2 :size="18" /></button>
+      </div>
+    </div>
+    <div v-if="thumbs.length > 1" class="thumbs">
+      <button v-for="(src, i) in thumbs" :key="src + i" type="button" :class="{ on: activeShot === i }" @click="activeShot = i">
+        <img :src="src" alt="" />
+      </button>
     </div>
 
     <div class="body">
+      <h1 class="title">{{ product.name }}</h1>
+      <p class="blurb top">{{ product.blurb || t('pdp_blurb_default') }}</p>
       <div class="price-row">
         <span class="price" :class="{ oos: isOos }">{{ money(displayPrice) }}</span>
         <span v-if="displayCompare" class="was">{{ money(displayCompare) }}</span>
-        <span v-if="discount" class="pill amber">-{{ discount }}%</span>
+        <span v-if="discount" class="off">{{ zh ? ('省' + discount + '%') : (discount + '% OFF') }}</span>
       </div>
-      <h1 class="title">{{ product.name }}</h1>
       <p v-if="interestCount > 0" class="interest">{{ t('pdp_interest', { n: interestCount }) }}</p>
-      <div class="ship-pills">
-        <span class="pill ok">{{ t('pdp_ship_tracked') }}</span>
-        <span class="pill info">{{ product.shipsIn || t('pdp_ships_default') }}</span>
-        <span class="pill" :class="isOos ? 'bad' : ''">{{ isOos ? t('out_of_stock') || 'Sold out' : (t('in_stock') || 'In stock') }}</span>
-      </div>
+      <div class="ship-bar">{{ t('pdp_ship_tracked') }} · {{ product.shipsIn || t('pdp_ships_default') }}</div>
       <button type="button" class="sku-row" @click="sheetOpen = true">
         <span class="sku-k">{{ t('common_option') }}</span>
-        <span class="sku-v">{{ sizeSummary }} · Qty {{ qty }}</span>
+        <span class="sku-v">{{ sizeSummary }} · {{ zh ? '数量' : 'Qty' }} {{ qty }}</span>
         <ChevronRight :size="18" :stroke-width="1.7" class="chev" />
       </button>
-      <div class="reviews-box">
-        <div class="rev-head"><strong>{{ t('reviews') || 'Reviews' }}</strong><span class="tiny">Write a review after delivery</span></div>
-        <div class="rev-empty">No reviews yet</div>
+      <div v-if="optionLabels.length" class="opt-block">
+        <div class="opt-lab">{{ t('common_option') }}</div>
+        <div class="opts">
+          <button v-for="opt in optionLabels" :key="'p'+opt" type="button" class="opt" :class="{ on: size === opt }" @click="size = opt">{{ opt }}</button>
+        </div>
       </div>
-      <p class="blurb">{{ product.blurb || t('pdp_blurb_default') }}</p>
+      <div class="qty-row page-qty">
+        <span class="qty-lab">{{ zh ? '数量' : 'Qty' }}</span>
+        <div class="qty-ctrl">
+          <button type="button" @click="qty = Math.max(1, qty - 1)">−</button>
+          <span>{{ qty }}</span>
+          <button type="button" @click="qty = qty + 1">+</button>
+        </div>
+      </div>
+      <div class="reviews-box">
+        <div class="rev-head"><strong>{{ t('reviews') || '评价' }}</strong></div>
+        <div class="rev-empty">{{ t('reviews_empty') || '暂无评价' }}</div>
+      </div>
       <div class="cta-spacer" />
     </div>
 
     <div class="sticky-cta">
-      <button type="button" class="dock wish" @click="doWish" aria-label="wishlist">♡<span class="lab">Save</span></button>
+      <button type="button" class="dock wish" @click="doWish" aria-label="wishlist">♡<span class="lab">收藏</span></button>
       <template v-if="isOos">
-        <button type="button" class="btn disabled" disabled>{{ t('out_of_stock') || 'Sold out' }}</button>
-        <button type="button" class="btn outline" @click="notifyMe" :disabled="notifyBusy">{{ notifyBusy ? "…" : "Notify me" }}</button>
+        <button type="button" class="btn disabled" disabled>{{ t('out_of_stock') || (zh ? '缺货' : 'Sold out') }}</button>
+        <button type="button" class="btn outline" @click="notifyMe" :disabled="notifyBusy">{{ notifyBusy ? "…" : (zh ? '到货通知' : 'Notify me') }}</button>
       <p v-if="notifyMsg" class="tiny" style="margin-top:8px">{{ notifyMsg }}</p>
       </template>
       <template v-else>
-        <button type="button" class="btn outline" @click="doAdd">{{ t('common_add') }}</button>
-        <button type="button" class="btn solid" @click="doBuy">{{ t('common_buy_now') }}</button>
+        <button type="button" class="btn outline" @click="doAdd"><ShoppingCart :size="16" /> {{ t('common_add') }}</button>
+        <button type="button" class="btn solid" @click="doBuy"><Zap :size="16" /> {{ t('common_buy_now') }}</button>
       </template>
     </div>
 
     <div v-if="sheetOpen" class="sheet-mask" @click="sheetOpen = false">
       <div class="sheet" @click.stop>
+        <div class="grab" aria-hidden="true"></div>
+        <div class="sheet-head">
+          <img v-if="gallerySrc" :src="gallerySrc" alt="" />
+          <div>
+            <strong>{{ product.name }}</strong>
+            <div class="sheet-price">{{ money(displayPrice) }}</div>
+            <div class="muted">{{ product.blurb || t('pdp_blurb_default') }}</div>
+          </div>
+          <button type="button" class="x" @click="sheetOpen = false" aria-label="close">×</button>
+        </div>
         <div class="sheet-title">{{ t('common_option') }}</div>
         <div class="opts">
           <button
@@ -63,20 +92,26 @@
           <div v-if="!optionLabels.length" class="muted">{{ t('common_default') }}</div>
         </div>
         <div class="qty-row">
-          <button type="button" @click="qty = Math.max(1, qty - 1)">−</button>
-          <span>{{ qty }}</span>
-          <button type="button" @click="qty = qty + 1">+</button>
+          <span class="qty-lab">{{ zh ? '数量' : 'Qty' }}</span>
+          <div class="qty-ctrl">
+            <button type="button" @click="qty = Math.max(1, qty - 1)">−</button>
+            <span>{{ qty }}</span>
+            <button type="button" @click="qty = qty + 1">+</button>
+          </div>
         </div>
-        <button type="button" class="sheet-ok" @click="confirmSheet">{{ t('common_add') }}</button>
+        <button type="button" class="sheet-ok" @click="confirmSheet">{{ zh ? '确认加入购物车' : 'Confirm add to cart' }}</button>
       </div>
     </div>
   </div>
-  <div v-else class="empty">{{ err || t('pdp_loading') }}</div>
+  <div v-else class="empty">
+    <p>{{ err || t('pdp_loading') }}</p>
+    <router-link v-if="err" class="btn solid" to="/browse">{{ t('tab_browse') }}</router-link>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { ChevronLeft, ChevronRight, ShoppingBag, MessageCircle } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight, Heart, Share2, ShoppingCart, Zap } from 'lucide-vue-next'
 import { useRoute, useRouter } from 'vue-router'
 import { fetchProductInterest, getProduct, money, type Product } from '@/api/products'
 import { useCart } from '@/composables/cart'
@@ -84,7 +119,8 @@ import { useI18n } from '@/composables/i18n'
 import { trackBrowse } from '@/composables/browseHistory'
 import { addToCartServer } from '@/api/cartApi'
 
-const { t } = useI18n()
+const { t, lang } = useI18n()
+const zh = computed(() => String(lang.value).startsWith('zh'))
 const route = useRoute()
 const router = useRouter()
 const cart = useCart()
@@ -105,7 +141,20 @@ const discount = computed(() => {
   return Math.round((1 - p.price / p.compareAt) * 100)
 })
 
-const gallerySrc = computed(() => product.value?.images?.[0] || product.value?.image || '')
+const activeShot = ref(0)
+const thumbs = computed(() => {
+  const p = product.value
+  const list = (p?.images || []).filter(Boolean)
+  if (list.length) return list.slice(0, 5)
+  return p?.image ? [p.image] : []
+})
+const gallerySrc = computed(() => thumbs.value[activeShot.value] || product.value?.image || '')
+function share() {
+  const url = location.href
+  const title = product.value?.name || 'Pimo'
+  if (navigator.share) navigator.share({ title, url }).catch(() => {})
+  else navigator.clipboard?.writeText(url).catch(() => {})
+}
 const galleryBg = computed(() =>
   gallerySrc.value ? {} : { background: 'linear-gradient(160deg, #E8F1EC 0%, #D8E4DC 55%, #EDE8E1 100%)' },
 )
@@ -206,6 +255,7 @@ async function load() {
   err.value = ''
   const p = await getProduct(decodeURIComponent(sku))
   product.value = p || null
+  activeShot.value = 0
   if (!p) {
     err.value = 'Not found'
     return
@@ -261,15 +311,15 @@ async function notifyMe() {
 .pill.coral { background: $hb-price; color: #fff; }
 .body { padding: 16px; }
 .ships { font-size: 12px; color: $hb-forest; font-weight: 650; }
-.title { margin: 8px 0; font-size: 22px; line-height: 1.25; color: $hb-ink; }
+.title { margin: 2px 0 4px; font-size: 20px; line-height: 1.25; letter-spacing: -0.03em; color: $hb-ink; font-weight: 800; }
 .interest { color: $hb-deep; font-weight: 600; margin: 0 0 8px; font-size: 13px; color: $hb-muted; font-weight: 560; }
 .price-row { display: flex; gap: 8px; align-items: baseline; }
 .price { font-size: 24px; font-weight: 780; color: $hb-ink; }
 .was { color: $hb-muted; text-decoration: line-through; }
 .fx { margin-top: 4px; font-size: 12px; color: $hb-muted; }
 .sku-row {
-  margin-top: 14px; width: 100%; border: 0; background: $hb-white; border-radius: 14px;
-  padding: 12px 14px; display: flex; gap: 8px; align-items: center; box-shadow: $hb-shadow-soft; cursor: pointer;
+  margin-top: 12px; width: 100%; border: 1px solid #F1EEEA; background: #fff; border-radius: 16px;
+  padding: 12px 14px; display: flex; gap: 8px; align-items: center; box-shadow: none; cursor: pointer;
 }
 .sku-k { color: $hb-muted; font-size: 12px; }
 .sku-v { flex: 1; text-align: right; font-weight: 680; }
@@ -282,10 +332,11 @@ async function notifyMe() {
 .blurb { margin-top: 14px; color: $hb-ink; line-height: 1.5; font-size: 14px; }
 .cta-spacer { height: 12px; }
 .sticky-cta {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
-  display: flex; gap: 8px; align-items: center;
-  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
-  background: rgba(255,255,255,0.96); border-top: 1px solid $hb-line;
+  position: fixed; left: 50%; transform: translateX(-50%); width: min(100vw, 768px); bottom: 0; z-index: 40;
+  box-shadow: 0 -8px 24px rgba(28,36,48,0.06);
+  display: flex; gap: 10px; align-items: center;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  background: #fff; border-top: 1px solid #F1EEEA;
 }
 .dock { position: relative; width: 46px; height: 46px; border: 0; border-radius: 14px; background: #fff; color: #121816; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(18,24,22,0.06); cursor: pointer; }
 .dock.chat { width: auto; padding: 0 10px; display: flex; align-items: center; gap: 4px; }
@@ -294,44 +345,66 @@ async function notifyMe() {
   position: absolute; top: -4px; right: -4px; min-width: 16px; height: 16px; border-radius: 999px;
   background: $hb-price; color: #fff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center;
 }
+.gtools { position: absolute; right: 12px; top: calc(12px + env(safe-area-inset-top)); display: flex; gap: 8px; z-index: 2; }
+.gtools button { width: 40px; height: 40px; border: 0; border-radius: 14px; background: rgba(255,255,255,0.92); color: #1C2430; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.thumbs { display: flex; gap: 8px; padding: 10px 16px 0; background: #fff; }
+.thumbs button { width: 56px; height: 56px; padding: 0; border-radius: 12px; border: 1px solid #E8E4DC; overflow: hidden; background: #F6F4F2; cursor: pointer; }
+.thumbs button.on { border: 2px solid #F96141; }
+.thumbs img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.opt-block { margin-top: 14px; }
+.opt-lab { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+.page-qty { margin-top: 14px; }
 .btn {
-  height: 44px; border-radius: 14px; border: 0; font-weight: 740; cursor: pointer; flex: 1;
-  &.outline { background: $hb-soft; color: $hb-forest; }
-  &.solid { background: $hb-price; color: #fff; }
+  height: 52px; border-radius: 999px; font-weight: 740; cursor: pointer; flex: 1; font-size: 15px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  &.outline { background: #fff; color: #F96141; border: 1.5px solid #F96141; }
+  &.solid { background: #F96141; color: #fff; border: 0; }
 }
 .empty { padding: 80px 20px; text-align: center; color: $hb-muted; }
-.sheet-mask { position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 60; display: flex; align-items: flex-end; }
-.sheet { width: 100%; background: #fff; border-radius: 18px 18px 0 0; padding: 16px 16px calc(16px + env(safe-area-inset-bottom)); }
-.sheet-title { font-weight: 740; font-size: 16px; margin-bottom: 10px; }
+.empty .btn { display: inline-flex; margin-top: 12px; padding: 0 16px; align-items: center; text-decoration: none; }
+.sheet-mask { position: fixed; inset: 0; background: rgba(28,36,48,0.45); z-index: 60; display: flex; align-items: flex-end; justify-content: center; }
+.sheet { width: min(100%, 768px); background: #fff; border-radius: 22px 22px 0 0; padding: 10px 16px calc(16px + env(safe-area-inset-bottom)); }
+.grab { width: 36px; height: 4px; border-radius: 99px; background: #E6E2DC; margin: 0 auto 12px; }
+.sheet-head { display: grid; grid-template-columns: 64px 1fr auto; gap: 10px; align-items: start; margin-bottom: 14px; }
+.sheet-head img { width: 64px; height: 64px; border-radius: 12px; object-fit: cover; background: #F6F4F2; }
+.sheet-head strong { display: block; font-size: 15px; }
+.sheet-price { color: #F96141; font-weight: 800; margin-top: 2px; }
+.sheet-head .muted { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.x { border: 0; background: transparent; font-size: 22px; color: #8B919A; cursor: pointer; line-height: 1; }
+.sheet-title { font-weight: 800; font-size: 14px; margin-bottom: 10px; letter-spacing: -0.02em; color: #5C6570; }
 .opts { display: flex; flex-wrap: wrap; gap: 8px; }
 .opt {
-  border: 1px solid $hb-line; background: $hb-paper; border-radius: 999px; padding: 8px 12px; cursor: pointer;
-  &.on { background: $hb-forest; color: #fff; border-color: $hb-forest; }
+  height: 36px; border: 1px solid #E8E4DC; background: #FCFAF8; border-radius: 999px; padding: 0 14px; cursor: pointer; font-weight: 650;
+  &.on { background: #F96141; color: #fff; border-color: #F96141; }
 }
 .muted { color: $hb-muted; font-size: 13px; }
-.qty-row { display: flex; align-items: center; gap: 16px; margin: 16px 0; font-size: 18px; font-weight: 700; }
-.qty-row button { width: 36px; height: 36px; border: 0; border-radius: 10px; background: $hb-paper; cursor: pointer; }
-.sheet-ok { width: 100%; height: 48px; border: 0; border-radius: 14px; background: $hb-price; color: #fff; font-weight: 740; cursor: pointer; }
+.qty-row { display: flex; align-items: center; justify-content: space-between; margin: 18px 0 16px; }
+.qty-lab { font-size: 14px; font-weight: 650; color: #5C6570; }
+.qty-ctrl { display: flex; align-items: center; gap: 14px; font-size: 16px; font-weight: 700; }
+.qty-ctrl button { width: 36px; height: 36px; border: 0; border-radius: 12px; background: #F6F4F2; cursor: pointer; }
+.sheet-ok { width: 100%; height: 52px; border: 0; border-radius: 999px; background: #F96141; color: #fff; font-weight: 740; cursor: pointer; }
 .body { background: #fff; border-radius: 20px 20px 0 0; margin-top: -16px; position: relative; padding-top: 14px; }
-.price { font-size: 26px; font-weight: 800; color: $hb-price; }
+.price { font-size: 28px; font-weight: 800; color: $hb-price; letter-spacing: -0.03em; }
 .price.oos { color: #9CA3AF; }
 .was { font-size: 13px; color: #9CA3AF; text-decoration: line-through; margin-left: 6px; }
 .interest { color: $hb-deep !important; font-size: 12px; font-weight: 600; margin-top: 8px; }
-.ship-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.ship-bar { margin-top: 12px; background: #FFF1EC; color: #C2410C; border-radius: 12px; padding: 10px 12px; font-size: 13px; font-weight: 650; }
+.off { background: #FFF1EC; color: #F96141; border-radius: 999px; padding: 2px 8px; font-size: 12px; font-weight: 800; }
+.blurb.top { margin-top: 4px; color: #8E949C; }
 .pill { display: inline-flex; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; background: #F3F4F6; color: #374151; }
 .pill.ok { background: #ECFDF5; color: #047857; }
 .pill.info { background: #E0F2FE; color: #0E7490; }
-.pill.amber { background: #FEF3C7; color: #B45309; }
+.pill.amber { background: #FEF3C7; color: #F96141; }
 .pill.bad, .pill.coral { background: #FEE2E2; color: #B91C1C; }
 .reviews-box { margin-top: 16px; padding-top: 14px; border-top: 1px solid #E8E4DC; }
 .rev-head { display: flex; justify-content: space-between; align-items: center; font-size: 15px; }
-.rev-empty { margin-top: 10px; padding: 14px; background: #F7F4EF; border-radius: 12px; text-align: center; color: #6B7280; font-size: 13px; }
+.rev-empty { margin-top: 10px; padding: 14px; background: #FCFAF8; border-radius: 12px; text-align: center; color: #6B7280; font-size: 13px; }
 .sticky-cta .btn.solid { background: $hb-price !important; }
 .sticky-cta .btn.disabled { background: #E8E4DC !important; color: #9CA3AF !important; }
 .dock.wish { flex-direction: column; font-size: 11px; color: $hb-muted; width: auto; padding: 0 6px; background: transparent; box-shadow: none; }
-.sheet { border-radius: 20px 20px 0 0 !important; }
+.sheet { width: min(100%, 768px); }
 .sheet-ok { background: $hb-price !important; }
 .page { background: $hb-paper; }
 
-.fn-page { --ink:#0F2744; --teal:#0E7490; --amber:#B45309; --sand:#F7F4EF; }
+.fn-page { --ink:#1C2430; --teal:#0E7490; --amber:#F96141; --sand:#FCFAF8; }
 </style>

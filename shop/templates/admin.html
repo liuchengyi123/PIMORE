@@ -4,13 +4,13 @@
 {% set kind_name = {'public':'公开','first':'首单','share':'分享','desktop':'桌面','checkin':'签到'} %}
 {% if panel == 'orders' %}
 <header class="page-head" data-figma="AD16 AD18"><div><h1>订单</h1><p class="muted">筛选状态、搜索邮箱/单号/运单，处理发货与退款。</p></div></header>
-<form class="ops-search" method="get" action="/admin/orders">
+<form class="ops-search orders-filters" method="get" action="/admin/orders">
   <input type="hidden" name="status" value="{{ order_status or 'all' }}">
   <input type="search" name="q" value="{{ order_q or '' }}" placeholder="搜索邮箱 / 订单号 / 运单号">
   <button class="btn" type="submit">搜索</button>
   {% if order_q %}<a class="btn ghost" href="/admin/orders?status={{ order_status or 'all' }}">清除</a>{% endif %}
 </form>
-<nav class="ranges section-tabs">
+<nav class="ranges section-tabs orders-filters">
   <a class="{% if (order_status or 'all') == 'all' %}on{% endif %}" href="/admin/orders?status=all{% if order_q %}&amp;q={{ order_q|urlencode }}{% endif %}">全部 {{ counts.all }}</a>
   <a class="{% if order_status == 'pending' %}on{% endif %}" href="/admin/orders?status=pending{% if order_q %}&amp;q={{ order_q|urlencode }}{% endif %}">待支付 {{ counts.pending }}</a>
   <a class="{% if order_status == 'paid' %}on{% endif %}" href="/admin/orders?status=paid{% if order_q %}&amp;q={{ order_q|urlencode }}{% endif %}">待发货 {{ counts.paid }}</a>
@@ -33,7 +33,7 @@
       <td>#{{ row['id'] }}</td>
       <td>{{ row['email'] }}</td>
       <td><span class="tag {{ row['status'] }}">{{ status_name.get(row['status'], row['status']) }}</span></td>
-      <td>{{ format_money(row['due_local'], row['currency']) }}</td>
+      <td class="due">{{ format_money(row['due_local'], row['currency']) }}</td>
       <td class="track-cell">{% if (row['carrier'] if 'carrier' in row.keys() else none) or (row['tracking'] if 'tracking' in row.keys() else none) %}{{ (row['carrier'] if 'carrier' in row.keys() else none) or '' }}{% if (row['carrier'] if 'carrier' in row.keys() else none) and (row['tracking'] if 'tracking' in row.keys() else none) %}/{% endif %}{{ (row['tracking'] if 'tracking' in row.keys() else none) or '' }}{% else %}—{% endif %}</td>
       <td>{% if row['status'] == 'paid' %}<a class="btn sm" href="/admin/orders/{{ row['id'] }}">处理</a>{% else %}<a class="btn ghost sm" href="/admin/orders/{{ row['id'] }}">查看</a>{% endif %}</td>
     </tr>
@@ -63,6 +63,7 @@
     <p class="muted">#{{ order['id'] }} · 面单、发货与退款。</p>
   </div>
 </header>
+<div class="order-page">
 <div class="order-detail-toolbar">
   <a class="btn ghost sm" href="/admin/orders">← 返回列表</a>
   <span class="tag {{ order['status'] }}">{{ status_name.get(order['status'], order['status']) }}</span>
@@ -73,8 +74,12 @@
   <div class="pad order-kv">
     <div class="kv"><span>买家</span><strong>{{ order['email'] }}</strong></div>
     <div class="kv"><span>应付</span><strong class="amber-price">{{ format_money(order['due_local'], order['currency']) }}</strong></div>
-    <div class="kv muted-line">{{ (order['pay_method'] if 'pay_method' in order.keys() else none) or '—' }} · {{ order['ship_country'] }}{% if (order['lang'] if 'lang' in order.keys() else none) %} · {{ (order['lang'] if 'lang' in order.keys() else none) }}{% endif %}</div>
-    {% if order['refund_reason'] %}<p class="note">退款原因：{{ order['refund_reason'] }}</p>{% endif %}
+    <div class="kv"><span>支付</span><strong>{{ (order['pay_method'] if 'pay_method' in order.keys() else none) or '—' }}</strong></div>
+    <div class="kv"><span>国家</span><strong>{{ order['ship_country'] or '—' }}</strong></div>
+    {% if order['lang'] if 'lang' in order.keys() else none %}
+    <div class="kv"><span>语言</span><strong>{{ order['lang'] }}</strong></div>
+    {% endif %}
+    {% if order['refund_reason'] %}<p class="note kv-wide">退款原因：{{ order['refund_reason'] }}</p>{% endif %}
   </div>
 </div>
 
@@ -98,6 +103,7 @@
   </div>
 </div>
 
+<div class="order-split">
 <div class="card">
   <h2>快递面单</h2>
   <div class="pad label-sheet">
@@ -139,6 +145,8 @@
     <p class="muted">需要管理员权限。</p>
     {% endif %}
   </div>
+</div>
+</div>
 </div>
 
 {% elif panel == 'products' %}
@@ -657,7 +665,7 @@
   <div class="pad actions">
     {% if is_admin_role %}<button class="btn quiet" type="submit" form="batch" onclick="return confirm('确定删除选中的商品？此操作不可恢复。')">删除选中</button>{% endif %}
   </div>
-  <div class="table-wrap">
+  <div class="table-wrap catalog-table">
   <table>
         <thead><tr>
       <th><input id="pick-all" type="checkbox" aria-label="全选"></th>
@@ -734,7 +742,7 @@
 </div>
 {% endif %}
 {% elif panel == 'images' %}
-<header class="page-head"><div><h1>图片</h1><p class="muted">图片翻译与商品图生成。</p></div></header>
+<header class="page-head page-gen"><div><h1>图片</h1><p class="muted">图片翻译与商品图生成。</p></div></header>
 <div class="card" style="margin-bottom:16px">
   <h2>主图用第几张</h2>
   <form class="pad stack" method="post" action="/admin/images/cover">
@@ -1065,6 +1073,7 @@
 </div><!-- /AD14-split -->
 {% elif panel == 'product' %}
 <header class="page-head"><div><h1>编辑商品</h1><p class="muted">{{ product.sku }} · 内部资料、规格价格、详情图与供应商。</p></div></header>
+<div class="product-edit">
 <div class="product-edit-toolbar" data-figma="AD13">
   <a class="btn ghost sm" href="/admin/products">← 返回列表</a>
 </div>
@@ -1192,9 +1201,10 @@
   </div>
   <p class="note pad">售价按 US×国家系数×FX；此处仅示意可售市场。</p>
 </div>
+</div>
 
 {% elif panel == 'purchasing' %}
-<header class="page-head"><div><h1>采购</h1><p class="muted">按供应商汇总待采购。勾选后可批量标记。</p></div></header>
+<header class="page-head page-buy"><div><h1>采购</h1><p class="muted">按供应商汇总待采购。勾选后可批量标记。</p></div></header>
 <div class="purchase-toolbar">
   <div class="hint">点 1688 下单后标记已采购。</div>
   <button class="btn teal" type="button" id="purchase-batch-btn">批量标记已采购</button>
@@ -1268,7 +1278,7 @@
 
 {% elif panel == 'coupons' %}
 <header class="page-head"><div><h1>优惠券</h1><p class="muted">金额按美元填写，保存后按美分存储。</p></div></header>
-<div class="growth-split" data-figma="AD20">
+<div class="growth-split page-coupons" data-figma="AD20">
 {% if is_admin_role %}
 <div class="card">
   <h2>新建优惠券</h2>
@@ -1341,7 +1351,7 @@
 {% elif panel == 'campaigns' %}
 <header class="page-head"><div><h1>活动</h1><p class="muted">秒杀与新人专享。</p></div></header>
 <p class="tip-bar">首页秒杀是跑马灯；新人一邮箱仅一件特价。</p>
-<div class="growth-split">
+<div class="growth-split page-acts">
 {% for block in campaign_rows %}
 {% set camp = block.camp %}
 <div class="card">
@@ -1505,7 +1515,7 @@
 
 {% elif panel == 'ads' %}
 <header class="page-head"><div><h1>站点广告位</h1><p class="muted">站内公告条与推荐位（不是投放平台）。</p></div></header>
-<div class="growth-split">
+<div class="growth-split page-ads">
 <div class="card">
   <h2>已有广告</h2>
   <div class="table-wrap"><table>
@@ -1556,7 +1566,7 @@
 {% if request.query_params.get('saved') %}
 <p class="ok-banner">已保存。结账页展示：{% if pay.shown %}{% for name in pay.shown %}{% if name == 'paypal' %}PayPal{% elif name == 'lianlian' %}连连{% else %}Stripe{% endif %}{% if not loop.last %}、{% endif %}{% endfor %}{% else %}没有可展示的方式{% endif %}。</p>
 {% endif %}
-<div class="card">
+<div class="card page-pay">
   <form class="pad stack" method="post" action="/admin/payments" autocomplete="off">
     {% if not request.query_params.get('saved') %}
     <p class="note">勾选后，结账页会同时列出这些方式。没填密钥的即使勾了也不会出现。</p>
@@ -1567,6 +1577,7 @@
       <label><input type="checkbox" name="pay_on" value="lianlian" {% if 'lianlian' in pay.enabled %}checked{% endif %}> 连连</label>
       <label><input type="checkbox" name="pay_on" value="stripe" {% if 'stripe' in pay.enabled %}checked{% endif %}> Stripe 银行卡</label>
     </fieldset>
+    <div class="gateway">
     <h2>PayPal</h2>
     <div class="fields">
       <label class="wide">Client ID <input name="paypal_client_id" value="{{ pay.paypal_client_id }}" autocomplete="off"></label>
@@ -1581,6 +1592,8 @@
       </label>
       <label class="wide">Webhook ID <input name="paypal_webhook_id" value="{{ pay.paypal_webhook_id }}" placeholder="可后填。地址 https://linkiip.com/paypal/webhook"></label>
     </div>
+    </div>
+    <div class="gateway">
     <h2>连连</h2>
     <div class="fields">
       <label>商户号 <input name="lianlian_merchant_id" value="{{ pay.lianlian_merchant_id }}"></label>
@@ -1599,6 +1612,8 @@
         <textarea name="lianlian_public_key" rows="3" placeholder="留空不改"></textarea>
       </label>
     </div>
+    </div>
+    <div class="gateway">
     <h2>Stripe</h2>
     <div class="fields">
       <label>Secret Key
@@ -1608,13 +1623,14 @@
         <input name="stripe_webhook_secret" type="password" autocomplete="new-password" placeholder="{% if pay.stripe_webhook_saved %}已保存，留空不改{% else %}whsec_…{% endif %}">
       </label>
     </div>
-    <div><button class="btn" ink" type="submit">保存支付支付设置</button></div>
+    </div>
+    <div><button class="btn" type="submit">保存支付设置</button></div>
   </form>
 </div>
 
 {% elif panel == 'staff' %}
 <header class="page-head"><div><h1>员工</h1><p class="muted">账号、停用与重置密码。忘记密码时由管理员在此重置。</p></div></header>
-<div class="growth-split">
+<div class="growth-split page-staff">
 <div class="card">
   <h2>账号列表</h2>
   <div class="table-wrap"><table>
@@ -1672,7 +1688,7 @@
 </div><!-- /AD26-split -->
 {% elif panel == 'withdrawals' %}
 <header class="page-head"><div><h1>提现</h1><p class="muted">确认打款后填写流水备注。仅管理员可标记已打款。</p></div></header>
-<div class="card">
+<div class="card page-cash">
   <h2>提现申请</h2>
   <div class="table-wrap"><table>
     <thead><tr><th>邮箱</th><th>金额</th><th>收款账户</th><th>状态</th><th>备注</th><th></th></tr></thead>
@@ -1696,7 +1712,7 @@
       </td>
     </tr>
     {% else %}
-    <tr><td class="empty" colspan="6">还没有提现申请。</td></tr>
+    <tr><td class="empty" colspan="6"><div class="empty-card">还没有提现申请。</div></td></tr>
     {% endfor %}
     </tbody>
   </table></div>

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>{{ seo_title }}</title>
-  <link rel="stylesheet" href="/static/lp-ad.css?v=8">
+  <link rel="stylesheet" href="/static/lp-ad.css?v=9">
   {% if ad_pixels is defined and (ad_pixels.meta_ok or ad_pixels.tiktok_ok) %}
   <script>
   window.__harborLp = {
@@ -30,7 +30,7 @@
 </head>
 <body class="lp-ad" data-lp-template="{{ lp.template_id }}" data-lp-skin="{{ lp.skin_id }}" data-lp-category="{{ lp.category }}" data-lp-lang="{{ lang }}" data-lp-master="{{ '1' if lp.master else '0' }}"{% if lp.code %} data-lp-code="{{ lp.code }}"{% endif %} style="--accent: {{ lp.accent }}; --ink: {{ lp.ink }}; --wash: {{ lp.wash }}; --deep: {{ lp.deep }};">
   <header class="lp-top">
-    <a class="lp-brand" href="{{ lp.enter_href }}">Harbor<sup>flash</sup></a>
+    <a class="lp-brand" href="{{ lp.enter_href }}">Pimo</a>
     <span class="lp-top-cat">{{ t.categories[lp.category] }}</span>
     <span class="lp-ship">{{ t.lp_ship }}</span>
   </header>

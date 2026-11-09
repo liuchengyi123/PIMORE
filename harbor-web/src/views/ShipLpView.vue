@@ -34,10 +34,11 @@ onMounted(async () => {
 .page { min-height: 100vh; background: $hb-paper; padding-bottom: 40px; }
 .hero {
   margin: 12px 16px 16px; margin-top: calc(12px + env(safe-area-inset-top));
-  border-radius: 26px; padding: 18px; color: #fff;
-  background: linear-gradient(155deg, #5a1d12 0%, #E0522E 68%, #f07a4f 100%);
+  border-radius: 22px; padding: 18px; color: #1C2430;
+  background: #FFF6F1;
 }
-.back { width: 34px; height: 34px; border: 0; border-radius: 12px; background: rgba(255,255,255,0.18); color: #fff; font-size: 20px; margin-bottom: 12px; cursor: pointer; }
+.kicker, .htitle { color: #F96141; }
+.back { width: 34px; height: 34px; border: 0; border-radius: 12px; background: #fff; color: #1C2430; font-size: 20px; margin-bottom: 12px; cursor: pointer; }
 .kicker { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; opacity: 0.85; font-weight: 650; }
 .htitle { font-size: 26px; font-weight: 760; margin-top: 8px; }
 .line { margin-top: 8px; font-size: 13px; opacity: 0.9; }
@@ -45,5 +46,5 @@ onMounted(async () => {
 .state { text-align: center; color: $hb-muted; padding: 40px 16px; }
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 16px; }
 
-.fn-page { --ink:#0F2744; --teal:#0E7490; --amber:#B45309; --sand:#F7F4EF; }
+.fn-page { --ink:#1C2430; --teal:#0E7490; --amber:#F96141; --sand:#FCFAF8; }
 </style>
