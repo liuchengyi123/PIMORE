@@ -48,6 +48,9 @@ const state = {
   settings: {},
   orders: [],
   inboxChip: 'all',
+  orderFilter: 'all',
+  openCount: 0,
+  closedCount: 0,
 };
 
 function esc(s) {
@@ -66,6 +69,113 @@ function fmtTime(iso) {
   } catch (_) {
     return iso;
   }
+}
+
+function shortTime(iso) {
+  if (!iso) return '';
+  try {
+    const d = new Date(String(iso).endsWith('Z') ? iso : iso + 'Z');
+    if (Number.isNaN(d.getTime())) return '';
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const day = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const diff = Math.round((start - day) / 86400000);
+    const hm = d.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false });
+    if (diff === 0) return hm;
+    if (diff === 1) return '昨天';
+    if (diff > 1 && diff < 7) return d.toLocaleDateString('zh-CN', { weekday: 'short' });
+    return d.toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' });
+  } catch (_) {
+    return '';
+  }
+}
+
+function deskPref(key, fallbackOn) {
+  try {
+    const v = localStorage.getItem(key);
+    if (v == null || v === '') return !!fallbackOn;
+    return v !== '0';
+  } catch (_) {
+    return !!fallbackOn;
+  }
+}
+
+function playPing() {
+  if (!deskPref('cs_sound', true) || !pingSound) return;
+  try { pingSound.currentTime = 0; pingSound.play(); } catch (_) {}
+}
+
+function deskNotify(title, body) {
+  if (!deskPref('cs_desktop', true) || !window.csDesk || !window.csDesk.notify) return;
+  window.csDesk.notify({ title, body });
+}
+
+function paintAvatar(el, label) {
+  if (!el) return;
+  const text = String(label || '访').trim() || '访';
+  el.textContent = text.slice(0, 1);
+  const hues = ['#F96141', '#3B82F6', '#8B5CF6', '#10B981', '#F59E0B', '#EC4899'];
+  let n = 0;
+  for (let i = 0; i < text.length; i++) n = (n + text.charCodeAt(i)) % hues.length;
+  el.style.background = hues[n];
+  el.style.color = '#fff';
+}
+
+function syncWorkspace(open) {
+  const ctx = document.querySelector('.context');
+  const ws = document.querySelector('.workspace');
+  if (ctx) ctx.hidden = !open;
+  if (ws) ws.classList.toggle('room-open', !!open);
+}
+
+function showCtx(name) {
+  const key = name || 'visitor';
+  document.querySelectorAll('[data-ctx]').forEach((btn) => {
+    btn.classList.toggle('on', btn.getAttribute('data-ctx') === key);
+  });
+  ['visitor', 'sku', 'orders', 'history'].forEach((k) => {
+    const el = document.getElementById('ctx-' + k);
+    if (el) el.hidden = k !== key;
+  });
+  syncWorkspace(true);
+}
+
+function renderCannedBar() {
+  const bar = document.getElementById('cannedBar');
+  if (!bar) return;
+  let lines = [];
+  try {
+    lines = String(localStorage.getItem('cs_canned') || '').split('\n').map((s) => s.trim()).filter(Boolean);
+  } catch (_) {}
+  if (!deskPref('cs_canned_on', true) || !lines.length) {
+    bar.hidden = true;
+    bar.innerHTML = '';
+    return;
+  }
+  bar.hidden = false;
+  bar.innerHTML = '<span class="canned-label">快捷回复</span>' + lines.slice(0, 8).map((line) => {
+    const label = line.length > 18 ? line.slice(0, 18) + '…' : line;
+    return `<button type="button" data-canned="${esc(line)}">${esc(label)}</button>`;
+  }).join('');
+}
+
+function applyDeskPrefs() {
+  let compact = false;
+  try { compact = localStorage.getItem('cs_compact') === '1'; } catch (_) {}
+  document.body.classList.toggle('cs-compact', compact);
+  renderCannedBar();
+  if (state.messages && state.messages.length) renderMessages();
+}
+
+function swapProduct(p) {
+  const old = document.getElementById('currentProduct');
+  if (!old) return;
+  const tmp = document.createElement('div');
+  tmp.innerHTML = productHtml(p);
+  const card = tmp.firstElementChild;
+  if (!card) return;
+  card.id = 'currentProduct';
+  old.replaceWith(card);
 }
 
 function showLogin() {
@@ -114,11 +224,11 @@ function showApp() {
 }
 
 function productHtml(p) {
-  if (!p || !p.sku) return '<div class="empty-card">暂无</div>';
+  if (!p || !p.sku) return '<div class="product-card empty-card">暂无当前商品</div>';
   const img = p.image
     ? `<img src="${esc(mediaUrl(p.image))}" alt="" />`
-    : '<div style="aspect-ratio:1;background:#F4F6FB"></div>';
-  return `<div class="product-card" data-sku="${esc(p.sku)}">${img}<div class="body"><div>${esc(p.name || p.sku)}</div><div class="price">${esc(p.price || '')}</div><div class="muted small">SKU ${esc(p.sku)}</div></div><div class="send-row"><button type="button" class="btn-send-prod" data-send-sku="${esc(p.sku)}">发送给用户</button></div></div>`;
+    : '<div style="width:72px;height:72px;border-radius:8px;background:#F7F8FA"></div>';
+  return `<div class="product-card" data-sku="${esc(p.sku)}">${img}<div class="body"><div class="pname">${esc(p.name || p.sku)}</div><div class="price">${esc(p.price || '')}</div><div class="muted small">SKU ${esc(p.sku)}</div></div><div class="send-row"><button type="button" class="btn-send-prod" data-send-sku="${esc(p.sku)}">发送给用户</button></div></div>`;
 }
 
 function renderHistory(list) {
@@ -155,10 +265,22 @@ function renderRooms() {
   const inboxEmpty = document.getElementById('inboxEmpty');
   const closedEmpty = document.getElementById('closedEmpty');
   const isClosed = String(state.status || 'open') === 'closed';
+  const openCountEl = document.getElementById('tabOpenCount');
+  const closedCountEl = document.getElementById('tabClosedCount');
+  if (isClosed) {
+    state.closedCount = (state.rooms || []).length;
+    if (closedCountEl) closedCountEl.textContent = String(state.closedCount);
+    if (openCountEl) openCountEl.textContent = String(state.openCount || 0);
+  } else {
+    state.openCount = (state.rooms || []).length;
+    if (openCountEl) openCountEl.textContent = String(state.openCount);
+    if (closedCountEl) closedCountEl.textContent = String(state.closedCount || 0);
+  }
   if (!rooms.length) {
     roomList.innerHTML = '';
     if (inboxEmpty) inboxEmpty.hidden = !!isClosed;
     if (closedEmpty) closedEmpty.hidden = !isClosed;
+    if (!isClosed && chatEmpty && !state.activeId) chatEmpty.hidden = true;
     if (!inboxEmpty && !closedEmpty) {
       roomList.innerHTML = '<div class="empty" style="padding:24px">暂无会话</div>';
     }
@@ -166,16 +288,25 @@ function renderRooms() {
   }
   if (inboxEmpty) inboxEmpty.hidden = true;
   if (closedEmpty) closedEmpty.hidden = true;
+  if (chatEmpty && !state.activeId) chatEmpty.hidden = false;
   roomList.innerHTML = rooms
     .map((r) => {
       const active = r.id === state.activeId ? 'active' : '';
       const unread = Number(r.unread_staff || 0);
       const title = r.email || r.visitor_id || r.id;
-      const preview = (r.current && r.current.name) || r.current?.sku || '未关联商品';
+      const preview = r.last_body || r.last_message || r.preview || (r.current && (r.current.name || r.current.sku)) || '未关联商品';
       const badge = unread > 0 ? `<span class="unread-dot">${unread > 99 ? '99+' : unread}</span>` : '';
-      return `<button type="button" class="room-item ${active}" data-id="${esc(r.id)}"><div class="row"><span class="name">${esc(title)}</span>${badge}</div><div class="preview">${esc(preview)}</div><div class="muted small">${esc(fmtTime(r.updated_at))}</div></button>`;
+      const ai = Number(r.ai_mode || 0) === 1;
+      const statusClass = r.status === 'closed' ? '' : ai ? 'ai' : 'open';
+      const statusLabel = r.status === 'closed' ? '已关闭' : ai ? 'AI' : '进行中';
+      const initial = String(title).trim().slice(0, 1) || '访';
+      return `<button type="button" class="room-item ${active}" data-id="${esc(r.id)}"><span class="avatar">${esc(initial)}</span><span class="room-main"><span class="row"><span class="name">${esc(title)}</span><span class="time">${esc(shortTime(r.updated_at))}</span></span><span class="row"><span class="preview">${esc(preview)}</span>${badge}</span><span class="room-status ${statusClass}">${statusLabel}</span></span></button>`;
     })
     .join('');
+  roomList.querySelectorAll('.room-item .avatar').forEach((el) => {
+    const name = el.parentElement && el.parentElement.querySelector('.name');
+    paintAvatar(el, name ? name.textContent : el.textContent);
+  });
 }
 
 
@@ -227,7 +358,7 @@ function renderBodyHtml(body) {
   if (prod) {
     const img = prod.image
       ? `<img src="${esc(mediaUrl(prod.image))}" alt="" />`
-      : '<div style="width:64px;height:64px;background:#0b1612;border-radius:8px"></div>';
+      : '<div style="width:64px;height:64px;background:#F7F8FA;border-radius:8px"></div>';
     const opt = prod.option ? `<div class="muted small">规格：${esc(prod.option)}</div>` : '';
     return `<div class="bubble-product">${img}<div><div>${esc(prod.name || prod.sku || '')}</div><div class="price">${esc(prod.price || '')}</div>${opt}<div class="tip">已选规格，用户可直达下单</div></div></div>`;
   }
@@ -277,21 +408,25 @@ async function sendImageFile(file) {
 }
 
 function renderMessages() {
+  const showOps = deskPref('cs_ops', true);
   msgList.innerHTML = state.messages
+    .filter((m) => showOps || !(m.role === 'system' && String(m.body || '').startsWith('[ops]')))
     .map((m) => {
       const role = m.role === 'staff' ? 'staff' : m.role === 'system' ? 'system' : 'user';
       const who = role === 'staff' ? staffWhoLabel(m.staff_user) : role === 'system' ? '系统' : '用户';
       let extra = '';
       let rawBody = String(m.body || '');
-      if (role === 'system' && rawBody.startsWith('[ops]')) rawBody = rawBody.slice(5);
+      const ops = role === 'system' && rawBody.startsWith('[ops]');
+      if (ops) rawBody = rawBody.slice(5);
       const isSpecial = rawBody.startsWith('[img]') || rawBody.startsWith('[product]') || rawBody.startsWith('[order]');
       if (!isSpecial && role === 'user' && m.body_user_original && m.body_user_original !== m.body) {
         extra = `<div class="orig">原文：${esc(m.body_user_original)}</div>`;
       } else if (!isSpecial && role === 'staff' && m.translated && m.body_original && m.lang && m.lang !== 'zh') {
-        extra = `<div class="orig">已译为 ${esc(m.lang)} · ${esc(m.body_original)}</div>`;
+        extra = `<div class="orig">已译 ${esc(m.lang)}：${esc(m.body_original)}</div>`;
       }
-      const showBody = (role === 'system' && String(m.body||'').startsWith('[ops]')) ? String(m.body).slice(5) : m.body;
-      return `<div class="bubble ${role}">${renderBodyHtml(showBody)}${extra}<span class="meta">${esc(who)} · ${esc(fmtTime(m.created_at))}</span></div>`;
+      const showBody = ops ? rawBody : m.body;
+      const cls = `bubble ${role}${isSpecial ? ' cardish' : ''}${ops ? ' ops' : ''}`;
+      return `<div class="${cls}">${renderBodyHtml(showBody)}${extra}<span class="meta">${esc(who)} · ${esc(fmtTime(m.created_at))}</span></div>`;
     })
     .join('');
   scrollMessagesToEnd();
@@ -434,7 +569,7 @@ function openSkuPickerWithProduct(prod) {
   body.innerHTML = offers.map((o, i) => {
     const img = o.image
       ? `<img src="${esc(mediaUrl(o.image))}" alt="" />`
-      : (prod.image ? `<img src="${esc(mediaUrl(prod.image))}" alt="" />` : '<div style="width:44px;height:44px;background:#0b1612;border-radius:8px"></div>');
+      : (prod.image ? `<img src="${esc(mediaUrl(prod.image))}" alt="" />` : '<div style="width:44px;height:44px;background:#F7F8FA;border-radius:8px"></div>');
     return `<button type="button" class="sku-opt" data-opt-idx="${i}">${img}<div><div>${esc(o.label || o.id || '')}</div><div class="muted small">${esc(o.price || prod.price || '')}</div></div></button>`;
   }).join('');
   body.querySelectorAll('.sku-opt').forEach((btn) => {
@@ -480,9 +615,16 @@ async function beginSendProduct(sku) {
 
 function renderAgent() {
   const a = state.agent || {};
-  if (agentName) agentName.textContent = a.display_name || a.username || '客服';
+  const name = a.display_name || a.username || '客服';
+  if (agentName) agentName.textContent = name;
   if (agentTitle) agentTitle.textContent = a.title || (a.username ? `@${a.username}` : '');
   if (agentStatus && a.status) agentStatus.value = a.status;
+  paintAvatar(document.getElementById('agentAvatar'), name);
+  const onlineEl = document.getElementById('statOnline');
+  if (onlineEl) {
+    const onlineN = (state.agents || []).filter((ag) => ag.status === 'online' && ag.enabled !== false).length;
+    onlineEl.textContent = `在线 ${onlineN || (a.status === 'online' ? 1 : 0)}`;
+  }
 }
 
 function cartCountOf(room) {
@@ -508,15 +650,33 @@ function renderVisitor(room) {
   const lang = room.user_lang || '-';
   const cart = Array.isArray(room.cart) ? room.cart : [];
   const count = cart.reduce((n, line) => n + Number(line.qty || line.quantity || 1), 0);
+  const title = room.email || room.visitor_id || '访客';
+  const live = room.status !== 'closed';
   visitorInfo.innerHTML = `
-    <div class="kv"><span>邮箱</span><strong>${esc(room.email || '-')}</strong></div>
-    <div class="kv"><span>访客</span><strong>${esc(room.visitor_id || '-')}</strong></div>
-    <div class="kv"><span>IP</span><strong>${esc(ip)}</strong></div>
-    <div class="kv"><span>归属地</span><strong>${esc(geo || '未知')}</strong></div>
-    <div class="kv"><span>语种</span><strong>${esc(lang)}</strong></div>
-    <div class="kv"><span>购物车</span><strong>${count} 件</strong></div>
-    <button type="button" id="inviteCart" class="btn" ${count ? '' : 'disabled'}>邀请下单</button>
+    <div class="visitor-card">
+      <div class="visitor-head">
+        <span class="avatar lg" id="visitorAvatar">${esc(String(title).trim().slice(0, 1) || '访')}</span>
+        <div>
+          <strong>${esc(title)}</strong>
+          <div class="presence ${live ? '' : 'off'}">${live ? '进行中' : '已关闭'}</div>
+        </div>
+      </div>
+      <div class="kv"><span>邮箱</span><strong>${esc(room.email || '-')}</strong></div>
+      <div class="kv"><span>访客</span><strong>${esc(room.visitor_id || '-')}</strong></div>
+      <div class="kv"><span>IP</span><strong>${esc(ip)}</strong></div>
+      <div class="kv"><span>归属地</span><strong>${esc(geo || '未知')}</strong></div>
+      <div class="kv"><span>语种</span><strong>${esc(lang)}</strong></div>
+      <div class="kv"><span>购物车</span><strong>${count} 件</strong></div>
+      <button type="button" id="inviteCart" ${count ? '' : 'disabled'}>邀请下单</button>
+    </div>
+    <div class="ctx-jumps">
+      <button type="button" data-jump="sku">当前商品 / 发送其他商品 <span>›</span></button>
+      <button type="button" data-jump="orders">订单 / 物流 <span>›</span></button>
+      <button type="button" data-jump="history">浏览足迹 <span>›</span></button>
+    </div>
   `;
+  paintAvatar(document.getElementById('visitorAvatar'), title);
+  paintAvatar(document.getElementById('chatAvatar'), title);
   const invite = document.getElementById('inviteCart');
   if (invite) {
     invite.addEventListener('click', async () => {
@@ -532,25 +692,36 @@ function renderVisitor(room) {
   }
 }
 
+function orderMatchesFilter(o) {
+  const f = state.orderFilter || 'all';
+  if (f === 'all') return true;
+  const st = String(o.status || '');
+  if (f === 'pending') return /待|未发|pending|paid|待发|处理/.test(st);
+  if (f === 'shipped') return /发货|运输|ship|transit|配送/.test(st);
+  if (f === 'done') return /完成|签收|done|deliver|关闭|已收/.test(st);
+  return true;
+}
+
 function renderOrders(orders) {
   if (!ordersList) return;
-  const list = Array.isArray(orders) ? orders : [];
+  const list = (Array.isArray(orders) ? orders : []).filter(orderMatchesFilter);
   if (!list.length) {
-    ordersList.innerHTML = '<div class="muted small">暂无订单</div>';
+    ordersList.innerHTML = '<div class="muted small">暂无该状态订单</div>';
     return;
   }
   ordersList.innerHTML = list.slice(0, 12).map((o) => {
     const id = o.id ?? o.submit_id ?? '';
-    const st = o.status || '';
+    const st = o.status || '—';
     const track = o.tracking_no || o.tracking || o.logistics_no || '';
+    const carrier = o.carrier || o.shipping_carrier || '';
     return `<div class="order-item" data-id="${esc(id)}">
-      <div class="row"><strong>#${esc(id)}</strong><span class="pill">${esc(st)}</span></div>
+      <div class="row"><strong>订单号 ${esc(id)}</strong><span class="pill">${esc(st)}</span></div>
       <div class="muted small">${esc(o.email || '')}</div>
-      <div class="muted small">${track ? '物流 ' + esc(track) : '暂无物流'}</div>
-      <div class="row" style="gap:6px;margin-top:6px">
+      <div class="muted small">${track ? '物流 ' + esc(carrier ? carrier + ' ' : '') + esc(track) : '暂无物流'}</div>
+      <div class="order-actions">
         <button type="button" class="btn ghost sm" data-order-view="${esc(id)}">详情</button>
         ${track ? `<button type="button" class="btn ghost sm" data-ship-send="${esc(id)}">发送物流</button>` : ''}
-        <button type="button" class="btn sm" data-order-send="${esc(id)}">发送订单卡</button>
+        <button type="button" class="btn primary sm" data-order-send="${esc(id)}">发送订单卡</button>
       </div>
     </div>`;
   }).join('');
@@ -614,22 +785,18 @@ function updateContext(room) {
     chatTitle.textContent = '会话';
     chatMeta.textContent = '';
     updateAssigneeLine(null);
-    currentProduct.outerHTML; // noop
-    currentProduct.className = 'product-card empty-card';
-    currentProduct.innerHTML = '暂无';
+    swapProduct(null);
     renderHistory([]);
+    syncWorkspace(false);
     return;
   }
-  chatTitle.textContent = room.email || room.visitor_id || room.id;
+  const title = room.email || room.visitor_id || room.id;
+  chatTitle.textContent = title;
+  paintAvatar(document.getElementById('chatAvatar'), title);
   chatMeta.textContent = `访客 ${room.visitor_id || '-'} · ${room.status === 'closed' ? '已关闭' : '进行中'} · 更新 ${fmtTime(room.updated_at)}`;
   updateAssigneeLine(room);
   fillTransferSelect();
-  currentProduct.outerHTML = productHtml(room.current).replace('class="product-card"', 'id="currentProduct" class="product-card"');
-  // productHtml returns full card; re-query
-  const fresh = document.getElementById('currentProduct');
-  if (!fresh) {
-    const wrap = document.querySelector('.context');
-  }
+  swapProduct(room.current);
   renderHistory(room.history || []);
 }
 
@@ -650,14 +817,15 @@ async function refreshInbox() {
     updateContext(null);
     renderVisitor(null);
     renderOrders([]);
+    syncWorkspace(false);
   }
   const unread = Number(res.unread_n != null ? res.unread_n : state.rooms.reduce((n, r) => n + Number(r.unread_staff || 0), 0));
   const openN = Number(res.open_n != null ? res.open_n : state.rooms.filter((r) => r.status === 'open').length);
   statOpen.textContent = `进行中 ${openN}`;
   statUnread.textContent = `未读 ${unread}`;
   if (unread > prevUnread && prevUnread >= 0 && state.knownUnread) {
-    try { pingSound.currentTime = 0; await pingSound.play(); } catch (_) {}
-    window.csDesk.notify({ title: 'Harbor 客服', body: '收到新的用户消息' });
+    playPing();
+    deskNotify('Harbor 客服', '收到新的用户消息');
   }
   state.knownUnread = 1;
   renderRooms();
@@ -685,17 +853,10 @@ async function openRoom(roomId) {
   chatPanel.hidden = false;
   state.messages = res.messages || [];
   state.lastMsgId = state.messages.reduce((m, x) => Math.max(m, Number(x.id || 0)), 0);
-  // rebuild current product node safely
-  const holder = document.querySelector('.context');
-  const old = document.getElementById('currentProduct');
-  if (old) {
-    const tmp = document.createElement('div');
-    tmp.innerHTML = productHtml(res.room && res.room.current);
-    const card = tmp.firstElementChild;
-    card.id = 'currentProduct';
-    old.replaceWith(card);
-  }
-  chatTitle.textContent = (res.room && (res.room.email || res.room.visitor_id)) || roomId;
+  swapProduct(res.room && res.room.current);
+  const openedTitle = (res.room && (res.room.email || res.room.visitor_id)) || roomId;
+  chatTitle.textContent = openedTitle;
+  paintAvatar(document.getElementById('chatAvatar'), openedTitle);
   chatMeta.textContent = `访客 ${(res.room && res.room.visitor_id) || '-'} · ${(res.room && res.room.status) === 'closed' ? '已关闭' : '进行中'} · 更新 ${fmtTime(res.room && res.room.updated_at)}`;
   updateAssigneeLine(res.room || null);
   fillTransferSelect();
@@ -703,6 +864,8 @@ async function openRoom(roomId) {
   renderVisitor(res.room || null);
   loadOrders(res.room || null);
   renderMessages();
+  renderCannedBar();
+  showCtx('visitor');
   renderRooms();
   // panel just became visible — pin to latest after layout
   requestAnimationFrame(() => scrollMessagesToEnd());
@@ -767,8 +930,8 @@ async function pollRoomLoop(loop, roomId) {
           state.messages.push(m);
           added += 1;
           if (m.role === 'user') {
-            try { pingSound.currentTime = 0; await pingSound.play(); } catch (_) {}
-            window.csDesk.notify({ title: '新消息', body: String(m.body || '').slice(0, 80) });
+            playPing();
+            deskNotify('新消息', String(m.body || '').slice(0, 80));
           }
         }
         state.lastMsgId = Math.max(state.lastMsgId, Number(m.id || 0));
@@ -782,14 +945,7 @@ async function pollRoomLoop(loop, roomId) {
       renderVisitor(res.room);
     }
     if (res.room && incoming.length) {
-      const old = document.getElementById('currentProduct');
-      if (old) {
-        const tmp = document.createElement('div');
-        tmp.innerHTML = productHtml(res.room.current);
-        const card = tmp.firstElementChild;
-        card.id = 'currentProduct';
-        old.replaceWith(card);
-      }
+      swapProduct(res.room.current);
       renderHistory(res.room.history || []);
       renderVisitor(res.room);
       updateAssigneeLine(res.room); __harborSyncAiBanner(res.room);
@@ -810,8 +966,8 @@ async function pollInboxLoop(loop) {
           state.rooms = res.rooms;
           const unread = state.rooms.reduce((n, r) => n + Number(r.unread_staff || 0), 0);
           if (unread > prevUnread) {
-            try { pingSound.currentTime = 0; await pingSound.play(); } catch (_) {}
-            window.csDesk.notify({ title: 'Harbor 客服', body: '收件箱有更新' });
+            playPing();
+            deskNotify('Harbor 客服', '收件箱有更新');
           }
           statOpen.textContent = `进行中 ${state.rooms.length}`;
           statUnread.textContent = `未读 ${unread}`;
@@ -959,6 +1115,7 @@ document.getElementById('btnCloseRoom').addEventListener('click', async () => {
   state.activeId = null;
   chatPanel.hidden = true;
   chatEmpty.hidden = false;
+  syncWorkspace(false);
   state.roomLoop += 1;
   refreshInbox();
 });
@@ -1327,11 +1484,15 @@ if (skuSearch && skuSearchResults) {
       const compact = $('setCompact'); if (compact) compact.checked = localStorage.getItem('cs_compact') === '1';
       const ops = $('setShowOps'); if (ops) ops.checked = localStorage.getItem('cs_ops') !== '0';
       const canned = $('setCanned'); if (canned) canned.value = localStorage.getItem('cs_canned') || '';
+      const cannedOn = $('setCannedOn'); if (cannedOn) cannedOn.checked = localStorage.getItem('cs_canned_on') !== '0';
+      const admin = $('openAdminCs');
+      if (admin) admin.href = (typeof deskBase === 'function' ? deskBase() : '') + '/admin/cs';
     } catch (_) {}
   }
   function closeSettings() { if (settingsPanel) settingsPanel.hidden = true; }
   settingsBtn?.addEventListener('click', openSettings);
   settingsClose?.addEventListener('click', closeSettings);
+  $('settingsCancel')?.addEventListener('click', closeSettings);
   settingsPanel?.addEventListener('click', (e) => { if (e.target === settingsPanel) closeSettings(); });
 
   document.querySelectorAll('.settings-tabs button').forEach((btn) => {
@@ -1355,9 +1516,12 @@ if (skuSearch && skuSearchResults) {
       localStorage.setItem('cs_compact', $('setCompact')?.checked ? '1' : '0');
       localStorage.setItem('cs_ops', $('setShowOps')?.checked ? '1' : '0');
       localStorage.setItem('cs_canned', $('setCanned')?.value || '');
+      localStorage.setItem('cs_canned_on', $('setCannedOn')?.checked ? '1' : '0');
       if ($('agentName') && $('setNick')?.value) $('agentName').textContent = $('setNick').value;
       if ($('agentTitle') && $('setTitle')) $('agentTitle').textContent = $('setTitle').value;
+      paintAvatar($('agentAvatar'), $('setNick')?.value || $('agentName')?.textContent || '客');
     } catch (_) {}
+    applyDeskPrefs();
     closeSettings();
   });
 
@@ -1371,6 +1535,48 @@ if (skuSearch && skuSearchResults) {
   }
   statusSel?.addEventListener('change', syncStatusUi);
   syncStatusUi();
+  applyDeskPrefs();
+
+  document.querySelectorAll('[data-ctx]').forEach((btn) => {
+    btn.addEventListener('click', () => showCtx(btn.getAttribute('data-ctx')));
+  });
+  $('ctxClose')?.addEventListener('click', () => syncWorkspace(false));
+  $('btnVisitor')?.addEventListener('click', () => showCtx('visitor'));
+  $('btnSku')?.addEventListener('click', () => showCtx('sku'));
+  $('btnOrders')?.addEventListener('click', () => showCtx('orders'));
+  visitorInfo?.addEventListener('click', (e) => {
+    const jump = e.target.closest('[data-jump]');
+    if (!jump) return;
+    showCtx(jump.getAttribute('data-jump'));
+  });
+  const orderFilters = $('orderFilters');
+  orderFilters?.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-ofilt]');
+    if (!btn) return;
+    state.orderFilter = btn.getAttribute('data-ofilt') || 'all';
+    orderFilters.querySelectorAll('[data-ofilt]').forEach((el) => el.classList.toggle('on', el === btn));
+    renderOrders(state.orders);
+  });
+  const cannedBar = $('cannedBar');
+  cannedBar?.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-canned]');
+    if (!btn || !replyBody) return;
+    const line = btn.getAttribute('data-canned') || '';
+    const start = replyBody.selectionStart || replyBody.value.length;
+    const v = replyBody.value;
+    const glue = v && start && !/\s$/.test(v.slice(0, start)) ? ' ' : '';
+    replyBody.value = v.slice(0, start) + glue + line + v.slice(start);
+    replyBody.focus();
+  });
+  $('pwToggle')?.addEventListener('click', () => {
+    const input = $('password');
+    const toggle = $('pwToggle');
+    if (!input || !toggle) return;
+    const show = input.type === 'password';
+    input.type = show ? 'text' : 'password';
+    toggle.setAttribute('aria-pressed', show ? 'true' : 'false');
+    toggle.setAttribute('aria-label', show ? '隐藏密码' : '显示密码');
+  });
 
   function openTransferModal() {
     if (!transferModal) return;

@@ -7,26 +7,101 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div id="loginView" class="login-view">
+  <div id="loginView" class="login-view" data-figma="12:2">
+    <section class="login-hero">
+      <div class="brand">
+        <span class="mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 3a7 7 0 0 0-7 7v3.2A2.8 2.8 0 0 0 7.8 16H9v-5H7v-1a5 5 0 0 1 10 0v1h-2v5h2.2a2.8 2.8 0 0 0 2.8-2.8V10a7 7 0 0 0-7-7zm-1.2 15.2a1.2 1.2 0 0 0 2.4 0V17h-2.4v1.2z"/></svg>
+        </span>
+        <div>
+          <strong>Harbor 客服台</strong>
+          <small>用心服务 · 连接每一位顾客</small>
+        </div>
+      </div>
+      <ul class="feature-list">
+        <li>
+          <span class="feat-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v7A2.5 2.5 0 0 1 17.5 16H9l-3.6 2.7c-.7.5-1.4 0-1.4-.8V6.5z"/></svg>
+          </span>
+          <span><b>高效接待</b><small>快速响应顾客咨询</small></span>
+        </li>
+        <li>
+          <span class="feat-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M4 7.5A2.5 2.5 0 0 1 6.5 5H10v14H6.5A2.5 2.5 0 0 1 4 16.5v-9zM12 5h5.5A2.5 2.5 0 0 1 20 7.5v9a2.5 2.5 0 0 1-2.5 2.5H12V5z"/></svg>
+          </span>
+          <span><b>多店铺管理</b><small>集中管理多个店铺</small></span>
+        </li>
+        <li>
+          <span class="feat-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M5 19V10h3v9H5zm5.5 0V5h3v14h-3zM16 19v-6h3v6h-3z"/></svg>
+          </span>
+          <span><b>数据报表</b><small>实时掌握服务数据</small></span>
+        </li>
+        <li>
+          <span class="feat-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 3 5 6v6c0 4.2 2.8 7.4 7 8.5 4.2-1.1 7-4.3 7-8.5V6l-7-3zm-1 12.2-2.6-2.6 1.2-1.2 1.4 1.4 3.4-3.4 1.2 1.2-4.6 4.6z"/></svg>
+          </span>
+          <span><b>安全稳定</b><small>保障店铺与账号安全</small></span>
+        </li>
+      </ul>
+    </section>
+
     <form id="loginForm" class="login-card">
-      <div class="brand"><span class="mark">H</span><div><strong>Harbor/Pimo</strong><small>客服登录 · CS Desktop</small></div></div>
-      <label>店铺地址<input id="baseUrl" name="base" value="http://127.0.0.1:8787" /></label>
-      <label>账号<input id="username" name="username" autocomplete="username" autofocus /></label>
-      <label>密码<input id="password" name="password" type="password" autocomplete="current-password" /></label>
+      <div class="login-card-brand">
+        <span class="mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 3a7 7 0 0 0-7 7v3.2A2.8 2.8 0 0 0 7.8 16H9v-5H7v-1a5 5 0 0 1 10 0v1h-2v5h2.2a2.8 2.8 0 0 0 2.8-2.8V10a7 7 0 0 0-7-7zm-1.2 15.2a1.2 1.2 0 0 0 2.4 0V17h-2.4v1.2z"/></svg>
+        </span>
+        <strong>Harbor 客服台</strong>
+      </div>
+      <label>店铺地址
+        <span class="field">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5V9H4V6.5zM4 11h16v6.5a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 17.5V11zm3 2.5h4v2H7v-2z"/></svg>
+          <input id="baseUrl" name="base" value="http://127.0.0.1:8787" placeholder="请输入店铺地址，例如 shop123" autocomplete="url" />
+        </span>
+      </label>
+      <label>账号
+        <span class="field">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm0 2c-3.3 0-8 1.7-8 5v1h16v-1c0-3.3-4.7-5-8-5z"/></svg>
+          <input id="username" name="username" autocomplete="username" placeholder="请输入账号" autofocus />
+        </span>
+      </label>
+      <label>密码
+        <span class="field">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M8 10V8a4 4 0 0 1 8 0v2h1.5A1.5 1.5 0 0 1 19 11.5v7a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 18.5v-7A1.5 1.5 0 0 1 6.5 10H8zm2 0h4V8a2 2 0 0 0-4 0v2z"/></svg>
+          <input id="password" name="password" type="password" autocomplete="current-password" placeholder="请输入密码" />
+          <button id="pwToggle" class="pw-toggle" type="button" aria-label="显示密码" aria-pressed="false">
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M12 6c4.5 0 8.2 2.8 9.5 6-1.3 3.2-5 6-9.5 6S3.8 15.2 2.5 12C3.8 8.8 7.5 6 12 6zm0 2a4 4 0 1 0 4 4 4 4 0 0 0-4-4zm0 2.2A1.8 1.8 0 1 1 10.2 12 1.8 1.8 0 0 1 12 10.2z"/></svg>
+          </button>
+        </span>
+      </label>
       <button class="btn primary" type="submit">登录</button>
       <p id="loginError" class="error" hidden></p>
       <p class="hint">本地默认：账号 admin，密码 harbor-local。需店铺服务已启动。</p>
     </form>
+
+    <aside class="login-aside" aria-hidden="true">
+      <p>更好的服务<br />从这里开始</p>
+      <div class="aside-blob">
+        <svg viewBox="0 0 120 90" width="120" height="90"><rect x="8" y="18" width="78" height="52" rx="8" fill="#fff" stroke="#E8EAF0"/><rect x="16" y="28" width="36" height="6" rx="3" fill="#F96141"/><rect x="16" y="40" width="52" height="4" rx="2" fill="#E8EAF0"/><rect x="16" y="48" width="40" height="4" rx="2" fill="#E8EAF0"/><circle cx="92" cy="28" r="16" fill="#FFF1EC"/><path fill="#F96141" d="M92 18a8 8 0 0 0-8 8v3h3v-3a5 5 0 0 1 10 0v3h3v-3a8 8 0 0 0-8-8z"/></svg>
+      </div>
+    </aside>
   </div>
 
   <div id="appView" class="app-view" hidden>
     <header class="topbar">
-      <div class="brand mini"><span class="mark">H</span><strong>Harbor 客服台</strong></div>
+      <div class="brand mini">
+        <span class="mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M12 3a7 7 0 0 0-7 7v3.2A2.8 2.8 0 0 0 7.8 16H9v-5H7v-1a5 5 0 0 1 10 0v1h-2v5h2.2a2.8 2.8 0 0 0 2.8-2.8V10a7 7 0 0 0-7-7z"/></svg>
+        </span>
+        <strong>Harbor 客服台</strong>
+      </div>
       <div class="top-stats">
         <span id="statOpen">进行中 0</span>
         <span id="statUnread" class="badge-pill">未读 0</span>
+        <span id="statOnline" class="stat-online">在线 0</span>
       </div>
       <div class="agent-box">
+        <span class="avatar sm" id="agentAvatar" aria-hidden="true">客</span>
         <div class="agent-who">
           <strong id="agentName">客服</strong>
           <small id="agentTitle" class="muted"></small>
@@ -37,24 +112,31 @@
           <option value="busy">挂起</option>
           <option value="offline">离线</option>
         </select>
-        <span id="statusHint" class="status-hint muted small" hidden data-figma="S07">离开/挂起时新会话不会优先分配给你</span>
+        <span id="statusHint" class="status-hint muted small" hidden data-figma="12:3">离开/挂起时新会话不会优先分配给你</span>
       </div>
-      <button id="btnSettings" class="btn ghost" type="button" title="设置">设置</button>
       <div class="top-actions">
-        <span id="baseLabel" class="muted"></span>
+        <span id="baseLabel" class="muted base-label"></span>
+        <button id="btnSettings" class="btn ghost" type="button" title="设置">设置</button>
         <button id="btnRefresh" class="btn ghost" type="button">刷新</button>
         <button id="btnLogout" class="btn ghost" type="button">退出</button>
       </div>
     </header>
 
     <main class="workspace">
-      <aside class="inbox">
+      <aside class="inbox" data-figma="12:4">
         <div class="inbox-tools">
-          <div class="tabs">
-            <button type="button" data-status="open" class="tab active">进行中</button>
-            <button type="button" data-status="closed" class="tab">已关闭</button>
+          <div class="tabs" role="tablist" aria-label="会话状态">
+            <button type="button" data-status="open" class="tab active">
+              <span>进行中</span>
+              <em id="tabOpenCount">0</em>
+            </button>
+            <button type="button" data-status="closed" class="tab">
+              <span>已关闭</span>
+              <em id="tabClosedCount">0</em>
+            </button>
           </div>
           <input id="searchQ" type="search" placeholder="搜索访客 / 商品 / 邮箱" />
+          <div class="filter-label">筛选</div>
           <div id="inboxChips" class="inbox-chips" role="tablist" aria-label="会话筛选">
             <button type="button" data-chip="all" class="on">全部</button>
             <button type="button" data-chip="mine">我的</button>
@@ -63,160 +145,220 @@
           </div>
           <p id="chipHint" class="chip-hint">全部进行中会话</p>
         </div>
+        <div class="list-label">会话列表</div>
         <div id="roomList" class="room-list"></div>
-        <div id="closedEmpty" class="empty empty-closed" hidden data-figma="S10">
-          <div class="empty-ico">📁</div>
+        <div id="closedEmpty" class="empty empty-closed" hidden data-figma="12:7">
+          <div class="empty-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="26" height="26"><path fill="currentColor" d="M4 6.5A2.5 2.5 0 0 1 6.5 4h4l2 2h5A2.5 2.5 0 0 1 20 8.5v9a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 17.5v-11z"/></svg>
+          </div>
           <strong>没有匹配的已关闭会话</strong>
           <p class="muted small">试试邮箱、商品名或订单号；清空搜索可查看最近关闭会话。</p>
         </div>
       </aside>
 
       <section class="chat">
-        <div id="chatEmpty" class="empty empty-selection" data-figma="S03">
-          <div class="empty-ico">💬</div>
-          <strong>选择左侧会话开始回复</strong>
-          <p class="muted small">进行中会话、未分配与挂起可在上方筛选。关闭的会话在「已关闭」。</p>
+        <div id="chatEmpty" class="empty empty-selection" data-figma="3:32">
+          <div class="empty-art" aria-hidden="true">
+            <svg viewBox="0 0 160 120" width="160" height="120">
+              <ellipse cx="78" cy="98" rx="52" ry="10" fill="#F96141" opacity=".12"/>
+              <path fill="#F96141" d="M46 28h62a14 14 0 0 1 14 14v28a14 14 0 0 1-14 14H74l-16 12v-12H46a14 14 0 0 1-14-14V42a14 14 0 0 1 14-14z"/>
+              <circle cx="68" cy="56" r="4" fill="#fff"/><circle cx="82" cy="56" r="4" fill="#fff"/><circle cx="96" cy="56" r="4" fill="#fff"/>
+              <path d="M118 34l6-10M126 40l12-4" stroke="#F96141" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <strong>请选择左侧的会话</strong>
+          <p class="muted small">或从列表中选择一个会话开始处理。进行中、未分配与挂起可在上方筛选。</p>
         </div>
         <div id="inboxEmpty" class="empty empty-inbox" hidden data-figma="S09">
-          <div class="empty-ico">📭</div>
+          <div class="empty-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="26" height="26"><path fill="currentColor" d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5V16l-4-2.2V20l-4-2-4 2v-6.2L4 16V6.5z"/></svg>
+          </div>
           <strong>暂无进行中会话</strong>
-          <p class="muted small">新访客进线后会出现在这里。可切换到「已关闭」查看历史，或调整筛选芯片。</p>
+          <p class="muted small">新访客进线后会出现在这里。可切换到「已关闭」查看历史，或调整筛选。</p>
         </div>
         <div id="chatPanel" hidden>
-          <div id="aiBanner" class="ai-banner" hidden data-figma="S06">
+          <div id="aiBanner" class="ai-banner" hidden data-figma="12:8">
             <span class="ai-pill">AI 接待中</span>
             <span class="muted small">[ops] 仅客服台可见 · 用户端无 AI 角标 · 手动回复将接回人工</span>
           </div>
           <div class="chat-head">
-            <div>
-              <strong id="chatTitle">会话</strong>
-              <div id="chatMeta" class="muted small"></div>
-              <div id="chatAssignee" class="assignee-line muted small"></div>
+            <div class="chat-who">
+              <span class="avatar" id="chatAvatar" aria-hidden="true">访</span>
+              <div>
+                <strong id="chatTitle">会话</strong>
+                <div id="chatMeta" class="muted small"></div>
+                <div id="chatAssignee" class="assignee-line muted small"></div>
+              </div>
             </div>
             <div class="chat-head-actions">
+              <button id="btnVisitor" class="btn ghost sm" type="button">访客</button>
+              <button id="btnSku" class="btn ghost sm" type="button">商品</button>
+              <button id="btnOrders" class="btn ghost sm" type="button">订单</button>
               <select id="transferSelect" class="transfer-select" title="转交给其他在线客服">
                 <option value="">转交给…</option>
               </select>
-              <button id="btnTransfer" class="btn ghost" type="button">转交</button>
-              <button id="btnToAi" class="btn ghost" type="button" title="转给 AI 自动接待">转给 AI</button>
-              <button id="btnCloseRoom" class="btn danger ghost" type="button">结束会话</button>
+              <button id="btnTransfer" class="btn ghost sm" type="button">转交</button>
+              <button id="btnToAi" class="btn ghost sm" type="button" title="转给 AI 自动接待">转给 AI</button>
+              <button id="btnCloseRoom" class="btn danger ghost sm" type="button">结束会话</button>
             </div>
           </div>
           <div id="msgList" class="msg-list"></div>
           <form id="replyForm" class="composer">
+            <div id="cannedBar" class="canned-bar" hidden></div>
             <div id="emojiBar" class="emoji-bar" hidden></div>
             <div class="composer-row">
-              <button id="emojiToggle" class="btn ghost emoji-toggle" type="button" title="表情">😊</button>
-              <button id="imageToggle" class="btn ghost image-toggle" type="button" title="发送图片">📎</button>
+              <button id="emojiToggle" class="btn ghost emoji-toggle" type="button" title="表情">
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 3a9 9 0 1 0 9 9 9 9 0 0 0-9-9zm-3.2 7.2a1.2 1.2 0 1 1 1.2 1.2 1.2 1.2 0 0 1-1.2-1.2zm6.4 0a1.2 1.2 0 1 1 1.2 1.2 1.2 1.2 0 0 1-1.2-1.2zM12 17.2a4.6 4.6 0 0 1-4-2.2h8a4.6 4.6 0 0 1-4 2.2z"/></svg>
+              </button>
+              <button id="imageToggle" class="btn ghost image-toggle" type="button" title="发送图片">
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M5 5.5A2.5 2.5 0 0 1 7.5 3h9A2.5 2.5 0 0 1 19 5.5v9.2l-3.2-3.2a1.5 1.5 0 0 0-2.1 0L9 16.2 7.6 14.8a1.5 1.5 0 0 0-2.1 0L5 15.3V5.5zM8 8.2A1.3 1.3 0 1 0 9.3 9.5 1.3 1.3 0 0 0 8 8.2zM5 18.5V17l1.6-1.6L9 17.8l4.8-4.8L19 17.2v1.3A2.5 2.5 0 0 1 16.5 21h-9A2.5 2.5 0 0 1 5 18.5z"/></svg>
+              </button>
               <input type="file" id="imagePick" accept="image/*" hidden />
-              <textarea id="replyBody" rows="3" placeholder="输入回复，Enter 发送，Shift+Enter 换行"></textarea>
+              <textarea id="replyBody" rows="2" placeholder="请输入消息，Enter 发送，Shift+Enter 换行"></textarea>
               <button class="btn primary" type="submit">发送</button>
             </div>
           </form>
         </div>
       </section>
 
-      <aside class="context">
-        <h3>访客信息</h3>
-        <div id="visitorInfo" class="info-card"><div class="muted small">选择会话后显示</div></div>
-        <h3>当前商品</h3>
-        <div id="currentProduct" class="product-card empty-card">暂无</div>
-        <h3>发送其他商品</h3>
-        <div class="sku-search-box">
-          <input id="skuSearch" type="search" placeholder="搜索 SKU / 商品名" />
-          <div id="skuSearchResults" class="sku-search-results"></div>
+      <aside class="context" hidden data-figma="12:15">
+        <div class="ctx-head">
+          <div class="ctx-tabs" role="tablist" aria-label="右侧详情">
+            <button type="button" data-ctx="visitor" class="on">访客</button>
+            <button type="button" data-ctx="sku">商品</button>
+            <button type="button" data-ctx="orders">订单</button>
+            <button type="button" data-ctx="history">足迹</button>
+          </div>
+          <button type="button" id="ctxClose" class="icon-x" aria-label="关闭详情">×</button>
         </div>
-        <h3>订单 / 物流</h3>
-        <div id="ordersList" class="orders-list"><div class="muted small">暂无</div></div>
-        <h3>浏览足迹</h3>
-        <div id="historyList" class="history-list"><div class="muted small">暂无</div></div>
+
+        <div id="ctx-visitor" class="ctx-pane">
+          <h3>访客信息</h3>
+          <div id="visitorInfo" class="info-card"><div class="muted small">选择会话后显示</div></div>
+        </div>
+
+        <div id="ctx-sku" class="ctx-pane" hidden data-figma="12:18">
+          <h3>当前商品</h3>
+          <div id="currentProduct" class="product-card empty-card">暂无</div>
+          <h3>发送其他商品</h3>
+          <div class="sku-search-box">
+            <input id="skuSearch" type="search" placeholder="搜索 SKU / 商品名" />
+            <div id="skuSearchResults" class="sku-search-results"></div>
+          </div>
+        </div>
+
+        <div id="ctx-orders" class="ctx-pane" hidden data-figma="12:16">
+          <h3>订单 / 物流</h3>
+          <div id="orderFilters" class="inbox-chips" role="tablist" aria-label="订单状态">
+            <button type="button" data-ofilt="all" class="on">全部</button>
+            <button type="button" data-ofilt="pending">待发货</button>
+            <button type="button" data-ofilt="shipped">已发货</button>
+            <button type="button" data-ofilt="done">已完成</button>
+          </div>
+          <div id="ordersList" class="orders-list"><div class="muted small">暂无</div></div>
+        </div>
+
+        <div id="ctx-history" class="ctx-pane" hidden data-figma="12:17">
+          <h3>浏览足迹</h3>
+          <div id="historyList" class="history-list"><div class="muted small">暂无</div></div>
+        </div>
       </aside>
-    <!-- Transfer modal S05 -->
+    </main>
+
     <div id="transferModal" class="sku-modal transfer-modal-wrap" hidden data-figma="S05">
-      <div class="sku-modal-card">
+      <div class="sku-modal-card" role="dialog" aria-modal="true" aria-labelledby="transferTitle">
         <div class="sku-modal-head">
-          <strong>转交给同事</strong>
-          <button type="button" id="transferModalClose" class="btn ghost">关闭</button>
+          <strong id="transferTitle">转交给同事</strong>
+          <button type="button" id="transferModalClose" class="icon-x" aria-label="关闭">×</button>
         </div>
-        <p class="muted small">接手客服可见完整历史 · 顶栏显示「接待」与「此前」花名</p>
+        <p class="muted small">接手客服可见完整历史。顶栏显示「接待」与「此前」花名。</p>
         <label class="transfer-label">选择在线客服
           <select id="transferModalSelect"></select>
         </label>
         <label class="transfer-label">备注（可选）
           <input id="transferNote" type="text" placeholder="例如：退款诉求，已核对订单" />
         </label>
-        <div class="sku-modal-head" style="margin-top:12px">
-          <span></span>
+        <div class="modal-actions">
           <button type="button" id="transferModalConfirm" class="btn primary">确认转交</button>
         </div>
       </div>
     </div>
 
-    <!-- Settings panel S11-S14 -->
-    <div id="settingsPanel" class="settings-overlay" hidden data-figma="S11">
-      <div class="settings-panel">
+    <div id="settingsPanel" class="settings-overlay" hidden data-figma="12:19">
+      <div class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
         <div class="sku-modal-head">
-          <strong>客服台设置</strong>
-          <button type="button" id="settingsClose" class="btn ghost">关闭</button>
+          <strong id="settingsTitle">客服台设置</strong>
+          <button type="button" id="settingsClose" class="icon-x" aria-label="关闭">×</button>
         </div>
-        <div class="settings-tabs">
+        <div class="settings-tabs" role="tablist">
           <button type="button" class="on" data-stab="profile">资料</button>
           <button type="button" data-stab="canned">快捷回复</button>
           <button type="button" data-stab="notify">通知</button>
           <button type="button" data-stab="desk">工作台</button>
         </div>
         <div id="stab-profile" class="stab-body">
-          <label>花名<input id="setNick" type="text" placeholder="小林" /></label>
-          <label>班次标题<input id="setTitle" type="text" placeholder="晚班客服" /></label>
-          <p class="muted small">显示在顶栏，访客不可见班次说明。</p>
+          <div class="set-row">
+            <label for="setNick">花名 <em>*</em></label>
+            <input id="setNick" type="text" placeholder="请输入花名" />
+          </div>
+          <div class="set-row">
+            <label for="setTitle">班次标题 <em>*</em></label>
+            <input id="setTitle" type="text" placeholder="请输入班次标题" />
+          </div>
+          <div class="set-row">
+            <span class="set-key">说明</span>
+            <p class="set-note">显示在顶栏，访客不可见班次说明。</p>
+          </div>
         </div>
-        <div id="stab-canned" class="stab-body" hidden>
-          <textarea id="setCanned" rows="6" placeholder="每行一条快捷回复"></textarea>
+        <div id="stab-canned" class="stab-body" hidden data-figma="12:20">
+          <label class="chk"><input id="setCannedOn" type="checkbox" checked /> 在输入框上方显示快捷回复</label>
+          <textarea id="setCanned" rows="8" placeholder="每行一条快捷回复"></textarea>
+          <p class="muted small canned-sample">示例：您好！很高兴为您服务，请问有什么可以帮您？</p>
         </div>
-        <div id="stab-notify" class="stab-body" hidden>
+        <div id="stab-notify" class="stab-body" hidden data-figma="12:21">
+          <h4>通知</h4>
           <label class="chk"><input id="setSound" type="checkbox" checked /> 新消息提示音</label>
           <label class="chk"><input id="setDesktop" type="checkbox" checked /> 桌面通知</label>
         </div>
-        <div id="stab-desk" class="stab-body" hidden>
-          <div class="admin-cs-link" style="margin:8px 0 12px;padding:10px;border:1px solid #E2E6EE;border-radius:8px;background:#F7F4EF">
-            <strong style="display:block;margin-bottom:4px;color:#0F2744">翻译 / IP / 话术 / 档案</strong>
-            <p class="muted small" style="margin:0 0 8px">全局客服设置在后台 /admin/cs 维护，此处仅本地工作台偏好。</p>
-            <a class="btn teal sm" href="/admin/cs" target="_blank" rel="noopener">打开后台客服设置</a>
+        <div id="stab-desk" class="stab-body" hidden data-figma="12:22">
+          <div class="admin-cs-link">
+            <strong>全局客服设置</strong>
+            <p class="muted small">全局客服设置在后台 /admin/cs 维护，此处仅本地工作台偏好。</p>
+            <a id="openAdminCs" class="btn primary sm" href="/admin/cs" target="_blank" rel="noopener">打开后台客服设置</a>
           </div>
-
           <label class="chk"><input id="setCompact" type="checkbox" /> 紧凑会话列表</label>
           <label class="chk"><input id="setShowOps" type="checkbox" checked /> 显示 [ops] 系统提示</label>
         </div>
-        <button type="button" id="settingsSave" class="btn primary" style="margin-top:12px;width:100%">保存</button>
+        <div class="modal-actions">
+          <button type="button" id="settingsCancel" class="btn ghost">取消</button>
+          <button type="button" id="settingsSave" class="btn primary">保存</button>
+        </div>
       </div>
     </div>
 
-    <div id="orderDetailModal" class="sku-modal" hidden>
+    <div id="orderDetailModal" class="sku-modal" hidden data-figma="12:24">
       <div class="sku-modal-card" role="dialog" aria-modal="true">
         <div class="sku-modal-head">
           <strong>订单详情</strong>
-          <button type="button" id="orderDetailClose" class="btn ghost">关闭</button>
+          <button type="button" id="orderDetailClose" class="icon-x" aria-label="关闭">×</button>
         </div>
         <div id="orderDetailBody" class="order-detail-body"></div>
-        <div class="sku-modal-head">
-          <span></span>
+        <div class="modal-actions">
           <button type="button" id="orderDetailSend" class="btn primary">发送订单卡</button>
         </div>
       </div>
     </div>
 
-    <!-- SKU picker modal -->
-    <div id="skuPickerModal" class="sku-modal" hidden>
-      <div class="sku-modal-card">
+    <div id="skuPickerModal" class="sku-modal" hidden data-figma="S08">
+      <div class="sku-modal-card" role="dialog" aria-modal="true">
         <div class="sku-modal-head">
           <strong id="skuPickerTitle">选择规格后发送</strong>
-          <button type="button" id="skuPickerClose" class="btn ghost">关闭</button>
+          <button type="button" id="skuPickerClose" class="icon-x" aria-label="关闭">×</button>
         </div>
-        <p class="muted small sku-picker-hint" data-figma="S08">选择规格后再发送商品卡给访客</p>
+        <p class="muted small sku-picker-hint">选择规格后再发送商品卡给访客</p>
         <div id="skuPickerBody" class="sku-modal-body"></div>
       </div>
     </div>
-    </main>
   </div>
 
   <audio id="pingSound" preload="auto">
@@ -226,7 +368,7 @@
     <div class="sku-modal-card" role="dialog" aria-modal="true">
       <div class="sku-modal-head"><strong>请确认</strong></div>
       <p id="askModalBody" class="muted"></p>
-      <div class="sku-modal-head">
+      <div class="modal-actions">
         <button type="button" id="askModalNo" class="btn ghost">取消</button>
         <button type="button" id="askModalYes" class="btn primary">确定</button>
       </div>
@@ -235,4 +377,3 @@
   <script src="app.js"></script>
 </body>
 </html>
-
