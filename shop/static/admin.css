@@ -1679,6 +1679,21 @@ td.empty { text-align: center; padding: 28px 12px; }
   height: 32px; background: #F7F8FA; color: #8B919A; font-size: 11px; font-weight: 700;
 }
 .page-lucky td:nth-child(3) { color: #F96141; font-weight: 750; }
+.coef-panel { padding: 12px; }
+.coef-panel .coef-table th,
+.coef-panel .coef-table td {
+  padding: 6px 8px; font-size: 12px; line-height: 1.25; vertical-align: middle;
+}
+.coef-panel .coef-table thead th {
+  height: 32px; background: #F7F8FA; color: #8B919A; font-size: 11px; font-weight: 700;
+}
+.coef-panel .coef-table input[type="number"] {
+  height: 34px; width: 110px; border-radius: 8px; border: 1px solid #E8EAF0; padding: 0 8px; font-size: 13px;
+}
+.coef-panel .actions .btn:not(.ghost) {
+  background: #F96141; border: 0; color: #fff; height: 34px; border-radius: 10px;
+}
+.coef-panel .coef-table td:nth-child(4) { color: #F96141; font-weight: 750; }
 
 /* AD29 / S02 web CS desk */
 .fn-support-shell { margin: 0 !important; }
