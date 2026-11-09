@@ -56,7 +56,7 @@
         <article v-for="(item, i) in flash" :key="item.name" class="mini" @click="openSlot(i)">
           <div class="shot">
             <img :src="item.image" alt="" />
-            <span class="range">$1–$10</span>
+            <span class="range">$1-$10</span>
           </div>
           <div class="nm">{{ item.name }}</div>
           <div class="pr">
@@ -79,7 +79,7 @@
         <article v-for="(item, i) in arrivals" :key="item.name" class="mini" @click="openSlot(i + 4)">
           <div class="shot">
             <img :src="item.image" alt="" />
-            <span class="range">$1–$10</span>
+            <span class="range">$1-$10</span>
           </div>
           <div class="nm">{{ item.name }}</div>
           <div class="pr">
@@ -102,7 +102,7 @@
         <article v-for="(item, i) in picks" :key="item.name" class="wide" @click="openSlot(i + 8)">
           <div class="shot tall">
             <img :src="item.image" alt="" />
-            <span class="range">$1–$10</span>
+            <span class="range">$1-$10</span>
           </div>
           <div class="nm">{{ item.name }}</div>
           <div class="stars">★★★★★ <span>({{ item.reviews }})</span></div>
@@ -262,11 +262,11 @@ onMounted(async () => {
   display: inline-flex; align-items: center; justify-content: center;
 }
 .block { margin-top: 20px; }
-.sec { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
-.sec-title { display: flex; align-items: center; gap: 6px; font-size: 18px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; }
-.sec-sub { margin-top: 2px; font-size: 12px; line-height: 1.3; color: #8B919A; }
+.sec { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.sec-title { display: flex; align-items: center; gap: 4px; font-size: 18px; font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
+.sec-sub { margin-top: 3px; font-size: 12px; line-height: 1.3; color: #8E949C; }
 .zap, .spark, .who { color: #F96141; }
-.see { color: #F96141; font-size: 13px; font-weight: 700; line-height: 1.1; padding-top: 2px; }
+.see { color: #F96141; font-size: 13px; font-weight: 700; line-height: 1; padding-top: 0; }
 .clock {
   display: flex; align-items: center; gap: 4px; color: #F96141;
   background: transparent; padding: 0;
@@ -274,29 +274,29 @@ onMounted(async () => {
 .clock span { display: flex; flex-direction: column; align-items: center; line-height: 1; background: #FFF1EC; border-radius: 10px; min-width: 32px; padding: 4px 5px; }
 .clock b { font-size: 12px; font-weight: 800; }
 .clock small { font-size: 8px; letter-spacing: 0.04em; color: #C47A68; margin-top: 1px; }
-.row { display: flex; gap: 12px; overflow-x: auto; margin-top: 12px; padding-bottom: 4px; scrollbar-width: none; }
+.row { display: flex; gap: 12px; overflow-x: auto; margin-top: 10px; padding-bottom: 2px; scrollbar-width: none; }
 .row::-webkit-scrollbar { display: none; }
 .mini, .wide { flex: 0 0 164px; cursor: pointer; }
 .shot { position: relative; border-radius: 16px; overflow: hidden; background: #F4F1EE; aspect-ratio: 1; border: 0; box-shadow: 0 8px 18px rgba(28,36,48,0.06); }
 .shot img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
 .range {
-  position: absolute; left: 8px; top: 8px; height: 20px; display: inline-flex; align-items: center;
-  background: #fff; color: #F96141; font-size: 11px; font-weight: 800; border-radius: 999px; padding: 0 8px;
+  position: absolute; left: 10px; top: 10px; height: 18px; display: inline-flex; align-items: center;
+  background: #fff; color: #F96141; font-size: 10px; font-weight: 800; letter-spacing: 0; border-radius: 999px; padding: 0 7px;
 }
 .nm {
-  margin-top: 8px; font-size: 13px; font-weight: 600; line-height: 1.25; min-height: 2.5em; color: #1C2430;
+  margin-top: 8px; font-size: 13px; font-weight: 650; line-height: 1.3; min-height: 2.6em; color: #1C2430;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
-.pr { display: flex; align-items: center; margin-top: 6px; }
-.pr b { color: #F96141; font-size: 15px; font-weight: 800; letter-spacing: -0.02em; }
+.pr { display: flex; align-items: center; margin-top: 4px; min-height: 26px; }
+.pr b { color: #F96141; font-size: 16px; font-weight: 800; letter-spacing: -0.03em; }
 .bag {
-  margin-left: auto; width: 28px; height: 28px; border: 0; border-radius: 999px;
+  margin-left: auto; width: 26px; height: 26px; border: 0; border-radius: 999px;
   background: #FFF1EC; color: #F96141; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
 }
-.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
 .wide { flex: none; }
 .shot.tall { aspect-ratio: 2.5; }
-.stars { margin-top: 4px; color: #F5B400; font-size: 11px; letter-spacing: 1px; }
+.stars { margin-top: 2px; color: #F5B400; font-size: 11px; letter-spacing: 1px; line-height: 1; }
 .stars span { color: #8E949C; letter-spacing: 0; margin-left: 4px; }
 .state { color: #8E949C; font-size: 13px; }
 .state.err { color: #E11D2E; }
