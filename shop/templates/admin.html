@@ -63,6 +63,7 @@
     <p class="muted">#{{ order['id'] }} · 面单、发货与退款。</p>
   </div>
 </header>
+<div class="order-page">
 <div class="order-detail-toolbar">
   <a class="btn ghost sm" href="/admin/orders">← 返回列表</a>
   <span class="tag {{ order['status'] }}">{{ status_name.get(order['status'], order['status']) }}</span>
@@ -73,8 +74,12 @@
   <div class="pad order-kv">
     <div class="kv"><span>买家</span><strong>{{ order['email'] }}</strong></div>
     <div class="kv"><span>应付</span><strong class="amber-price">{{ format_money(order['due_local'], order['currency']) }}</strong></div>
-    <div class="kv muted-line">{{ (order['pay_method'] if 'pay_method' in order.keys() else none) or '—' }} · {{ order['ship_country'] }}{% if (order['lang'] if 'lang' in order.keys() else none) %} · {{ (order['lang'] if 'lang' in order.keys() else none) }}{% endif %}</div>
-    {% if order['refund_reason'] %}<p class="note">退款原因：{{ order['refund_reason'] }}</p>{% endif %}
+    <div class="kv"><span>支付</span><strong>{{ (order['pay_method'] if 'pay_method' in order.keys() else none) or '—' }}</strong></div>
+    <div class="kv"><span>国家</span><strong>{{ order['ship_country'] or '—' }}</strong></div>
+    {% if order['lang'] if 'lang' in order.keys() else none %}
+    <div class="kv"><span>语言</span><strong>{{ order['lang'] }}</strong></div>
+    {% endif %}
+    {% if order['refund_reason'] %}<p class="note kv-wide">退款原因：{{ order['refund_reason'] }}</p>{% endif %}
   </div>
 </div>
 
@@ -98,6 +103,7 @@
   </div>
 </div>
 
+<div class="order-split">
 <div class="card">
   <h2>快递面单</h2>
   <div class="pad label-sheet">
@@ -139,6 +145,8 @@
     <p class="muted">需要管理员权限。</p>
     {% endif %}
   </div>
+</div>
+</div>
 </div>
 
 {% elif panel == 'products' %}
