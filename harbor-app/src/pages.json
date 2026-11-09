@@ -77,7 +77,8 @@
       "path": "pages/sale/index",
       "style": {
         "navigationBarTitleText": "Sale",
-        "navigationBarBackgroundColor": "#F7F6F3",
+        "navigationStyle": "custom",
+        "navigationBarBackgroundColor": "#FCFBFA",
         "navigationBarTextStyle": "black"
       }
     },
