@@ -2080,3 +2080,29 @@ tbody td { border-top: 1px solid #F0F1F5; }
 
 .launch-left { display: grid; gap: 12px; min-width: 0; }
 #launch-pixel h2 { font-size: 15px; }
+
+/* Shared admin shell — header and sidebar only */
+.brand { height: 48px !important; padding: 0 12px !important; }
+.side-nav { padding: 6px 8px 16px !important; }
+.side-label { margin: 8px 10px 2px !important; font-size: 11px !important; }
+.side-nav a, .side a, aside.side a {
+  height: 44px !important;
+  min-height: 44px !important;
+  margin: 0 !important;
+  padding: 0 12px !important;
+  box-sizing: border-box !important;
+  border-radius: 10px !important;
+  font-size: 13px !important;
+  border-left: 0 !important;
+}
+.side-nav a.on, .side a.on, aside.side a.on,
+.side-nav a.on:hover, .side a.on:hover {
+  background: #F96141 !important;
+  color: #fff !important;
+  font-weight: 700 !important;
+  box-shadow: none !important;
+  border-left: 0 !important;
+}
+.topbar { height: 48px !important; padding: 0 16px !important; }
+.who-chip { padding: 2px 8px 2px 2px !important; gap: 6px !important; }
+.who-avatar { width: 26px !important; height: 26px !important; background: #F96141 !important; }
