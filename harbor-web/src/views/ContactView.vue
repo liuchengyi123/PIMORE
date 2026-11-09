@@ -55,31 +55,32 @@ async function send() {
 }
 </script>
 <style scoped>
-.page { min-height: 100vh; background: #FCFAF8; color: #1C2430; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
-.head { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
-.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #1C2430; }
-.title { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; margin: 0; }
+.page { min-height: 100vh; background: #FCFAF8; color: #1C2430; padding: 10px 16px 32px; padding-top: calc(10px + env(safe-area-inset-top)); }
+.head { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #1C2430; padding: 0; }
+.title { font-size: 20px; font-weight: 800; letter-spacing: -0.03em; margin: 0; }
 .chat-card {
-  background: #fff; border: 1px solid #E8E4DC; border-radius: 16px; padding: 14px; margin-bottom: 10px;
+  background: #fff; border: 1px solid #F1EEEA; border-radius: 14px; padding: 12px; margin-bottom: 8px;
 }
-.chat-card .h { font-size: 16px; font-weight: 700; }
-.chat-card .sub { margin: 6px 0 0; font-size: 11px; color: #6B7280; }
+.chat-card .h { font-size: 15px; font-weight: 800; }
+.chat-card .sub { margin: 4px 0 0; font-size: 12px; color: #8B919A; line-height: 1.3; }
 .open {
-  display: flex; align-items: center; justify-content: center; margin-top: 12px; height: 37px;
-  border-radius: 12px; background: #F96141; color: #fff; font-size: 14px; font-weight: 600; text-decoration: none;
+  display: flex; align-items: center; justify-content: center; margin-top: 10px; height: 34px;
+  border-radius: 10px; background: #F96141; color: #fff; font-size: 14px; font-weight: 700; text-decoration: none;
 }
 .field {
-  display: block; background: #fff; border: 1px solid #E8E4DC; border-radius: 12px;
-  padding: 12px 14px; margin-bottom: 10px;
+  display: block; background: #fff; border: 1px solid #F1EEEA; border-radius: 12px;
+  padding: 8px 12px; margin-bottom: 8px;
 }
-.field.tall { min-height: 100px; }
-.field span { display: block; font-size: 11px; font-weight: 600; color: #6B7280; margin-bottom: 4px; }
+.field.tall { min-height: 88px; }
+.field span { display: block; font-size: 11px; font-weight: 700; color: #8B919A; margin-bottom: 2px; }
 .field input, .field textarea {
   width: 100%; border: 0; outline: 0; font-size: 14px; color: #1C2430; background: transparent; resize: vertical;
-  font-family: inherit;
+  font-family: inherit; height: 34px; padding: 0;
 }
+.field textarea { height: 72px; }
 .send {
-  width: 100%; height: 46px; border-radius: 999px; border: 0; background: #F96141;
+  width: 100%; height: 40px; border-radius: 999px; border: 0; background: #F96141;
   color: #fff; font-size: 14px; font-weight: 700; cursor: pointer;
 }
 .msg { font-size: 12px; color: #0E7490; margin: 0 0 10px; }
