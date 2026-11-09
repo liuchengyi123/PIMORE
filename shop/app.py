@@ -6966,10 +6966,17 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             funnel = funnel_stats(conn, min(14, max(1, int(days or 7))))
         except Exception:
             funnel = {"totals": {"land": 0, "deal_click": 0, "purchase": 0}}
+        recent_orders = conn.execute(
+            """
+            select id, email, status, due_cents, currency, created_at, pay_method
+            from orders order by id desc limit 6
+            """
+        ).fetchall()
         return render(
             request,
             "admin_board.html",
             board=data,
+            recent_orders=recent_orders,
             push_line=push_line(conn),
             hot_line=hot_line(app.state.hot, app.state.hot_ready),
             ad_funnel=funnel,
@@ -6981,7 +6988,11 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         status = str(request.query_params.get("status") or "all").strip().lower()
         q = str(request.query_params.get("q") or "").strip()
         all_rows = conn.execute(
-            "select id, email, status, currency, due_local, tracking, carrier from orders order by id desc"
+            """
+            select id, email, status, currency, due_local, due_cents, tracking, carrier,
+                   created_at, pay_method
+            from orders order by id desc
+            """
         ).fetchall()
         counts = {
             "all": len(all_rows),
@@ -8725,7 +8736,28 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
     @app.get("/admin/purchasing", response_class=HTMLResponse)
     def admin_purchasing(request: Request):
         require_admin(request)
-        return render(request, "admin.html", panel="purchasing", purchases=purchase_rows())
+        rows = purchase_rows()
+        grouped = {}
+        for row in rows:
+            key = row.get("url") or "未关联供应商"
+            bucket = grouped.setdefault(key, {
+                "name": "1688 供应商" if row.get("url") else "未关联供应商",
+                "url": row.get("url") or "",
+                "lines": 0,
+                "qty": 0,
+                "cost": 0,
+            })
+            bucket["lines"] += 1
+            bucket["qty"] += int(row.get("qty") or 0)
+            bucket["cost"] += int(row.get("cost") or 0) * int(row.get("qty") or 0)
+        suppliers = sorted(grouped.values(), key=lambda item: (-item["lines"], item["name"]))
+        return render(
+            request,
+            "admin.html",
+            panel="purchasing",
+            purchases=rows,
+            suppliers=suppliers,
+        )
 
     @app.post("/admin/purchasing/bought")
     async def admin_purchasing_bought(request: Request):

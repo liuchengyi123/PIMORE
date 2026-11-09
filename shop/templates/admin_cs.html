@@ -16,6 +16,7 @@
 {% if request.query_params.get('flash') == 'agent_saved' %}<p class="ok">客服档案已更新。</p>{% endif %}
 {% if request.query_params.get('flash') == 'canned_added' %}<p class="ok">话术已添加。</p>{% endif %}
 
+<div class="cs-grid">
 <form class="cs-settings-form" method="post" action="/admin/cs/settings">
 <div class="card" data-figma="S11">
   <h2>功能开关</h2>
@@ -121,4 +122,5 @@
   </div>
 </div>
 
+</div>
 {% endblock %}

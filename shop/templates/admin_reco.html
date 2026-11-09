@@ -21,6 +21,87 @@
   {% endif %}
 
   <form id="reco-form" method="post" action="/admin/reco">
+    <div class="reco-board" data-figma="AD22">
+      <article class="card">
+        <h2>千人千面</h2>
+        <label>兴趣坑占比
+          <input type="range" min="0" max="100" step="5" value="{{ (rules.browse_share * 100)|round|int }}" data-sync="browse_share" data-scale="0.01">
+          <output>{{ (rules.browse_share * 100)|round|int }}%</output>
+        </label>
+        <label>至少几条信号
+          <input type="range" min="0" max="20" step="1" value="{{ rules.personal_min_signals }}" data-sync="personal_min_signals">
+          <output>{{ rules.personal_min_signals }}</output>
+        </label>
+      </article>
+      <article class="card">
+        <h2>热度系数</h2>
+        <label>每次打开加多少
+          <input type="range" min="0" max="200" step="1" value="{{ rules.heat_per_click }}" data-sync="heat_per_click">
+          <output>{{ rules.heat_per_click }}</output>
+        </label>
+        <p class="muted small">打开次数 × 这个数，显示在商品「关注热度」。</p>
+      </article>
+      <article class="card">
+        <h2>价格带配额</h2>
+        <label>$3 以下最多
+          <input type="range" min="0" max="24" step="1" value="{{ rules.lp_under3_cap }}" data-sync="lp_under3_cap">
+          <output>{{ rules.lp_under3_cap }}</output>
+        </label>
+        <label>$3–$5 至少
+          <input type="range" min="0" max="24" step="1" value="{{ rules.lp_band_3_5_min }}" data-sync="lp_band_3_5_min">
+          <output>{{ rules.lp_band_3_5_min }}</output>
+        </label>
+        <label>$5–$10 至少
+          <input type="range" min="0" max="24" step="1" value="{{ rules.lp_band_5_10_min }}" data-sync="lp_band_5_10_min">
+          <output>{{ rules.lp_band_5_10_min }}</output>
+        </label>
+      </article>
+      <article class="card">
+        <h2>冷启动热榜</h2>
+        <label>外部热销权重
+          <input type="range" min="0" max="80" step="0.5" value="{{ rules.hot_weight }}" data-sync="hot_weight">
+          <output>{{ '%.1f'|format(rules.hot_weight) }}</output>
+        </label>
+        <label class="check"><input type="checkbox" id="hot-boost-mirror" {% if rules.hot_boost %}checked{% endif %}> 用外部热销加分</label>
+      </article>
+    </div>
+
+    <div class="card reco-scenes">
+      <h2>规则配置列表</h2>
+      <div class="table-wrap dense">
+        <table>
+          <thead><tr><th>场景</th><th>策略</th><th>权重</th><th>状态</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><b>落地页</b><div class="muted small">/lp/ad 组货</div></td>
+              <td>热度 + 价格带 + {% if rules.lp_shuffle %}刷新打乱{% else %}固定顺序{% endif %}</td>
+              <td>一页 {{ rules.lp_max_cards }} 个</td>
+              <td><span class="badge ok">已启用</span></td>
+            </tr>
+            <tr>
+              <td><b>首页</b><div class="muted small">冷启动与兴趣坑</div></td>
+              <td>兴趣占比 {{ '%.0f'|format(rules.browse_share * 100) }}%</td>
+              <td>信号 ≥ {{ rules.personal_min_signals }}</td>
+              <td><span class="badge ok">已启用</span></td>
+            </tr>
+            <tr>
+              <td><b>购物车</b><div class="muted small">空车推荐</div></td>
+              <td>与首页同一套兴趣规则</td>
+              <td>热度 {{ rules.heat_per_click }}</td>
+              <td><span class="badge ok">已启用</span></td>
+            </tr>
+            <tr>
+              <td><b>商品页</b><div class="muted small">关注热度数字</div></td>
+              <td>打开次数 × 热度系数</td>
+              <td>{{ rules.heat_per_click }}</td>
+              <td><span class="badge ok">已启用</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="muted small pad">拖动上面的滑杆会写入下面的数字。保存后约 30 秒生效。</p>
+    </div>
+
     <div class="card">
       <h2>关注热度</h2>
       <div class="pad fields">
@@ -85,4 +166,30 @@
     </div>
   </form>
 </section>
+<script>
+(function () {
+  function field(name) {
+    return document.querySelector('#reco-form [name="' + name + '"]');
+  }
+  document.querySelectorAll('#reco-form input[type="range"][data-sync]').forEach(function (range) {
+    var name = range.getAttribute('data-sync');
+    var scale = parseFloat(range.getAttribute('data-scale') || '1');
+    var out = range.parentElement.querySelector('output');
+    function paint() {
+      var shown = range.value;
+      if (out) out.textContent = scale < 1 ? (Math.round(parseFloat(shown)) + '%') : shown;
+      var input = field(name);
+      if (!input) return;
+      var next = scale < 1 ? (parseFloat(shown) * scale).toFixed(2) : shown;
+      if (input.value !== String(next) && input.value !== shown) input.value = scale < 1 ? String(parseFloat(next)) : shown;
+    }
+    range.addEventListener('input', paint);
+  });
+  var mirror = document.getElementById('hot-boost-mirror');
+  var real = document.querySelector('#reco-form input[type="checkbox"][name="hot_boost"]');
+  if (mirror && real) {
+    mirror.addEventListener('change', function () { real.checked = mirror.checked; });
+  }
+})();
+</script>
 {% endblock %}

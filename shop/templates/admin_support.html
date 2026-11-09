@@ -94,9 +94,15 @@
       <button class="btn" type="submit">发送</button>
     </form>
     {% else %}
-    <div class="pad">
-      <h2>选择左侧会话</h2>
-      <p class="muted">打开后右侧会显示当前商品卡片与浏览历史，可实时回复。</p>
+    <div class="cs-empty">
+      <div class="cs-empty-mark" aria-hidden="true"></div>
+      <h2>选择一条会话开始处理</h2>
+      <p class="muted">左侧是客服会话列表。点开买家消息即可查看详情并回复。</p>
+      <div class="cs-empty-hints">
+        <div><b>快速回复</b><span>常用话术填进输入框</span></div>
+        <div><b>客户信息</b><span>商品、足迹与订单</span></div>
+        <div><b>关闭会话</b><span>处理完后从列表收起</span></div>
+      </div>
     </div>
     {% endif %}
   </section>
@@ -173,7 +179,11 @@
 </script>
 
   <aside class="cs-context-pane">
-    <p class="muted" style="font-size:11px;margin:0 0 8px">当前商品</p>
+    <div class="cs-rail-stats">
+      <div><b>{{ open_n }}</b><span>进行中</span></div>
+      <div><b>{{ unread_n }}</b><span>未读</span></div>
+    </div>
+    <p class="muted" style="font-size:11px;margin:10px 0 8px">当前商品</p>
     {% if room and room.current %}
     <div style="display:flex;gap:8px;align-items:center">
       {% if room.current.image %}<img src="{{ room.current.image }}" alt="" style="width:32px;height:32px;border-radius:7px;object-fit:cover">{% else %}<div style="width:32px;height:32px;border-radius:7px;background:linear-gradient(145deg,#bae6fd,#0369a1)"></div>{% endif %}

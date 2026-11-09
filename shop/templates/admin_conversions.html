@@ -1,32 +1,117 @@
 {% extends "admin_base.html" %}
 {% block body %}
+{% set total = ad_logs|length %}
+{% set ok_n = ad_logs|selectattr('ok')|list|length %}
+{% set rate = '—' if not total else '%.1f'|format(ok_n * 100 / total) %}
+<section class="zh-log" data-figma="AD23">
 <header class="page-head page-log">
   <div>
     <h1>转化日志</h1>
-    <p class="muted">服务端回传记录。时间是 Asia/Shanghai。响应已去掉 token、邮箱和电话。</p>
+    <p class="muted">实时查看广告转化与订单回传。时间是 Asia/Shanghai。响应已去掉 token、邮箱和电话。</p>
+  </div>
+  <div class="log-kpis">
+    <div class="kpi-card compact">
+      <span class="kpi-label">回传条数</span>
+      <b class="kpi-val">{{ total }}</b>
+      <span class="kpi-sub">本页最近记录</span>
+    </div>
+    <div class="kpi-card compact">
+      <span class="kpi-label">回传成功率</span>
+      <b class="kpi-val">{% if total %}{{ rate }}%{% else %}—{% endif %}</b>
+      <span class="kpi-sub">成功 {{ ok_n }} · 跳过 {{ total - ok_n }}</span>
+    </div>
   </div>
 </header>
+<div class="card log-filters">
+  <div class="pad log-filter-row">
+    <label>渠道
+      <select id="log-plat">
+        <option value="">全部渠道</option>
+        <option value="meta">Meta</option>
+        <option value="tiktok">TikTok</option>
+        <option value="google">Google</option>
+      </select>
+    </label>
+    <label>事件
+      <select id="log-event">
+        <option value="">全部事件</option>
+      </select>
+    </label>
+    <label>结果
+      <select id="log-ok">
+        <option value="">全部</option>
+        <option value="1">成功</option>
+        <option value="0">失败 / 跳过</option>
+      </select>
+    </label>
+    <button class="btn" type="button" id="log-reset">重置</button>
+  </div>
+</div>
 <div class="card">
-  <div class="table-wrap">
+  <div class="table-wrap dense">
     <table>
-      <thead><tr><th>时间（上海）</th><th>acct</th><th>平台</th><th>事件</th><th>event_id</th><th>HTTP</th><th>结果</th><th>响应</th></tr></thead>
-      <tbody>
+      <thead><tr><th>时间（上海）</th><th>事件</th><th>渠道</th><th>acct</th><th>event_id</th><th>HTTP</th><th>状态</th><th>响应</th></tr></thead>
+      <tbody id="log-body">
       {% for row in ad_logs %}
-        <tr>
+        <tr data-plat="{{ (row.platform or '')|lower }}" data-event="{{ row.event_name }}" data-ok="{{ 1 if row.ok else 0 }}">
           <td>{{ row.created_at_sh or row.created_at }}</td>
+          <td><span class="evt">{{ row.event_name }}</span></td>
+          <td><span class="chan {{ (row.platform or '')|lower }}">{{ row.platform }}</span></td>
           <td><code>{{ row.acct or "—" }}</code></td>
-          <td>{{ row.platform }}</td>
-          <td>{{ row.event_name }}</td>
           <td class="mono">{{ row.event_id }}</td>
           <td>{{ row.http_status or "—" }}</td>
-          <td>{% if row.ok %}<span class="badge ok">OK</span>{% else %}<span class="badge warn">SKIP</span>{% endif %}</td>
+          <td>{% if row.ok %}<span class="badge ok">成功</span>{% else %}<span class="badge warn">跳过</span>{% endif %}</td>
           <td class="mono">{{ row.detail }}</td>
         </tr>
       {% else %}
-        <tr><td class="empty" colspan="8">暂无回传记录。</td></tr>
+        <tr class="log-empty"><td class="empty" colspan="8">暂无回传记录。</td></tr>
       {% endfor %}
       </tbody>
     </table>
   </div>
+  <p class="muted pad" id="log-count">共 {{ total }} 条记录</p>
 </div>
+</section>
+<script>
+(function () {
+  var body = document.getElementById('log-body');
+  if (!body) return;
+  var rows = Array.prototype.slice.call(body.querySelectorAll('tr[data-plat]'));
+  var eventSel = document.getElementById('log-event');
+  var seen = {};
+  rows.forEach(function (row) {
+    var name = row.getAttribute('data-event') || '';
+    if (name && !seen[name]) {
+      seen[name] = true;
+      var opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = name;
+      eventSel.appendChild(opt);
+    }
+  });
+  function apply() {
+    var plat = document.getElementById('log-plat').value;
+    var ev = eventSel.value;
+    var ok = document.getElementById('log-ok').value;
+    var n = 0;
+    rows.forEach(function (row) {
+      var show = (!plat || row.getAttribute('data-plat').indexOf(plat) >= 0)
+        && (!ev || row.getAttribute('data-event') === ev)
+        && (!ok || row.getAttribute('data-ok') === ok);
+      row.hidden = !show;
+      if (show) n += 1;
+    });
+    document.getElementById('log-count').textContent = '显示 ' + n + ' / ' + rows.length + ' 条';
+  }
+  ['log-plat', 'log-event', 'log-ok'].forEach(function (id) {
+    document.getElementById(id).addEventListener('change', apply);
+  });
+  document.getElementById('log-reset').addEventListener('click', function () {
+    document.getElementById('log-plat').value = '';
+    eventSel.value = '';
+    document.getElementById('log-ok').value = '';
+    apply();
+  });
+})();
+</script>
 {% endblock %}

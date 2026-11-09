@@ -21,6 +21,22 @@
   {% if notice == "smart_ok" %}<p class="ok">已按最新消耗重算广告组回传比例。拉取失败的组会保持基础比例，并记在下方历史里。</p>{% endif %}
   {% if notice == "smart_fail" %}<p class="error">智能扣量没有跑完，基础比例未改。看下方历史里的原因。</p>{% endif %}
 
+  <div class="pixel-grid" data-figma="AD24">
+    {% for p, label in platforms %}
+    {% set accts = accounts_by_plat.get(p, []) %}
+    {% set head = accts[0] if accts else none %}
+    <article class="pixel-card {% if platform == p %}on{% endif %}">
+      <header>
+        <b>{{ label }}</b>
+        {% if head and head.status.pixel %}<span class="badge ok">已启用</span>{% else %}<span class="badge warn">未配置</span>{% endif %}
+      </header>
+      <p class="muted small">{{ accts|length }} 个账户{% if head %} · {{ head.name }}{% endif %}</p>
+      <p class="mono small">{% if head and head.status.pixel %}Pixel 已配置{% else %}Pixel ID 未填写{% endif %}</p>
+      <a class="btn ghost sm" href="/admin/traffic?platform={{ p }}{% if head %}&amp;acct={{ head.code }}{% endif %}">配置此平台</a>
+    </article>
+    {% endfor %}
+  </div>
+
   <div class="card">
     <div class="pad">
       <div class="seg-control plat-tabs" role="tablist">

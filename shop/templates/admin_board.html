@@ -1,9 +1,13 @@
 {% extends "admin_base.html" %}
 {% block body %}
+{% set status_name = {'pending':'待付款','paid':'待发货','shipped':'已完成','cancelled':'已取消','refunded':'已退款'} %}
+{% set pay_name = {'card':'银行卡','paypal':'PayPal','lianlian':'连连','stripe':'Stripe'} %}
+{% set d = board.deltas %}
+<section class="zh-board" data-figma="AD02">
 <header class="page-head">
   <div>
-    <h1>{% if board.pages == 0 and board.products == 0 %}数据 · 空态{% else %}数据{% endif %}</h1>
-    <p class="muted">{% if board.pages == 0 and board.products == 0 %}今日暂无流量时的空态示意。{% else %}访问、商品点击、加购、下单从这次上线开始记。累计购买用全部历史订单。金额是美元。{% endif %}</p>
+    <h1>数据看板</h1>
+    <p class="muted">实时掌握店铺经营数据，助力业务增长。金额为美元。</p>
   </div>
 </header>
 <nav class="ranges" aria-label="日期范围">
@@ -12,68 +16,122 @@
   <a class="{% if board.days == 30 %}on{% endif %}" href="/admin/stats?days=30">近30天</a>
 </nav>
 
-<div class="kpi-grid" data-figma="AD02">
+<div class="kpi-grid zh-kpis">
   <div class="kpi-card">
-    <span class="kpi-label">访问</span>
-    <b class="kpi-val">{{ board.pages }}</b>
-    <span class="kpi-sub">独立访客 {{ board.visitors }}</span>
-  </div>
-  <div class="kpi-card">
-    <span class="kpi-label">商品点击</span>
-    <b class="kpi-val">{{ board.products }}</b>
-    <span class="kpi-sub">加购 {{ board.carts }}</span>
-  </div>
-  <div class="kpi-card">
-    <span class="kpi-label">下单</span>
+    <span class="kpi-ico" aria-hidden="true">单</span>
+    <span class="kpi-label">{% if board.days == 1 %}今日订单{% else %}订单{% endif %}</span>
     <b class="kpi-val">{{ board.orders }}</b>
-    <span class="kpi-sub">支付单 {{ board.paid_orders }}</span>
+    <span class="kpi-sub">支付单 {{ board.paid_orders }}{% if d.orders is not none %} · <em class="{% if d.orders >= 0 %}up{% else %}down{% endif %}">{% if d.orders >= 0 %}+{% endif %}{{ d.orders }}% 较上一日</em>{% endif %}</span>
   </div>
   <div class="kpi-card">
-    <span class="kpi-label">支付金额</span>
+    <span class="kpi-ico sale" aria-hidden="true">¥</span>
+    <span class="kpi-label">销售额</span>
     <b class="kpi-val">{{ format_money(board.paid_cents, 'USD') }}</b>
-    <span class="kpi-sub">访问到支付 {{ board.rate }}</span>
+    <span class="kpi-sub">访问 {{ board.pages }}{% if d.sales is not none %} · <em class="{% if d.sales >= 0 %}up{% else %}down{% endif %}">{% if d.sales >= 0 %}+{% endif %}{{ d.sales }}% 较上一日</em>{% endif %}</span>
   </div>
-  <div class="kpi-card compact">
-    <span class="kpi-label">累计订单</span>
-    <b class="kpi-val">{{ board.life_orders }}</b>
+  <div class="kpi-card">
+    <span class="kpi-ico gmv" aria-hidden="true">G</span>
+    <span class="kpi-label">GMV</span>
+    <b class="kpi-val">{{ format_money(board.gmv_cents, 'USD') }}</b>
+    <span class="kpi-sub">累计已付 {{ format_money(board.life_cents, 'USD') }}</span>
   </div>
-  <div class="kpi-card compact">
-    <span class="kpi-label">累计已付</span>
-    <b class="kpi-val">{{ board.life_paid }}</b>
+  <div class="kpi-card">
+    <span class="kpi-ico rate" aria-hidden="true">%</span>
+    <span class="kpi-label">转化率</span>
+    <b class="kpi-val">{{ board.rate }}</b>
+    <span class="kpi-sub">独立访客 {{ board.visitors }} · 加购 {{ board.carts }}</span>
   </div>
-  <div class="kpi-card compact">
-    <span class="kpi-label">累计已付金额</span>
-    <b class="kpi-val">{{ format_money(board.life_cents, 'USD') }}</b>
+  <div class="kpi-card">
+    <span class="kpi-ico back" aria-hidden="true">退</span>
+    <span class="kpi-label">退款率</span>
+    <b class="kpi-val">{{ board.refund_rate }}</b>
+    <span class="kpi-sub">已退款 {{ board.life_refunded }} · {{ format_money(board.life_refunded_cents, 'USD') }}</span>
   </div>
-  <div class="kpi-card compact">
-    <span class="kpi-label">已退款</span>
-    <b class="kpi-val">{{ board.life_refunded }}</b>
-    <span class="kpi-sub">{{ format_money(board.life_refunded_cents, 'USD') }}</span>
+</div>
+
+<div class="zh-charts">
+  <div class="card chart-card">
+    <div class="chart-head">
+      <h2>近{{ board.days }}日趋势</h2>
+      <div class="chart-legend">
+        <span><i class="lg-line"></i>{{ board.chart.line_name }}</span>
+        <span><i class="lg-bar"></i>{{ board.chart.bar_name }}</span>
+      </div>
+    </div>
+    <div class="pad chart-pad">
+      {% set chart = board.chart %}
+      <svg class="trend-svg" viewBox="0 0 {{ chart.w }} {{ chart.h }}" role="img" aria-label="趋势图">
+        <line x1="8" y1="{{ chart.baseline }}" x2="{{ chart.w - 8 }}" y2="{{ chart.baseline }}" class="axis"></line>
+        {% for bar in chart.bars %}
+        <rect x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar.w }}" height="{{ bar.h }}" rx="4" class="bar"></rect>
+        {% endfor %}
+        {% if chart.poly %}
+        <polyline points="{{ chart.poly }}" class="line"></polyline>
+        {% for dot in chart.dots %}
+        <circle cx="{{ dot.x }}" cy="{{ dot.y }}" r="3.5" class="dot"></circle>
+        <text x="{{ dot.x }}" y="{{ chart.h - 6 }}" text-anchor="middle" class="tick">{{ dot.label }}</text>
+        {% endfor %}
+        {% endif %}
+      </svg>
+      {% if chart.empty %}<p class="muted chart-empty">这段还没有访问或成交，坐标轴已留好。</p>{% endif %}
+    </div>
+  </div>
+  <div class="card chart-card">
+    <div class="chart-head">
+      <h2>销售额分布</h2>
+      <div class="chart-legend"><span>按天</span></div>
+    </div>
+    <div class="pad chart-pad">
+      {% set bars = board.bars %}
+      <svg class="trend-svg" viewBox="0 0 {{ bars.w }} {{ bars.h }}" role="img" aria-label="销售额分布">
+        <line x1="8" y1="{{ bars.baseline }}" x2="{{ bars.w - 8 }}" y2="{{ bars.baseline }}" class="axis"></line>
+        {% for bar in bars.bars %}
+        <rect x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar.w }}" height="{{ bar.h }}" rx="4" class="bar solid"></rect>
+        {% endfor %}
+        {% for dot in bars.dots %}
+        <text x="{{ dot.x }}" y="{{ bars.h - 6 }}" text-anchor="middle" class="tick">{{ dot.label }}</text>
+        {% endfor %}
+      </svg>
+      <p class="muted chart-note">柱高按当日支付金额。最高 {{ format_money(bars.max_bar, 'USD') }}。</p>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="chart-head">
+    <h2>最近订单</h2>
+    <a class="more" href="/admin/orders">查看全部</a>
+  </div>
+  <div class="table-wrap dense">
+    <table>
+      <thead><tr><th>订单号</th><th>买家</th><th>金额</th><th>支付</th><th>状态</th><th>时间</th><th></th></tr></thead>
+      <tbody>
+      {% for row in recent_orders %}
+      <tr>
+        <td class="mono">#{{ row['id'] }}</td>
+        <td>{{ row['email'] }}</td>
+        <td>{{ format_money(row['due_cents'], row['currency'] or 'USD') }}</td>
+        <td>{{ pay_name.get(row['pay_method'], row['pay_method'] or '—') }}</td>
+        <td><span class="tag {{ row['status'] }}">{{ status_name.get(row['status'], row['status']) }}</span></td>
+        <td class="muted">{{ row['created_at'] or '—' }}</td>
+        <td><a class="btn ghost sm" href="/admin/orders/{{ row['id'] }}">查看</a></td>
+      </tr>
+      {% else %}
+      <tr><td class="empty" colspan="7">还没有订单。</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
   </div>
 </div>
 
 {% if board.pages == 0 and board.products == 0 %}
-<div class="card empty-board">
-  <p class="empty-center">这段还没有访问。</p>
-</div>
-<div class="card empty-board">
-  <p class="empty-center">这段还没有商品点击。</p>
-</div>
+<div class="card empty-board"><p class="empty-center">这段还没有访问。</p></div>
+<div class="card empty-board"><p class="empty-center">这段还没有商品点击。</p></div>
 {% else %}
 <div class="split">
   <div class="card">
-    <h2>每天访问</h2>
-    <div class="pad meters">
-      {% for row in board.trend %}
-      <div><span>{{ row.label }}</span><i style="width: {{ row.width }}%"></i><b>{{ row.n }}</b></div>
-      {% else %}
-      <p class="muted">这段还没有访问。</p>
-      {% endfor %}
-    </div>
-  </div>
-  <div class="card">
     <h2>语种占比</h2>
-    <div class="table-wrap">
+    <div class="table-wrap dense">
       <table>
         <thead><tr><th>语言</th><th>访问</th><th>占比</th></tr></thead>
         <tbody>
@@ -86,7 +144,7 @@
       </table>
     </div>
     <h2>国家</h2>
-    <div class="table-wrap">
+    <div class="table-wrap dense">
       <table>
         <thead><tr><th>国家</th><th>访问</th></tr></thead>
         <tbody>
@@ -101,12 +159,9 @@
     <p class="note">{{ push_line }}</p>
     <p class="note">{{ hot_line }}</p>
   </div>
-</div>
-
-<div class="split">
   <div class="card">
     <h2>这段商品点击</h2>
-    <div class="table-wrap">
+    <div class="table-wrap dense">
       <table>
         <thead><tr><th>商品</th><th>点击</th><th>加购</th><th>支付件数</th><th>支付金额</th></tr></thead>
         <tbody>
@@ -125,21 +180,10 @@
       </table>
     </div>
   </div>
-  <div class="card funnel-card">
-    <h2>投放漏斗摘要</h2>
-    <div class="funnel-kpis">
-      <div class="funnel-kpi"><span>落地</span><b>{{ board.pages }}</b></div>
-      <div class="funnel-kpi"><span>点商品</span><b>{{ board.products }}</b></div>
-      <div class="funnel-kpi"><span>成交</span><b>{{ board.paid_orders }}</b></div>
-    </div>
-    <p class="note">广告回传与账户配置请到投放回传。</p>
-    <p><a class="btn ghost sm" href="/admin/traffic">打开投放回传</a></p>
-  </div>
 </div>
-
 <div class="card">
   <h2>累计卖出</h2>
-  <div class="table-wrap">
+  <div class="table-wrap dense">
     <table>
       <thead><tr><th>商品</th><th>件数</th><th>金额</th></tr></thead>
       <tbody>
@@ -157,4 +201,5 @@
   </div>
 </div>
 {% endif %}
+</section>
 {% endblock %}

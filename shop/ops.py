@@ -87,6 +87,57 @@ def _pair(conn, kind, start):
     return int(row["n"]), int(row["cents"])
 
 
+def _pct(curr, prev):
+    if not prev:
+        return None
+    return round((curr - prev) * 100.0 / prev, 1)
+
+
+def _combo_chart(points, line_key, bar_key):
+    """Geometry for a combo chart: bars (money) + line (counts)."""
+    width, height = 640, 210
+    pad_l, pad_r, pad_t, pad_b = 8, 8, 18, 26
+    count = max(len(points), 1)
+    inner_w = width - pad_l - pad_r
+    inner_h = height - pad_t - pad_b
+    max_line = max((int(p.get(line_key) or 0) for p in points), default=0) or 1
+    max_bar = max((int(p.get(bar_key) or 0) for p in points), default=0) or 1
+    baseline = pad_t + inner_h
+    bars = []
+    dots = []
+    for index, point in enumerate(points):
+        slot = inner_w / count
+        bar_w = max(8, slot * 0.46)
+        x = pad_l + slot * index + (slot - bar_w) / 2
+        value = int(point.get(bar_key) or 0)
+        bar_h = 0 if value <= 0 else max(2, (value / max_bar) * inner_h)
+        bars.append({
+            "x": round(x, 1),
+            "y": round(baseline - bar_h, 1),
+            "w": round(bar_w, 1),
+            "h": round(bar_h, 1),
+        })
+        cx = pad_l + slot * index + slot / 2
+        line_v = int(point.get(line_key) or 0)
+        cy = baseline - (line_v / max_line) * inner_h
+        dots.append({
+            "x": round(cx, 1),
+            "y": round(cy, 1),
+            "label": point.get("label") or "",
+        })
+    return {
+        "w": width,
+        "h": height,
+        "baseline": baseline,
+        "bars": bars,
+        "dots": dots,
+        "poly": " ".join(f"{dot['x']},{dot['y']}" for dot in dots),
+        "max_line": max_line if any(int(p.get(line_key) or 0) for p in points) else 0,
+        "max_bar": max_bar if any(int(p.get(bar_key) or 0) for p in points) else 0,
+        "empty": not any(int(p.get(line_key) or 0) or int(p.get(bar_key) or 0) for p in points),
+    }
+
+
 def board(conn, days):
     picked, start = _span(days)
     cutoff = (_today() - timedelta(days=400)).isoformat()
@@ -117,13 +168,44 @@ def board(conn, days):
         ).fetchall()
     }
     peak = max(counted.values(), default=0)
+    sale_days = {
+        row["day"]: {"n": int(row["n"]), "cents": int(row["cents"] or 0)}
+        for row in conn.execute(
+            """
+            select day, count(*) as n, coalesce(sum(cents), 0) as cents
+            from visits where kind = 'sale' and day >= ?
+            group by day
+            """,
+            (start,),
+        ).fetchall()
+    }
     start_day = datetime.strptime(start, "%Y-%m-%d").date()
     trend = []
     for offset in range(picked):
         day = (start_day + timedelta(days=offset)).isoformat()
         count = counted.get(day, 0)
+        sale = sale_days.get(day) or {"n": 0, "cents": 0}
         width = 0 if count == 0 or peak == 0 else max(4, round(count * 100 / peak))
-        trend.append({"day": day, "label": day[5:], "n": count, "width": width})
+        trend.append({
+            "day": day,
+            "label": day[5:],
+            "n": count,
+            "width": width,
+            "orders": sale["n"],
+            "sales": sale["cents"],
+        })
+    line_key = "orders" if any(point["orders"] for point in trend) else "n"
+    chart = _combo_chart(trend, line_key, "sales")
+    chart["line_name"] = "订单数" if line_key == "orders" else "访问"
+    chart["bar_name"] = "销售额"
+    bars_only = _combo_chart(trend, "sales", "sales")
+    last = trend[-1] if trend else {"n": 0, "orders": 0, "sales": 0}
+    prev = trend[-2] if len(trend) > 1 else {"n": 0, "orders": 0, "sales": 0}
+    deltas = {
+        "orders": _pct(last["orders"], prev["orders"]),
+        "sales": _pct(last["sales"], prev["sales"]),
+        "visits": _pct(last["n"], prev["n"]),
+    }
     items = []
     for row in conn.execute(
         """
@@ -229,4 +311,9 @@ def board(conn, days):
         "life_refunded": refunded_n,
         "life_refunded_cents": refunded_life,
         "sold": sold_rows,
+        "gmv_cents": sales_cents,
+        "refund_rate": "—" if sales == 0 else f"{refunds * 100 / sales:.2f}%",
+        "chart": chart,
+        "bars": bars_only,
+        "deltas": deltas,
     }

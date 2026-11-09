@@ -2,8 +2,11 @@
 {% block body %}
 <header class="page-head page-lp">
   <div>
-    <h1>投放落地页</h1>
-    <p class="muted">选类目和落地页模块，生成 Meta / TikTok 投放链接。类目广告进站，不直达结算。页面不写满额包邮。商品顺序和关注热度在 <a href="/admin/reco">推荐规则</a> 里改。</p>
+    <h1>投放落地页生成器</h1>
+    <p class="muted">左侧选模块，中间看手机预览，右侧改类目、皮肤和投放参数。商品顺序在 <a href="/admin/reco">推荐规则</a>。</p>
+  </div>
+  <div class="page-actions">
+    <button class="btn" type="submit" form="lp-launch-form">发布链接</button>
   </div>
 </header>
 
@@ -16,8 +19,9 @@
 
 <div class="launch-split">
   <div class="launch-left">
-  <form id="lp-launch-form" class="card" method="post" action="/admin/launch" enctype="multipart/form-data">
-    <h2>选择落地页模块</h2>
+  <form id="lp-launch-form" class="lp-builder" method="post" action="/admin/launch" enctype="multipart/form-data">
+    <div class="card lp-lib">
+    <h2>模块库</h2>
     <div class="pad">
       <div class="lp-mod-picks" role="radiogroup" aria-label="落地页模块">
         {% for mod in lp_templates %}
@@ -27,8 +31,12 @@
         </label>
         {% endfor %}
       </div>
-
-      <div class="fields" style="margin-top:14px">
+    </div>
+    </div>
+    <div class="card lp-props">
+    <h2>属性</h2>
+    <div class="pad">
+      <div class="fields">
         <div class="wide" id="lp-hero-field" {% if form_state.template not in hero_template_ids and form_state.template not in scene_template_ids %}hidden{% endif %}>
           主商品
           <input id="lp-hero-q" type="search" placeholder="输入标题或 SKU，再点下面的一条" autocomplete="off">
@@ -83,6 +91,7 @@
       </div>
       <p class="muted small">稳定路径 <code>{{ built_link.path.split('?')[0] }}</code> · {{ built_link.template_label }} · {{ built_link.category_zh }} / {{ built_link.skin_zh }}</p>
       {% endif %}
+    </div>
     </div>
   </form>
   <div class="card" id="launch-pixel">
