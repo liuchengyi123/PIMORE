@@ -1,89 +1,114 @@
 <template>
-  <div class="page">
-    <header class="head">
-      <button type="button" class="back" @click="$router.back()" aria-label="back">‹</button>
-      <h1 class="title">{{ zh ? '国家与货币' : 'Country & currency' }}</h1>
+  <AgShell tabs="me">
+    <header class="top ag-top ag-pad">
+      <AgBrand />
+      <div class="ag-tagline">{{ tx('每天的家 · $1–$10', 'EVERYDAY HOME · $1 – $10') }}</div>
     </header>
-    <p class="hint">{{ zh ? '语言和货币跟着所选国家走。' : 'Language and currency follow the country you pick.' }}</p>
-    <button
-      v-for="c in countries"
-      :key="c.code"
-      type="button"
-      class="card"
-      :class="{ on: country === c.code }"
-      @click="pick(c.code)"
-    >
-      <span class="left">
-        <span class="nm">{{ c.name }}</span>
-        <span class="meta">{{ c.langLabel }} · {{ c.currency }}</span>
-      </span>
-      <span class="radio">{{ country === c.code ? '●' : '○' }}</span>
-    </button>
-    <p v-if="msg" class="msg">{{ msg }}</p>
-    <button type="button" class="cta" :disabled="busy" @click="save">{{ busy ? '…' : (zh ? '保存' : 'Save') }}</button>
-  </div>
+    <div class="title ag-pad">
+      <button type="button" class="ag-back ink" @click="router.back()" :aria-label="tx('返回', 'Back')"><ChevronLeft :size="24" /></button>
+      <div>
+        <h1 class="ag-h1">{{ tx('国家 / 地区与语言', 'Locale / Region & Language') }}</h1>
+        <p class="ag-sub">{{ tx('设置国家、货币和语言，购物更顺手。', 'Set your country, currency and language for a better shopping experience.') }}</p>
+      </div>
+    </div>
+
+    <div class="ag-pad">
+      <button type="button" class="row ag-card" @click="open = open === 'c' ? '' : 'c'">
+        <span class="flag">{{ flag(country) }}</span>
+        <span class="mid"><small>{{ tx('国家 / 地区', 'Country / Region') }}</small><b>{{ countryName }}</b></span>
+        <ChevronRight :size="18" color="#C5C0BA" />
+      </button>
+      <div v-if="open === 'c'" class="pick">
+        <button v-for="c in options" :key="c.code" type="button" :class="{ on: c.code === country }" @click="country = c.code; open = ''">
+          <span>{{ c.flag }} {{ c.zh }}</span><span>{{ c.en }}</span>
+        </button>
+      </div>
+
+      <button type="button" class="row ag-card" @click="open = open === 'm' ? '' : 'm'">
+        <span class="ag-icon"><CircleDollarSign :size="18" /></span>
+        <span class="mid"><small>{{ tx('货币', 'Currency') }}</small><b>{{ currency }} ({{ currencyName }})</b></span>
+        <ChevronRight :size="18" color="#C5C0BA" />
+      </button>
+      <p v-if="open === 'm'" class="ag-note hint">{{ tx('货币跟着国家走。换国家就会换货币。', 'Currency follows the country you pick.') }}</p>
+
+      <button type="button" class="row ag-card" @click="open = open === 'l' ? '' : 'l'">
+        <span class="ag-icon"><MessageCircle :size="18" /></span>
+        <span class="mid">
+          <small>{{ tx('语言', 'Language') }}</small>
+          <b>{{ langLabel }}</b>
+          <em>{{ tx('（随你的地区自动选择）', '(Auto by your region)') }}</em>
+        </span>
+        <ChevronRight :size="18" color="#C5C0BA" />
+      </button>
+
+      <p v-if="msg" class="ag-toast">{{ msg }}</p>
+      <button type="button" class="ag-cta" :disabled="busy" @click="save">{{ busy ? '…' : tx('保存偏好', 'Save preferences') }}</button>
+      <p class="foot"><Info :size="14" /> {{ tx('你可以随时在账户里修改这些设置。', 'You can change these settings anytime in your account.') }}</p>
+    </div>
+  </AgShell>
 </template>
+
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { defaultCountry } from '@/api/countryLocale'
+import { useRouter } from 'vue-router'
+import { ChevronLeft, ChevronRight, CircleDollarSign, Info, MessageCircle } from 'lucide-vue-next'
+import AgBrand from '@/components/account/AgBrand.vue'
+import AgShell from '@/components/account/AgShell.vue'
+import { currencyForCountry, defaultCountry, langForCountry } from '@/api/countryLocale'
+import { postLocale } from '@/api/accountApi'
 import { useI18n } from '@/composables/i18n'
+import { useZh } from '@/composables/zh'
 
-const { setCountry, lang } = useI18n()
-const zh = computed(() => String(lang.value).startsWith('zh'))
+const { tx, zh } = useZh()
+const { setCountry } = useI18n()
+const router = useRouter()
+const country = ref(defaultCountry() || 'CN')
+const open = ref<'' | 'c' | 'm' | 'l'>('')
 const busy = ref(false)
 const msg = ref('')
-const country = ref(defaultCountry() || 'US')
 
-const countries = [
-  { code: 'US', name: 'United States', langLabel: 'English', currency: 'USD' },
-  { code: 'CN', name: '中国', langLabel: '简体中文', currency: 'CNY' },
-  { code: 'JP', name: '日本', langLabel: '日本語', currency: 'JPY' },
-  { code: 'DE', name: 'Deutschland', langLabel: 'Deutsch', currency: 'EUR' },
-  { code: 'GB', name: 'United Kingdom', langLabel: 'English', currency: 'GBP' },
-  { code: 'CA', name: 'Canada', langLabel: 'English', currency: 'CAD' },
-  { code: 'TW', name: '台灣', langLabel: '繁體中文', currency: 'TWD' },
-  { code: 'HK', name: '香港', langLabel: '繁體中文', currency: 'HKD' },
+const options = [
+  { code: 'CN', zh: '中国', en: 'China', flag: '🇨🇳', lang: '简体中文' },
+  { code: 'US', zh: '美国', en: 'United States', flag: '🇺🇸', lang: 'English' },
+  { code: 'JP', zh: '日本', en: 'Japan', flag: '🇯🇵', lang: '日本語' },
+  { code: 'GB', zh: '英国', en: 'United Kingdom', flag: '🇬🇧', lang: 'English' },
+  { code: 'DE', zh: '德国', en: 'Germany', flag: '🇩🇪', lang: 'Deutsch' },
+  { code: 'CA', zh: '加拿大', en: 'Canada', flag: '🇨🇦', lang: 'English' },
+  { code: 'TW', zh: '台湾', en: 'Taiwan', flag: '🇹🇼', lang: '繁體中文' },
+  { code: 'HK', zh: '香港', en: 'Hong Kong', flag: '🇭🇰', lang: '繁體中文' },
 ]
-
-function pick(code: string) {
-  country.value = code
-  try { setCountry(code) } catch { /* */ }
-}
+const current = computed(() => options.find((c) => c.code === country.value) || options[0])
+const countryName = computed(() => zh.value ? current.value.zh : current.value.en)
+const currency = computed(() => currencyForCountry(country.value))
+const currencyName = computed(() => ({ USD: 'US Dollar', CNY: zh.value ? '人民币' : 'Yuan', JPY: zh.value ? '日元' : 'Yen', GBP: 'Pound', EUR: 'Euro', CAD: 'Canadian Dollar', TWD: zh.value ? '新台币' : 'Taiwan Dollar', HKD: zh.value ? '港币' : 'Hong Kong Dollar' }[currency.value] || currency.value))
+const langLabel = computed(() => current.value.lang)
+function flag(code: string) { return options.find((c) => c.code === code)?.flag || '🌐' }
 
 async function save() {
   busy.value = true
   msg.value = ''
   try {
     setCountry(country.value)
-    msg.value = zh.value ? '已保存' : 'Saved'
+    await postLocale(langForCountry(country.value), currency.value, country.value)
+    msg.value = tx('已保存', 'Saved')
   } catch {
-    msg.value = zh.value ? '已保存在本机' : 'Saved locally'
-  } finally {
-    busy.value = false
-  }
+    msg.value = tx('已保存在本机', 'Saved on this device')
+  } finally { busy.value = false }
 }
 </script>
+
 <style scoped>
-.page { min-height: 100vh; background: #FCFAF8; color: #1C2430; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
-.head { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
-.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #1C2430; }
-.title { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; margin: 0; }
-.hint { font-size: 11px; color: #6B7280; margin: 0 0 12px; }
-.card {
-  width: 100%; display: flex; justify-content: space-between; align-items: center; text-align: left;
-  background: #fff; border: 1px solid #E8E4DC; border-radius: 16px; padding: 14px; margin-bottom: 8px;
-  cursor: pointer; color: inherit;
-}
-.card.on { border: 2px solid #F96141; }
-.card.on .radio { color: #F96141; }
-.left { display: flex; flex-direction: column; gap: 2px; }
-.nm { font-size: 16px; font-weight: 700; }
-.meta { font-size: 11px; color: #6B7280; }
-.radio { font-size: 16px; color: #1C2430; }
-.msg { font-size: 12px; color: #0E7490; margin: 8px 0; }
-.cta {
-  width: 100%; height: 46px; border: 0; border-radius: 999px; background: #F96141; color: #fff;
-  font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 8px;
-}
-.cta:disabled { opacity: 0.7; }
+.top { margin-bottom: 8px; }
+.title { display: grid; grid-template-columns: 32px 1fr; gap: 4px; align-items: start; margin-bottom: 14px; }
+.row { width: 100%; display: flex; align-items: center; gap: 12px; padding: 14px; margin-bottom: 10px; text-align: left; cursor: pointer; color: inherit; border: 1px solid #F1ECE6; }
+.flag { font-size: 28px; width: 42px; text-align: center; }
+.mid { flex: 1; }
+.mid small, .mid em { display: block; color: #8B919A; font-size: 12px; font-style: normal; }
+.mid b { display: block; font-size: 16px; margin-top: 2px; }
+.pick { background: #fff; border-radius: 16px; overflow: hidden; margin: -4px 0 10px; border: 1px solid #F1ECE6; }
+.pick button { width: 100%; display: flex; justify-content: space-between; padding: 12px 14px; border: 0; border-bottom: 1px solid #F6F1EC; background: #fff; cursor: pointer; font-size: 14px; }
+.pick button.on { color: #F96141; font-weight: 800; }
+.hint { margin: -4px 4px 10px; }
+.ag-cta { margin-top: 8px; }
+.foot { display: flex; gap: 6px; align-items: flex-start; color: #8B919A; font-size: 12.5px; }
 </style>
