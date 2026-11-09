@@ -2,12 +2,39 @@ import { harborRequest } from './http'
 import { apiRoot, LIVE_ORIGIN, shopOrigin } from './config'
 import { withShopLang } from './catalogLang'
 
+export interface OrderItemPreview {
+  name: string
+  image?: string
+  qty?: number
+  option?: string
+}
+
 export interface OrderRow {
   id: string
   status: string
   statusLabel: string
   due: string
   image?: string
+  date?: string
+  itemCount?: number
+  tracking?: string
+  items?: OrderItemPreview[]
+}
+
+export interface OrderLine {
+  sku: string
+  name: string
+  option: string
+  qty: number
+  price: string
+  amount: string
+  image?: string
+}
+
+export interface OrderTotal {
+  label: string
+  value: string
+  emphasis?: boolean
 }
 
 export interface OrderDetail {
@@ -23,6 +50,24 @@ export interface OrderDetail {
   canPay: boolean
   canCancel: boolean
   rawHint?: string
+  email: string
+  shipName: string
+  address: string
+  payMethod: string
+  lines: OrderLine[]
+  totals: OrderTotal[]
+}
+
+export interface InvoiceModel {
+  ok: boolean
+  id: string
+  email: string
+  shipName: string
+  address: string
+  lines: OrderLine[]
+  due: string
+  payMethod: string
+  note: string
 }
 
 export interface AccountSummary {
@@ -60,43 +105,94 @@ function absUrl(path: string): string {
   return LIVE_ORIGIN + p
 }
 
+function statusFromLabel(st: string): string {
+  const s = st.toLowerCase()
+  if (/return|refund|退/.test(s)) return 'return'
+  if (/ship|运输|发货/.test(s)) return 'shipped'
+  if (/paid|complete|完成|已付/.test(s)) return 'paid'
+  if (/await|pend|unpaid|待付|待支付/.test(s)) return 'pending'
+  return s || 'unknown'
+}
+
+function pushArtOrder(orders: OrderRow[], id: string, block: string) {
+  const img = block.match(/<img[^>]+src="([^"]+)"/i)?.[1]
+  const nm = strip(block.match(/class="nm"[^>]*>([\s\S]*?)<\/div>/i)?.[1] || '')
+  const meta = strip(block.match(/class="meta"[^>]*>([\s\S]*?)<\/div>/i)?.[1] || '')
+  const st = strip(block.match(/class="st[^"]*"[^>]*>([\s\S]*?)<\/span>/i)?.[1] || '')
+  const status = statusFromLabel(st)
+  orders.push({
+    id,
+    status,
+    statusLabel: st || status,
+    due: meta || nm,
+    image: img ? absUrl(img) : undefined,
+    items: img ? [{ name: nm, image: absUrl(img) }] : nm ? [{ name: nm }] : [],
+  })
+}
+
+function parseOrderCard(chunk: string): OrderRow | null {
+  const head = strip(chunk.match(/<span class="tiny"[^>]*>([\s\S]*?)<\/span>/i)?.[1] || '')
+  if (!head) return null
+  const bits = head.split('·').map((s) => s.trim()).filter(Boolean)
+  const id = bits[0] || ''
+  const date = bits.slice(1).join(' · ')
+  const st = strip(chunk.match(/class="fn-pill[^"]*"[^>]*>([\s\S]*?)<\/span>/i)?.[1] || '')
+  const nm = strip(chunk.match(/class="nm"[^>]*>([\s\S]*?)<\/div>/i)?.[1] || '')
+  const due = strip(chunk.match(/class="price"[^>]*>([\s\S]*?)<\/div>/i)?.[1] || '')
+  const images = [...chunk.matchAll(/<img[^>]+src="([^"]+)"/gi)].map((m) => absUrl(m[1])).filter(Boolean)
+  const tinies = [...chunk.matchAll(/<div class="tiny"[^>]*>([\s\S]*?)<\/div>/gi)].map((m) => strip(m[1])).filter(Boolean)
+  const countMatch = nm.match(/^(\d+)\s*(?:items|件)/i)
+  const nameLine = countMatch ? (tinies.find((t) => t.includes('+') || t.includes('、')) || tinies[0] || '') : ''
+  const tracking = (countMatch ? tinies.find((t) => t !== nameLine) : tinies[0]) || ''
+  const names = (nameLine ? nameLine.split(/\s+\+\s+/) : nm && !countMatch ? [nm] : [])
+    .map((s) => s.trim())
+    .filter(Boolean)
+  const items: OrderItemPreview[] = images.map((image, i) => ({
+    name: names[i] || (countMatch ? '' : nm),
+    image,
+  }))
+  if (!items.length && nm && !countMatch) items.push({ name: nm })
+  const itemCount = countMatch ? Number(countMatch[1]) : Math.max(items.length, names.length)
+  return {
+    id,
+    status: statusFromLabel(st),
+    statusLabel: st || statusFromLabel(st),
+    due,
+    image: images[0],
+    date,
+    itemCount: itemCount || undefined,
+    tracking,
+    items,
+  }
+}
+
 export function parseOrdersHtml(html: string): { signedIn: boolean; loginRequired: boolean; orders: OrderRow[] } {
   if (!html) return { signedIn: false, loginRequired: true, orders: [] }
-  if (/name=["']password["']/i.test(html) && !/class=["']art["']/i.test(html) && /\/login/i.test(html)) {
+  const hasCard = /fn-order-card/i.test(html)
+  const hasArt = /class=["']art["']/i.test(html)
+  if (/name=["']password["']/i.test(html) && !hasArt && !hasCard && /\/login/i.test(html)) {
     return { signedIn: false, loginRequired: true, orders: [] }
   }
   const orders: OrderRow[] = []
   const re = /<a\s+class="art"\s+href="\/orders\/([^"?]+)[^"]*"[^>]*>([\s\S]*?)<\/a>/gi
   let m: RegExpExecArray | null
-  while ((m = re.exec(html))) {
-    const id = m[1]
-    const block = m[2]
-    const img = block.match(/<img[^>]+src="([^"]+)"/i)?.[1]
-    const nm = strip(block.match(/class="nm"[^>]*>([\s\S]*?)<\/div>/i)?.[1] || '')
-    const meta = strip(block.match(/class="meta"[^>]*>([\s\S]*?)<\/div>/i)?.[1] || '')
-    const st = strip(block.match(/class="st[^"]*"[^>]*>([\s\S]*?)<\/span>/i)?.[1] || '')
-    const status = /ship/i.test(st)
-      ? 'shipped'
-      : /paid/i.test(st)
-        ? 'paid'
-        : /await|pend/i.test(st)
-          ? 'pending'
-          : st.toLowerCase() || 'unknown'
-    orders.push({
-      id,
-      status,
-      statusLabel: st || status,
-      due: meta || nm,
-      image: img ? absUrl(img) : undefined,
-    })
+  while ((m = re.exec(html))) pushArtOrder(orders, m[1], m[2])
+  if (!orders.length && hasCard) {
+    const parts = html.split(/<div class="fn-order-card">/i).slice(1)
+    for (const part of parts) {
+      const chunk = part.split(/<div class="fn-sec-head"|<p class="fn-empty"|<a class="fn-me-cs/)[0]
+      const row = parseOrderCard(chunk)
+      if (row?.id) orders.push(row)
+    }
   }
-  const signedIn = orders.length > 0 || /class=["']acchead["']/i.test(html)
+  const signedIn = orders.length > 0 || /class=["']acchead["']/i.test(html) || /fn-order-tabs/i.test(html)
   return { signedIn, loginRequired: !signedIn && /\/login/i.test(html), orders }
 }
 
-export async function fetchOrders() {
+export async function fetchOrders(status = '') {
+  const q = status ? '?status=' + encodeURIComponent(status) : ''
   try {
-    const res = await harborRequest<string>('/account/orders', { method: 'GET' })
+    const res = await harborRequest<string>('/account/orders' + q, { method: 'GET' })
     const raw = typeof res.data === 'string' ? res.data : String(res.data || '')
     const parsed = parseOrdersHtml(raw)
     return { ok: true, live: true, loginRequired: parsed.loginRequired, orders: parsed.orders }
@@ -111,48 +207,159 @@ export async function fetchOrders() {
   }
 }
 
-export function parseOrderDetail(html: string, id: string): OrderDetail {
-  if (!html || html.length < 40) {
-    return {
-      ok: false,
-      live: false,
-      id,
-      status: '',
-      due: '',
-      arrives: '',
-      tracking: '',
-      carrier: '',
-      summary: [],
-      canPay: false,
-      canCancel: false,
-    }
+function blankDetail(id: string, extra: Partial<OrderDetail> = {}): OrderDetail {
+  return {
+    ok: false,
+    live: false,
+    id,
+    status: '',
+    due: '',
+    arrives: '',
+    tracking: '',
+    carrier: '',
+    summary: [],
+    canPay: false,
+    canCancel: false,
+    email: '',
+    shipName: '',
+    address: '',
+    payMethod: '',
+    lines: [],
+    totals: [],
+    ...extra,
   }
-  const status = strip(
-    html.match(/<ol class="steps[\s\S]*?<\/ol>[\s\S]*?<p class="price"[^>]*>[\s\S]*?<\/p>\s*<p>([\s\S]*?)<\/p>/i)?.[1] ||
-      '',
-  )
-  const due = strip(html.match(/class="price"[^>]*>([\s\S]*?)<\/p>/i)?.[1] || '')
-  const tracking = strip(html.match(/tracking[^<]*<a[^>]*>([\s\S]*?)<\/a>/i)?.[1] || '')
-  const carrier = strip(html.match(/carrier[^<]*<\/[^>]+>\s*([^<]+)/i)?.[1] || '')
+}
+
+function parseSumRows(html: string): OrderTotal[] {
+  const totals: OrderTotal[] = []
+  const re = /<div class="fn-sum-row([^"]*)"[^>]*>\s*<span[^>]*>([\s\S]*?)<\/span>\s*<span[^>]*>([\s\S]*?)<\/span>/gi
+  let m: RegExpExecArray | null
+  while ((m = re.exec(html))) {
+    const label = strip(m[2])
+    const value = strip(m[3])
+    if (!label && !value) continue
+    if (/×|x\s*\d/i.test(label) && !value) continue
+    totals.push({ label, value, emphasis: /total/i.test(m[1]) })
+  }
+  return totals
+}
+
+export function parseOrderDetail(html: string, id: string): OrderDetail {
+  if (!html || html.length < 40) return blankDetail(id)
+  const steps = html.match(/class="fn-track-steps"[\s\S]*?<\/div>/i)?.[0] || ''
+  const spans = [...steps.matchAll(/<span class="([^"]*)"[^>]*>([\s\S]*?)<\/span>/gi)]
+  const onCount = spans.filter((s) => /\bon\b/.test(s[1])).length
+  let status = ''
+  if (onCount >= 3) status = 'shipped'
+  else if (onCount === 2) status = 'paid'
+  else if (onCount === 1) status = 'pending'
+  if (!status) {
+    const legacy = strip(
+      html.match(/<ol class="steps[\s\S]*?<\/ol>[\s\S]*?<p class="price"[^>]*>[\s\S]*?<\/p>\s*<p>([\s\S]*?)<\/p>/i)?.[1] || '',
+    )
+    const nm = strip(html.match(/class="nm"[^>]*>([\s\S]*?)<\/div>/i)?.[1] || '')
+    status = statusFromLabel(legacy || nm)
+  }
+  const due =
+    strip(html.match(/class="price"[^>]*>([\s\S]*?)<\/(?:p|span|div)>/i)?.[1] || '') ||
+    strip(html.match(/data-due-local="([^"]*)"/i)?.[1] || '')
+  const tiny = strip(html.match(/<p class="tiny"[^>]*>([\s\S]*?)<\/p>/i)?.[1] || '')
+  const trackM = tiny.match(/(?:承运商|carrier)\s*([^·]+)\s*·\s*([^·]+)/i)
+  const carrier = trackM ? trackM[1].trim() : strip(html.match(/carrier[^<]*<\/[^>]+>\s*([^<]+)/i)?.[1] || '')
+  const tracking = trackM
+    ? trackM[2].trim()
+    : strip(html.match(/tracking[^<]*<a[^>]*>([\s\S]*?)<\/a>/i)?.[1] || '')
+  const arrivesM = tiny.match(/(\d+)\s*[–-]\s*(\d+)/) || html.match(/>(\d+)\s*[–-]\s*(\d+)\s*days/i)
+  const arrives = arrivesM ? `${arrivesM[1]}–${arrivesM[2]}` : ''
   const summary: string[] = []
   const sumBlock = html.match(/class="summary"[^>]*>([\s\S]*?)<\/section>/i)?.[1] || ''
   for (const pm of sumBlock.matchAll(/<p>([\s\S]*?)<\/p>/gi)) {
     const t = strip(pm[1])
     if (t) summary.push(t)
   }
+  const totals = parseSumRows(html)
+  for (const row of totals) {
+    if (row.label && row.value) summary.push(`${row.label} ${row.value}`)
+  }
+  const email = strip(html.match(/data-email="([^"]*)"/i)?.[1] || '')
+  const payChecked = strip(html.match(/name="pay_method"[^>]*checked[^>]*value="([^"]+)"|name="pay_method"[^>]*value="([^"]+)"[^>]*checked/i)?.[1] || html.match(/name="pay_method"[^>]*value="([^"]+)"[^>]*checked/i)?.[1] || '')
   return {
     ok: true,
     live: true,
     id,
     status: status || 'unknown',
     due,
-    arrives: '',
+    arrives,
     tracking,
     carrier,
     summary,
     canPay: /action="\/orders\/[^"]+\/pay"/i.test(html),
     canCancel: /action="\/orders\/[^"]+\/cancel"/i.test(html),
+    email,
+    shipName: '',
+    address: '',
+    payMethod: payChecked,
+    lines: [],
+    totals,
   }
+}
+
+export function parseInvoiceHtml(html: string): InvoiceModel {
+  const empty: InvoiceModel = {
+    ok: false, id: '', email: '', shipName: '', address: '', lines: [], due: '', payMethod: '', note: '',
+  }
+  if (!html || !/fn-invoice|invoice/i.test(html)) return empty
+  const tinies = [...html.matchAll(/<p class="tiny"[^>]*>([\s\S]*?)<\/p>/gi)].map((m) => strip(m[1])).filter(Boolean)
+  const email = tinies.find((t) => /@/.test(t)) || ''
+  const idTiny = tinies.find((t) => /订单|order/i.test(t)) || ''
+  const id = (idTiny.match(/(\d{2,}|[A-Z]{1,4}-?\d{3,})/i) || [])[1] || ''
+  const addrTiny = tinies.find((t) => t !== email && t !== idTiny && t.includes('·') && !/paypal|stripe|card|lianlian|连连/i.test(t)) || ''
+  const [shipName, ...rest] = addrTiny.split('·').map((s) => s.trim())
+  const payTiny = [...tinies].reverse().find((t) => /paypal|stripe|card|lianlian|连连|standard|express/i.test(t)) || ''
+  const lines: OrderLine[] = []
+  for (const m of html.matchAll(/<div class="fn-sum-row(?![^"]*total)[^"]*"[^>]*>\s*<span[^>]*>([\s\S]*?)<\/span>/gi)) {
+    const label = strip(m[1])
+    const qtyM = label.match(/^(.*?)\s*[×x]\s*(\d+)\s*$/i)
+    if (!qtyM) continue
+    lines.push({
+      sku: qtyM[1].trim(),
+      name: qtyM[1].trim(),
+      option: '',
+      qty: Number(qtyM[2]) || 1,
+      price: '',
+      amount: '',
+    })
+  }
+  const due = strip(html.match(/class="fn-sum-row total"[\s\S]*?class="price"[^>]*>([\s\S]*?)<\/span>/i)?.[1] || '')
+  return {
+    ok: Boolean(id || email || lines.length || due),
+    id,
+    email,
+    shipName: shipName || '',
+    address: rest.join(' ').trim(),
+    lines,
+    due,
+    payMethod: payTiny.split('·')[0]?.trim() || '',
+    note: payTiny,
+  }
+}
+
+export async function postOrderReturn(id: string, reason: string) {
+  const res = await harborRequest<string>('/orders/' + encodeURIComponent(id) + '/return', {
+    method: 'POST',
+    form: true,
+    data: { reason },
+  })
+  return { ok: res.statusCode < 400, status: res.statusCode }
+}
+
+export async function postBuyAgain(id: string) {
+  const res = await harborRequest<string>('/orders/' + encodeURIComponent(id) + '/again', {
+    method: 'POST',
+    form: true,
+    data: {},
+  })
+  return { ok: res.statusCode < 400, status: res.statusCode }
 }
 
 export async function fetchOrderDetail(id: string): Promise<OrderDetail> {
@@ -161,20 +368,7 @@ export async function fetchOrderDetail(id: string): Promise<OrderDetail> {
     const html = typeof res.data === 'string' ? res.data : String(res.data || '')
     return parseOrderDetail(html, id)
   } catch (e) {
-    return {
-      ok: false,
-      live: false,
-      id,
-      status: '',
-      due: '',
-      arrives: '',
-      tracking: '',
-      carrier: '',
-      summary: [],
-      canPay: false,
-      canCancel: false,
-      rawHint: e instanceof Error ? e.message : 'network',
-    }
+    return blankDetail(id, { rawHint: e instanceof Error ? e.message : 'network' })
   }
 }
 

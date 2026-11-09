@@ -1,10 +1,10 @@
 <template>
-  <div class="fn-page page" :class="{ desktop: isDesktop }" data-figma="M24">
+  <div class="fn-page page" :class="{ desktop: isDesktop }" data-figma="3:35">
     <header class="head">
-      <button type="button" class="back" @click="goBack" aria-label="back"><ChevronLeft :size="22" :stroke-width="1.75" /></button>
+      <button type="button" class="back" @click="goBack" aria-label="back"><ChevronLeft :size="22" :stroke-width="2.2" /></button>
       <div class="head-main">
-        <div class="title">{{ t('chat_title') }}</div>
-        <div class="sub">{{ statusLabel }}</div>
+        <div class="title">{{ zh ? '在线客服' : 'Support chat' }}</div>
+        <div class="sub">{{ zh ? (booting ? t('chat_connecting') : '买家客服') : statusLabel }}</div>
       </div>
     </header>
 
@@ -42,10 +42,9 @@
 
       <div class="main-pane">
         <div ref="msgsEl" class="msgs" @scroll.passive="onScroll">
-          <div v-if="!messages.length && !booting" class="fn-chat-empty">
-            <div class="fn-chat-ico">💬</div>
-            <div class="fn-chat-title">{{ lab.help }}</div>
-            <div class="fn-chat-sub">{{ t('chat_empty') }}</div>
+          <div v-if="!messages.length && !booting" class="greet">
+            <p>{{ zh ? '您好！我是 Harbor / Pimo 平台客服' : "Hi! I'm Harbor / Pimo support." }}</p>
+            <p>{{ zh ? '很高兴为您服务' : 'Happy to help.' }}</p>
           </div>
           <div
             v-for="m in messages"
@@ -54,8 +53,11 @@
             class="bubble-row"
             :class="m.role"
           >
+            <div v-if="m.role === 'staff'" class="avatar"><Headset :size="16" :stroke-width="2" /></div>
+            <div class="bubble-col">
+              <div v-if="m.role === 'user'" class="when">{{ timeLabel(m) }}</div>
+              <div v-else-if="m.role === 'staff'" class="who-line"><b>{{ whoLabel(m) }}</b><span>{{ timeLabel(m) }}</span></div>
             <div class="bubble">
-              <div class="who">{{ whoLabel(m) }}</div>
               <img
                 v-if="imgOf(m)"
                 class="bubble-img"
@@ -89,6 +91,8 @@
               </div>
               <div v-else class="body">{{ m.body }}</div>
             </div>
+            </div>
+            <div v-if="m.role === 'user'" class="avatar me"><UserRound :size="16" :stroke-width="2" /></div>
           </div>
           <div v-if="typingHint" class="typing-row">
             <span class="typing">{{ typingHint }}</span>
@@ -117,28 +121,29 @@
             >{{ e }}</button>
           </div>
 
-          <div v-if="!isDesktop" class="tool-row">
-            <button type="button" class="tool" @click="openBrowseSheet">
-              <ImagePlus :size="18" :stroke-width="1.7" class="tool-ico" />
-              <span class="tool-lab">{{ lab.visits }}</span>
-            </button>
-            <button type="button" class="tool" @click="openOrderSheet">
-              <ImagePlus :size="18" :stroke-width="1.7" class="tool-ico" />
-              <span class="tool-lab">{{ lab.orders }}</span>
-            </button>
+          <div class="quick">
+            <button type="button" @click="onTrack"><Truck :size="16" /> {{ zh ? '物流进度' : 'Tracking' }}</button>
+            <button type="button" @click="onRefund"><BadgeJapaneseYen :size="16" /> {{ zh ? '退款' : 'Refund' }}</button>
+            <button type="button" @click="onCoupon"><Ticket :size="16" /> {{ zh ? '优惠券' : 'Coupons' }}</button>
+          </div>
+
+          <div v-if="plusOpen" class="plus-menu">
+            <button type="button" @click="plusOpen = false; toggleEmoji()">{{ zh ? '表情' : 'Emoji' }}</button>
+            <button type="button" @click="plusOpen = false; pickImage()">{{ zh ? '图片' : 'Photo' }}</button>
+            <button type="button" @click="plusOpen = false; openBrowseSheet()">{{ lab.visits }}</button>
+            <button type="button" @click="plusOpen = false; openOrderSheet()">{{ lab.orders }}</button>
           </div>
 
           <div class="composer-row">
-            <button type="button" class="emoji-btn" :class="{ on: emojiOpen }" @click.stop="toggleEmoji" aria-label="emoji"><Smile :size="20" :stroke-width="1.7" /></button>
-            <button type="button" class="emoji-btn" @click.stop="pickImage" aria-label="image"><ImagePlus :size="20" :stroke-width="1.7" /></button>
+            <button type="button" class="plus" :class="{ on: plusOpen }" @click.stop="plusOpen = !plusOpen" aria-label="more"><Plus :size="20" :stroke-width="2.2" /></button>
             <input
               class="inp"
               v-model="draft"
               :placeholder="t('chat_placeholder')"
               @keydown.enter.prevent="send"
-              @focus="emojiOpen = false"
+              @focus="emojiOpen = false; plusOpen = false"
             />
-            <button type="button" class="send" :class="{ on: canSend }" @click="send">{{ t('chat_send') }}</button>
+            <button type="button" class="send" :class="{ on: canSend }" :disabled="!canSend" @click="send">{{ t('chat_send') }}</button>
           </div>
           <input ref="fileInput" type="file" accept="image/*" class="file-hidden" @change="onFilePicked" />
         </div>
@@ -257,7 +262,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
-import { ChevronLeft, ImagePlus, Smile, Package, SendHorizontal } from 'lucide-vue-next'
+import { BadgeJapaneseYen, ChevronLeft, Headset, ImagePlus, Plus, Smile, Ticket, Truck, UserRound } from 'lucide-vue-next'
 import { useRoute, useRouter } from 'vue-router'
 import { shopOrigin } from '@/api/config'
 import { addToCartServer } from '@/api/cartApi'
@@ -298,6 +303,8 @@ const productCard = ref<CsProductCtx | null>(null)
 const entryOffer = ref<CsProductCtx | null>(null)
 const sending = ref(false)
 const emojiOpen = ref(false)
+const plusOpen = ref(false)
+const zh = computed(() => String(lang.value).startsWith('zh'))
 const stickers = ref<string[]>(['👍', '❤️', '😊', '🙏', '😂', '🔥', '🎉', '😅', '🤝', '✨'])
 let pollAlive = false
 let lastId = 0
@@ -410,8 +417,32 @@ const statusLabel = computed(() => {
   return online.value ? t('chat_online') : t('chat_reconnecting')
 })
 
+function timeLabel(m: CsMessage) {
+  const raw = String(m.created_at || '')
+  const d = new Date(raw.includes('T') ? raw : raw.replace(' ', 'T'))
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toLocaleTimeString(zh.value ? 'zh-CN' : 'en-US', { hour: '2-digit', minute: '2-digit', hour12: !zh.value })
+}
+
+function onTrack() {
+  const order = String(route.query.order || '').trim()
+  plusOpen.value = false
+  if (order) router.push('/orders/' + encodeURIComponent(order))
+  else openOrderSheet()
+}
+
+function onRefund() {
+  const order = String(route.query.order || '').trim()
+  router.push(order ? { path: '/return', query: { order } } : '/return')
+}
+
+function onCoupon() {
+  router.push('/coupons')
+}
+
 function whoLabel(m: CsMessage) {
   if (m.role === 'user') return t('chat_you')
+  if (m.role === 'staff' && zh.value) return '买家客服'
   if (m.role === 'staff') {
     let name = String(m.staff_user || '').trim()
     name = name
@@ -808,23 +839,32 @@ onUnmounted(() => {
 .page {
   min-height: 100vh;
   height: 100dvh;
-  background: $hb-paper;
+  background: #FCFAF8;
   display: flex;
   flex-direction: column;
-  padding-top: calc(10px + env(safe-area-inset-top));
+  padding-top: 0;
   overflow: hidden;
 }
 .head {
+  position: relative;
   display: flex;
-  gap: 12px;
   align-items: center;
-  padding: 0 16px 10px;
+  justify-content: center;
+  gap: 12px;
+  padding: 14px 48px 16px;
+  padding-top: calc(14px + env(safe-area-inset-top));
   flex: 0 0 auto;
+  background: #F96141;
+  color: #fff;
 }
-.back { width: 40px; height: 40px; border: 0; border-radius: 14px; background: #fff; color: #121816; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(18,24,22,0.06); cursor: pointer; }
-.head-main { flex: 1; min-width: 0; }
-.title { font-size: 20px; font-weight: 720; color: $hb-ink; }
-.sub { font-size: 12px; color: $hb-muted; margin-top: 2px; }
+.back {
+  position: absolute; left: 8px; top: calc(12px + env(safe-area-inset-top));
+  width: 36px; height: 36px; border: 0; border-radius: 12px; background: transparent; color: #fff;
+  display: inline-flex; align-items: center; justify-content: center; box-shadow: none; cursor: pointer;
+}
+.head-main { flex: 1; min-width: 0; text-align: center; }
+.title { font-size: 18px; font-weight: 800; color: #fff; }
+.sub { font-size: 12px; color: rgba(255,255,255,0.88); margin-top: 2px; }
 
 .chat-body {
   flex: 1;
@@ -849,22 +889,33 @@ onUnmounted(() => {
   -webkit-overflow-scrolling: touch;
 }
 .empty { text-align: center; color: $hb-muted; padding: 40px 8px; font-size: 13px; }
-.bubble-row { display: flex; margin-bottom: 10px; }
+.greet { text-align: center; color: #9AA1A9; font-size: 13px; line-height: 1.55; padding: 28px 36px 8px; }
+.greet p { margin: 0; }
+.bubble-row { display: flex; align-items: flex-end; gap: 8px; margin-bottom: 14px; }
 .bubble-row.user { justify-content: flex-end; }
 .bubble-row.staff, .bubble-row.system { justify-content: flex-start; }
-.bubble {
-  max-width: 78%;
-  border-radius: 16px;
-  padding: 10px 12px;
-  background: $hb-white;
-  box-shadow: $hb-shadow-soft;
+.bubble-col { max-width: 78%; display: flex; flex-direction: column; }
+.bubble-row.user .bubble-col { align-items: flex-end; }
+.when, .who-line { font-size: 11px; color: #9AA1A9; margin-bottom: 4px; }
+.who-line { display: flex; gap: 6px; align-items: baseline; }
+.who-line b { color: #1C2430; font-size: 12px; }
+.avatar {
+  width: 36px; height: 36px; border-radius: 50%; background: #F96141; color: #fff; flex: 0 0 auto;
+  display: inline-flex; align-items: center; justify-content: center;
 }
-.bubble-row.user .bubble { background: $hb-forest; }
-.bubble-row.user .who, .bubble-row.user .body { color: $hb-white; }
-.bubble-row.staff .bubble { background: $hb-coral-soft; border: 1px solid rgba(224, 82, 46, 0.12); }
-.bubble-row.system .bubble { background: transparent; box-shadow: none; padding: 4px 0; }
-.who { font-size: 11px; color: $hb-muted; margin-bottom: 4px; font-weight: 650; }
-.body { font-size: 14px; line-height: 1.45; color: $hb-ink; white-space: pre-wrap; word-break: break-word; }
+.bubble {
+  border-radius: 16px 16px 16px 4px;
+  padding: 10px 12px;
+  background: #F3F4F6;
+  box-shadow: none;
+}
+.bubble-row.user .bubble { background: #F96141; border-radius: 16px 16px 4px 16px; }
+.bubble-row.user .body { color: #fff; }
+.bubble-row.staff .bubble { background: #F3F4F6; color: #1C2430; }
+.bubble-row.system { justify-content: center; }
+.bubble-row.system .bubble { background: transparent; box-shadow: none; padding: 4px 0; max-width: 100%; }
+.bubble-row.system .body { color: #9AA1A9; text-align: center; font-size: 13px; }
+.body { font-size: 14px; line-height: 1.5; color: #1C2430; white-space: pre-wrap; word-break: break-word; }
 .bubble-img { display: block; max-width: 220px; width: 220px; border-radius: 10px; margin-top: 4px; cursor: zoom-in; }
 .tail { height: 8px; }
 .typing-row { padding: 0 4px 8px; }
@@ -925,21 +976,39 @@ onUnmounted(() => {
 .emoji-btn.on { outline: 2px solid rgba(15, 90, 60, 0.25); }
 .emoji { border: 0; background: transparent; display: inline-block; font-size: 22px; padding: 4px 8px; cursor: pointer; }
 .composer-row { display: flex; gap: 10px; align-items: center; width: 100%; }
+.quick { display: flex; gap: 8px; padding: 0 2px 10px; overflow: auto; }
+.quick button {
+  display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px;
+  border-radius: 999px; border: 1px solid #F3D7CF; background: #fff; color: #F96141;
+  font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap;
+}
+.plus-menu {
+  display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;
+}
+.plus-menu button {
+  border: 0; background: #FFF1EC; color: #F96141; border-radius: 999px; padding: 6px 12px;
+  font-size: 12px; font-weight: 700; cursor: pointer;
+}
+.plus {
+  width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid #E7DFD8; background: #fff; color: #1C2430;
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex: 0 0 auto;
+}
+.plus.on { border-color: #F96141; color: #F96141; }
 .composer {
   display: flex; flex-direction: column; gap: 0; align-items: stretch;
-  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
-  background: rgba(255, 255, 255, 0.94);
-  border-top: 1px solid $hb-line;
-  backdrop-filter: blur(12px);
+  padding: 8px 12px calc(10px + env(safe-area-inset-bottom));
+  background: #fff;
+  border-top: 1px solid #F1EEEA;
   flex: 0 0 auto;
 }
 .inp {
-  flex: 1; border: 0; outline: none; background: $hb-paper; border-radius: 14px; padding: 12px 14px; font-size: 14px;
+  flex: 1; border: 0; outline: none; background: #F6F4F2; border-radius: 999px; padding: 12px 14px; font-size: 14px;
 }
 .send {
-  border: 0; min-width: 64px; height: 44px; border-radius: 14px; background: $hb-line; color: $hb-muted;
-  display: flex; align-items: center; justify-content: center; font-weight: 720; font-size: 14px; cursor: pointer;
-  &.on { background: $hb-coral; color: $hb-white; }
+  border: 0; min-width: 64px; height: 40px; padding: 0 14px; border-radius: 999px; background: #F7C7BB; color: #fff;
+  display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; cursor: pointer;
+  &.on { background: #F96141; color: #fff; }
+  &:disabled { cursor: default; }
 }
 .file-hidden { display: none; }
 
@@ -1074,9 +1143,10 @@ onUnmounted(() => {
     background: linear-gradient(180deg, #eef2ef 0%, $hb-paper 40%);
   }
   .page.desktop .head {
-    padding: 0 4px 14px;
+    border-radius: 18px 18px 0 0;
+    margin: 0 0 0;
   }
-  .page.desktop .title { font-size: 22px; }
+  .page.desktop .title { font-size: 18px; color: #fff; }
   .chat-body {
     flex-direction: row;
     gap: 14px;
@@ -1109,26 +1179,7 @@ onUnmounted(() => {
   .offer-bar { margin: 0 16px 10px; }
   .sheet-list { max-height: none; }
 }
-.fn-chat-empty { text-align: center; padding: 48px 24px; }
-.fn-chat-ico {
-  width: 64px; height: 64px; margin: 0 auto 14px; border-radius: 20px; background: #FFF1EC;
-  display: flex; align-items: center; justify-content: center; font-size: 24px;
-}
-.fn-chat-title { font-weight: 800; color: #1C2430; font-size: 18px; letter-spacing: -0.02em; }
-.fn-chat-sub { margin-top: 8px; font-size: 12px; color: #6B7280; line-height: 1.5; }
-.head { background: #fff !important; border-bottom: 1px solid #E8E4DC; }
-.title { color: #1C2430 !important; }
-.bubble-row.mine .bubble, .bubble.me, .mine .bubble {
-  background: #F96141 !important; color: #fff !important; border-bottom-right-radius: 4px !important;
-}
-.bubble-row.theirs .bubble, .bubble.them, .theirs .bubble {
-  background: #fff !important; border: 1px solid #E8E4DC !important; color: #1C2430 !important;
-  border-bottom-left-radius: 4px !important;
-}
-.composer, .input-bar {
-  background: #fff !important; border-top: 1px solid #E8E4DC !important;
-}
-.page { background: #FCFAF8 !important; }
+.page { background: #FCFAF8; }
 
 @media (max-width: 959px) {
   .side-pane.fn-half-sheet, .side-pane.open-sheet {
