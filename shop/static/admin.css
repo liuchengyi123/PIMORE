@@ -1834,7 +1834,7 @@ body { background: #F4F6FB; color: #1C2430; }
   background: #fff; color: #1C2430; border: 1px solid #E8EAF0; text-decoration: none;
 }
 .kpi-grid { margin-bottom: 16px; }
-.empty-orders-card, td.empty {
+.empty-orders-card, td.empty, .empty-center, .empty-board {
   background: #fff; border-radius: 16px; color: #8B919A; text-align: center; padding: 28px 12px;
 }
 table { border-collapse: separate; border-spacing: 0; border-radius: 16px; overflow: hidden; }

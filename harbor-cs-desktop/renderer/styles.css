@@ -1,8 +1,8 @@
 ﻿:root {
-  --ink: #0F2744;
-  --teal: #0E7490;
-  --amber: #B45309;
-  --sand: #F7F4EF;
+  --ink: #1C2430;
+  --teal: #F96141;
+  --amber: #F96141;
+  --sand: #F7F8FA;
   --forest: #1C2430;
   --forest-deep: #0A1A2E;
   --coral: #F96141;
@@ -10,10 +10,10 @@
   --bg: #F4F7FB;
   --panel: #FFFFFF;
   --panel-2: #F1F0EC;
-  --line: #E2E6EE;
-  --text: #0F2744;
-  --muted: #5C6570;
-  --user: #E0F2FE;
+  --line: #E8EAF0;
+  --text: #1C2430;
+  --muted: #8B919A;
+  --user: #F4F6FB;
   --staff: #F7F4EF;
   --system: transparent;
 }
@@ -425,7 +425,7 @@ input:focus, textarea:focus { outline: 2px solid rgba(224,82,46,0.35); border-co
   border-radius: 999px; padding: 5px 10px; font-size: 12px; font-weight: 600; cursor: pointer;
 }
 .inbox-chips button.on, .chip-row .chip.on { background: var(--ink); color: #fff; border-color: var(--ink); }
-.btn-primary, .composer .send { background: var(--ink) !important; color: #fff !important; }
+.btn-primary, .composer .send { background: #F96141 !important; color: #fff !important; }
 
 
 /* Function CS desk frames 30-32 */
@@ -530,22 +530,22 @@ input:focus, textarea:focus { outline: 2px solid rgba(224,82,46,0.35); border-co
 .agent-box.busy-mode { background: #FEE2E2; border-radius: 10px; padding: 4px 8px; }
 .sku-picker-hint { margin: 0 0 8px; }
 
-/* —— Function CS Desk S02–S04 light shell —— */
+/* —— Function CS Desk light shell, same coral tokens as the shopper —— */
 :root {
-  --ink: #0F2744;
-  --teal: #0E7490;
-  --amber: #F59E0B;
-  --sand: #F7F4EF;
-  --forest: #0F2744;
-  --forest-deep: #0A1C30;
-  --coral: #B91C1C;
-  --bg: #F7F4EF;
+  --ink: #1C2430;
+  --teal: #F96141;
+  --amber: #F96141;
+  --sand: #F7F8FA;
+  --forest: #1C2430;
+  --forest-deep: #0A1A2E;
+  --coral: #F96141;
+  --bg: #F7F8FA;
   --panel: #FFFFFF;
-  --line: #E2E6EE;
-  --text: #0F2744;
-  --muted: #5C6570;
-  --user: #E0F2FE;
-  --staff: #F1F5F9;
+  --line: #E8EAF0;
+  --text: #1C2430;
+  --muted: #8B919A;
+  --user: #F4F6FB;
+  --staff: #FFFFFF;
 }
 body { background: var(--sand) !important; color: var(--text) !important; }
 .login-view {
@@ -588,7 +588,7 @@ body { background: var(--sand) !important; color: var(--text) !important; }
 .tab {
   background: #fff !important; color: var(--muted) !important; border: 1px solid var(--line) !important;
 }
-.tab.active { background: var(--ink) !important; color: #fff !important; border-color: var(--ink) !important; }
+.tab.active { background: #F96141 !important; color: #fff !important; border-color: #F96141 !important; }
 .inbox-chips button {
   border: 1px solid var(--line) !important; background: #fff !important; color: var(--ink) !important;
   border-radius: 999px !important; padding: 4px 10px !important; font-size: 12px !important;
@@ -596,14 +596,14 @@ body { background: var(--sand) !important; color: var(--text) !important; }
 .inbox-chips button.on { background: #FFF1EC !important; border-color: #F8D5CC !important; color: #F96141 !important; font-weight: 700; }
 .room-item { background: #fff !important; color: var(--text) !important; border-bottom: 1px solid var(--line) !important; }
 .room-item:hover, .room-item.active { background: #F7F4EF !important; }
-.room-item.active { box-shadow: inset 3px 0 0 var(--teal); }
+.room-item.active { box-shadow: inset 3px 0 0 #F96141; }
 .unread-dot { background: var(--amber) !important; color: #0F2744 !important; font-weight: 800 !important; }
 .chat-head {
   background: #fff !important; border-bottom: 1px solid var(--line) !important;
   padding: 12px 14px !important;
 }
 .msg-list { background: var(--sand) !important; }
-.bubble.user { background: #E0F2FE !important; color: var(--ink) !important; }
+.bubble.user { background: #F4F6FB !important; color: #1C2430 !important; }
 .bubble.staff {
   background: #fff !important; color: var(--ink) !important;
   border: 1px solid var(--line) !important;
@@ -644,6 +644,6 @@ body { background: var(--sand) !important; color: var(--text) !important; }
   border-radius: 8px !important; height: 32px !important;
 }
 .mark {
-  background: linear-gradient(145deg, var(--ink), var(--teal)) !important;
+  background: #F96141 !important;
 }
 .error { color: var(--coral) !important; }
