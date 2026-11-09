@@ -112,7 +112,7 @@ input:focus, textarea:focus { outline: 2px solid rgba(224,82,46,0.35); border-co
   border-right: 1px solid var(--line);
 }
 .context { border-right: none; padding: 14px; overflow: auto; background: #F7F8FA; }
-.context h3 { margin: 0 0 10px; font-size: 13px; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; }
+.context h3 { margin: 14px 0 8px; font-size: 13px; color: #1C2430; letter-spacing: 0; text-transform: none; font-weight: 800; }
 .inbox { display: grid; grid-template-rows: auto 1fr; background: #FFFFFF; }
 .inbox-tools { padding: 12px; display: grid; gap: 10px; border-bottom: 1px solid var(--line); }
 .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
@@ -296,14 +296,14 @@ input:focus, textarea:focus { outline: 2px solid rgba(224,82,46,0.35); border-co
 .history-list { display: grid; gap: 8px; }
 .history-item {
   display: grid;
-  grid-template-columns: 48px 1fr;
+  grid-template-columns: 48px 1fr auto;
   gap: 8px;
   padding: 8px;
   border-radius: 12px;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid var(--line);
+  background: #fff;
+  border: 1px solid #E8EAF0;
 }
-.history-item img { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; background: #0b1612; }
+.history-item img { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; background: #F4F6FB; }
 .history-item .t { font-size: 12px; line-height: 1.35; }
 
 .agent-box{display:flex;align-items:center;gap:10px;margin-left:auto;margin-right:12px}
@@ -312,10 +312,18 @@ input:focus, textarea:focus { outline: 2px solid rgba(224,82,46,0.35); border-co
 .agent-who small{font-size:11px}
 #agentStatus{background:#13241e;color:#e8f5ef;border:1px solid #2a4a3d;border-radius:8px;padding:6px 8px}
 .info-card,.orders-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
-.info-card .kv{display:flex;justify-content:space-between;gap:8px;font-size:12px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.06)}
-.info-card .kv span{color:#8aa99a}
-.order-item{text-align:left;background:#12221c;border:1px solid #243f34;border-radius:10px;padding:8px 10px;color:inherit;cursor:pointer}
-.order-item:hover{border-color:#3d6b56}
+.info-card .kv{display:flex;justify-content:space-between;gap:8px;font-size:12px;padding:6px 0;border-bottom:1px solid #F0F1F5}
+.info-card .kv span{color:#8B919A}
+.info-card .kv strong{color:#1C2430;font-weight:650}
+#inviteCart{margin-top:8px;width:100%;height:36px;border:0;border-radius:999px;background:#F96141;color:#fff;font-weight:700;cursor:pointer}
+#inviteCart:disabled{background:#E8E4DC;color:#9CA3AF;cursor:default}
+.order-item{text-align:left;background:#fff;border:1px solid #E8EAF0;border-radius:12px;padding:10px;color:#1C2430}
+.order-item:hover{border-color:#F96141}
+.order-item .pill{background:#FFF1EC;color:#E24E32;border-radius:999px;padding:2px 8px;font-size:11px;font-weight:700}
+.order-detail-body{display:grid;gap:8px;font-size:13px;color:#1C2430}
+.order-detail-body .line{display:flex;justify-content:space-between;gap:12px;padding-bottom:6px;border-bottom:1px solid #F0F1F5}
+.order-detail-body .line span{color:#8B919A}
+.order-detail-body .items{display:grid;gap:4px;padding-top:4px;color:#5C6570}
 .order-item .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .order-item .pill{font-size:11px;background:#1d3a2e;padding:2px 6px;border-radius:999px}
 .bubble .orig{margin-top:6px;opacity:.85}
@@ -334,13 +342,13 @@ input:focus, textarea:focus { outline: 2px solid rgba(224,82,46,0.35); border-co
 .product-card .send-row { padding: 0 12px 10px; }
 .product-card .btn-send-prod {
   width: 100%; border: 0; border-radius: 8px; padding: 8px 10px;
-  background: var(--coral); color: #1a100c; font-weight: 700; cursor: pointer;
+  background: #F96141; color: #fff; font-weight: 700; cursor: pointer; border-radius: 999px;
 }
 .product-card .btn-send-prod:hover { filter: brightness(1.05); }
 .history-item { cursor: default; align-items: center; }
 .history-item .btn-send-mini {
-  margin-left: auto; border: 0; border-radius: 6px; padding: 4px 8px;
-  background: rgba(232,164,116,0.2); color: var(--coral); font-size: 12px; cursor: pointer; white-space: nowrap;
+  margin-left: auto; border: 0; border-radius: 999px; padding: 4px 10px;
+  background: #F96141; color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;
 }
 .sku-search-box { margin-bottom: 14px; }
 .sku-search-box input {

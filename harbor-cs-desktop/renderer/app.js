@@ -117,7 +117,7 @@ function productHtml(p) {
   if (!p || !p.sku) return '<div class="empty-card">暂无</div>';
   const img = p.image
     ? `<img src="${esc(mediaUrl(p.image))}" alt="" />`
-    : '<div style="aspect-ratio:1;background:#0b1612"></div>';
+    : '<div style="aspect-ratio:1;background:#F4F6FB"></div>';
   return `<div class="product-card" data-sku="${esc(p.sku)}">${img}<div class="body"><div>${esc(p.name || p.sku)}</div><div class="price">${esc(p.price || '')}</div><div class="muted small">SKU ${esc(p.sku)}</div></div><div class="send-row"><button type="button" class="btn-send-prod" data-send-sku="${esc(p.sku)}">发送给用户</button></div></div>`;
 }
 
@@ -549,6 +549,7 @@ function renderOrders(orders) {
       <div class="muted small">${track ? '物流 ' + esc(track) : '暂无物流'}</div>
       <div class="row" style="gap:6px;margin-top:6px">
         <button type="button" class="btn ghost sm" data-order-view="${esc(id)}">详情</button>
+        ${track ? `<button type="button" class="btn ghost sm" data-ship-send="${esc(id)}">发送物流</button>` : ''}
         <button type="button" class="btn sm" data-order-send="${esc(id)}">发送订单卡</button>
       </div>
     </div>`;
@@ -1039,8 +1040,22 @@ if (agentStatus) {
 }
 
 ordersList && ordersList.addEventListener('click', async (e) => {
+  const shipBtn = e.target.closest('[data-ship-send]');
   const sendBtn = e.target.closest('[data-order-send]');
   const viewBtn = e.target.closest('[data-order-view]');
+  if (shipBtn && !sendBtn && !viewBtn) {
+    const sid = shipBtn.getAttribute('data-ship-send');
+    const found = (state.orders || []).find((row) => String(row.id ?? row.submit_id ?? '') === String(sid));
+    const track = found && (found.tracking_no || found.tracking || found.logistics_no || '');
+    const carrier = found && (found.carrier || found.shipping_carrier || '');
+    if (!state.activeId) { alert('请先选择会话'); return; }
+    const text = `物流更新 #${sid}${carrier ? ' · ' + carrier : ''}${track ? ' · ' + track : ''}`;
+    const reply = await window.csDesk.reply({ roomId: state.activeId, body: text });
+    if (!reply || !reply.ok) { alert((reply && reply.error) || '发送失败'); return; }
+    await openRoom(state.activeId);
+    refreshInbox();
+    return;
+  }
   const id = (sendBtn && sendBtn.getAttribute('data-order-send'))
     || (viewBtn && viewBtn.getAttribute('data-order-view'))
     || ((e.target.closest('.order-item') || {}).dataset || {}).id;
@@ -1081,22 +1096,44 @@ ordersList && ordersList.addEventListener('click', async (e) => {
     refreshInbox();
     return;
   }
-  const lines = [
-    `订单 #${o.id ?? ''}`,
-    `状态：${o.status || ''}`,
-    `邮箱：${o.email || ''}`,
-    `物流：${o.tracking_no || o.tracking || o.logistics_no || '无'}`,
-    `承运：${o.carrier || o.shipping_carrier || ''}`,
-  ];
-  if (Array.isArray(o.items)) {
-    lines.push('商品：');
-    for (const it of o.items.slice(0, 8)) {
-      lines.push(`- ${it.name || it.sku || ''} x${it.qty || it.quantity || 1}`);
+  const modal = document.getElementById('orderDetailModal');
+  const body = document.getElementById('orderDetailBody');
+  const send = document.getElementById('orderDetailSend');
+  if (modal && body) {
+    const rows = [
+      ['订单', '#' + (o.id ?? '')],
+      ['状态', o.status || '—'],
+      ['邮箱', o.email || '—'],
+      ['物流', o.tracking_no || o.tracking || o.logistics_no || '无'],
+      ['承运', o.carrier || o.shipping_carrier || '—'],
+      ['金额', o.due_text || o.total || o.due || '—'],
+    ];
+    let html = rows.map(([k, v]) => `<div class="line"><span>${esc(k)}</span><b>${esc(String(v))}</b></div>`).join('');
+    if (Array.isArray(o.items) && o.items.length) {
+      html += '<div class="items">' + o.items.slice(0, 8).map((it) => `<div>${esc(it.name || it.sku || '')} ×${esc(String(it.qty || it.quantity || 1))}</div>`).join('') + '</div>';
     }
+    body.innerHTML = html;
+    if (send) send.dataset.orderId = String(o.id ?? id);
+    modal.hidden = false;
+    return;
   }
-  alert(lines.filter(Boolean).join('
-'));
 });
+
+const orderDetailModal = document.getElementById('orderDetailModal');
+const orderDetailClose = document.getElementById('orderDetailClose');
+const orderDetailSend = document.getElementById('orderDetailSend');
+if (orderDetailClose && orderDetailModal) {
+  orderDetailClose.addEventListener('click', () => { orderDetailModal.hidden = true; });
+  orderDetailModal.addEventListener('click', (ev) => { if (ev.target === orderDetailModal) orderDetailModal.hidden = true; });
+}
+if (orderDetailSend && orderDetailModal) {
+  orderDetailSend.addEventListener('click', () => {
+    const oid = orderDetailSend.dataset.orderId || '';
+    const btn = oid && ordersList ? ordersList.querySelector('[data-order-send="' + oid.replace(/"/g, '') + '"]') : null;
+    orderDetailModal.hidden = true;
+    if (btn) btn.click();
+  });
+}
 
 
 const inboxChips = document.getElementById('inboxChips');
