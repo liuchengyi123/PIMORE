@@ -378,6 +378,7 @@ watch(kind, (k) => { if (k === 'gift') loadGift() })
 .card.gift { width: min(100%, 340px); padding: 12px 20px 8px; text-align: left; }
 .card.checkin { padding: 26px 24px 8px; }
 .card.invite { padding: 20px 24px 8px; }
+.card.locale { width: min(100%, 336px); padding: 16px 14px 14px; }
 .card.pwa:not(.ios) { background: #10243A; color: #fff; padding: 22px 24px 8px; border-radius: 20px; }
 .card.ios { width: min(100%, 768px); border-radius: 28px 28px 0 0; padding: 12px 12px calc(12px + env(safe-area-inset-bottom)); text-align: left; }
 .grab { width: 36px; height: 4px; border-radius: 99px; background: #E6E2DC; margin: 2px auto 14px; }
@@ -402,6 +403,9 @@ h2 { margin: 0 0 8px; font-size: 26px; line-height: 1.22; letter-spacing: -0.03e
 .card.invite h2 { font-size: 24px; line-height: 1.25; margin: 0 0 10px; }
 .card.invite .sub { max-width: 268px; margin: 0 auto 18px; font-size: 15px; line-height: 1.5; }
 .card.gift h2 { font-size: 20px; line-height: 1.3; font-weight: 780; text-align: left; margin: 0 0 6px; letter-spacing: -0.02em; }
+.card.locale h2 { font-size: 22px; line-height: 1.2; margin: 0 28px 4px; }
+.card.locale .sub { font-size: 13px; line-height: 1.35; margin: 0 8px 10px; color: #5C6570; }
+.card.locale .x { top: 8px; right: 8px; width: 28px; height: 28px; font-size: 22px; }
 .sub { margin: 0 0 16px; color: #5C6570; line-height: 1.45; font-size: 15px; }
 .center { text-align: center; }
 .gift-name { text-align: left; }
@@ -424,16 +428,17 @@ h2 { margin: 0 0 8px; font-size: 26px; line-height: 1.22; letter-spacing: -0.03e
 }
 .stamp { width: 26px; height: 26px; border-radius: 50%; border: 2px solid #1C2430; box-sizing: border-box; }
 .stamp:nth-child(7) { grid-column: 2; }
-.locales { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 8px; text-align: left; }
+.locales { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 0; text-align: left; }
 .ccy {
-  position: relative; height: 64px; border-radius: 14px; border: 1px solid #E6E2DC; background: #fff;
-  display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; color: #1C2430;
+  position: relative; height: 52px; border-radius: 12px; border: 1px solid #E6E2DC; background: #fff;
+  display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; color: #1C2430;
 }
-.ccy.on { border: 2px solid #FF6B4A; background: #FFF6F3; }
-.ccy b { font-size: 14px; }
+.ccy svg { width: 26px; height: 26px; flex: 0 0 auto; }
+.ccy.on { border: 2px solid #FF6B4A; background: #FFF1EC; }
+.ccy b { font-size: 15px; font-weight: 800; letter-spacing: 0.01em; }
 .tick {
   position: absolute; top: -6px; right: -6px; width: 16px; height: 16px; border-radius: 50%;
-  background: #FF6B4A; color: #fff; font-size: 10px; display: grid; place-items: center;
+  background: #FF6B4A; color: #fff; font-size: 10px; font-weight: 800; display: grid; place-items: center;
 }
 .ios-hero { background: #FF6B4A; color: #fff; border-radius: 22px; padding: 22px 16px 18px; text-align: center; }
 .ios-hero h2 { color: #fff; margin: 0; font-size: 26px; }

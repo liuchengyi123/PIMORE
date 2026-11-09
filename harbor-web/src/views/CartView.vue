@@ -90,7 +90,7 @@
         <div class="confirm-head">
           <h2>{{ zhCart ? '移除' : 'Remove' }}</h2>
           <span class="trash-art" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="22" height="22"><path d="M5 7h14M9 7V5h6v2M8 7l1 12h6l1-12" fill="none" stroke="#FF6B4A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <svg viewBox="0 0 24 24" width="22" height="22"><path d="M4 7h16M9 7V4.5h6V7M8 7l.8 13h6.4L16 7" fill="none" stroke="#FF6B4A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </span>
         </div>
         <p class="rm-name">{{ pendingRemove.name }}</p>
@@ -228,15 +228,15 @@ h1 small { font-size: 12px; color: $hb-muted; font-weight: 600; }
 .confirm-mask { align-items: center; padding: 24px 16px; }
 .gap-mask { align-items: flex-end; }
 .confirm-card {
-  width: min(100%, 420px); background: #fff; border-radius: 18px; padding: 18px 16px 16px;
+  width: min(100%, 336px); background: #fff; border-radius: 16px; padding: 12px 14px 12px;
   box-shadow: 0 18px 40px rgba(28,36,48,0.16); text-align: center;
 }
-.confirm-head { display: flex; align-items: center; justify-content: space-between; text-align: left; border-bottom: 1px solid #F1EEEA; padding-bottom: 8px; }
-.confirm-card h2 { margin: 0; font-size: 24px; font-weight: 750; }
-.confirm-card p { margin: 10px 0 0; color: #5C6570; font-size: 16px; line-height: 1.45; }
-.rm-name { color: #1C2430 !important; font-size: 18px !important; font-weight: 700; }
-.confirm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
-.confirm-actions button { height: 46px; border-radius: 12px; font-weight: 750; font-size: 16px; cursor: pointer; }
+.confirm-head { display: flex; align-items: center; justify-content: space-between; text-align: left; border-bottom: 1px solid #F1EEEA; padding: 2px 2px 8px; }
+.confirm-card h2 { margin: 0; font-size: 24px; line-height: 1.1; font-weight: 800; letter-spacing: -0.02em; }
+.confirm-card p { margin: 6px 6px 0; color: #5C6570; font-size: 15px; line-height: 1.35; }
+.rm-name { margin: 12px 6px 0 !important; color: #1C2430 !important; font-size: 18px !important; font-weight: 750; line-height: 1.25; }
+.confirm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #F1EEEA; }
+.confirm-actions button { height: 44px; border-radius: 10px; font-weight: 750; font-size: 16px; cursor: pointer; }
 .confirm-actions .ghost { background: #fff; border: 1.5px solid #FF6B4A; color: #FF6B4A; }
 .confirm-actions .ok { background: #FF6B4A; border: 0; color: #fff; }
 .gap-sheet {
