@@ -268,12 +268,15 @@ onMounted(async () => {
 .zap, .spark, .who { color: #F96141; }
 .see { color: #F96141; font-size: 13px; font-weight: 700; line-height: 1; padding-top: 0; }
 .clock {
-  display: flex; align-items: center; gap: 4px; color: #F96141;
+  display: flex; align-items: center; gap: 3px; color: #F96141;
   background: transparent; padding: 0;
 }
-.clock span { display: flex; flex-direction: column; align-items: center; line-height: 1; background: #FFF1EC; border-radius: 10px; min-width: 32px; padding: 4px 5px; }
-.clock b { font-size: 12px; font-weight: 800; }
-.clock small { font-size: 8px; letter-spacing: 0.04em; color: #C47A68; margin-top: 1px; }
+.clock span {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  line-height: 1; background: #FFF1EC; border-radius: 8px; min-width: 28px; height: 32px; padding: 0 4px;
+}
+.clock b { font-size: 13px; font-weight: 800; color: #F96141; letter-spacing: -0.03em; }
+.clock small { font-size: 7px; letter-spacing: 0.02em; color: #F96141; margin-top: 2px; font-weight: 700; }
 .row { display: flex; gap: 12px; overflow-x: auto; margin-top: 10px; padding-bottom: 2px; scrollbar-width: none; }
 .row::-webkit-scrollbar { display: none; }
 .mini, .wide { flex: 0 0 164px; cursor: pointer; }
