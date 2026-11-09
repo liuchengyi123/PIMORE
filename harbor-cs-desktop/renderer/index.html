@@ -339,9 +339,12 @@
           </div>
         </div>
         <div id="stab-canned" class="stab-body" hidden data-figma="12:20">
-          <label class="chk"><input id="setCannedOn" type="checkbox" checked /> 在输入框上方显示快捷回复</label>
-          <textarea id="setCanned" rows="8" placeholder="每行一条快捷回复"></textarea>
-          <p class="muted small canned-sample">示例：您好！很高兴为您服务，请问有什么可以帮您？</p>
+          <div class="canned-head">
+            <label class="chk"><input id="setCannedOn" type="checkbox" checked /> 快捷回复</label>
+            <button type="button" id="cannedAdd" class="btn primary sm">新建</button>
+          </div>
+          <div id="cannedList" class="canned-list"></div>
+          <textarea id="setCanned" hidden></textarea>
         </div>
         <div id="stab-notify" class="stab-body" hidden data-figma="12:21">
           <h4>通知</h4>

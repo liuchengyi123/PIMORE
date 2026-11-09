@@ -66,6 +66,23 @@ function cannedLines() {
   return String(raw).split('\n').map((s) => s.trim()).filter(Boolean);
 }
 
+function syncCannedFromRows() {
+  const box = document.getElementById('setCanned');
+  const rows = document.querySelectorAll('[data-canned-edit]');
+  if (!box || !rows.length) return;
+  box.value = [...rows].map((el) => el.value.replace(/\s+/g, ' ').trim()).filter(Boolean).join('\n');
+}
+
+function renderCannedEditor() {
+  const list = document.getElementById('cannedList');
+  const box = document.getElementById('setCanned');
+  if (!list || !box) return;
+  const lines = String(box.value || '').split('\n').map((s) => s.trim()).filter(Boolean);
+  list.innerHTML = lines.length
+    ? lines.map((line, i) => `<div class="canned-row"><span class="canned-idx">${i + 1}</span><input type="text" value="${esc(line)}" data-canned-edit /><button type="button" class="icon-x" data-canned-del aria-label="删除">×</button></div>`).join('')
+    : '<p class="muted small">暂无快捷回复，点「新建」添加一行。</p>';
+}
+
 function pageSize() {
   const n = Number(localStorage.getItem('cs_page_size') || 20);
   return n > 0 ? n : 20;
@@ -1526,6 +1543,7 @@ if (skuSearch && skuSearchResults) {
       const admin = $('openAdminCs');
       if (admin) admin.href = (typeof deskBase === 'function' ? deskBase() : '') + '/admin/cs';
     } catch (_) {}
+    renderCannedEditor();
   }
   function closeSettings() {
     if (settingsPanel) settingsPanel.hidden = true;
@@ -1551,6 +1569,7 @@ if (skuSearch && skuSearchResults) {
   });
 
   settingsSave?.addEventListener('click', () => {
+    syncCannedFromRows();
     try {
       localStorage.setItem('cs_nick', $('setNick')?.value || '');
       localStorage.setItem('cs_title', $('setTitle')?.value || '');
@@ -1586,6 +1605,28 @@ if (skuSearch && skuSearchResults) {
     btn.addEventListener('click', () => showCtx(btn.getAttribute('data-ctx')));
   });
   $('ctxClose')?.addEventListener('click', () => { syncWorkspace(false); syncRail('inbox'); });
+  const cannedList = $('cannedList');
+  cannedList?.addEventListener('input', (e) => {
+    if (e.target.matches('[data-canned-edit]')) syncCannedFromRows();
+  });
+  cannedList?.addEventListener('click', (e) => {
+    const del = e.target.closest('[data-canned-del]');
+    if (!del) return;
+    del.closest('.canned-row')?.remove();
+    syncCannedFromRows();
+    renderCannedEditor();
+  });
+  $('cannedAdd')?.addEventListener('click', () => {
+    const list = $('cannedList');
+    if (!list) return;
+    list.querySelector('p')?.remove();
+    const i = list.querySelectorAll('.canned-row').length + 1;
+    const row = document.createElement('div');
+    row.className = 'canned-row';
+    row.innerHTML = `<span class="canned-idx">${i}</span><input type="text" value="" data-canned-edit placeholder="每行一条快捷回复" /><button type="button" class="icon-x" data-canned-del aria-label="删除">×</button>`;
+    list.appendChild(row);
+    row.querySelector('input')?.focus();
+  });
   document.querySelectorAll('.rail-item').forEach((btn) => {
     btn.addEventListener('click', () => {
       const key = btn.getAttribute('data-rail') || 'inbox';
