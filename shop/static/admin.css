@@ -1302,10 +1302,11 @@ a.btn { text-decoration: none; }
 /* AD01–AD30 / S02 / S11–S14 visual chrome — do not change form actions */
 
 :root {
-  --brand: #0F2744;
-  --brand-2: #F96141;
+  --brand: #F96141;
+  --brand-2: #E24E32;
   --brand-soft: #FFF1EC;
   --bg: #F4F6FB;
+  --text: #1C2430;
   --amber: #F59E0B;
   --amber-soft: #FEF3C7;
   --side-w: 220px;
@@ -1755,7 +1756,33 @@ body.admin-launch .content {
   display: grid;
   gap: 2px;
 }
-#launch-postback .funnel-totals strong { font-size: 18px; color: #0F2744; }
+#launch-postback .funnel-totals strong { font-size: 18px; color: #1C2430; }
+
+/* ZH admin — dashboard, orders, catalog, and the rest of the shell */
+body { background: #F4F6FB; color: #1C2430; }
+.work, .content { background: #F4F6FB; }
+.kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.kpi-card {
+  background: #fff; border: 1px solid #E8EAF0; border-radius: 16px;
+  padding: 16px; box-shadow: 0 8px 24px rgba(28,36,48,0.04);
+}
+.kpi-label { color: #8B919A; font-size: 12px; font-weight: 650; }
+.kpi-val { display: block; margin-top: 6px; font-size: 28px; letter-spacing: -0.03em; color: #1C2430; }
+.ranges a { border-radius: 999px; }
+.ranges a.on { background: #F96141; color: #fff; }
+.content .btn, .content button[type="submit"] {
+  background: #F96141; border-color: transparent; color: #fff; border-radius: 10px;
+}
+.content .btn.ghost, .content button.ghost {
+  background: #fff; color: #1C2430; border: 1px solid #E6E8EE;
+}
+.content .btn.danger, .content button.danger { background: #B91C1C; color: #fff; }
+.table-wrap, table { background: #fff; }
+.card { border-radius: 16px; }
+.confirm-card, .modal-card {
+  background: #fff; border-radius: 16px; padding: 20px;
+  box-shadow: 0 18px 50px rgba(28,36,48,0.16);
+}
 #launch-postback .funnel-totals span { font-size: 12px; color: #5C6570; }
 
 
