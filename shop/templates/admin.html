@@ -734,7 +734,7 @@
 </div>
 {% endif %}
 {% elif panel == 'images' %}
-<header class="page-head"><div><h1>图片</h1><p class="muted">图片翻译与商品图生成。</p></div></header>
+<header class="page-head page-gen"><div><h1>图片</h1><p class="muted">图片翻译与商品图生成。</p></div></header>
 <div class="card" style="margin-bottom:16px">
   <h2>主图用第几张</h2>
   <form class="pad stack" method="post" action="/admin/images/cover">
@@ -1194,7 +1194,7 @@
 </div>
 
 {% elif panel == 'purchasing' %}
-<header class="page-head"><div><h1>采购</h1><p class="muted">按供应商汇总待采购。勾选后可批量标记。</p></div></header>
+<header class="page-head page-buy"><div><h1>采购</h1><p class="muted">按供应商汇总待采购。勾选后可批量标记。</p></div></header>
 <div class="purchase-toolbar">
   <div class="hint">点 1688 下单后标记已采购。</div>
   <button class="btn teal" type="button" id="purchase-batch-btn">批量标记已采购</button>

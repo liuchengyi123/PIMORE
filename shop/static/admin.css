@@ -1512,6 +1512,20 @@ td.empty { text-align: center; padding: 28px 12px; }
 .login-card .lead { margin: 0 0 14px !important; }
 .login-submit { width: 100% !important; height: 44px !important; margin-top: 4px !important; background: #F96141 !important; border: 0 !important; border-radius: 999px !important; color: #fff !important; }
 .page-head { margin-bottom: 8px; }
+.page-buy ~ .purchase-toolbar { border-color: #F8D5CC; background: #FFF6F3; }
+.page-buy ~ .card { border-top: 3px solid #F96141; }
+.badge-1688 { border-color: #F96141 !important; color: #F96141 !important; border-radius: 999px !important; }
+.page-gen + .card { border-left: 4px solid #F96141; }
+.page-gen ~ .growth-split { align-items: start; }
+.traffic .card { border-top: 3px solid #1C2430; }
+.page-lp ~ .launch-split .launch-left .card { border-top: 3px solid #F96141; }
+#reco-form { display: grid; gap: 12px; }
+#reco-form .card h2 { color: #F96141; }
+.page-log + .card thead th { background: #1C2430; color: #fff; }
+.page-log + .card td { font-size: 12px; }
+.fn-support-shell .status-tabs a.on { background: #F96141 !important; border-color: #F96141 !important; color: #fff !important; }
+.fn-support-shell .cs-item.on { background: #FFF1EC !important; box-shadow: inset 3px 0 0 #F96141; }
+.fn-support-shell .page-head h1 { color: #1C2430 !important; }
 .product-count { margin: 0 0 10px; font-size: 13px; }
 .pay-picks { border: 0; margin: 0 0 12px; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
 .pay-picks legend { width: 100%; font-size: 12px; font-weight: 700; color: #8B919A; }
