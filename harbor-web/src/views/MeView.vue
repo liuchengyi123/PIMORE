@@ -21,14 +21,14 @@
 
     <section class="orders card">
       <div class="ord-head">
-        <span class="h">My orders</span>
-        <button type="button" class="all" @click="go('/orders')">All ›</button>
+        <span class="h">{{ lang === 'en' ? 'My orders' : '我的订单' }}</span>
+        <button type="button" class="all" @click="go('/orders')">{{ lang === 'en' ? 'All' : '全部' }} ›</button>
       </div>
       <div class="ord-row">
-        <button type="button" class="ost" @click="go('/orders')"><span class="ic">💳</span><span class="ol">To pay</span><b>{{ acct.pending }}</b></button>
-        <button type="button" class="ost" @click="go('/orders')"><span class="ic">📦</span><span class="ol">Paid</span><b>{{ acct.paid }}</b></button>
-        <button type="button" class="ost" @click="go('/orders')"><span class="ic">🚚</span><span class="ol">Shipped</span><b>{{ acct.shipped }}</b></button>
-        <button type="button" class="ost" @click="go('/orders')"><span class="ic">↩</span><span class="ol">Returns</span><b>0</b></button>
+        <button type="button" class="ost" @click="go('/orders')"><span class="ic">💳</span><span class="ol">{{ lang === 'en' ? 'To pay' : '待支付' }}</span><b>{{ acct.pending }}</b></button>
+        <button type="button" class="ost" @click="go('/orders')"><span class="ic">📦</span><span class="ol">{{ lang === 'en' ? 'Paid' : '已支付' }}</span><b>{{ acct.paid }}</b></button>
+        <button type="button" class="ost" @click="go('/orders')"><span class="ic">🚚</span><span class="ol">{{ lang === 'en' ? 'Shipped' : '已发货' }}</span><b>{{ acct.shipped }}</b></button>
+        <button type="button" class="ost" @click="go('/return')"><span class="ic">↩</span><span class="ol">{{ lang === 'en' ? 'Returns' : '退货' }}</span><b>0</b></button>
       </div>
     </section>
 
@@ -57,17 +57,30 @@ const balanceText = ref('$—')
 const couponCount = ref('—')
 const wishCount = ref('—')
 
-const menu = [
-  { to: '/addresses', label: 'Addresses' },
-  { to: '/payments', label: 'Payment methods' },
-  { to: '/wishlist', label: 'Wishlist' },
-  { to: '/history', label: 'Browsing history' },
-  { to: '/coupons', label: 'Coupons · Check-in · Rewards' },
-  { to: '/invite', label: 'Invite friends' },
-  { to: '/locale', label: 'Country / currency' },
-  { to: '/install', label: 'Install app' },
-  { to: '/help', label: 'Help · Contact · Policies' },
-]
+const menu = computed(() => lang.value === 'en'
+  ? [
+      { to: '/addresses', label: 'Addresses' },
+      { to: '/payments', label: 'Payment methods' },
+      { to: '/wishlist', label: 'Wishlist' },
+      { to: '/history', label: 'Browsing history' },
+      { to: '/coupons', label: 'Coupons · Check-in · Rewards' },
+      { to: '/invite', label: 'Invite friends' },
+      { to: '/locale', label: 'Country / currency' },
+      { to: '/install', label: 'Install app' },
+      { to: '/help', label: 'Help · Contact · Policies' },
+    ]
+  : [
+      { to: '/orders', label: '我的订单' },
+      { to: '/coupons', label: '优惠券' },
+      { to: '/balance', label: '余额' },
+      { to: '/wishlist', label: '愿望单' },
+      { to: '/addresses', label: '收货地址' },
+      { to: '/payments', label: '支付方式' },
+      { to: '/rewards', label: '奖励' },
+      { to: '/invite', label: '邀请好友' },
+      { to: '/help', label: '帮助与客服' },
+      { to: '/locale', label: '国家与货币' },
+    ])
 
 const displayName = computed(() => {
   if (!acct.signedIn) return lang.value === 'en' ? 'Welcome to Harbor' : '欢迎来到 Harbor'

@@ -2,27 +2,28 @@
   <div class="fn-page page" data-figma="M17">
     <button type="button" class="back" @click="$router.back()" aria-label="back"><ChevronLeft :size="22" :stroke-width="1.75" /></button>
     <div class="brand">Harbor</div>
-    <h1>Welcome back!</h1>
-    <p class="sub">{{ t('me_sign_in') }} · Harbor</p>
+    <h1>{{ zh ? '欢迎回来' : 'Welcome back!' }}</h1>
+    <p class="sub">{{ t('me_sign_in') }}</p>
     <form class="form" @submit.prevent="submit">
-      <label>Email<input v-model="email" type="email" required autocomplete="email" /></label>
-      <label>Password<input v-model="password" type="password" required autocomplete="current-password" /></label>
+      <label>{{ zh ? '邮箱' : 'Email' }}<input v-model="email" type="email" required autocomplete="email" /></label>
+      <label>{{ zh ? '密码' : 'Password' }}<input v-model="password" type="password" required autocomplete="current-password" /></label>
       <p v-if="error" class="err">{{ error }}</p>
       <button type="submit" class="btn" :disabled="busy">{{ busy ? '…' : t('me_sign_in') }}</button>
     </form>
     <div class="auth-links">
-      <router-link to="/reset">Forgot password?</router-link>
-      <router-link :to="{ path: '/register', query: $route.query }">Register</router-link>
+      <router-link to="/reset">{{ zh ? '忘记密码' : 'Forgot password?' }}</router-link>
+      <router-link :to="{ path: '/register', query: $route.query }">{{ zh ? '注册' : 'Register' }}</router-link>
     </div>
   </div>
 </template>
 <script setup lang="ts">
 import { ChevronLeft } from 'lucide-vue-next'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { loginAccount } from '@/api/accountApi'
 import { useI18n } from '@/composables/i18n'
-const { t } = useI18n()
+const { t, lang } = useI18n()
+const zh = computed(() => String(lang.value).startsWith('zh'))
 const route = useRoute()
 const router = useRouter()
 const email = ref('')
