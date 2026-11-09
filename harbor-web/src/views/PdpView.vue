@@ -68,32 +68,43 @@
     </div>
 
     <div v-if="sheetOpen" class="sheet-mask" @click="sheetOpen = false">
-      <div class="sheet" @click.stop>
+      <div class="sheet" data-figma="1:3" @click.stop>
         <div class="grab" aria-hidden="true"></div>
+        <button type="button" class="x" @click="sheetOpen = false" aria-label="close">×</button>
         <div class="sheet-head">
           <img v-if="gallerySrc" :src="gallerySrc" alt="" />
+          <span v-else class="sheet-ph" aria-hidden="true"></span>
           <div>
+            <div class="brand">Pimo</div>
             <strong>{{ product.name }}</strong>
             <div class="sheet-price">{{ money(displayPrice) }}</div>
             <div class="muted">{{ product.blurb || t('pdp_blurb_default') }}</div>
           </div>
-          <button type="button" class="x" @click="sheetOpen = false" aria-label="close">×</button>
         </div>
-        <div class="sheet-title">{{ t('common_option') }}</div>
-        <div class="opts">
-          <button
-            v-for="opt in optionLabels"
-            :key="opt"
-            type="button"
-            class="opt"
-            :class="{ on: size === opt }"
-            @click="size = opt"
-          >{{ opt }}</button>
-          <div v-if="!optionLabels.length" class="muted">{{ t('common_default') }}</div>
+        <div v-if="colorOpts.length" class="opt-sec">
+          <div class="sheet-title">{{ zh ? '颜色' : 'Color' }}</div>
+          <div class="swatches">
+            <button v-for="opt in colorOpts" :key="'c'+opt.label" type="button" class="swatch" :class="{ on: size === opt.label }" @click="size = opt.label">
+              <span class="dot" :style="opt.hex ? { background: opt.hex } : undefined">
+                <img v-if="opt.image && !opt.hex" :src="opt.image" alt="" />
+              </span>
+              <span>{{ opt.label }}</span>
+            </button>
+          </div>
         </div>
+        <div v-if="sizeOpts.length" class="opt-sec">
+          <div class="sheet-title">{{ sizeTitle }}</div>
+          <div class="opts">
+            <button v-for="opt in sizeOpts" :key="opt.label" type="button" class="opt" :class="{ on: (fitPick || size) === opt.label }" @click="pickFit(opt.label)">
+              <img v-if="opt.image" :src="opt.image" alt="" />
+              {{ opt.label }}
+            </button>
+          </div>
+        </div>
+        <div v-if="!optionLabels.length" class="muted">{{ t('common_default') }}</div>
         <div class="qty-row">
-          <span class="qty-lab">{{ zh ? '数量' : 'Qty' }}</span>
-          <div class="qty-ctrl">
+          <span class="qty-lab">{{ zh ? '数量' : 'Quantity' }}</span>
+          <div class="qty-pill">
             <button type="button" @click="qty = Math.max(1, qty - 1)">−</button>
             <span>{{ qty }}</span>
             <button type="button" @click="qty = qty + 1">+</button>
@@ -118,6 +129,7 @@ import { useCart } from '@/composables/cart'
 import { useI18n } from '@/composables/i18n'
 import { trackBrowse } from '@/composables/browseHistory'
 import { addToCartServer } from '@/api/cartApi'
+import previewShot from '@/assets/home/new-2.jpg'
 
 const { t, lang } = useI18n()
 const zh = computed(() => String(lang.value).startsWith('zh'))
@@ -177,7 +189,52 @@ const optionLabels = computed(() => {
   if (p.offers?.length) return p.offers.map((o) => o.label)
   return p.sizes || []
 })
-const sizeSummary = computed(() => size.value || (optionLabels.value.length ? t('common_choose_n') : t('common_default')))
+const COLOR_RULES: { re: RegExp; hex: string }[] = [
+  { re: /\bcoral\b|珊瑚|橙/, hex: '#F96141' },
+  { re: /\bblack\b|黑/, hex: '#1C2430' },
+  { re: /\bwhite\b|白/, hex: '#F4F4F5' },
+  { re: /\bgr[ae]y\b|灰/, hex: '#C5C8CE' },
+  { re: /\bnavy\b|藏青|海军/, hex: '#1E3A5F' },
+  { re: /\bolive\b|橄榄/, hex: '#5C6B4A' },
+  { re: /\bred\b|红/, hex: '#E23D3D' },
+  { re: /\bblue\b|蓝/, hex: '#2F6FED' },
+  { re: /\bgreen\b|绿/, hex: '#3E7A4D' },
+  { re: /\bpink\b|粉/, hex: '#E7A0B0' },
+  { re: /\bbrown\b|棕|咖/, hex: '#8C5A3C' },
+  { re: /\bbeige\b|卡其/, hex: '#E6D3B3' },
+  { re: /\byellow\b|黄/, hex: '#E2B340' },
+  { re: /\bpurple\b|紫/, hex: '#6B4C9A' },
+]
+function swatchHex(label: string) {
+  const s = label.trim().toLowerCase()
+  return COLOR_RULES.find((rule) => rule.re.test(s))?.hex || ''
+}
+const optionItems = computed(() => optionLabels.value.map((label) => {
+  const offer = product.value?.offers?.find((o) => o.label === label)
+  return { label, hex: swatchHex(label), image: offer?.image || '' }
+}))
+const colorOpts = computed(() => optionItems.value.filter((o) => o.hex))
+const fitPick = ref('')
+const sizeOpts = computed(() => {
+  const sizes = product.value?.sizes || []
+  if (colorOpts.value.length && sizes.length) return sizes.map((label) => ({ label, hex: '', image: '' }))
+  const taken = new Set(colorOpts.value.map((o) => o.label))
+  const rest = optionItems.value.filter((o) => !taken.has(o.label))
+  return rest.length ? rest : (colorOpts.value.length ? [] : optionItems.value)
+})
+const sizeTitle = computed(() => {
+  const sized = sizeOpts.value.some((o) => /^(xxs|xs|s|m|l|xl|xxl|xxxl|\d+(\.\d+)?)$/i.test(o.label.trim()))
+  if (sized) return zh.value ? '尺码' : 'Size'
+  return zh.value ? '规格' : 'Option'
+})
+const sizeSummary = computed(() => {
+  const bits = [size.value, fitPick.value].filter(Boolean)
+  return bits.join(' · ') || (optionLabels.value.length ? t('common_choose_n') : t('common_default'))
+})
+function pickFit(label: string) {
+  if (colorOpts.value.length && (product.value?.sizes || []).includes(label)) fitPick.value = label
+  else size.value = label
+}
 
 function goBack() {
   if (window.history.length > 1) router.back()
@@ -202,8 +259,9 @@ async function addLocalAndMaybeServer() {
   if (!product.value || busy.value) return
   busy.value = true
   try {
-    const label = size.value || optionLabels.value[0] || 'default'
-    size.value = label
+    const base = size.value || optionLabels.value[0] || 'default'
+    size.value = base
+    const label = fitPick.value && fitPick.value !== base ? `${base} / ${fitPick.value}` : base
     cart.add(product.value, label, qty.value)
     const offer = selectedOffer.value
     try {
@@ -222,7 +280,7 @@ async function addLocalAndMaybeServer() {
 }
 
 async function doWish() { /* wishlist cookie handled server-side via /wishlist when available */ }
-function doAdd() {
+async function doAdd() {
   if (optionLabels.value.length && !size.value) {
     sheetOpen.value = true
     return
@@ -245,8 +303,40 @@ async function confirmSheet() {
   alert(t('common_saved_locally'))
 }
 
+function applyFitDefault(p: Product) {
+  const sizes = p.sizes || []
+  const colored = (p.offers || []).some((o) => swatchHex(o.label))
+  fitPick.value = colored && sizes.length ? (sizes.includes('M') ? 'M' : sizes[0]) : ''
+}
+
 async function load() {
   const sku = String(route.params.sku || route.query.sku || '').trim()
+  if (!sku && route.query.preview === 'sheet') {
+    const preview: Product = {
+      id: 'preview',
+      sku: 'preview',
+      name: '每日连帽衫',
+      price: 68,
+      category: 'Pimo',
+      image: previewShot,
+      images: [previewShot],
+      blurb: '柔软耐穿，适合每天穿。',
+      offers: [
+        { id: 'coral', label: '珊瑚', price: 68 },
+        { id: 'black', label: '黑色', price: 68 },
+        { id: 'gray', label: '麻灰', price: 68 },
+        { id: 'navy', label: '藏青', price: 68 },
+        { id: 'olive', label: '橄榄', price: 68 },
+      ],
+      sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+    }
+    product.value = preview
+    size.value = '珊瑚'
+    applyFitDefault(preview)
+    sheetOpen.value = true
+    err.value = ''
+    return
+  }
   if (!sku) {
     err.value = 'Missing sku'
     interestCount.value = 0
@@ -268,12 +358,17 @@ async function load() {
   } else if (prefOption) size.value = prefOption
   else if (p.offers?.[0]) size.value = p.offers[0].label
   else if (p.sizes?.[0]) size.value = p.sizes[0]
+  applyFitDefault(p)
   trackBrowse({ sku: p.sku, name: p.name, image: p.image || '', price: p.price })
   interestCount.value = await fetchProductInterest(p.sku)
 }
 
 onMounted(load)
 watch(() => [route.params.sku, route.query.sku], load)
+watch(() => [route.query.sheet, product.value], () => {
+  const flag = String(route.query.sheet || '')
+  if ((flag === 'add' || flag === 'options') && product.value) sheetOpen.value = true
+})
 
 const notifyBusy = ref(false)
 const notifyMsg = ref('')
@@ -363,19 +458,37 @@ async function notifyMe() {
 .empty { padding: 80px 20px; text-align: center; color: $hb-muted; }
 .empty .btn { display: inline-flex; margin-top: 12px; padding: 0 16px; align-items: center; text-decoration: none; }
 .sheet-mask { position: fixed; inset: 0; background: rgba(28,36,48,0.45); z-index: 60; display: flex; align-items: flex-end; justify-content: center; }
-.sheet { width: min(100%, 768px); background: #fff; border-radius: 22px 22px 0 0; padding: 10px 16px calc(16px + env(safe-area-inset-bottom)); }
+.sheet { position: relative; width: min(100%, 768px); background: #fff; border-radius: 22px 22px 0 0; padding: 10px 16px calc(16px + env(safe-area-inset-bottom)); }
 .grab { width: 36px; height: 4px; border-radius: 99px; background: #E6E2DC; margin: 0 auto 12px; }
-.sheet-head { display: grid; grid-template-columns: 64px 1fr auto; gap: 10px; align-items: start; margin-bottom: 14px; }
-.sheet-head img { width: 64px; height: 64px; border-radius: 12px; object-fit: cover; background: #F6F4F2; }
-.sheet-head strong { display: block; font-size: 15px; }
-.sheet-price { color: #F96141; font-weight: 800; margin-top: 2px; }
-.sheet-head .muted { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.x { border: 0; background: transparent; font-size: 22px; color: #8B919A; cursor: pointer; line-height: 1; }
-.sheet-title { font-weight: 800; font-size: 14px; margin-bottom: 10px; letter-spacing: -0.02em; color: #5C6570; }
+.sheet-head { display: grid; grid-template-columns: 84px 1fr; gap: 12px; align-items: start; margin: 4px 28px 16px 0; }
+.sheet-head img, .sheet-ph { width: 84px; height: 84px; border-radius: 14px; object-fit: cover; background: #F6F4F2; display: block; }
+.brand { font-size: 12px; color: #8B919A; }
+.sheet-head strong { display: block; font-size: 18px; letter-spacing: -0.02em; }
+.sheet-price { color: #1C2430; font-weight: 800; margin-top: 4px; font-size: 18px; }
+.sheet-head .muted { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-top: 2px; }
+.x {
+  position: absolute; right: 12px; top: 16px; width: 32px; height: 32px; border: 0; border-radius: 50%;
+  background: #F4F1EC; color: #5C6570; font-size: 20px; cursor: pointer; line-height: 1;
+}
+.opt-sec { margin-top: 8px; }
+.sheet-title { font-weight: 800; font-size: 15px; margin-bottom: 10px; color: #1C2430; }
+.swatches { display: flex; gap: 14px; overflow-x: auto; padding: 4px 2px 8px; }
+.swatch { border: 0; background: transparent; display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 56px; cursor: pointer; color: #5C6570; font-size: 12px; }
+.dot { width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(28,36,48,0.08); overflow: hidden; display: block; }
+.dot img { width: 100%; height: 100%; object-fit: cover; }
+.swatch.on .dot { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #F96141; }
+.swatch.on { color: #1C2430; font-weight: 700; }
 .opts { display: flex; flex-wrap: wrap; gap: 8px; }
 .opt {
-  height: 36px; border: 1px solid #E8E4DC; background: #FCFAF8; border-radius: 999px; padding: 0 14px; cursor: pointer; font-weight: 650;
-  &.on { background: #F96141; color: #fff; border-color: #F96141; }
+  height: 36px; border: 1px solid #E8E4DC; background: #fff; border-radius: 999px; padding: 0 14px; cursor: pointer; font-weight: 650;
+  display: inline-flex; align-items: center; gap: 6px;
+  &.on { background: #FF6B4A; color: #fff; border-color: #FF6B4A; }
+  img { width: 18px; height: 18px; border-radius: 50%; object-fit: cover; }
+}
+.qty-pill {
+  display: inline-flex; align-items: center; border: 1px solid #E6E2DC; border-radius: 999px; overflow: hidden;
+  button { width: 36px; height: 36px; border: 0; background: #fff; cursor: pointer; font-size: 18px; }
+  span { min-width: 24px; text-align: center; font-weight: 700; }
 }
 .muted { color: $hb-muted; font-size: 13px; }
 .qty-row { display: flex; align-items: center; justify-content: space-between; margin: 18px 0 16px; }

@@ -19,23 +19,30 @@
       <button type="button" class="link" @click="addrSheet = true">{{ zh ? '填写地址' : 'Address form' }}</button>
     </div>
     <div v-if="addrSheet" class="addr-mask" @click.self="addrSheet = false">
-      <div class="addr-sheet" role="dialog">
-        <h2>{{ zh ? '收货地址' : 'Shipping address' }}</h2>
-        <label class="field"><span>{{ zh ? '邮箱' : 'Email' }}</span><input v-model="form.email" type="email" /></label>
-        <label class="field"><span>{{ zh ? '姓名' : 'Name' }}</span><input v-model="form.name" /></label>
-        <label class="field"><span>{{ zh ? '地址' : 'Address' }}</span><input v-model="form.address" /></label>
-        <label class="field"><span>{{ zh ? '城市' : 'City' }}</span><input v-model="form.city" /></label>
-        <label class="field"><span>{{ zh ? '地区' : 'Region' }}</span><input v-model="form.region" /></label>
-        <label class="field"><span>{{ zh ? '邮编' : 'Postal' }}</span><input v-model="form.postal" /></label>
-        <label class="field"><span>{{ zh ? '电话' : 'Phone' }}</span><input v-model="form.phone" /></label>
+      <div class="addr-sheet" role="dialog" data-figma="5:11">
+        <div class="grab" aria-hidden="true"></div>
+        <div class="addr-head">
+          <button type="button" class="back" @click="addrSheet = false" aria-label="关闭"><ChevronLeft :size="20" :stroke-width="1.75" /></button>
+          <h2>{{ zh ? '新增地址' : 'Add address' }}</h2>
+        </div>
+        <div class="paste-lab"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><rect x="6" y="4" width="12" height="16" rx="2" fill="none" stroke="#1C2430" stroke-width="1.7"/><path d="M9 4h6v3H9zM9 11h6M9 15h4" stroke="#1C2430" stroke-width="1.7" stroke-linecap="round"/></svg>{{ zh ? '粘贴地址' : 'Paste address' }}</div>
+        <textarea v-model="paste" class="paste" :placeholder="zh ? '在此粘贴完整地址\n例如：上海市浦东新区世纪大道 100 号' : 'Paste full address here'"></textarea>
+        <button type="button" class="place" @click="readAddress">{{ zh ? '识别地址' : 'Read address' }}</button>
+        <div class="addr-sec">{{ zh ? '地址详情' : 'Address details' }}</div>
+        <label class="field"><span>{{ zh ? '姓名' : 'Name' }}</span><input v-model="form.name" :placeholder="zh ? '姓和名' : 'First and last name'" /></label>
+        <label class="field"><span>{{ zh ? '电话' : 'Phone' }}</span><input v-model="form.phone" :placeholder="zh ? '手机号码' : '+1 (555) 010-0000'" /></label>
         <label class="field"><span>{{ zh ? '国家' : 'Country' }}</span>
           <select v-model="form.ship_country">
-            <option value="US">US</option><option value="CN">CN</option><option value="TW">TW</option>
-            <option value="HK">HK</option><option value="GB">GB</option><option value="CA">CA</option>
-            <option value="JP">JP</option>
+            <option v-for="c in shipCountries" :key="c.code" :value="c.code">{{ zh ? c.zh : c.en }}</option>
           </select>
         </label>
-        <button type="button" class="place" @click="addrSheet = false">{{ zh ? '完成' : 'Done' }}</button>
+        <label class="field"><span>{{ zh ? '省 / 州' : 'Region / State' }}</span><input v-model="form.region" :placeholder="zh ? '省 / 州' : 'Region / State'" /></label>
+        <label class="field"><span>{{ zh ? '城市' : 'City' }}</span><input v-model="form.city" :placeholder="zh ? '例如：上海' : 'e.g. New York'" /></label>
+        <label class="field"><span>{{ zh ? '邮编' : 'Postal code' }}</span><input v-model="form.postal" :placeholder="zh ? '例如：200120' : 'e.g. 10001'" /></label>
+        <label class="field"><span>{{ zh ? '地址行 1' : 'Address line 1' }}</span><input v-model="form.address" :placeholder="zh ? '街道、门牌、公司名' : 'Street address, P.O. box, company name'" /></label>
+        <label class="field"><span>{{ zh ? '地址行 2' : 'Address line 2' }}</span><input v-model="address2" :placeholder="zh ? '公寓、楼层、单元' : 'Apartment, suite, unit, floor'" /></label>
+        <label class="field"><span>{{ zh ? '邮箱' : 'Email' }}</span><input v-model="form.email" type="email" :placeholder="zh ? '用于订单通知' : 'For order updates'" /></label>
+        <button type="button" class="place" @click="saveAddress">{{ zh ? '保存地址' : 'Save address' }}</button>
       </div>
     </div>
 
@@ -115,7 +122,7 @@
 <script setup lang="ts">
 import { ChevronLeft } from 'lucide-vue-next'
 import { computed, onMounted, reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { money } from '@/api/products'
 import { useCart } from '@/composables/cart'
 import { useI18n } from '@/composables/i18n'
@@ -124,6 +131,21 @@ import { checkoutUrl, submitCheckoutForm } from '@/api/accountApi'
 const { t, lang } = useI18n()
 const zh = computed(() => String(lang.value).startsWith('zh'))
 const addrSheet = ref(false)
+const paste = ref('')
+const address2 = ref('')
+const route = useRoute()
+const shipCountries = [
+  { code: 'CN', zh: '中国', en: 'China' },
+  { code: 'US', zh: '美国', en: 'United States' },
+  { code: 'TW', zh: '台湾', en: 'Taiwan' },
+  { code: 'HK', zh: '香港', en: 'Hong Kong' },
+  { code: 'GB', zh: '英国', en: 'United Kingdom' },
+  { code: 'CA', zh: '加拿大', en: 'Canada' },
+  { code: 'AU', zh: '澳大利亚', en: 'Australia' },
+  { code: 'JP', zh: '日本', en: 'Japan' },
+  { code: 'DE', zh: '德国', en: 'Germany' },
+  { code: 'FR', zh: '法国', en: 'France' },
+]
 const cart = useCart()
 const router = useRouter()
 const lines = computed(() => cart.lines.value)
@@ -151,7 +173,33 @@ const form = reactive({
   submit_id: '',
 })
 
+function readAddress() {
+  const raw = paste.value.trim()
+  if (!raw) return
+  const mobile = raw.match(/1[3-9]\d{9}/)
+  const phone = mobile || raw.match(/(?:\+\d{1,3}[\s-]?)?(?:\(\d{3}\)|\d{3})[\s.-]?\d{3}[\s.-]?\d{4}/)
+  if (phone) form.phone = phone[0].trim()
+  const postal = raw.match(/\b\d{6}\b|\b\d{5}(?:-\d{4})?\b/)
+  if (postal) form.postal = postal[0]
+  const city = raw.match(/([\u4e00-\u9fa5]{2,8}市)/)
+  if (city) form.city = city[1]
+  const region = raw.match(/([\u4e00-\u9fa5]{2,8}(?:省|自治区))/)
+  if (region) form.region = region[1]
+  const lines = raw.split(/\n+/).map((s) => s.trim()).filter(Boolean)
+  const nameLine = lines.find((l) => /^[\u4e00-\u9fa5A-Za-z·\s]{2,16}$/.test(l) && !/省|市|区|路|街|号/.test(l))
+  if (nameLine) form.name = nameLine
+  const street = lines.find((l) => /路|街|道|巷|号|St\.?|Ave|Rd|Blvd/i.test(l))
+  if (street) form.address = street
+}
+
+function saveAddress() {
+  const extra = address2.value.trim()
+  if (extra && !form.address.includes(extra)) form.address = form.address ? `${form.address}, ${extra}` : extra
+  addrSheet.value = false
+}
+
 onMounted(async () => {
+  if (route.query.addr) addrSheet.value = true
   form.submit_id = 'h5-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
   try {
     await cart.syncLocalToServer()
@@ -248,9 +296,17 @@ h1 { margin: 0; font-size: 22px; font-weight: 800; color: $hb-ink; letter-spacin
   display: flex; align-items: flex-end; justify-content: center;
 }
 .addr-sheet {
-  width: min(100%, 768px); background: #fff; border-radius: 20px 20px 0 0;
-  padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+  width: min(100%, 768px); max-height: 92vh; overflow: auto; background: #FCFAF8;
+  border-radius: 22px 22px 0 0; padding: 8px 16px calc(16px + env(safe-area-inset-bottom));
 }
-.addr-sheet h2 { margin: 0 0 10px; font-size: 18px; }
-.addr-sheet .place { width: 100%; margin-top: 8px; }
+.addr-sheet .grab { width: 36px; height: 4px; border-radius: 99px; background: #E6E2DC; margin: 4px auto 8px; }
+.addr-head { display: grid; grid-template-columns: 36px 1fr 36px; align-items: center; margin-bottom: 12px; }
+.addr-sheet h2 { margin: 0; text-align: center; font-size: 18px; font-weight: 800; }
+.paste-lab { display: flex; align-items: center; gap: 6px; font-weight: 750; margin-bottom: 8px; }
+.paste {
+  width: 100%; min-height: 84px; border-radius: 12px; border: 1px solid #E6E2DC; padding: 10px 12px;
+  font: inherit; resize: vertical; background: #fff; color: #1C2430;
+}
+.addr-sec { margin: 16px 0 8px; color: #5C6570; font-size: 13px; font-weight: 650; }
+.addr-sheet .place { width: 100%; margin-top: 8px; background: #FF6B4A; }
 </style>
