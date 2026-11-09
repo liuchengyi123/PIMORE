@@ -103,6 +103,7 @@
           <div class="shot tall">
             <img :src="item.image" alt="" />
             <span class="range">$1-$10</span>
+            <span class="sold">{{ zh ? '已售' : 'Sold' }}</span>
           </div>
           <div class="nm">{{ item.name }}</div>
           <div class="stars">★★★★★ <span>({{ item.reviews }})</span></div>
@@ -286,6 +287,10 @@ onMounted(async () => {
   position: absolute; left: 10px; top: 10px; height: 18px; display: inline-flex; align-items: center;
   background: #fff; color: #F96141; font-size: 10px; font-weight: 800; letter-spacing: 0; border-radius: 999px; padding: 0 7px;
 }
+.sold {
+  position: absolute; left: 10px; bottom: 8px; height: 18px; display: inline-flex; align-items: center;
+  background: #fff; color: #F96141; font-size: 10px; font-weight: 800; border-radius: 999px; padding: 0 7px;
+}
 .nm {
   margin-top: 8px; font-size: 13px; font-weight: 650; line-height: 1.3; min-height: 2.6em; color: #1C2430;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
@@ -296,9 +301,9 @@ onMounted(async () => {
   margin-left: auto; width: 26px; height: 26px; border: 0; border-radius: 999px;
   background: #FFF1EC; color: #F96141; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
 }
-.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
 .wide { flex: none; }
-.shot.tall { aspect-ratio: 2.5; }
+.shot.tall { aspect-ratio: 334 / 130; }
 .stars { margin-top: 2px; color: #F5B400; font-size: 11px; letter-spacing: 1px; line-height: 1; }
 .stars span { color: #8E949C; letter-spacing: 0; margin-left: 4px; }
 .state { color: #8E949C; font-size: 13px; }

@@ -33,6 +33,7 @@
       <article v-for="(item, i) in shown" :key="item.sku" class="card">
         <div class="shot" @click="open(item, i)">
           <img :src="item.image" alt="" />
+          <span class="sold">{{ zh ? '已售' : 'Sold' }}</span>
           <button type="button" class="heart" aria-label="Save" @click.stop="wish(item)"><Heart :size="16" :stroke-width="1.75" /></button>
         </div>
         <div class="nm" @click="open(item, i)">{{ item.name }}</div>
@@ -174,18 +175,22 @@ onMounted(() => {
 }
 h1 { margin: 14px 0 0; font-size: 24px; letter-spacing: -0.03em; font-weight: 800; line-height: 1.15; }
 .sub { margin: 2px 0 14px; color: #8E949C; font-size: 13px; line-height: 1.35; }
-.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 12px; }
-.shot { position: relative; border-radius: 18px; overflow: hidden; background: #F6F3F0; aspect-ratio: 4 / 3; cursor: pointer; border: 0; box-shadow: 0 8px 18px rgba(28,36,48,0.06); }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.shot { position: relative; border-radius: 16px; overflow: hidden; background: #F6F3F0; aspect-ratio: 4 / 3; cursor: pointer; border: 0; box-shadow: 0 8px 18px rgba(28,36,48,0.06); }
 .shot img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
 .heart {
   position: absolute; top: 8px; right: 8px; width: 32px; height: 32px; border: 0; border-radius: 99px;
   background: rgba(255,255,255,0.94); color: #1C2430; cursor: pointer;
   display: inline-flex; align-items: center; justify-content: center;
 }
-.nm { margin-top: 8px; font-size: 14px; font-weight: 750; line-height: 1.3; }
+.sold {
+  position: absolute; left: 8px; bottom: 8px; height: 18px; display: inline-flex; align-items: center;
+  background: #fff; color: #F96141; font-size: 10px; font-weight: 800; border-radius: 999px; padding: 0 7px;
+}
+.nm { margin-top: 6px; font-size: 14px; font-weight: 750; line-height: 1.3; }
 .cat { margin-top: 2px; font-size: 12px; color: #9AA0A8; }
-.pr { display: flex; align-items: center; margin-top: 8px; }
-.pr b { font-size: 16px; }
+.pr { display: flex; align-items: center; margin-top: 6px; }
+.pr b { font-size: 16px; font-weight: 800; color: #F96141; letter-spacing: -0.03em; }
 .add {
   margin-left: auto; height: 34px; padding: 0 14px; border: 0; border-radius: 999px;
   background: #F96141; color: #fff; font-weight: 700; cursor: pointer;
