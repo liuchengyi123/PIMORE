@@ -56,7 +56,7 @@
     <view class="body">
       <view class="section-head">
         <view>
-          <text class="section-title"><text class="bolt">⚡</text> Flash Deals</text>
+          <text class="section-title" @click="goFlash"><text class="bolt">⚡</text> Flash Deals</text>
           <text class="section-sub">Big savings. Limited time.</text>
         </view>
         <view class="clock-pill">
@@ -174,6 +174,9 @@ function goHelp() {
 
 function goNew() {
   uni.navigateTo({ url: '/pages/new/index' })
+}
+function goFlash() {
+  uni.navigateTo({ url: '/pages/flash/index' })
 }
 function filterCat(id: string) {
   // Same page: refresh the curated grid only (do not open category page).

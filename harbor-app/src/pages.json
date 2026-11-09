@@ -83,6 +83,15 @@
       }
     },
     {
+      "path": "pages/flash/index",
+      "style": {
+        "navigationBarTitleText": "Flash Sale",
+        "navigationStyle": "custom",
+        "navigationBarBackgroundColor": "#F77051",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
       "path": "pages/new/index",
       "style": {
         "navigationBarTitleText": "New",
