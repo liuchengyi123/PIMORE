@@ -202,7 +202,7 @@ h1 { margin: 0; font-size: 22px; font-weight: 800; color: $hb-ink; letter-spacin
 .sec { font-weight: 700; font-size: 14px; color: $hb-ink; }
 .row { display: flex; align-items: center; gap: 8px; }
 .between { justify-content: space-between; }
-.link { border: 0; background: transparent; color: $hb-deep; font-size: 12px; font-weight: 600; cursor: pointer; }
+.link { border: 0; background: transparent; color: #F96141; font-size: 13px; font-weight: 700; cursor: pointer; }
 .addr { margin-top: 8px; font-size: 13px; color: $hb-ink; line-height: 1.45; }
 .muted { color: $hb-muted; }
 .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; font-size: 11px; font-weight: 600; color: $hb-muted; }
@@ -221,8 +221,8 @@ h1 { margin: 0; font-size: 22px; font-weight: 800; color: $hb-ink; letter-spacin
 }
 .toggle.on .knob { left: 19px; }
 .pay {
-  display: block; padding: 12px; border: 1px solid $hb-line; border-radius: 12px; margin-bottom: 8px;
-  font-size: 13px; font-weight: 600; color: $hb-ink; cursor: pointer;
+  display: flex; align-items: center; min-height: 48px; padding: 0 14px; border: 1px solid #E8E4DC; border-radius: 14px; margin-bottom: 8px;
+  font-size: 14px; font-weight: 650; color: $hb-ink; cursor: pointer;
 }
 .pay.on { border-width: 2px; border-color: $hb-coral; background: #FFF6F3; }
 .pay input { margin-right: 8px; }
@@ -231,14 +231,16 @@ h1 { margin: 0; font-size: 22px; font-weight: 800; color: $hb-ink; letter-spacin
 .price { font-size: 18px; font-weight: 800; color: $hb-price; }
 .err { color: #B91C1C; font-size: 13px; margin: 8px 0; }
 .dock {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
-  background: #fff; border-top: 1px solid $hb-line; padding: 12px 16px;
+  position: fixed; left: 50%; transform: translateX(-50%); width: min(100vw, 768px); bottom: 0; z-index: 20;
+  background: #fff; border-top: 1px solid #F1EEEA; padding: 12px 16px;
   display: flex; gap: 12px; align-items: center;
   padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  box-shadow: 0 -8px 24px rgba(28,36,48,0.06);
 }
+.dock .price { font-size: 20px; }
 .place {
-  flex: 1; height: 48px; border: 0; border-radius: 999px; background: $hb-coral; color: #fff;
-  font-weight: 700; font-size: 15px; cursor: pointer;
+  flex: 1; height: 52px; border: 0; border-radius: 999px; background: #F96141; color: #fff;
+  font-weight: 700; font-size: 16px; cursor: pointer;
 }
 .place:disabled { opacity: .5; }
 .addr-mask {
