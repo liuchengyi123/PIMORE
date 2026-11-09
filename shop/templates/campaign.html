@@ -2,7 +2,7 @@
 {% block body_class %} act act-{{ mode }}{% endblock %}
 {% block body %}
 {% set found = namespace(share=None, install=None, check=None) %}
-{% for offer in offers|default([]) %}
+{% for offer in earn_offers|default([]) %}
   {% if offer.kind == 'share' and found.share is none %}{% set found.share = offer %}{% endif %}
   {% if offer.kind == 'desktop' and found.install is none %}{% set found.install = offer %}{% endif %}
   {% if offer.kind == 'checkin' and found.check is none %}{% set found.check = offer %}{% endif %}

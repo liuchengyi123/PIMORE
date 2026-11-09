@@ -384,3 +384,102 @@ def test_visual_rules_in_stylesheet(client):
     assert "min-height: 44px" in css
     assert "#ffffff" in css
     assert "#141414" in css
+
+
+def _coupon_names(html):
+    import re
+
+    rows = re.findall(r'<article class="fn-coupon-row">.*?</article>', html, re.S)
+    return [re.search(r'class="nm">([^<]+)', row).group(1).strip() for row in rows]
+
+
+def test_wallet_hides_unearned_catalog_templates():
+    from shop.checkout import wallet_visible
+
+    assert wallet_visible("public", 1, "", 0, set()) is False
+    assert wallet_visible("first", 2, "", 0, set()) is False
+    assert wallet_visible("share", 3, "", 0, set()) is False
+    assert wallet_visible("public", 1, "a@b.c", 0, set()) is True
+    assert wallet_visible("first", 2, "a@b.c", 0, set()) is True
+    assert wallet_visible("first", 2, "a@b.c", 1, {2}) is False
+    assert wallet_visible("share", 3, "a@b.c", 0, set()) is False
+    assert wallet_visible("checkin", 4, "a@b.c", 0, set()) is False
+    assert wallet_visible("desktop", 5, "a@b.c", 0, set()) is False
+    assert wallet_visible("share", 3, "a@b.c", 2, {3}) is True
+    assert wallet_visible("checkin", 4, "a@b.c", 2, {4}) is True
+
+
+def test_guest_me_does_not_list_the_coupon_catalog(client):
+    from shop.checkout import list_coupons
+
+    me = client.get("/account?country=US")
+    assert me.status_code == 200
+    assert 'data-coupon-count="0"' in me.text
+    assert "lucky-chip" in me.text
+    coupons = client.get("/account/coupons?country=US")
+    assert coupons.status_code == 200
+    assert _coupon_names(coupons.text) == []
+    assert "Sign in to see coupons on your account." in coupons.text
+    assert "Storewide saving is the 10% OFF spin." in coupons.text
+    assert 'href="/login?next=/account/coupons&amp;country=US"' in coupons.text
+    assert "lucky-chip" in coupons.text
+    zh = client.get("/account/coupons?country=CN&lang=zh")
+    assert _coupon_names(zh.text) == []
+    assert "登录后查看账户里的优惠券。" in zh.text
+    assert "全场优惠是幸运转盘的 10% OFF。" in zh.text
+    assert "首单优惠" not in zh.text
+    assert "可直接使用" not in zh.text
+    assert "分享奖励" not in zh.text
+    check = client.get("/check-in?country=US")
+    assert check.text.count("$1.00") >= 7
+    share = client.get("/share?country=US")
+    assert share.text.count("$4.00") >= 2
+    kinds = {row["kind"] for row in list_coupons(client.app.state.db, "", 10_000)}
+    assert {"public", "first"} <= kinds
+    assert kinds.isdisjoint({"share", "desktop", "checkin"})
+    stored = [
+        row["kind"]
+        for row in client.app.state.db.execute(
+            "select kind from coupons where enabled = 1 order by id"
+        ).fetchall()
+    ]
+    assert stored == ["public", "first", "share", "desktop", "checkin"]
+
+
+def test_signed_in_wallet_counts_owned_coupons_only(client):
+    created = client.post(
+        "/register",
+        data={"email": "new@example.com", "password": "correct horse", "next": "/account"},
+    )
+    assert created.status_code == 200
+    assert 'data-coupon-count="2"' in created.text
+    coupons = client.get("/account/coupons?country=US")
+    assert _coupon_names(coupons.text) == ["First order", "Ready to use"]
+    db = client.app.state.db
+    db.execute(
+        """
+        insert into orders (submit_id, email, status, currency, units_per_usd, due_cents, due_local)
+        values ('wallet-order', 'new@example.com', 'cancelled', 'USD', 1, 100, 100)
+        """
+    )
+    db.commit()
+    still = client.get("/account?country=US")
+    assert 'data-coupon-count="2"' in still.text
+    db.execute("update orders set status = 'paid' where submit_id = 'wallet-order'")
+    db.commit()
+    after = client.get("/account/coupons?country=US")
+    assert _coupon_names(after.text) == ["Ready to use"]
+    assert 'data-coupon-count="1"' in client.get("/account?country=US").text
+    stamped = client.post("/check-in", follow_redirects=False)
+    assert stamped.status_code == 200
+    owned = client.get("/account/coupons?country=US")
+    assert _coupon_names(owned.text) == ["Daily check-in", "Ready to use"]
+    assert "Share reward" not in owned.text
+    assert "Home screen reward" not in owned.text
+    assert 'data-coupon-count="2"' in client.get("/account?country=US").text
+    db.execute("update coupons set enabled = 0 where kind in ('public', 'checkin')")
+    db.commit()
+    empty = client.get("/account/coupons?country=US")
+    assert _coupon_names(empty.text) == []
+    assert "No coupons yet. Check in or share, and they show up here." in empty.text
+    assert 'data-coupon-count="0"' in client.get("/account?country=US").text
