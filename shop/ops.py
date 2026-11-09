@@ -120,12 +120,24 @@ def _money_tick(cents):
     return f"${dollars:.2f}"
 
 
+def _top_round(x, y, w, h, radius=5):
+    if h <= 0:
+        return ""
+    radius = min(radius, w / 2, h)
+    return (
+        f"M{x:.1f},{y + h:.1f} V{y + radius:.1f} "
+        f"Q{x:.1f},{y:.1f} {x + radius:.1f},{y:.1f} "
+        f"H{x + w - radius:.1f} Q{x + w:.1f},{y:.1f} {x + w:.1f},{y + radius:.1f} "
+        f"V{y + h:.1f} Z"
+    )
+
+
 def _combo_chart(points, line_key, bar_key, *, money="right", show_line=True):
     """Geometry for a combo chart: bars plus an optional line, with axis ticks."""
-    width, height = 720, 248
-    pad_l = 46
-    pad_r = 52 if money == "right" else 14
-    pad_t, pad_b = 12, 30
+    width, height = 720, 214
+    pad_l = 42
+    pad_r = 48 if money == "right" else 12
+    pad_t, pad_b = 8, 24
     count = max(len(points), 1)
     inner_w = width - pad_l - pad_r
     inner_h = height - pad_t - pad_b
@@ -151,15 +163,17 @@ def _combo_chart(points, line_key, bar_key, *, money="right", show_line=True):
     label_every = 1 if count <= 8 else 2 if count <= 16 else 5
     for index, point in enumerate(points):
         slot = inner_w / count
-        bar_w = min(22, max(5, slot * 0.36))
+        bar_w = min(26, max(6, slot * 0.42))
         x = pad_l + slot * index + (slot - bar_w) / 2
         value = int(point.get(bar_key) or 0)
         bar_h = 0 if value <= 0 else max(2, (value / max_bar) * inner_h)
+        bar_y = baseline - bar_h
         bars.append({
             "x": round(x, 1),
-            "y": round(baseline - bar_h, 1),
+            "y": round(bar_y, 1),
             "w": round(bar_w, 1),
             "h": round(bar_h, 1),
+            "d": _top_round(x, bar_y, bar_w, bar_h),
         })
         cx = pad_l + slot * index + slot / 2
         line_v = int(point.get(line_key) or 0)

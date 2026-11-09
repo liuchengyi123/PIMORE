@@ -4,46 +4,43 @@
 {% set pay_name = {'card':'银行卡','paypal':'PayPal','lianlian':'连连','stripe':'Stripe'} %}
 {% set d = board.deltas %}
 <section class="zh-board" data-figma="AD02">
-<header class="page-head">
+<header class="page-head zh-board-head">
   <div>
     <h1>数据看板</h1>
     <p class="muted">实时掌握店铺经营数据，助力业务增长。金额为美元。</p>
   </div>
+  <nav class="ranges" aria-label="日期范围">
+    <a class="{% if board.days == 1 %}on{% endif %}" href="/admin/stats?days=1">今日</a>
+    <a class="{% if board.days == 7 %}on{% endif %}" href="/admin/stats?days=7">近7天</a>
+    <a class="{% if board.days == 30 %}on{% endif %}" href="/admin/stats?days=30">近30天</a>
+  </nav>
 </header>
-<nav class="ranges" aria-label="日期范围">
-  <a class="{% if board.days == 1 %}on{% endif %}" href="/admin/stats?days=1">今日</a>
-  <a class="{% if board.days == 7 %}on{% endif %}" href="/admin/stats?days=7">近7天</a>
-  <a class="{% if board.days == 30 %}on{% endif %}" href="/admin/stats?days=30">近30天</a>
-</nav>
 
 <div class="kpi-grid zh-kpis">
   <div class="kpi-card">
-    <span class="kpi-ico" aria-hidden="true">单</span>
-    <span class="kpi-label">{% if board.days == 1 %}今日订单{% else %}订单{% endif %}</span>
+    <div class="kpi-top"><span class="kpi-ico" aria-hidden="true">单</span><span class="kpi-label">{% if board.days == 1 %}今日订单{% else %}订单{% endif %}</span></div>
     <b class="kpi-val">{{ board.orders }}</b>
-    <span class="kpi-sub">支付单 {{ board.paid_orders }}{% if d.orders is not none %} · <em class="{% if d.orders >= 0 %}up{% else %}down{% endif %}">{% if d.orders >= 0 %}+{% endif %}{{ d.orders }}% 较上一日</em>{% endif %}</span>
+    {% if d.orders is not none %}<span class="kpi-delta {% if d.orders >= 0 %}up{% else %}down{% endif %}">{% if d.orders >= 0 %}↑{% else %}↓{% endif %} {{ d.orders|abs }}% 较上一日</span>{% endif %}
+    <span class="kpi-sub">支付单 {{ board.paid_orders }}</span>
   </div>
   <div class="kpi-card">
-    <span class="kpi-ico sale" aria-hidden="true">¥</span>
-    <span class="kpi-label">销售额</span>
+    <div class="kpi-top"><span class="kpi-ico sale" aria-hidden="true">¥</span><span class="kpi-label">销售额</span></div>
     <b class="kpi-val">{{ format_money(board.paid_cents, 'USD') }}</b>
-    <span class="kpi-sub">访问 {{ board.pages }}{% if d.sales is not none %} · <em class="{% if d.sales >= 0 %}up{% else %}down{% endif %}">{% if d.sales >= 0 %}+{% endif %}{{ d.sales }}% 较上一日</em>{% endif %}</span>
+    {% if d.sales is not none %}<span class="kpi-delta {% if d.sales >= 0 %}up{% else %}down{% endif %}">{% if d.sales >= 0 %}↑{% else %}↓{% endif %} {{ d.sales|abs }}% 较上一日</span>{% endif %}
+    <span class="kpi-sub">访问 {{ board.pages }}</span>
   </div>
   <div class="kpi-card">
-    <span class="kpi-ico gmv" aria-hidden="true">G</span>
-    <span class="kpi-label">GMV</span>
+    <div class="kpi-top"><span class="kpi-ico gmv" aria-hidden="true">G</span><span class="kpi-label">GMV</span></div>
     <b class="kpi-val">{{ format_money(board.gmv_cents, 'USD') }}</b>
     <span class="kpi-sub">累计已付 {{ format_money(board.life_cents, 'USD') }}</span>
   </div>
   <div class="kpi-card">
-    <span class="kpi-ico rate" aria-hidden="true">%</span>
-    <span class="kpi-label">转化率</span>
+    <div class="kpi-top"><span class="kpi-ico rate" aria-hidden="true">%</span><span class="kpi-label">转化率</span></div>
     <b class="kpi-val">{{ board.rate }}</b>
-    <span class="kpi-sub">独立访客 {{ board.visitors }} · 加购 {{ board.carts }}</span>
+    <span class="kpi-sub">访客 {{ board.visitors }} · 加购 {{ board.carts }}</span>
   </div>
   <div class="kpi-card">
-    <span class="kpi-ico back" aria-hidden="true">退</span>
-    <span class="kpi-label">退款率</span>
+    <div class="kpi-top"><span class="kpi-ico back" aria-hidden="true">退</span><span class="kpi-label">退款率</span></div>
     <b class="kpi-val">{{ board.refund_rate }}</b>
     <span class="kpi-sub">已退款 {{ board.life_refunded }} · {{ format_money(board.life_refunded_cents, 'USD') }}</span>
   </div>
@@ -56,8 +53,8 @@
   <text x="{{ chart.plot_left - 8 }}" y="{{ grid.y + 3 }}" text-anchor="end" class="ytick">{{ grid.left }}</text>
   {% if grid.right %}<text x="{{ chart.plot_right + 8 }}" y="{{ grid.y + 3 }}" class="ytick">{{ grid.right }}</text>{% endif %}
   {% endfor %}
-  {% for bar in chart.bars %}
-  <rect x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar.w }}" height="{{ bar.h }}" rx="3" class="bar{% if solid %} solid{% endif %}"></rect>
+  {% for bar in chart.bars if bar.d %}
+  <path d="{{ bar.d }}" class="bar{% if solid %} solid{% endif %}"></path>
   {% endfor %}
   {% if chart.show_line %}
   <polyline points="{{ chart.poly }}" class="line"></polyline>
@@ -97,7 +94,7 @@
       <div class="dist-pane" data-pane="day">{{ chart_svg(board.dist.day, true) }}</div>
       <div class="dist-pane" data-pane="week" hidden>{{ chart_svg(board.dist.week, true) }}</div>
       <div class="dist-pane" data-pane="month" hidden>{{ chart_svg(board.dist.month, true) }}</div>
-      <p class="muted chart-note">柱高按支付金额。按天最高 {{ format_money(board.dist.day.max_bar, 'USD') }}。</p>
+      <p class="muted chart-note">最高 {{ format_money(board.dist.day.max_bar, 'USD') }}</p>
     </div>
   </div>
 </div>

@@ -1970,7 +1970,25 @@ tbody td { border-top: 1px solid #F0F1F5; }
   font-size: 12px !important;
 }
 .mono { font-variant-numeric: tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; }
-.zh-board .kpi-grid { grid-template-columns: repeat(5, minmax(0, 1fr)) !important; }
+.zh-board .zh-board-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; margin-bottom: 10px; }
+.zh-board .zh-board-head .ranges { margin: 0; }
+.zh-board .kpi-grid { grid-template-columns: repeat(5, minmax(0, 1fr)) !important; gap: 8px !important; margin-bottom: 10px; }
+.zh-board .kpi-card {
+  position: relative; padding: 10px 12px 8px !important; min-height: 0;
+  display: grid; gap: 1px; align-content: start; border-radius: 12px;
+}
+.zh-board .kpi-top { display: flex; align-items: center; gap: 8px; }
+.zh-board .kpi-ico {
+  position: static; width: 26px; height: 26px; border-radius: 999px;
+  display: grid; place-items: center; flex: none;
+  background: #FFF1EC; color: #F96141; font-size: 11px; font-weight: 800;
+}
+.zh-board .kpi-label { font-size: 12px; color: #8B919A; font-weight: 650; }
+.zh-board .kpi-val { font-size: 20px !important; line-height: 1.15; margin-top: 4px; letter-spacing: -0.03em; }
+.zh-board .kpi-delta { font-size: 11px; font-weight: 750; font-style: normal; }
+.zh-board .kpi-delta.up { color: #128A5E; }
+.zh-board .kpi-delta.down { color: #E24E32; }
+.zh-board .kpi-sub { font-size: 11px; color: #8B919A; }
 .kpi-card { position: relative; }
 .kpi-ico {
   position: absolute; top: 12px; right: 12px;
@@ -1984,9 +2002,10 @@ tbody td { border-top: 1px solid #F0F1F5; }
 .kpi-ico.back { background: #FEE2E2; color: #B91C1C; }
 .kpi-sub .up { color: #128A5E; font-style: normal; font-weight: 700; }
 .kpi-sub .down { color: #E24E32; font-style: normal; font-weight: 700; }
-.zh-charts { display: grid; grid-template-columns: 1.4fr 0.95fr; gap: 12px; margin: 0 0 12px; }
+.zh-charts { display: grid; grid-template-columns: 1.45fr 0.9fr; gap: 10px; margin: 0 0 10px; }
+.zh-board .chart-card { padding-bottom: 4px; }
 .chart-card { padding-bottom: 8px; }
-.chart-head, .zh-log .page-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 14px 0; }
+.chart-head, .zh-log .page-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 12px 0; }
 .chart-head h2 { margin: 0; border: 0; padding: 0; font-size: 14px; font-weight: 750; color: #1C2430; }
 .chart-legend { display: flex; gap: 14px; color: #5C6570; font-size: 12px; font-weight: 650; }
 .chart-legend i { display: inline-block; width: 16px; height: 8px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
@@ -2006,7 +2025,7 @@ tbody td { border-top: 1px solid #F0F1F5; }
 .trend-svg .grid { stroke: #EEF0F4; stroke-width: 1; }
 .trend-svg .bar { fill: #F8C3B4; }
 .trend-svg .bar.solid { fill: #F96141; }
-.trend-svg .line { fill: none; stroke: #F96141; stroke-width: 2.4; stroke-linejoin: round; stroke-linecap: round; }
+.trend-svg .line { fill: none; stroke: #F96141; stroke-width: 2.6; stroke-linejoin: round; stroke-linecap: round; }
 .trend-svg .dot { fill: #fff; stroke: #F96141; stroke-width: 2; }
 .trend-svg .tick, .trend-svg .ytick { font-size: 10px; fill: #8B919A; font-family: Inter, sans-serif; }
 .chart-empty, .chart-note { margin: 2px 8px 0; font-size: 12px; }
