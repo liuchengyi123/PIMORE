@@ -159,7 +159,13 @@
 
 {% elif panel == 'coupons' %}
   <header class="fn-acc-mbar"><a class="fn-list-back" href="{{ href('/', country) }}">‹</a><h1 class="fn-list-mtitle">{{ t.my_coupons }}</h1><span class="fn-list-filter-spacer"></span></header>
-  <p class="tiny fn-coupon-spin">{{ t.coupons_spin_note }}</p>
+  {# Sand-page copy. Do not use tiny / fn-acc-sub / fn-empty here: body.fn-acc-sub inherits the navy hero's translucent white. #}
+  <div class="fn-coupon-lead">
+    <p>{{ t.coupons_spin_note }}</p>
+    {% if not offers %}
+    <p>{% if email %}{{ t.coupons_empty }}{% else %}{{ t.coupons_guest }}{% endif %}</p>
+    {% endif %}
+  </div>
   {% if offers %}
   {% for offer in offers %}
   <article class="fn-coupon-row">
@@ -172,11 +178,8 @@
   </article>
   {% endfor %}
   {% elif not email %}
-  <p class="fn-empty">{{ t.coupons_guest }}</p>
   <p class="fn-acc-guest"><a class="btn" href="{{ href('/login?next=/account/coupons', country) }}">{{ t.login }}</a>
     <a class="btn ghost" href="{{ href('/register?next=/account/coupons', country) }}">{{ t.create_account }}</a></p>
-  {% else %}
-  <p class="fn-empty">{{ t.coupons_empty }}</p>
   {% endif %}
 
 {% elif panel == 'balance' %}
