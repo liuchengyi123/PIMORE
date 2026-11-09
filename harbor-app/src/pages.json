@@ -122,7 +122,8 @@
       "path": "pages/pdp/index",
       "style": {
         "navigationBarTitleText": "Product",
-        "navigationBarBackgroundColor": "#F7F6F3",
+        "navigationStyle": "custom",
+        "navigationBarBackgroundColor": "#FFFFFF",
         "navigationBarTextStyle": "black"
       }
     },
