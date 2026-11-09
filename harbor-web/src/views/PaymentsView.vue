@@ -68,15 +68,15 @@ function label(r: any) {
 function sub(r: any) { return r.provider || r.meta || '' }
 </script>
 <style scoped>
-.page { min-height: 100vh; background: #FCFAF8; color: #1C2430; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
-.head { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
-.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #1C2430; }
-.title { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; margin: 0; }
-.list { display: flex; flex-direction: column; gap: 8px; }
-.card { background: #fff; border: 1px solid #E2E6EE; border-radius: 16px; padding: 14px; }
-.row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-.nm { font-size: 16px; font-weight: 700; }
-.badge { background: #FFF1EC; color: #F96141; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
-.sub { margin-top: 4px; font-size: 11px; color: #5C6570; }
-.state { text-align: center; color: #6B7280; padding: 36px 8px; }
+.page { min-height: 100vh; background: #FCFAF8; color: #1C2430; padding: 10px 16px 32px; padding-top: calc(10px + env(safe-area-inset-top)); }
+.head { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #1C2430; padding: 0; }
+.title { font-size: 20px; font-weight: 800; letter-spacing: -0.03em; margin: 0; }
+.list { display: flex; flex-direction: column; gap: 6px; }
+.card { background: #fff; border: 1px solid #F1EEEA; border-radius: 14px; padding: 10px 12px; }
+.row { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 24px; }
+.nm { font-size: 14px; font-weight: 700; line-height: 1.25; }
+.badge { background: #FFF1EC; color: #F96141; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; }
+.sub { margin-top: 2px; font-size: 12px; color: #8B919A; }
+.state { text-align: center; color: #8B919A; padding: 20px 8px; font-size: 13px; }
 </style>
