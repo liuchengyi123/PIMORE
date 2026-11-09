@@ -297,16 +297,18 @@ h1 { margin: 0; font-size: 22px; font-weight: 800; color: $hb-ink; letter-spacin
 }
 .addr-sheet {
   width: min(100%, 768px); max-height: 92vh; overflow: auto; background: #FCFAF8;
-  border-radius: 22px 22px 0 0; padding: 8px 16px calc(16px + env(safe-area-inset-bottom));
+  border-radius: 20px 20px 0 0; padding: 4px 14px calc(12px + env(safe-area-inset-bottom));
 }
-.addr-sheet .grab { width: 36px; height: 4px; border-radius: 99px; background: #E6E2DC; margin: 4px auto 8px; }
-.addr-head { display: grid; grid-template-columns: 36px 1fr 36px; align-items: center; margin-bottom: 12px; }
-.addr-sheet h2 { margin: 0; text-align: center; font-size: 18px; font-weight: 800; }
-.paste-lab { display: flex; align-items: center; gap: 6px; font-weight: 750; margin-bottom: 8px; }
+.addr-sheet .grab { width: 36px; height: 4px; border-radius: 99px; background: #E6E2DC; margin: 2px auto 4px; }
+.addr-head { display: grid; grid-template-columns: 32px 1fr 32px; align-items: center; margin-bottom: 6px; }
+.addr-sheet h2 { margin: 0; text-align: center; font-size: 17px; line-height: 1.2; font-weight: 800; }
+.paste-lab { display: flex; align-items: center; gap: 6px; font-weight: 750; font-size: 14px; margin-bottom: 4px; }
 .paste {
-  width: 100%; min-height: 84px; border-radius: 12px; border: 1px solid #E6E2DC; padding: 10px 12px;
-  font: inherit; resize: vertical; background: #fff; color: #1C2430;
+  width: 100%; min-height: 64px; border-radius: 10px; border: 1px solid #E6E2DC; padding: 8px 10px;
+  font: inherit; font-size: 14px; line-height: 1.35; resize: vertical; background: #fff; color: #1C2430;
 }
-.addr-sec { margin: 16px 0 8px; color: #5C6570; font-size: 13px; font-weight: 650; }
-.addr-sheet .place { width: 100%; margin-top: 8px; background: #FF6B4A; }
+.addr-sec { margin: 10px 0 4px; color: #5C6570; font-size: 12px; font-weight: 700; }
+.addr-sheet .field { gap: 3px; margin-bottom: 6px; }
+.addr-sheet .field input, .addr-sheet .field select { height: 38px; border-radius: 10px; }
+.addr-sheet .place { width: 100%; height: 44px; margin-top: 6px; background: #FF6B4A; }
 </style>

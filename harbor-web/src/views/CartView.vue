@@ -240,29 +240,29 @@ h1 small { font-size: 12px; color: $hb-muted; font-weight: 600; }
 .confirm-actions .ghost { background: #fff; border: 1.5px solid #FF6B4A; color: #FF6B4A; }
 .confirm-actions .ok { background: #FF6B4A; border: 0; color: #fff; }
 .gap-sheet {
-  width: min(100%, 440px); max-height: 88vh; overflow: auto; background: #fff;
-  border-radius: 28px 28px 0 0; padding: 8px 18px calc(18px + env(safe-area-inset-bottom));
+  width: min(100%, 420px); max-height: 88vh; overflow: auto; background: #fff;
+  border-radius: 24px 24px 0 0; padding: 4px 14px calc(12px + env(safe-area-inset-bottom));
 }
-.grab { width: 42px; height: 4px; border-radius: 99px; background: #E6E2DC; margin: 4px auto 14px; }
-.added { display: flex; align-items: center; justify-content: center; gap: 8px; color: #FF6B4A; font-weight: 700; font-size: 14px; }
-.added .tick { display: block; flex: 0 0 auto; }
-.gap-sheet h2 { margin: 10px 0 14px; text-align: center; font-size: 22px; line-height: 1.3; font-weight: 800; letter-spacing: -0.03em; color: #1C2430; }
+.grab { width: 36px; height: 4px; border-radius: 99px; background: #E6E2DC; margin: 2px auto 8px; }
+.added { display: flex; align-items: center; justify-content: center; gap: 6px; color: #FF6B4A; font-weight: 750; font-size: 13px; }
+.added .tick { display: block; flex: 0 0 auto; width: 18px; height: 18px; }
+.gap-sheet h2 { margin: 4px 0 8px; text-align: center; font-size: 20px; line-height: 1.25; font-weight: 800; letter-spacing: -0.03em; color: #1C2430; }
 .gap-search {
-  display: flex; align-items: center; gap: 8px; height: 44px; border-radius: 12px;
-  border: 1px solid #E6E2DC; padding: 0 12px; color: #8B919A; background: #fff;
+  display: flex; align-items: center; gap: 6px; height: 40px; border-radius: 10px;
+  border: 1px solid #E6E2DC; padding: 0 10px; color: #8B919A; background: #fff;
 }
 .gap-search input { border: 0; flex: 1; outline: none; font-size: 14px; background: transparent; color: #1C2430; }
 .gap-search input::placeholder { color: #A0A6AE; }
-.gap-tabs { display: flex; gap: 22px; margin: 16px 0 12px; border-bottom: 1px solid #F3F0EC; }
-.gap-tabs button { border: 0; background: transparent; padding: 8px 0 10px; font-size: 15px; font-weight: 650; color: #8B919A; cursor: pointer; }
+.gap-tabs { display: flex; gap: 16px; margin: 8px 0 8px; border-bottom: 1px solid #F3F0EC; }
+.gap-tabs button { border: 0; background: transparent; padding: 6px 0 8px; font-size: 14px; font-weight: 650; color: #8B919A; cursor: pointer; }
 .gap-tabs button.on { color: #1C2430; font-weight: 800; box-shadow: inset 0 -2px 0 #FF6B4A; }
-.gap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 12px; }
+.gap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 8px; }
 .gap-card { border: 0; background: transparent; text-align: left; cursor: pointer; padding: 0; color: inherit; }
-.gap-card img, .gap-ph { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 12px; background: #F6F4F2; display: block; }
-.gap-card b { display: block; margin-top: 10px; font-size: 14px; font-weight: 650; line-height: 1.35; letter-spacing: -0.01em; color: #1C2430; }
-.gap-card em { display: block; margin-top: 4px; font-style: normal; color: #1C2430; font-weight: 800; font-size: 16px; }
+.gap-card img, .gap-ph { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 10px; background: #F6F4F2; display: block; }
+.gap-card b { display: block; margin-top: 6px; font-size: 13px; font-weight: 650; line-height: 1.3; letter-spacing: -0.01em; color: #1C2430; }
+.gap-card em { display: block; margin-top: 2px; font-style: normal; color: #1C2430; font-weight: 800; font-size: 15px; }
 .gap-go {
-  width: 100%; height: 50px; margin-top: 18px; border: 0; border-radius: 12px;
+  width: 100%; height: 44px; margin-top: 12px; border: 0; border-radius: 12px;
   background: #FF6B4A; color: #fff; font-weight: 750; font-size: 16px; cursor: pointer;
 }
 @media (min-width: 960px) {
