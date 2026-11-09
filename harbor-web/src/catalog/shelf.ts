@@ -66,6 +66,7 @@ export const shelf: Product[] = [
     id: 'bath-towels', sku: 'bath-towels', name: '速干浴巾',
     price: 8.99, compareAt: 16.99, category: '家纺', image: just2,
     images: [just2, neu2, flash4], blurb: '速干 · 柔软', material: '超细纤维',
+    sizes: ['单条', '两条'],
     offers: [
       { id: 'coral', label: '珊瑚', price: 8.99, compareAt: 16.99 },
       { id: 'black', label: '黑色', price: 8.99, compareAt: 16.99 },

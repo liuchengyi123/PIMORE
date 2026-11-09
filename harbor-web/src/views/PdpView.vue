@@ -80,11 +80,11 @@
         </div>
       </div>
 
-      <div v-if="optionLabels.length" class="opt-row">
-        <span class="opt-k">{{ isColorOptions ? (zh ? '颜色' : 'Color') : t('common_option') }}</span>
-        <div v-if="isColorOptions" class="swatches">
+      <div v-if="colorLabels.length" class="opt-row">
+        <span class="opt-k">{{ zh ? '颜色' : 'Color' }}</span>
+        <div class="swatches">
           <button
-            v-for="opt in optionLabels"
+            v-for="opt in colorLabels"
             :key="opt"
             type="button"
             class="swatch"
@@ -94,12 +94,22 @@
             @click="size = opt"
           />
         </div>
-        <div v-else class="pills">
-          <button v-for="opt in optionLabels" :key="opt" type="button" class="pill" :class="{ on: size === opt }" @click="size = opt">{{ opt }}</button>
-        </div>
         <button type="button" class="opt-more" @click="sheetOpen = true">
           {{ size || (zh ? '请选择' : 'Choose') }} <ChevronRight :size="14" />
         </button>
+      </div>
+      <div v-if="specLabels.length" class="opt-row specs">
+        <span class="opt-k">{{ zh ? '规格' : 'Size' }}</span>
+        <div class="pills">
+          <button
+            v-for="opt in specLabels"
+            :key="opt"
+            type="button"
+            class="pill"
+            :class="{ on: pickedSpec === opt }"
+            @click="pickSpec(opt)"
+          >{{ opt }}</button>
+        </div>
       </div>
 
       <div class="qty-row">
@@ -141,16 +151,19 @@
           </div>
           <button type="button" class="x" @click="sheetOpen = false" aria-label="关闭">×</button>
         </div>
-        <template v-if="optionLabels.length">
-          <div class="sheet-title">{{ isColorOptions ? (zh ? '颜色' : 'Color') : t('common_option') }}</div>
-          <div v-if="isColorOptions" class="sheet-colors">
-            <button v-for="opt in optionLabels" :key="'c'+opt" type="button" class="cdot" :class="{ on: size === opt }" @click="size = opt">
+        <template v-if="colorLabels.length">
+          <div class="sheet-title">{{ zh ? '颜色' : 'Color' }}</div>
+          <div class="sheet-colors">
+            <button v-for="opt in colorLabels" :key="'c'+opt" type="button" class="cdot" :class="{ on: size === opt }" @click="size = opt">
               <i :style="{ background: swatch(opt) }" />
               <span>{{ opt }}</span>
             </button>
           </div>
-          <div v-else class="opts">
-            <button v-for="opt in optionLabels" :key="opt" type="button" class="opt" :class="{ on: size === opt }" @click="size = opt">{{ opt }}</button>
+        </template>
+        <template v-if="specLabels.length">
+          <div class="sheet-title">{{ zh ? '规格' : 'Size' }}</div>
+          <div class="opts">
+            <button v-for="opt in specLabels" :key="'s'+opt" type="button" class="opt" :class="{ on: pickedSpec === opt }" @click="pickSpec(opt)">{{ opt }}</button>
           </div>
         </template>
         <div class="qty-row sheet-qty">
@@ -192,6 +205,7 @@ const product = ref<Product | null>(null)
 const isOos = computed(() => Number((product.value as { stock?: number } | null)?.stock ?? 1) <= 0)
 const interestCount = ref(0)
 const size = ref('')
+const spec = ref('')
 const qty = ref(1)
 const sheetOpen = ref(false)
 const busy = ref(false)
@@ -268,7 +282,18 @@ const optionLabels = computed(() => {
   if (p.offers?.length) return p.offers.map((o) => o.label)
   return p.sizes || []
 })
-const isColorOptions = computed(() => optionLabels.value.length > 0 && optionLabels.value.every((label) => !!swatch(label)))
+const colorLabels = computed(() => optionLabels.value.filter((label) => !!swatch(label)))
+const specLabels = computed(() => {
+  const colors = new Set(colorLabels.value)
+  const fromOffers = optionLabels.value.filter((label) => !colors.has(label))
+  const fromSizes = (product.value?.sizes || []).filter((label) => !colors.has(label) && !fromOffers.includes(label))
+  return [...fromOffers, ...fromSizes]
+})
+const pickedSpec = computed(() => (colorLabels.value.length ? spec.value : size.value))
+function pickSpec(opt: string) {
+  if (colorLabels.value.length) spec.value = opt
+  else size.value = opt
+}
 
 const shipTitle = computed(() => {
   const th = Number(cart.freeShipThreshold.value || 0)
@@ -391,6 +416,8 @@ async function load() {
   else if (p.offers?.[0]) size.value = p.offers[0].label
   else if (p.sizes?.[0]) size.value = p.sizes[0]
   else size.value = ''
+  const colorSet = new Set((p.offers || []).map((o) => o.label).filter((label) => swatch(label)))
+  spec.value = colorSet.size ? ((p.sizes || []).find((label) => !colorSet.has(label)) || '') : ''
   trackBrowse({ sku: p.sku, name: p.name, image: p.image || '', price: p.price })
   interestCount.value = await fetchProductInterest(p.sku)
 }
@@ -520,22 +547,25 @@ async function notifyMe() {
 }
 .perk b { font-size: 11px; line-height: 1.25; }
 .perk small { color: #8B919A; font-size: 10px; line-height: 1.3; }
-.opt-row { display: flex; align-items: center; gap: 10px; margin-top: 18px; }
-.opt-k { font-size: 14px; font-weight: 700; }
-.swatches, .pills { display: flex; gap: 8px; flex: 1; flex-wrap: wrap; }
+.opt-row { display: flex; align-items: center; gap: 8px; margin-top: 12px; min-height: 36px; }
+.opt-row.specs { margin-top: 8px; }
+.opt-k { font-size: 14px; font-weight: 800; flex: none; }
+.swatches { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+.pills { display: flex; gap: 6px; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.pills::-webkit-scrollbar { display: none; }
 .swatch {
-  width: 22px; height: 22px; border-radius: 999px; border: 2px solid #fff;
-  box-shadow: 0 0 0 1px #E4E0DA; cursor: pointer; padding: 0;
+  width: 22px; height: 22px; border-radius: 999px; border: 0; padding: 0; cursor: pointer; flex: none;
+  box-shadow: inset 0 0 0 2px #fff, 0 0 0 1px #E4E0DA;
 }
-.swatch.on { box-shadow: 0 0 0 2px #F96141; }
+.swatch.on { box-shadow: inset 0 0 0 2px #fff, 0 0 0 2px #F96141; }
 .pill {
-  height: 32px; border: 1px solid #E8E4DC; background: #fff; border-radius: 999px;
-  padding: 0 12px; cursor: pointer; font-weight: 650; font-size: 13px;
+  height: 32px; border: 1px solid #E6E1DA; background: #fff; border-radius: 999px;
+  padding: 0 12px; cursor: pointer; font-weight: 700; font-size: 13px; color: #1C2430; flex: none;
 }
 .pill.on { background: #F96141; color: #fff; border-color: #F96141; }
 .opt-more {
-  margin-left: auto; border: 0; background: transparent; color: #8B919A;
-  display: inline-flex; align-items: center; gap: 2px; cursor: pointer; font-size: 13px;
+  margin-left: auto; border: 0; background: transparent; color: #8B919A; flex: none;
+  display: inline-flex; align-items: center; gap: 1px; cursor: pointer; font-size: 13px; font-weight: 650;
 }
 .qty-row { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; }
 .qty-lab { font-size: 14px; font-weight: 700; }
@@ -581,17 +611,25 @@ async function notifyMe() {
 .sheet-price { color: #F96141; font-weight: 800; font-size: 18px; margin-top: 2px; }
 .muted { color: #8B919A; font-size: 13px; margin-top: 2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .x { border: 0; background: transparent; font-size: 22px; color: #8B919A; cursor: pointer; line-height: 1; }
-.sheet-title { margin: 16px 0 10px; font-size: 14px; font-weight: 800; }
-.sheet-colors { display: flex; gap: 12px; overflow-x: auto; }
-.cdot { border: 0; background: transparent; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; color: #5C6570; font-size: 11px; }
-.cdot i { width: 28px; height: 28px; border-radius: 999px; box-shadow: 0 0 0 1px #E4E0DA; }
-.cdot.on i { box-shadow: 0 0 0 2px #F96141; }
-.cdot.on { color: #F96141; font-weight: 700; }
+.sheet-title { margin: 14px 0 8px; font-size: 14px; font-weight: 800; color: #1C2430; }
+.sheet-colors { display: flex; justify-content: space-between; gap: 4px; }
+.cdot {
+  flex: 1; min-width: 0; border: 0; background: transparent; padding: 0;
+  display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; color: #5C6570; font-size: 11px;
+}
+.cdot i {
+  width: 30px; height: 30px; border-radius: 999px;
+  box-shadow: inset 0 0 0 2px #fff, 0 0 0 1px #E4E0DA;
+}
+.cdot span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cdot.on i { box-shadow: inset 0 0 0 2px #fff, 0 0 0 2px #F96141; }
+.cdot.on { color: #F96141; font-weight: 800; }
 .opts { display: flex; flex-wrap: wrap; gap: 8px; }
 .opt {
-  height: 36px; border: 1px solid #E8E4DC; background: #fff; border-radius: 999px; padding: 0 14px; cursor: pointer; font-weight: 650;
+  height: 34px; min-width: 52px; border: 1px solid #E6E1DA; background: #fff; border-radius: 999px;
+  padding: 0 14px; cursor: pointer; font-weight: 700; font-size: 13px; color: #1C2430;
 }
 .opt.on { background: #F96141; color: #fff; border-color: #F96141; }
-.sheet-qty { margin: 18px 0 16px; }
+.sheet-qty { margin: 14px 0 14px; }
 .sheet-ok { width: 100%; height: 48px; border: 0; border-radius: 999px; background: #F96141; color: #fff; font-weight: 750; cursor: pointer; font-size: 16px; }
 </style>
