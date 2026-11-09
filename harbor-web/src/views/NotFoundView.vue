@@ -78,32 +78,32 @@ const count = computed(() => cart.count.value)
   border-radius: 99px; background: #F96141; color: #fff; font-size: 10px; font-style: normal; font-weight: 800;
   display: grid; place-items: center;
 }
-.stage { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 28px 8px 12px; }
+.stage { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 8px 4px 8px; }
 .code {
-  position: relative; font-size: 84px; line-height: 0.9; font-weight: 800; letter-spacing: -0.06em; color: #F96141;
+  position: relative; font-size: 72px; line-height: 0.85; font-weight: 800; letter-spacing: -0.06em; color: #F96141;
 }
 .spark {
   position: absolute; background: #F96141; border-radius: 99px;
 }
-.spark.a { width: 18px; height: 4px; left: -22px; top: 18px; transform: rotate(-30deg); }
-.spark.b { width: 10px; height: 4px; left: -16px; top: 36px; }
-.spark.c { width: 18px; height: 4px; right: -22px; top: 18px; transform: rotate(30deg); }
-.spark.d { width: 10px; height: 4px; right: -16px; top: 36px; }
-.still { position: relative; width: 220px; height: 120px; margin-top: 8px; }
-.still img { position: absolute; object-fit: cover; border-radius: 16px; box-shadow: 0 8px 20px rgba(28,36,48,0.08); }
-.pot { width: 72px; height: 84px; left: 8px; bottom: 0; }
-.soft { width: 96px; height: 72px; left: 62px; bottom: 18px; }
-.basket { width: 78px; height: 78px; right: 0; bottom: 0; }
-h1 { margin: 16px 0 0; font-size: 26px; letter-spacing: -0.03em; font-weight: 800; }
-.lead, .soft-copy { margin: 8px 0 0; max-width: 280px; color: #5C6570; font-size: 14px; line-height: 1.45; }
-.soft-copy { color: #8B919A; }
+.spark.a { width: 16px; height: 3px; left: -18px; top: 16px; transform: rotate(-28deg); }
+.spark.b { width: 8px; height: 3px; left: -14px; top: 30px; }
+.spark.c { width: 16px; height: 3px; right: -18px; top: 16px; transform: rotate(28deg); }
+.spark.d { width: 8px; height: 3px; right: -14px; top: 30px; }
+.still { position: relative; width: 196px; height: 96px; margin-top: 2px; }
+.still img { position: absolute; object-fit: cover; border-radius: 14px; box-shadow: 0 6px 16px rgba(28,36,48,0.08); }
+.pot { width: 64px; height: 74px; left: 4px; bottom: 0; }
+.soft { width: 86px; height: 64px; left: 54px; bottom: 14px; }
+.basket { width: 70px; height: 70px; right: 0; bottom: 0; }
+h1 { margin: 10px 0 0; font-size: 24px; letter-spacing: -0.03em; font-weight: 800; line-height: 1.15; }
+.lead, .soft-copy { margin: 6px 0 0; max-width: 280px; color: #5C6570; font-size: 13px; line-height: 1.35; }
+.soft-copy { margin-top: 4px; color: #8B919A; }
 .btn {
   display: flex; align-items: center; justify-content: center; gap: 8px;
-  width: min(100%, 320px); height: 48px; margin-top: 12px; border-radius: 999px; font-weight: 750; font-size: 15px;
+  width: min(100%, 320px); height: 46px; margin-top: 8px; border-radius: 999px; font-weight: 750; font-size: 15px;
 }
-.solid { background: #F96141; color: #fff; }
+.solid { margin-top: 12px; background: #F96141; color: #fff; }
 .ghost { border: 1.5px solid #F96141; color: #F96141; background: #fff; }
-.foot { margin-top: 22px; color: #8B919A; font-size: 13px; }
+.foot { margin-top: 14px; color: #8B919A; font-size: 13px; }
 .house {
   width: 32px; height: 32px; margin: 0 auto 6px; border-radius: 10px; background: #FFF1EC; color: #F96141;
   display: grid; place-items: center;

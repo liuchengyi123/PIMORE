@@ -152,7 +152,7 @@ onMounted(async () => {
 <style lang="scss" scoped>
 .page {
   min-height: 100vh; background: #FCFAF8; color: #1C2430;
-  padding: calc(14px + env(safe-area-inset-top)) 16px 8px;
+  padding: calc(12px + env(safe-area-inset-top)) 16px 8px;
   font-family: "Plus Jakarta Sans", "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 .brand { display: flex; align-items: center; gap: 8px; color: inherit; }
@@ -162,32 +162,39 @@ onMounted(async () => {
 }
 .logo { display: block; font-size: 20px; font-weight: 800; letter-spacing: -0.04em; line-height: 1; color: #F96141; }
 .tag { display: block; margin-top: 2px; font-size: 11px; color: #8B919A; }
-.head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-top: 16px; }
-h1 { margin: 0; font-size: 26px; letter-spacing: -0.04em; font-weight: 800; }
-.head p { margin: 4px 0 0; color: #8B919A; font-size: 13px; }
-.clear { border: 0; background: transparent; color: #F96141; font-weight: 750; font-size: 14px; cursor: pointer; padding: 4px 0; }
+.head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-top: 12px; }
+h1 { margin: 0; font-size: 24px; letter-spacing: -0.04em; font-weight: 800; line-height: 1.1; }
+.head p { margin: 2px 0 0; color: #8B919A; font-size: 13px; }
+.clear { border: 0; background: transparent; color: #F96141; font-weight: 750; font-size: 14px; cursor: pointer; padding: 2px 0; }
 .state { text-align: center; color: #8B919A; padding: 36px 8px; }
-.group { margin-top: 18px; }
+.group { margin-top: 14px; }
 .sec { display: flex; align-items: baseline; justify-content: space-between; }
-.sec h2 { margin: 0; font-size: 16px; }
+.sec h2 { margin: 0; font-size: 16px; font-weight: 800; }
 .sec span { color: #8B919A; font-size: 12px; }
-.hrow { display: flex; gap: 10px; overflow-x: auto; margin-top: 10px; padding-bottom: 4px; }
-.mini { flex: 0 0 112px; cursor: pointer; }
-.shot { position: relative; aspect-ratio: 1; border-radius: 14px; overflow: hidden; background: #F6F4F2; }
+.hrow { display: flex; gap: 8px; overflow-x: auto; margin-top: 8px; padding-bottom: 2px; scrollbar-width: none; }
+.hrow::-webkit-scrollbar { display: none; }
+.mini { flex: 0 0 84px; cursor: pointer; }
+.shot { position: relative; aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: #F6F4F2; }
 .shot img, .line img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .pack {
   position: absolute; left: 6px; top: 6px; background: #F96141; color: #fff;
   font-size: 10px; font-weight: 800; border-radius: 999px; padding: 2px 6px;
 }
-.mini .nm { margin-top: 6px; font-size: 12px; font-weight: 650; line-height: 1.3; min-height: 2.6em; }
-.price { color: #F96141; font-weight: 800; font-size: 13px; }
-.list { margin-top: 8px; }
+.mini .nm {
+  margin-top: 4px; font-size: 11px; font-weight: 650; line-height: 1.25; min-height: 2.5em;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.price { color: #F96141; font-weight: 800; font-size: 13px; letter-spacing: -0.02em; }
+.list { margin-top: 4px; }
 .line {
-  width: 100%; display: flex; align-items: center; gap: 12px; padding: 10px 0;
+  width: 100%; display: flex; align-items: center; gap: 10px; padding: 8px 0;
   border: 0; border-bottom: 1px solid #F1EEEA; background: transparent; text-align: left; cursor: pointer; color: inherit;
 }
-.line img { width: 64px; height: 64px; border-radius: 12px; object-fit: cover; background: #F6F4F2; flex: none; }
-.meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-.line .nm { font-size: 14px; font-weight: 700; }
+.line img { width: 56px; height: 56px; border-radius: 10px; object-fit: cover; background: #F6F4F2; flex: none; }
+.meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.line .nm {
+  font-size: 14px; font-weight: 700; line-height: 1.25;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
 .line :deep(svg) { color: #C4C8CE; flex: none; }
 </style>
