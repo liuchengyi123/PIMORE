@@ -197,27 +197,28 @@ onUnmounted(() => { if (timer) window.clearInterval(timer) })
 .promo span { display: flex; flex-direction: column; min-width: 0; }
 .promo b { font-size: 13px; }
 .promo small { color: #8B919A; font-size: 11px; }
-.sec { display: flex; align-items: baseline; justify-content: space-between; margin-top: 18px; }
-.sec h2 { margin: 0; font-size: 20px; letter-spacing: -0.03em; }
+.sec { display: flex; align-items: baseline; justify-content: space-between; margin-top: 14px; }
+.sec h2 { margin: 0; font-size: 18px; letter-spacing: -0.03em; }
 .sec a { color: #F96141; font-size: 13px; font-weight: 700; }
 .state { text-align: center; color: #8B919A; padding: 28px 8px; }
-.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
-.card { cursor: pointer; }
-.shot { position: relative; aspect-ratio: 1.02; border-radius: 16px; overflow: hidden; background: #F6F4F2; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+.card { cursor: pointer; min-width: 0; }
+.shot { position: relative; aspect-ratio: 1.18; border-radius: 14px; overflow: hidden; background: #F6F4F2; }
 .shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .badge {
-  position: absolute; left: 8px; top: 8px; background: #F96141; color: #fff;
-  font-size: 12px; font-weight: 800; border-radius: 999px; padding: 3px 7px;
+  position: absolute; left: 8px; top: 8px; height: 22px; display: inline-flex; align-items: center;
+  background: #F96141; color: #fff; font-size: 12px; font-weight: 800; letter-spacing: -0.02em;
+  border-radius: 999px; padding: 0 8px;
 }
 .nm {
-  margin-top: 8px; font-size: 13px; font-weight: 700; line-height: 1.35; min-height: 2.6em;
+  margin-top: 6px; font-size: 13px; font-weight: 750; line-height: 1.25; min-height: 2.5em;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
-.pr { display: flex; align-items: baseline; gap: 6px; margin-top: 4px; }
-.was { color: #B0B6BE; text-decoration: line-through; font-size: 12px; }
-.pr b { color: #F96141; font-size: 16px; }
+.pr { display: flex; align-items: center; gap: 4px; margin-top: 2px; }
+.was { color: #B0B6BE; text-decoration: line-through; font-size: 11px; }
+.pr b { color: #F96141; font-size: 16px; font-weight: 800; letter-spacing: -0.03em; }
 .bag {
-  margin-left: auto; width: 28px; height: 28px; border: 0; border-radius: 999px; align-self: center;
+  margin-left: auto; width: 28px; height: 28px; border: 0; border-radius: 999px; flex: none;
   background: #F96141; color: #fff; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
 }
 </style>

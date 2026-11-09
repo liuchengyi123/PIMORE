@@ -120,20 +120,30 @@ h1 { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.04em; colo
   display: grid; place-items: center; flex: none; box-shadow: 0 6px 16px rgba(249,97,65,0.12);
 }
 .state { text-align: center; color: #8B919A; padding: 28px 8px; }
-.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
-.card { cursor: pointer; }
-.shot { position: relative; aspect-ratio: 1.05; border-radius: 16px; overflow: hidden; background: #F6F4F2; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+.card {
+  background: #fff; border-radius: 16px; overflow: hidden; border: 1px solid #F3F0EC;
+  cursor: pointer; min-width: 0;
+}
+.shot { position: relative; aspect-ratio: 1.32; background: #F6F4F2; }
 .shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .tag {
-  position: absolute; left: 8px; top: 8px; background: #F96141; color: #fff;
-  font-size: 10px; font-weight: 800; letter-spacing: 0.04em; border-radius: 999px; padding: 3px 7px;
+  position: absolute; left: 8px; top: 8px; height: 20px; display: inline-flex; align-items: center;
+  background: #F96141; color: #fff; font-size: 10px; font-weight: 800; letter-spacing: 0.04em;
+  border-radius: 999px; padding: 0 7px;
 }
-.nm { margin-top: 8px; font-size: 14px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.25; }
-.sub { margin-top: 2px; color: #8B919A; font-size: 12px; }
-.pr { display: flex; align-items: center; margin-top: 6px; }
-.pr b { color: #F96141; font-size: 16px; }
+.nm {
+  margin: 8px 8px 0; font-size: 13px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.25;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.5em;
+}
+.sub {
+  margin: 2px 8px 0; color: #8B919A; font-size: 12px; line-height: 1.2;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.pr { display: flex; align-items: center; margin: 4px 8px 8px; }
+.pr b { color: #F96141; font-size: 16px; font-weight: 800; letter-spacing: -0.03em; }
 .bag {
-  margin-left: auto; width: 28px; height: 28px; border: 0; border-radius: 999px;
+  margin-left: auto; width: 28px; height: 28px; border: 0; border-radius: 999px; flex: none;
   background: #F96141; color: #fff; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
 }
 </style>
