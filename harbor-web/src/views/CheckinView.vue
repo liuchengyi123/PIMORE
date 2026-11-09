@@ -17,19 +17,19 @@
     <div class="days">
       <div v-for="d in 5" :key="d" class="day" :class="{ done: d < streakDay, today: d === streakDay, future: d > streakDay }">
         <div class="mark">{{ d < streakDay ? '✓' : (d === streakDay ? '●' : '') }}</div>
-        <div class="lab">Day{{ d }}</div>
+        <div class="lab">{{ zh ? ('第' + d + '天') : ('Day ' + d) }}</div>
       </div>
     </div>
 
     <section class="balance-card">
       <div class="row">
-        <span class="b-title">Balance</span>
+        <span class="b-title">{{ zh ? '余额' : 'Balance' }}</span>
         <span class="b-amt">{{ balanceText }}</span>
       </div>
-      <p class="b-note">{{ detail || 'From invites & rewards · Withdraw available' }}</p>
+      <p class="b-note">{{ detail || (zh ? '来自邀请和奖励 · 可提现' : 'From invites & rewards · Withdraw available') }}</p>
       <div class="b-actions">
-        <router-link class="btn outline" to="/rewards">Rewards</router-link>
-        <router-link class="btn solid" to="/withdraw">Withdraw</router-link>
+        <router-link class="btn outline" to="/rewards">{{ zh ? '奖励' : 'Rewards' }}</router-link>
+        <router-link class="btn solid" to="/withdraw">{{ zh ? '提现' : 'Withdraw' }}</router-link>
       </div>
     </section>
   </div>
@@ -38,14 +38,15 @@
 import { computed, onMounted, ref } from 'vue'
 import { fetchAccountSummary, fetchCheckInHtml, fetchBalancePanel, postCheckIn } from '@/api/accountApi'
 import { useI18n } from '@/composables/i18n'
-const { t } = useI18n()
+const { t, lang } = useI18n()
+const zh = computed(() => String(lang.value).startsWith('zh'))
 const checked = ref(false)
 const busy = ref(false)
 const detail = ref('')
 const needLogin = ref(false)
 const streakDay = ref(3)
 const balanceText = ref('$0.00')
-const streakLabel = computed(() => `Day ${streakDay.value} streak`)
+const streakLabel = computed(() => zh.value ? `连续 ${streakDay.value} 天` : `Day ${streakDay.value} streak`)
 async function refresh() {
   const sum = await fetchAccountSummary()
   checked.value = !!sum.checkedToday
@@ -79,7 +80,7 @@ onMounted(refresh)
 .page { min-height: 100vh; background: #FCFAF8; color: #1C2430; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
 .head { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
 .back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #1C2430; }
-.title { font-size: 17px; font-weight: 700; margin: 0; }
+.title { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; margin: 0; }
 .hero {
   border-radius: 16px; padding: 16px;
   background: linear-gradient(162deg, #F96141 4%, #0E7490 96%);

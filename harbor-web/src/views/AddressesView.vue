@@ -2,15 +2,15 @@
   <div class="page">
     <header class="head">
       <button type="button" class="back" @click="$router.back()" aria-label="back">‹</button>
-      <h1 class="title">Addresses</h1>
-      <a class="add" :href="shopPath('/account/addresses')" target="_blank" rel="noopener">Add</a>
+      <h1 class="title">{{ zh ? '地址' : 'Addresses' }}</h1>
+      <a class="add" :href="shopPath('/account/addresses')" target="_blank" rel="noopener">{{ zh ? '新增' : 'Add' }}</a>
     </header>
-    <div v-if="loginRequired" class="state">Sign in to manage addresses.</div>
-    <div v-else-if="loading" class="state">Loading…</div>
-    <div v-else-if="!rows.length" class="state">No addresses yet.</div>
+    <div v-if="loginRequired" class="state">{{ zh ? '登录后管理地址。' : 'Sign in to manage addresses.' }}</div>
+    <div v-else-if="loading" class="state">{{ zh ? '加载中…' : 'Loading…' }}</div>
+    <div v-else-if="!rows.length" class="state">{{ zh ? '还没有地址' : 'No addresses yet.' }}</div>
     <div v-else class="list">
       <article v-for="(r, i) in rows" :key="i" class="card">
-        <span v-if="i === 0" class="badge">Default</span>
+        <span v-if="i === 0" class="badge">{{ zh ? '默认' : 'Default' }}</span>
         <div class="nm">{{ r.name }}</div>
         <div class="line">{{ r.line }}</div>
       </article>
@@ -19,8 +19,11 @@
 </template>
 <script setup lang="ts">
 import { ChevronLeft } from 'lucide-vue-next'
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { addAddress, fetchAddresses, shopPath, type AddressRow } from '@/api/accountApi'
+import { useI18n } from '@/composables/i18n'
+const { lang } = useI18n()
+const zh = computed(() => String(lang.value).startsWith('zh'))
 const rows = ref<AddressRow[]>([])
 const loading = ref(true)
 const loginRequired = ref(false)
@@ -61,11 +64,11 @@ onMounted(refresh)
 .page { min-height: 100vh; background: #FCFAF8; color: #1C2430; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
 .head { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
 .back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #1C2430; }
-.title { flex: 1; font-size: 17px; font-weight: 700; margin: 0; }
-.add { font-size: 13px; font-weight: 600; color: #0E7490; text-decoration: none; }
+.title { flex: 1; font-size: 22px; font-weight: 800; letter-spacing: -0.03em; margin: 0; }
+.add { font-size: 13px; font-weight: 700; color: #F96141; text-decoration: none; }
 .list { display: flex; flex-direction: column; gap: 10px; }
 .card { background: #fff; border: 2px solid #F96141; border-radius: 16px; padding: 14px; }
-.badge { display: inline-flex; background: #E0F2FE; color: #0E7490; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px; margin-bottom: 8px; }
+.badge { display: inline-flex; background: #FFF1EC; color: #F96141; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px; margin-bottom: 8px; }
 .nm { font-size: 13px; font-weight: 600; }
 .line { margin-top: 4px; font-size: 13px; line-height: 1.45; }
 .state { text-align: center; color: #6B7280; padding: 36px 8px; }
