@@ -21,13 +21,15 @@
     <template v-else>
       <section v-if="lines.length" class="ship">
         <div class="ship-top">
-          <Truck :size="18" :stroke-width="1.75" />
+          <Truck :size="16" :stroke-width="1.85" />
           <div>
             <b>{{ shipTitle }}</b>
             <p>{{ shipSub }}</p>
           </div>
         </div>
-        <div class="bar" aria-hidden="true"><i :style="{ width: shipPct + '%' }" /></div>
+        <div class="bar" role="progressbar" :aria-valuenow="shipPct" aria-valuemin="0" aria-valuemax="100">
+          <i :style="{ width: shipPct + '%' }" />
+        </div>
         <div class="ship-ends">
           <span>{{ money(subtotal) }}</span>
           <span>{{ goal > 0 ? money(goal) : (zh ? '包邮' : 'Free') }}</span>
@@ -264,14 +266,17 @@ h1 { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.03em; colo
   border-radius: 999px; background: $hb-coral; color: #fff; font-weight: 750;
 }
 .ship {
-  background: $hb-coral-soft; border-radius: 16px; padding: 14px 14px 10px; margin-bottom: 12px;
+  background: #FFF1EC; border-radius: 14px; padding: 9px 12px 7px; margin-bottom: 10px;
 }
-.ship-top { display: flex; gap: 10px; align-items: flex-start; color: $hb-coral; }
-.ship-top b { display: block; color: $hb-ink; font-size: 14px; font-weight: 750; }
-.ship-top p { margin: 2px 0 0; color: $hb-muted; font-size: 12px; font-weight: 500; }
-.bar { margin-top: 12px; height: 6px; border-radius: 99px; background: #F3D7CF; overflow: hidden; }
+.ship-top { display: flex; gap: 8px; align-items: center; color: $hb-coral; }
+.ship-top b { display: block; color: $hb-ink; font-size: 13.5px; font-weight: 760; line-height: 1.2; }
+.ship-top p { margin: 1px 0 0; color: #8B919A; font-size: 11.5px; font-weight: 500; line-height: 1.25; }
+.bar { margin-top: 7px; height: 6px; border-radius: 99px; background: #F6D4CB; overflow: hidden; }
 .bar > i { display: block; height: 100%; background: $hb-coral; border-radius: 99px; }
-.ship-ends { display: flex; justify-content: space-between; margin-top: 6px; font-size: 12px; color: $hb-muted; }
+.ship-ends {
+  display: flex; justify-content: space-between; margin-top: 3px;
+  font-size: 11px; font-weight: 650; color: #8B919A; font-variant-numeric: tabular-nums;
+}
 .sheet { background: #fff; border-radius: 18px; padding: 4px 12px; box-shadow: $hb-shadow-soft; }
 .row { display: flex; gap: 12px; align-items: flex-start; padding: 14px 0; border-bottom: 1px solid $hb-line; }
 .row:last-child { border-bottom: 0; }
