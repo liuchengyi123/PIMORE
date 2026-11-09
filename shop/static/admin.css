@@ -1829,6 +1829,9 @@ tbody td { border-top: 1px solid #F0F1F5; }
 .stack input, .stack select, .stack textarea, form.stack input, form.stack select, form.stack textarea {
   width: 100%; box-sizing: border-box; border: 1px solid #E8EAF0; border-radius: 10px; background: #fff; color: #1C2430;
 }
+.note, p.note {
+  background: #FFF8F5; border-radius: 12px; padding: 10px 12px; color: #5C6570;
+}
 #launch-postback .funnel-totals span { font-size: 12px; color: #5C6570; }
 
 

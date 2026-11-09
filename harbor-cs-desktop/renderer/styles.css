@@ -165,7 +165,7 @@ input:focus, textarea:focus { outline: 2px solid rgba(224,82,46,0.35); border-co
   word-break: break-word;
 }
 .bubble.user { background: var(--user); justify-self: start; border-bottom-left-radius: 4px; }
-.bubble.staff { background: linear-gradient(135deg, #5a2d22, #3d221c); justify-self: end; border-bottom-right-radius: 4px; }
+.bubble.staff { background: #F96141; color: #fff; justify-self: end; border-bottom-right-radius: 4px; }
 .bubble.system { justify-self: center; color: var(--muted); font-size: 12px; background: transparent; border: 1px dashed var(--line); }
 .bubble .meta { display: block; margin-top: 6px; font-size: 11px; color: rgba(255,255,255,0.55); }
 .composer {
@@ -473,12 +473,13 @@ input:focus, textarea:focus { outline: 2px solid rgba(224,82,46,0.35); border-co
 .chat-head { background: #fff; }
 .ai-banner {
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-  padding: 8px 14px; background: #E0F2FE; border-bottom: 1px solid var(--line);
+  padding: 8px 14px; background: #FFF1EC; border-bottom: 1px solid #F8C7B8;
 }
 .ai-pill {
   display: inline-flex; align-items: center; height: 24px; padding: 0 10px;
-  border-radius: 999px; background: #0E7490; color: #fff; font-size: 12px; font-weight: 700;
+  border-radius: 999px; background: #F96141; color: #fff; font-size: 12px; font-weight: 700;
 }
+.emoji-bar { background: #fff; border: 1px solid #E8EAF0; border-radius: 12px; }
 .status-hint { margin-left: 8px; }
 .settings-overlay, .transfer-modal-wrap {
   position: fixed; inset: 0; z-index: 80;
