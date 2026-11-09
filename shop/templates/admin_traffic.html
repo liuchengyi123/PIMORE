@@ -25,14 +25,46 @@
     {% for p, label in platforms %}
     {% set accts = accounts_by_plat.get(p, []) %}
     {% set head = accts[0] if accts else none %}
+    {% set creds = head.credentials if head and head.credentials else {} %}
+    {% if p == 'meta' %}{% set pid = creds.get('meta_pixel_id', '') %}
+    {% elif p == 'tiktok' %}{% set pid = creds.get('tiktok_pixel_id', '') %}
+    {% else %}{% set pid = creds.get('google_measurement_id') or creds.get('google_aw_id') or '' %}{% endif %}
+    {% set ns = namespace(last='') %}
+    {% for row in ad_logs %}
+      {% if not ns.last and (row.platform or '')|lower == p %}{% set ns.last = row.created_at_sh or row.created_at %}{% endif %}
+    {% endfor %}
     <article class="pixel-card {% if platform == p %}on{% endif %}">
       <header>
-        <b>{{ label }}</b>
-        {% if head and head.status.pixel %}<span class="badge ok">已启用</span>{% else %}<span class="badge warn">未配置</span>{% endif %}
+        <span class="px-mark {{ p }}" aria-hidden="true">{{ label[:1] }}</span>
+        <div class="px-title">
+          <b>{{ label }} Pixel</b>
+          <small>{% if p == 'meta' %}Facebook / Instagram{% elif p == 'tiktok' %}TikTok 广告{% else %}Google Ads{% endif %}{% if head %} · {{ head.name }}{% endif %}</small>
+        </div>
+        {% if head and head.enabled and head.status.pixel %}<span class="badge ok">已启用</span>
+        {% elif head and not head.enabled %}<span class="badge warn">已停用</span>
+        {% else %}<span class="badge warn">未配置</span>{% endif %}
       </header>
-      <p class="muted small">{{ accts|length }} 个账户{% if head %} · {{ head.name }}{% endif %}</p>
-      <p class="mono small">{% if head and head.status.pixel %}Pixel 已配置{% else %}Pixel ID 未填写{% endif %}</p>
-      <a class="btn ghost sm" href="/admin/traffic?platform={{ p }}{% if head %}&amp;acct={{ head.code }}{% endif %}">配置此平台</a>
+      <label class="px-id">Pixel ID
+        <input readonly value="{% if pid %}{{ pid[:4] }}····{{ pid[-4:] }}{% else %}未填写{% endif %}" aria-label="{{ label }} Pixel ID">
+      </label>
+      <div class="px-map">
+        <span>事件映射</span>
+        <em>Purchase</em><em>AddToCart</em><em>ViewContent</em>
+      </div>
+      <div class="px-foot">
+        {% if head and head.status.capi %}<span class="log-pill ok">正常</span>{% else %}<span class="log-pill bad">未就绪</span>{% endif %}
+        <small>{% if ns.last %}最近回传 {{ ns.last }}{% else %}还没有回传{% endif %}</small>
+      </div>
+      <div class="px-actions">
+        {% if head %}
+        <form method="post" action="/admin/traffic/test">
+          <input type="hidden" name="account_id" value="{{ head.id }}">
+          <input type="hidden" name="platform" value="{{ p }}">
+          <button class="btn sm" type="submit">发送测试事件</button>
+        </form>
+        {% endif %}
+        <a class="btn ghost sm" href="/admin/traffic?platform={{ p }}{% if head %}&amp;acct={{ head.code }}{% endif %}">配置</a>
+      </div>
     </article>
     {% endfor %}
   </div>

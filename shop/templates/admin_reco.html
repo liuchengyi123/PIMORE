@@ -22,47 +22,53 @@
 
   <form id="reco-form" method="post" action="/admin/reco">
     <div class="reco-board" data-figma="AD22">
-      <article class="card">
-        <h2>千人千面</h2>
-        <label>兴趣坑占比
+      <article class="card reco-slide-card">
+        <header class="reco-card-h"><span class="reco-ico">人</span><div><b>千人千面</b><small>兴趣坑占比与信号门槛</small></div></header>
+        <label class="reco-slide">
+          <span class="reco-slide-top"><span>兴趣坑占比</span><output>{{ (rules.browse_share * 100)|round|int }}%</output></span>
           <input type="range" min="0" max="100" step="5" value="{{ (rules.browse_share * 100)|round|int }}" data-sync="browse_share" data-scale="0.01">
-          <output>{{ (rules.browse_share * 100)|round|int }}%</output>
+          <span class="reco-scale"><i>0%</i><i>100%</i></span>
         </label>
-        <label>至少几条信号
+        <label class="reco-slide">
+          <span class="reco-slide-top"><span>至少几条信号</span><output>{{ rules.personal_min_signals }}</output></span>
           <input type="range" min="0" max="20" step="1" value="{{ rules.personal_min_signals }}" data-sync="personal_min_signals">
-          <output>{{ rules.personal_min_signals }}</output>
+          <span class="reco-scale"><i>0</i><i>20</i></span>
         </label>
       </article>
-      <article class="card">
-        <h2>热度系数</h2>
-        <label>每次打开加多少
+      <article class="card reco-slide-card">
+        <header class="reco-card-h"><span class="reco-ico heat">热</span><div><b>热度系数</b><small>每次打开加多少</small></div></header>
+        <label class="reco-slide">
+          <span class="reco-slide-top"><span>每次打开加多少</span><output>{{ rules.heat_per_click }}</output></span>
           <input type="range" min="0" max="200" step="1" value="{{ rules.heat_per_click }}" data-sync="heat_per_click">
-          <output>{{ rules.heat_per_click }}</output>
+          <span class="reco-scale"><i>0</i><i>200</i></span>
         </label>
-        <p class="muted small">打开次数 × 这个数，显示在商品「关注热度」。</p>
       </article>
-      <article class="card">
-        <h2>价格带配额</h2>
-        <label>$3 以下最多
+      <article class="card reco-slide-card">
+        <header class="reco-card-h"><span class="reco-ico band">价</span><div><b>价格带配额</b><small>落地页各价位坑位</small></div></header>
+        <label class="reco-slide">
+          <span class="reco-slide-top"><span>$3 以下最多</span><output>{{ rules.lp_under3_cap }}</output></span>
           <input type="range" min="0" max="24" step="1" value="{{ rules.lp_under3_cap }}" data-sync="lp_under3_cap">
-          <output>{{ rules.lp_under3_cap }}</output>
+          <span class="reco-scale"><i>0</i><i>24</i></span>
         </label>
-        <label>$3–$5 至少
+        <label class="reco-slide">
+          <span class="reco-slide-top"><span>$3–$5 至少</span><output>{{ rules.lp_band_3_5_min }}</output></span>
           <input type="range" min="0" max="24" step="1" value="{{ rules.lp_band_3_5_min }}" data-sync="lp_band_3_5_min">
-          <output>{{ rules.lp_band_3_5_min }}</output>
+          <span class="reco-scale"><i>0</i><i>24</i></span>
         </label>
-        <label>$5–$10 至少
+        <label class="reco-slide">
+          <span class="reco-slide-top"><span>$5–$10 至少</span><output>{{ rules.lp_band_5_10_min }}</output></span>
           <input type="range" min="0" max="24" step="1" value="{{ rules.lp_band_5_10_min }}" data-sync="lp_band_5_10_min">
-          <output>{{ rules.lp_band_5_10_min }}</output>
+          <span class="reco-scale"><i>0</i><i>24</i></span>
         </label>
       </article>
-      <article class="card">
-        <h2>冷启动热榜</h2>
-        <label>外部热销权重
+      <article class="card reco-slide-card">
+        <header class="reco-card-h"><span class="reco-ico cold">冷</span><div><b>冷启动热榜</b><small>外部热销加分</small></div></header>
+        <label class="reco-slide">
+          <span class="reco-slide-top"><span>外部热销权重</span><output>{{ '%.1f'|format(rules.hot_weight) }}</output></span>
           <input type="range" min="0" max="80" step="0.5" value="{{ rules.hot_weight }}" data-sync="hot_weight">
-          <output>{{ '%.1f'|format(rules.hot_weight) }}</output>
+          <span class="reco-scale"><i>0</i><i>80</i></span>
         </label>
-        <label class="check"><input type="checkbox" id="hot-boost-mirror" {% if rules.hot_boost %}checked{% endif %}> 用外部热销加分</label>
+        <label class="check reco-boost"><input type="checkbox" id="hot-boost-mirror" {% if rules.hot_boost %}checked{% endif %}> 用外部热销加分</label>
       </article>
     </div>
 
@@ -75,25 +81,25 @@
             <tr>
               <td><b>落地页</b><div class="muted small">/lp/ad 组货</div></td>
               <td>热度 + 价格带 + {% if rules.lp_shuffle %}刷新打乱{% else %}固定顺序{% endif %}</td>
-              <td>一页 {{ rules.lp_max_cards }} 个</td>
+              <td class="reco-row-slide"><input type="range" min="4" max="60" step="1" value="{{ rules.lp_max_cards }}" data-sync="lp_max_cards"><output>{{ rules.lp_max_cards }}</output></td>
               <td><span class="badge ok">已启用</span></td>
             </tr>
             <tr>
               <td><b>首页</b><div class="muted small">冷启动与兴趣坑</div></td>
-              <td>兴趣占比 {{ '%.0f'|format(rules.browse_share * 100) }}%</td>
-              <td>信号 ≥ {{ rules.personal_min_signals }}</td>
+              <td>兴趣占比</td>
+              <td class="reco-row-slide"><input type="range" min="0" max="100" step="5" value="{{ (rules.browse_share * 100)|round|int }}" data-sync="browse_share" data-scale="0.01"><output>{{ (rules.browse_share * 100)|round|int }}%</output></td>
               <td><span class="badge ok">已启用</span></td>
             </tr>
             <tr>
               <td><b>购物车</b><div class="muted small">空车推荐</div></td>
               <td>与首页同一套兴趣规则</td>
-              <td>热度 {{ rules.heat_per_click }}</td>
+              <td class="reco-row-slide"><input type="range" min="0" max="20" step="1" value="{{ rules.personal_min_signals }}" data-sync="personal_min_signals"><output>{{ rules.personal_min_signals }}</output></td>
               <td><span class="badge ok">已启用</span></td>
             </tr>
             <tr>
               <td><b>商品页</b><div class="muted small">关注热度数字</div></td>
               <td>打开次数 × 热度系数</td>
-              <td>{{ rules.heat_per_click }}</td>
+              <td class="reco-row-slide"><input type="range" min="0" max="200" step="1" value="{{ rules.heat_per_click }}" data-sync="heat_per_click"><output>{{ rules.heat_per_click }}</output></td>
               <td><span class="badge ok">已启用</span></td>
             </tr>
           </tbody>
@@ -177,11 +183,17 @@
     var out = range.parentElement.querySelector('output');
     function paint() {
       var shown = range.value;
-      if (out) out.textContent = scale < 1 ? (Math.round(parseFloat(shown)) + '%') : shown;
+      var text = scale < 1 ? (Math.round(parseFloat(shown)) + '%') : shown;
+      document.querySelectorAll('#reco-form input[data-sync="' + name + '"]').forEach(function (node) {
+        if (node !== range) node.value = shown;
+        var nodeOut = node.parentElement && node.parentElement.querySelector('output');
+        if (nodeOut) nodeOut.textContent = text;
+      });
+      if (out) out.textContent = text;
       var input = field(name);
       if (!input) return;
-      var next = scale < 1 ? (parseFloat(shown) * scale).toFixed(2) : shown;
-      if (input.value !== String(next) && input.value !== shown) input.value = scale < 1 ? String(parseFloat(next)) : shown;
+      var next = scale < 1 ? String(parseFloat((parseFloat(shown) * scale).toFixed(2))) : shown;
+      if (input.value !== String(next) && input.value !== shown) input.value = next;
     }
     range.addEventListener('input', paint);
   });
