@@ -63,5 +63,5 @@ input { border: 1.5px solid #E7DFD8; border-radius: 16px; padding: 14px 16px; fo
 .err { color: #E11D2E; font-size: 13px; margin: 0; }
 .auth-links { display: flex; justify-content: space-between; margin-top: 16px; color: #F96141; font-weight: 700; font-size: 14px; }
 
-.fn-page { --ink:#0F2744; --teal:#0E7490; --amber:#B45309; --sand:#F7F4EF; }
+.fn-page { --ink:#1C2430; --teal:#0E7490; --amber:#F96141; --sand:#FCFAF8; }
 </style>

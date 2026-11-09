@@ -319,11 +319,11 @@ async function notifyMe() {
 .pill { display: inline-flex; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; background: #F3F4F6; color: #374151; }
 .pill.ok { background: #ECFDF5; color: #047857; }
 .pill.info { background: #E0F2FE; color: #0E7490; }
-.pill.amber { background: #FEF3C7; color: #B45309; }
+.pill.amber { background: #FEF3C7; color: #F96141; }
 .pill.bad, .pill.coral { background: #FEE2E2; color: #B91C1C; }
 .reviews-box { margin-top: 16px; padding-top: 14px; border-top: 1px solid #E8E4DC; }
 .rev-head { display: flex; justify-content: space-between; align-items: center; font-size: 15px; }
-.rev-empty { margin-top: 10px; padding: 14px; background: #F7F4EF; border-radius: 12px; text-align: center; color: #6B7280; font-size: 13px; }
+.rev-empty { margin-top: 10px; padding: 14px; background: #FCFAF8; border-radius: 12px; text-align: center; color: #6B7280; font-size: 13px; }
 .sticky-cta .btn.solid { background: $hb-price !important; }
 .sticky-cta .btn.disabled { background: #E8E4DC !important; color: #9CA3AF !important; }
 .dock.wish { flex-direction: column; font-size: 11px; color: $hb-muted; width: auto; padding: 0 6px; background: transparent; box-shadow: none; }
@@ -331,5 +331,5 @@ async function notifyMe() {
 .sheet-ok { background: $hb-price !important; }
 .page { background: $hb-paper; }
 
-.fn-page { --ink:#0F2744; --teal:#0E7490; --amber:#B45309; --sand:#F7F4EF; }
+.fn-page { --ink:#1C2430; --teal:#0E7490; --amber:#F96141; --sand:#FCFAF8; }
 </style>

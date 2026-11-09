@@ -107,7 +107,7 @@ h1 { margin: 0; font-size: 28px; font-weight: 800; color: #fff; }
 .pill { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: #F3F4F6; color: $hb-ink; }
 .pill.paid { background: #ECFDF5; color: #047857; }
 .pill.ship { background: #E0F2FE; color: #0E7490; }
-.pill.pend { background: #FEF3C7; color: #B45309; }
+.pill.pend { background: #FEF3C7; color: #F96141; }
 .thumbs { display: flex; gap: 10px; margin-top: 10px; }
 .thumbs img, .ph { width: 64px; height: 64px; border-radius: 10px; object-fit: cover; background: linear-gradient(145deg,#bae6fd,#0369a1); }
 .ph { display: flex; align-items: flex-end; padding: 12px; color: #fff; font-size: 11px; font-weight: 600; box-sizing: border-box; }

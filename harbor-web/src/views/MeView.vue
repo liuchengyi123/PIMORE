@@ -147,11 +147,11 @@ onMounted(async () => {
 }
 .ic { font-size: 18px; }
 .ol { font-size: 11px; color: #6B7280; }
-.ost b { font-size: 11px; color: #0F2744; }
+.ost b { font-size: 11px; color: #1C2430; }
 .menu .row {
   width: 100%; display: flex; justify-content: space-between; align-items: center;
   padding: 14px; border: 0; border-bottom: 1px solid #E8E4DC; background: #fff; cursor: pointer;
-  font-size: 14px; color: #0F2744; text-align: left;
+  font-size: 14px; color: #1C2430; text-align: left;
 }
 .menu .row:last-child { border-bottom: 0; }
 .chev { color: #6B7280; }

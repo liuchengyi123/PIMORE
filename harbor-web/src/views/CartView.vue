@@ -142,5 +142,5 @@ h1 small { font-size: 12px; color: $hb-muted; font-weight: 600; }
 .empty { padding: 80px 24px; text-align: center; }
 .empty .btn { background: $hb-ink; color: #fff; border-radius: 999px; padding: 10px 18px; text-decoration: none; font-weight: 700; display: inline-block; margin-top: 16px; }
 
-.fn-page { --ink:#0F2744; --teal:#0E7490; --amber:#B45309; --sand:#F7F4EF; }
+.fn-page { --ink:#1C2430; --teal:#0E7490; --amber:#F96141; --sand:#FCFAF8; }
 </style>

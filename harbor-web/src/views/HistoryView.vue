@@ -18,6 +18,7 @@
         </div>
       </article>
     </div>
+    <AppTabBar active="me" />
   </div>
 </template>
 <script setup lang="ts">
@@ -27,6 +28,7 @@ import { fetchHistoryHtml } from '@/api/accountApi'
 import { parseFeedCards, type Product } from '@/api/products'
 import { loadBrowseHistory, clearBrowseHistory } from '@/composables/browseHistory'
 import { useI18n } from '@/composables/i18n'
+import AppTabBar from '@/components/AppTabBar.vue'
 const { t } = useI18n()
 const router = useRouter()
 const products = ref<Product[]>([])
@@ -65,9 +67,9 @@ function clearLocal() {
 }
 </script>
 <style scoped>
-.page { min-height: 100vh; background: #F7F4EF; color: #0F2744; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
+.page { min-height: 100vh; background: #FCFAF8; color: #1C2430; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
 .head { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
-.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; color: #0F2744; cursor: pointer; }
+.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; color: #1C2430; cursor: pointer; }
 .title { flex: 1; font-size: 17px; font-weight: 700; margin: 0; }
 .clear { border: 0; background: transparent; font-size: 11px; color: #5C6570; cursor: pointer; }
 .state { text-align: center; color: #6B7280; padding: 36px 8px; }
@@ -76,6 +78,6 @@ function clearLocal() {
 .thumb { height: 120px; background: #e8e4dc; position: relative; }
 .thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .body { padding: 10px; }
-.nm { font-size: 13px; font-weight: 600; color: #0F2744; min-height: 34px; line-height: 1.3; }
-.price { margin-top: 6px; font-size: 16px; font-weight: 700; color: #B45309; }
+.nm { font-size: 13px; font-weight: 600; color: #1C2430; min-height: 34px; line-height: 1.3; }
+.price { margin-top: 6px; font-size: 16px; font-weight: 700; color: #F96141; }
 </style>

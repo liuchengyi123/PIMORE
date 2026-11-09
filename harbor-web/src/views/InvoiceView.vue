@@ -65,9 +65,9 @@ const totalLabel = computed(() => {
 
 </script>
 <style scoped>
-.page { min-height: 100vh; background: #F7F4EF; color: #0F2744; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
+.page { min-height: 100vh; background: #FCFAF8; color: #1C2430; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
 .head { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
-.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #0F2744; }
+.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #1C2430; }
 .title { font-size: 17px; font-weight: 700; margin: 0; }
 .sheet { background: #fff; border: 1px solid #E8E4DC; border-radius: 16px; padding: 16px; }
 .brand { font-size: 13px; font-weight: 700; color: #0E7490; }
@@ -76,10 +76,10 @@ const totalLabel = computed(() => {
 .rule { height: 1px; background: #E8E4DC; margin: 14px 0; }
 .line { font-size: 13px; padding: 4px 0; line-height: 1.4; }
 .total { display: flex; justify-content: space-between; align-items: baseline; font-size: 16px; font-weight: 700; }
-.amt { color: #B45309; font-size: 18px; }
+.amt { color: #F96141; font-size: 18px; }
 .cta {
   display: flex; align-items: center; justify-content: center; margin-top: 14px; height: 41px;
-  border-radius: 12px; background: #0F2744; color: #fff; font-size: 14px; font-weight: 600; text-decoration: none;
+  border-radius: 12px; background: #F96141; color: #fff; font-size: 14px; font-weight: 600; text-decoration: none;
 }
 .state { text-align: center; color: #6B7280; padding: 20px 8px; }
 </style>

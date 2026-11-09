@@ -1112,21 +1112,21 @@ onUnmounted(() => {
   width: 64px; height: 64px; margin: 0 auto 14px; border-radius: 32px; background: #E0F2FE;
   display: flex; align-items: center; justify-content: center; font-size: 24px;
 }
-.fn-chat-title { font-weight: 700; color: #0F2744; font-size: 17px; }
+.fn-chat-title { font-weight: 700; color: #1C2430; font-size: 17px; }
 .fn-chat-sub { margin-top: 8px; font-size: 12px; color: #6B7280; line-height: 1.5; }
 .head { background: #fff !important; border-bottom: 1px solid #E8E4DC; }
-.title { color: #0F2744 !important; }
+.title { color: #1C2430 !important; }
 .bubble-row.mine .bubble, .bubble.me, .mine .bubble {
-  background: #0F2744 !important; color: #fff !important; border-bottom-right-radius: 4px !important;
+  background: #F96141 !important; color: #fff !important; border-bottom-right-radius: 4px !important;
 }
 .bubble-row.theirs .bubble, .bubble.them, .theirs .bubble {
-  background: #fff !important; border: 1px solid #E8E4DC !important; color: #0F2744 !important;
+  background: #fff !important; border: 1px solid #E8E4DC !important; color: #1C2430 !important;
   border-bottom-left-radius: 4px !important;
 }
 .composer, .input-bar {
   background: #fff !important; border-top: 1px solid #E8E4DC !important;
 }
-.page { background: #F7F4EF !important; }
+.page { background: #FCFAF8 !important; }
 
 @media (max-width: 959px) {
   .side-pane.fn-half-sheet, .side-pane.open-sheet {
@@ -1135,16 +1135,16 @@ onUnmounted(() => {
     box-shadow: 0 -8px 30px rgba(15,39,68,.15); background: #fff;
   }
   .detail-btn.primary, .detail-btn:not(.ghost) {
-    background: #0F2744 !important; color: #fff !important; border-radius: 10px;
+    background: #F96141 !important; color: #fff !important; border-radius: 10px;
   }
   .detail-btn.ghost {
-    background: #fff !important; border: 1px solid #E8E4DC !important; color: #0F2744 !important;
+    background: #fff !important; border: 1px solid #E8E4DC !important; color: #1C2430 !important;
   }
-  .detail-price { color: #B45309 !important; font-weight: 700; font-size: 18px; }
+  .detail-price { color: #F96141 !important; font-weight: 700; font-size: 18px; }
   .prod-card, .order-card {
-    background: #F7F4EF !important; border-radius: 12px !important; border: 0 !important;
+    background: #FCFAF8 !important; border-radius: 12px !important; border: 0 !important;
   }
 }
 
-.fn-page { --ink:#0F2744; --teal:#0E7490; --amber:#B45309; --sand:#F7F4EF; }
+.fn-page { --ink:#1C2430; --teal:#0E7490; --amber:#F96141; --sand:#FCFAF8; }
 </style>
