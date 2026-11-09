@@ -1,137 +1,203 @@
 <template>
-  <div class="page" data-figma="M12">
+  <div class="page" data-figma="1:6">
     <header class="head">
-      <button type="button" class="back" @click="$router.back()" aria-label="back"><ChevronLeft :size="22" :stroke-width="1.75" /></button>
+      <button type="button" class="back" @click="$router.back()" :aria-label="zh ? '返回' : 'back'">
+        <ChevronLeft :size="22" :stroke-width="1.75" />
+      </button>
       <h1>{{ zh ? '结算' : 'Checkout' }}</h1>
+      <div class="secure"><Lock :size="14" :stroke-width="1.75" /> {{ zh ? '安全结算' : 'Secure Checkout' }}</div>
     </header>
 
-    <div class="card ship">
-      <div class="row between">
-        <div class="sec">{{ zh ? '收货地址' : 'Ship to' }}</div>
-        <button type="button" class="link" @click="focusShip">{{ zh ? '修改' : 'Change' }}</button>
+    <section class="card">
+      <div class="card-h">
+        <MapPin :size="16" :stroke-width="1.75" class="ico" />
+        <b>{{ zh ? '收货地址' : 'Shipping Address' }}</b>
+        <button type="button" class="link" @click="addrSheet = true">{{ zh ? '修改' : 'Edit' }}</button>
       </div>
-      <div class="addr" v-if="form.name">
-        {{ form.name }}<br />
-        {{ form.address }}{{ form.city ? ', ' + form.city : '' }}{{ form.region ? ', ' + form.region : '' }} {{ form.postal }}<br />
-        {{ form.ship_country }}
+      <button type="button" class="addr" @click="addrSheet = true">
+        <span v-if="form.name">
+          <b>{{ form.name }}</b><br />
+          {{ form.address }}<template v-if="form.city">，{{ form.city }}</template>
+          <template v-if="form.region"> {{ form.region }}</template>
+          {{ form.postal }}<br />
+          {{ countryName }}<template v-if="form.phone"> · {{ form.phone }}</template>
+        </span>
+        <span v-else class="muted">{{ zh ? '还没有收货地址' : 'No address yet' }}</span>
+        <ChevronRight :size="18" class="chev" />
+      </button>
+    </section>
+
+    <section class="card">
+      <div class="card-h">
+        <Truck :size="16" :stroke-width="1.75" class="ico" />
+        <b>{{ zh ? '配送方式' : 'Shipping Method' }}</b>
       </div>
-      <div class="addr muted" v-else>{{ zh ? '还没有地址' : 'No address yet' }}</div>
-      <button type="button" class="link" @click="addrSheet = true">{{ zh ? '填写地址' : 'Address form' }}</button>
-    </div>
+      <button
+        v-for="opt in ships"
+        :key="opt.id"
+        type="button"
+        class="opt"
+        :class="{ on: shipId === opt.id }"
+        @click="shipId = opt.id"
+      >
+        <span class="radio" :class="{ on: shipId === opt.id }" />
+        <span class="opt-copy">
+          <b>{{ zh ? opt.zh : opt.en }}</b>
+          <small>{{ zh ? opt.daysZh : opt.daysEn }}</small>
+        </span>
+        <span class="opt-price">{{ zh ? opt.priceZh : opt.priceEn }}</span>
+      </button>
+    </section>
+
+    <section class="card">
+      <div class="card-h">
+        <Ticket :size="16" :stroke-width="1.75" class="ico" />
+        <b>{{ zh ? '使用优惠券' : 'Apply Coupon' }}</b>
+      </div>
+      <div class="coupon">
+        <input v-model="form.coupon_code" :placeholder="zh ? '输入优惠码' : 'Enter coupon code'" />
+        <button type="button" class="apply" @click="couponOn = true">{{ zh ? '使用' : 'Apply' }}</button>
+      </div>
+      <p v-if="couponOn && form.coupon_code" class="hint">{{ zh ? '已记下优惠码，提交时一并带上' : 'Code will be sent with the order' }}</p>
+    </section>
+
+    <section class="card">
+      <div class="card-h">
+        <Gift :size="16" :stroke-width="1.75" class="ico" />
+        <b>{{ zh ? '礼物选项' : 'Gift Option' }}</b>
+        <button type="button" class="toggle" :class="{ on: giftOn }" @click="giftOn = !giftOn" :aria-label="zh ? '礼物' : 'gift'">
+          <span class="knob" />
+        </button>
+      </div>
+      <button type="button" class="gift-row" @click="giftOn = !giftOn">
+        <Gift :size="16" />
+        <span>{{ zh ? '添加赠言（可选）' : 'Add gift message (optional)' }}</span>
+        <ChevronRight :size="16" />
+      </button>
+      <textarea v-if="giftOn" v-model="form.gift" rows="3" :placeholder="zh ? '写给收件人的话' : 'A note for the recipient'" />
+    </section>
+
+    <section class="card">
+      <div class="card-h">
+        <CreditCard :size="16" :stroke-width="1.75" class="ico" />
+        <b>{{ zh ? '支付方式' : 'Payment Method' }}</b>
+      </div>
+      <button type="button" class="opt" :class="{ on: form.pay_method === 'card' }" @click="form.pay_method = 'card'">
+        <span class="radio" :class="{ on: form.pay_method === 'card' }" />
+        <CreditCard :size="18" class="pay-ico" />
+        <span class="opt-copy">
+          <b>{{ zh ? '信用卡 / 借记卡' : 'Credit / Debit Card' }}</b>
+          <small>Visa、Mastercard、Amex</small>
+        </span>
+        <span class="brands"><i>VISA</i><i>MC</i><i>AE</i></span>
+      </button>
+      <button type="button" class="opt" :class="{ on: form.pay_method === 'paypal' }" @click="form.pay_method = 'paypal'">
+        <span class="radio" :class="{ on: form.pay_method === 'paypal' }" />
+        <span class="pp" aria-hidden="true"><b>Pay</b><b>Pal</b></span>
+        <span class="opt-copy">
+          <b>PayPal</b>
+          <small>{{ zh ? '使用 PayPal 账户支付' : 'Pay with your PayPal account' }}</small>
+        </span>
+      </button>
+      <button type="button" class="opt" :class="{ on: form.pay_method === 'lianlian' }" @click="form.pay_method = 'lianlian'">
+        <span class="radio" :class="{ on: form.pay_method === 'lianlian' }" />
+        <Wallet :size="18" class="pay-ico" />
+        <span class="opt-copy">
+          <b>{{ zh ? '连连钱包' : 'LianLian Wallet' }}</b>
+          <small>{{ zh ? '连连支付' : 'LianLian' }}</small>
+        </span>
+        <span class="ll">连连</span>
+      </button>
+      <div class="bal-row">
+        <span>{{ zh ? '使用余额抵扣' : 'Use balance' }}</span>
+        <button type="button" class="toggle" :class="{ on: form.use_balance }" @click="form.use_balance = !form.use_balance" :aria-label="zh ? '余额' : 'balance'">
+          <span class="knob" />
+        </button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-h">
+        <Receipt :size="16" :stroke-width="1.75" class="ico" />
+        <b>{{ zh ? '订单摘要' : 'Order Summary' }}</b>
+      </div>
+      <div class="sum"><span>{{ zh ? `商品小计（${lines.length} 件）` : `Subtotal (${lines.length} items)` }}</span><span>{{ money(subtotal) }}</span></div>
+      <div class="sum"><span>{{ zh ? '运费' : 'Shipping' }}</span><span>{{ zh ? '免费' : 'Free' }}</span></div>
+      <div class="sum">
+        <span>{{ zh ? '优惠' : 'Coupon' }}</span>
+        <span :class="{ off: couponOn && form.coupon_code }">{{ couponOn && form.coupon_code ? form.coupon_code : (zh ? '未使用' : 'None') }}</span>
+      </div>
+      <div class="sum total"><span>{{ zh ? '合计' : 'Total' }}</span><span class="due">{{ money(subtotal) }}</span></div>
+      <p class="hint">{{ zh ? '可追踪物流 · 预计 7–12 天 · 包邮' : 'Tracked shipping · est. 7–12 days · free' }}</p>
+    </section>
+
+    <p v-if="error" class="err">{{ error }}</p>
+    <p v-if="!lines.length" class="err">{{ t('checkout_empty') }}</p>
+
+    <button type="button" class="place" :disabled="!lines.length || busy" @click="place">
+      <Lock :size="16" :stroke-width="1.75" />
+      {{ busy ? (zh ? '提交中…' : '…') : (zh ? '提交订单' : 'Place Order') }}
+    </button>
+    <p class="legal">
+      {{ zh ? '提交订单即表示同意' : 'By placing your order, you agree to our' }}
+      <router-link to="/policy/terms">{{ zh ? '服务条款' : 'Terms of Service' }}</router-link>
+      {{ zh ? '和' : 'and' }}
+      <router-link to="/policy/privacy">{{ zh ? '隐私政策' : 'Privacy Policy' }}</router-link>
+    </p>
+
     <div v-if="addrSheet" class="addr-mask" @click.self="addrSheet = false">
-      <div class="addr-sheet" role="dialog">
+      <div class="addr-sheet" role="dialog" :aria-label="zh ? '收货地址' : 'Shipping address'">
         <h2>{{ zh ? '收货地址' : 'Shipping address' }}</h2>
-        <label class="field"><span>{{ zh ? '邮箱' : 'Email' }}</span><input v-model="form.email" type="email" /></label>
-        <label class="field"><span>{{ zh ? '姓名' : 'Name' }}</span><input v-model="form.name" /></label>
-        <label class="field"><span>{{ zh ? '地址' : 'Address' }}</span><input v-model="form.address" /></label>
-        <label class="field"><span>{{ zh ? '城市' : 'City' }}</span><input v-model="form.city" /></label>
-        <label class="field"><span>{{ zh ? '地区' : 'Region' }}</span><input v-model="form.region" /></label>
-        <label class="field"><span>{{ zh ? '邮编' : 'Postal' }}</span><input v-model="form.postal" /></label>
-        <label class="field"><span>{{ zh ? '电话' : 'Phone' }}</span><input v-model="form.phone" /></label>
+        <label class="field"><span>{{ zh ? '邮箱' : 'Email' }}</span><input v-model="form.email" type="email" autocomplete="email" /></label>
+        <label class="field"><span>{{ zh ? '姓名' : 'Name' }}</span><input v-model="form.name" autocomplete="name" /></label>
+        <label class="field"><span>{{ zh ? '地址' : 'Address' }}</span><input v-model="form.address" autocomplete="street-address" /></label>
+        <label class="field"><span>{{ zh ? '城市' : 'City' }}</span><input v-model="form.city" autocomplete="address-level2" /></label>
+        <label class="field"><span>{{ zh ? '地区' : 'Region' }}</span><input v-model="form.region" autocomplete="address-level1" /></label>
+        <label class="field"><span>{{ zh ? '邮编' : 'Postal' }}</span><input v-model="form.postal" autocomplete="postal-code" /></label>
+        <label class="field"><span>{{ zh ? '电话' : 'Phone' }}</span><input v-model="form.phone" autocomplete="tel" /></label>
         <label class="field"><span>{{ zh ? '国家' : 'Country' }}</span>
           <select v-model="form.ship_country">
-            <option value="US">US</option><option value="CN">CN</option><option value="TW">TW</option>
-            <option value="HK">HK</option><option value="GB">GB</option><option value="CA">CA</option>
-            <option value="JP">JP</option>
+            <option value="US">United States</option>
+            <option value="CN">中国</option>
+            <option value="TW">台湾</option>
+            <option value="HK">香港</option>
+            <option value="GB">United Kingdom</option>
+            <option value="CA">Canada</option>
+            <option value="JP">日本</option>
           </select>
         </label>
         <button type="button" class="place" @click="addrSheet = false">{{ zh ? '完成' : 'Done' }}</button>
       </div>
     </div>
-
-    <form class="form" @submit.prevent="place">
-      <div class="ship-fields">
-      <label class="field"><span>{{ zh ? '邮箱' : 'Contact email' }}</span><input v-model="form.email" type="email" required /></label>
-      <label class="field"><span>{{ zh ? '姓名' : 'Name' }}</span><input ref="nameEl" v-model="form.name" required /></label>
-      <label class="field"><span>{{ zh ? '地址' : 'Address' }}</span><input v-model="form.address" required /></label>
-      <div class="split">
-        <label class="field"><span>{{ zh ? '城市' : 'City' }}</span><input v-model="form.city" required /></label>
-        <label class="field"><span>{{ zh ? '地区' : 'Region' }}</span><input v-model="form.region" /></label>
-      </div>
-      <div class="split">
-        <label class="field"><span>{{ zh ? '邮编' : 'Postal' }}</span><input v-model="form.postal" required /></label>
-        <label class="field"><span>{{ zh ? '国家' : 'Country' }}</span>
-          <select v-model="form.ship_country">
-            <option value="US">US</option><option value="CN">CN</option><option value="TW">TW</option>
-            <option value="HK">HK</option><option value="GB">GB</option><option value="CA">CA</option>
-            <option value="DE">DE</option><option value="FR">FR</option><option value="ES">ES</option>
-            <option value="PT">PT</option><option value="BR">BR</option><option value="MX">MX</option>
-            <option value="JP">JP</option>
-          </select>
-        </label>
-      </div>
-      <label class="field"><span>{{ zh ? '电话' : 'Phone' }}</span><input v-model="form.phone" /></label>
-      </div>
-
-      <div class="card">
-        <div class="row between">
-          <div class="sec">{{ zh ? '优惠券' : 'Coupon' }}</div>
-          <span class="link">{{ zh ? '选择' : 'Select' }} ›</span>
-        </div>
-        <div class="tiny" v-if="form.coupon_code">{{ form.coupon_code }}</div>
-        <input class="coupon-in" v-model="form.coupon_code" :placeholder="zh ? '优惠码' : 'Code'" />
-      </div>
-
-      <div class="card">
-        <div class="row between">
-          <div class="sec">{{ zh ? '使用余额' : 'Use balance' }}</div>
-          <button type="button" class="toggle" :class="{ on: form.use_balance }" @click="form.use_balance = !form.use_balance" aria-label="toggle balance">
-            <span class="knob" />
-          </button>
-        </div>
-        <div class="tiny">{{ zh ? '有余额时在付款时抵扣' : 'Applied at payment when available' }}</div>
-      </div>
-
-      <div class="card">
-        <div class="sec" style="margin-bottom:10px">{{ zh ? '支付方式' : 'Pay with' }}</div>
-        <label class="pay" :class="{ on: form.pay_method === 'paypal' }">
-          <input v-model="form.pay_method" type="radio" value="paypal" /> PayPal
-        </label>
-        <label class="pay" :class="{ on: form.pay_method === 'card' }">
-          <input v-model="form.pay_method" type="radio" value="card" /> {{ zh ? '银行卡 · Visa / Mastercard / Amex' : 'Card · Visa / Mastercard / Amex (Stripe)' }}
-        </label>
-        <label class="pay" :class="{ on: form.pay_method === 'lianlian' }">
-          <input v-model="form.pay_method" type="radio" value="lianlian" /> LianLian
-        </label>
-      </div>
-
-      <div class="card totals">
-        <div class="row between tiny-row"><span class="tiny">{{ zh ? '商品' : 'Items' }}</span><span>{{ money(subtotal) }}</span></div>
-        <div class="row between tiny-row"><span class="tiny">{{ zh ? '运费' : 'Shipping' }}</span><span>{{ zh ? '可追踪' : 'Tracked' }}</span></div>
-        <div class="row between total-row"><span class="sec">{{ zh ? '合计' : 'Total' }}</span><span class="price">{{ money(subtotal) }}</span></div>
-        <div class="tiny" style="margin-top:8px">{{ zh ? '可追踪物流 · 预计 7–12 天' : 'Tracked shipping · Est. 7–12 days' }}</div>
-      </div>
-
-      <p v-if="error" class="err">{{ error }}</p>
-      <p v-if="!lines.length" class="err">{{ t('checkout_empty') }}</p>
-    </form>
-
-    <div class="dock">
-      <div class="price">{{ money(subtotal) }}</div>
-      <button type="button" class="place" :disabled="!lines.length || busy" @click="place">{{ busy ? '…' : (zh ? '提交订单' : 'Place order') }}</button>
-    </div>
   </div>
 </template>
+
 <script setup lang="ts">
-import { ChevronLeft } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight, CreditCard, Gift, Lock, MapPin, Receipt, Ticket, Truck, Wallet } from 'lucide-vue-next'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { money } from '@/api/products'
 import { useCart } from '@/composables/cart'
 import { useI18n } from '@/composables/i18n'
-import { checkoutUrl, submitCheckoutForm } from '@/api/accountApi'
+import { submitCheckoutForm } from '@/api/accountApi'
 
 const { t, lang } = useI18n()
 const zh = computed(() => String(lang.value).startsWith('zh'))
 const addrSheet = ref(false)
+const giftOn = ref(false)
+const couponOn = ref(false)
+const shipId = ref('economy')
+const ships = [
+  { id: 'express', zh: '加急配送', en: 'Express Shipping', daysZh: '3–5 个工作日', daysEn: '3–5 business days', priceZh: '优先', priceEn: 'Priority' },
+  { id: 'standard', zh: '标准配送', en: 'Standard Shipping', daysZh: '7–12 个工作日', daysEn: '7–12 business days', priceZh: '可追踪', priceEn: 'Tracked' },
+  { id: 'economy', zh: '经济配送', en: 'Economy Shipping', daysZh: '12–18 个工作日', daysEn: '12–18 business days', priceZh: '免费', priceEn: 'Free' },
+]
 const cart = useCart()
 const router = useRouter()
 const lines = computed(() => cart.lines.value)
 const subtotal = computed(() => cart.subtotal.value)
 const busy = ref(false)
 const error = ref('')
-const nameEl = ref<HTMLInputElement | null>(null)
-function focusShip() { nameEl.value?.focus() }
 const form = reactive({
   email: '',
   name: '',
@@ -143,12 +209,24 @@ const form = reactive({
   phone: '',
   street_number: '',
   district: '',
-  pay_method: 'paypal',
+  pay_method: 'card',
   use_balance: true,
   coupon_code: '',
   gift: '',
   buy: '',
   submit_id: '',
+})
+const countryName = computed(() => {
+  const map: Record<string, string> = {
+    US: zh.value ? '美国' : 'United States',
+    CN: '中国',
+    TW: '台湾',
+    HK: '香港',
+    GB: zh.value ? '英国' : 'United Kingdom',
+    CA: zh.value ? '加拿大' : 'Canada',
+    JP: '日本',
+  }
+  return map[form.ship_country] || form.ship_country
 })
 
 onMounted(async () => {
@@ -160,17 +238,35 @@ onMounted(async () => {
   }
 })
 
-function openHtml() {
-  window.location.href = checkoutUrl(false)
-}
-
 async function place() {
   if (!lines.value.length || busy.value) return
+  if (!form.email.includes('@') || !form.name.trim() || !form.address.trim() || !form.city.trim() || !form.postal.trim()) {
+    error.value = zh.value ? '请先填写邮箱和收货地址' : 'Add an email and shipping address'
+    addrSheet.value = true
+    return
+  }
   busy.value = true
   error.value = ''
   try {
     try { await cart.syncLocalToServer() } catch { /* continue */ }
-    const res = await submitCheckoutForm({ ...form })
+    const res = await submitCheckoutForm({
+      email: form.email,
+      name: form.name,
+      address: form.address,
+      city: form.city,
+      region: form.region,
+      postal: form.postal,
+      ship_country: form.ship_country,
+      phone: form.phone,
+      street_number: form.street_number,
+      district: form.district,
+      pay_method: form.pay_method,
+      use_balance: form.use_balance ? '1' : '',
+      coupon_code: couponOn.value ? form.coupon_code : '',
+      gift: giftOn.value ? form.gift : '',
+      buy: form.buy,
+      submit_id: form.submit_id,
+    })
     if (res.ok && res.orderId) {
       if (res.payUrl && /^https?:\/\//i.test(res.payUrl) && !/\/orders\//i.test(res.payUrl)) {
         window.location.href = res.payUrl
@@ -183,7 +279,7 @@ async function place() {
       window.location.href = res.payUrl
       return
     }
-    error.value = '下单未通过校验，请检查地址/邮箱或改用店铺结算页'
+    error.value = zh.value ? '下单未通过校验，请检查地址和邮箱' : 'Checkout was not accepted. Check the address and email.'
   } catch (e) {
     error.value = e instanceof Error ? e.message : String(e)
   } finally {
@@ -191,66 +287,112 @@ async function place() {
   }
 }
 </script>
+
 <style lang="scss" scoped>
 @import '@/styles/theme.scss';
-.page { min-height: 100vh; background: $hb-paper; padding: 8px 16px 120px; padding-top: calc(8px + env(safe-area-inset-top)); }
-.ship-fields { display: none; }
-.head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-.back { width: 36px; height: 36px; border: 0; border-radius: 12px; background: #fff; display: inline-flex; align-items: center; justify-content: center; color: $hb-ink; box-shadow: $hb-shadow-soft; }
-h1 { margin: 0; font-size: 22px; font-weight: 800; color: $hb-ink; letter-spacing: -0.03em; }
-.card { background: #fff; border-radius: 16px; padding: 14px; margin-bottom: 12px; border: 0; box-shadow: 0 8px 20px rgba(28,36,48,0.05); }
-.sec { font-weight: 700; font-size: 14px; color: $hb-ink; }
-.row { display: flex; align-items: center; gap: 8px; }
-.between { justify-content: space-between; }
-.link { border: 0; background: transparent; color: #F96141; font-size: 13px; font-weight: 700; cursor: pointer; }
-.addr { margin-top: 8px; font-size: 13px; color: $hb-ink; line-height: 1.45; }
-.muted { color: $hb-muted; }
-.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; font-size: 11px; font-weight: 600; color: $hb-muted; }
-.field input, .field select, .coupon-in {
-  height: 42px; border-radius: 12px; border: 1px solid $hb-line; padding: 0 12px;
-  font-size: 14px; color: $hb-ink; background: #fff;
+.page {
+  min-height: 100vh; background: $hb-paper; color: $hb-ink;
+  padding: calc(8px + env(safe-area-inset-top)) 16px 32px;
 }
-.split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.tiny { font-size: 12px; color: $hb-muted; margin-top: 6px; }
+.head { display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 8px; margin-bottom: 14px; }
+.back {
+  width: 36px; height: 36px; border: 0; border-radius: 12px; background: #fff; color: $hb-ink;
+  display: inline-flex; align-items: center; justify-content: center; box-shadow: $hb-shadow-soft; cursor: pointer;
+}
+h1 { margin: 0; text-align: center; font-size: 18px; font-weight: 800; }
+.secure { display: inline-flex; align-items: center; gap: 4px; color: $hb-muted; font-size: 12px; font-weight: 650; }
+.card {
+  background: #fff; border-radius: 18px; padding: 14px; margin-bottom: 12px; box-shadow: $hb-shadow-soft;
+}
+.card-h { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.card-h b { flex: 1; font-size: 15px; }
+.ico { color: $hb-coral; }
+.link { border: 0; background: transparent; color: $hb-coral; font-weight: 750; cursor: pointer; font-size: 13px; }
+.addr {
+  width: 100%; border: 0; background: transparent; display: flex; align-items: center; gap: 8px;
+  text-align: left; color: $hb-ink; font-size: 13px; line-height: 1.45; cursor: pointer; padding: 0;
+}
+.addr b { font-size: 14px; }
+.muted { color: $hb-muted; }
+.chev { margin-left: auto; color: $hb-muted; flex: 0 0 auto; }
+.opt {
+  width: 100%; border: 0; background: transparent; border-radius: 14px; padding: 12px 10px;
+  display: flex; align-items: center; gap: 10px; text-align: left; cursor: pointer; color: $hb-ink;
+}
+.opt.on { background: $hb-coral-soft; }
+.opt + .opt { margin-top: 4px; }
+.radio {
+  width: 18px; height: 18px; border-radius: 50%; border: 2px solid #D9D3CB; flex: 0 0 auto; box-sizing: border-box;
+}
+.radio.on { border-color: $hb-coral; background: $hb-coral; box-shadow: inset 0 0 0 3px #fff; }
+.opt-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.opt-copy b { font-size: 14px; }
+.opt-copy small { color: $hb-muted; font-size: 12px; margin-top: 2px; }
+.opt-price { font-weight: 750; font-size: 14px; color: $hb-ink; }
+.coupon { display: flex; gap: 8px; }
+.coupon input, .field input, .field select, textarea {
+  width: 100%; border: 1px solid $hb-line; border-radius: 12px; background: #fff; color: $hb-ink;
+  font-size: 14px; padding: 0 12px;
+}
+.coupon input { height: 44px; flex: 1; }
+.apply {
+  height: 44px; padding: 0 16px; border: 0; border-radius: 12px; background: $hb-coral; color: #fff;
+  font-weight: 750; cursor: pointer;
+}
+.hint { margin: 8px 0 0; font-size: 12px; color: $hb-muted; line-height: 1.45; }
 .toggle {
-  width: 40px; height: 24px; border-radius: 12px; border: 0; background: #E2E6EE; position: relative; cursor: pointer;
+  width: 44px; height: 26px; border-radius: 13px; border: 0; background: #E4DFD8; position: relative; cursor: pointer;
 }
 .toggle.on { background: $hb-coral; }
 .knob {
-  position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 9px; background: #fff; transition: left .15s;
+  position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: left .15s;
 }
-.toggle.on .knob { left: 19px; }
-.pay {
-  display: flex; align-items: center; min-height: 48px; padding: 0 14px; border: 1px solid #E8E4DC; border-radius: 14px; margin-bottom: 8px;
-  font-size: 14px; font-weight: 650; color: $hb-ink; cursor: pointer;
+.toggle.on .knob { left: 21px; }
+.gift-row {
+  width: 100%; border: 0; background: transparent; display: flex; align-items: center; gap: 8px;
+  color: $hb-muted; font-size: 13px; cursor: pointer; padding: 4px 0 0;
 }
-.pay.on { border-width: 2px; border-color: $hb-coral; background: #FFF6F3; }
-.pay input { margin-right: 8px; }
-.tiny-row { margin-bottom: 6px; font-size: 13px; color: $hb-ink; }
-.total-row { margin-top: 8px; padding-top: 8px; border-top: 1px solid $hb-line; }
-.price { font-size: 18px; font-weight: 800; color: $hb-price; }
+.gift-row span { flex: 1; text-align: left; }
+textarea { margin-top: 10px; padding: 10px 12px; resize: vertical; min-height: 72px; }
+.pay-ico { color: $hb-ink; }
+.brands { display: flex; gap: 4px; }
+.brands i {
+  font-style: normal; font-size: 9px; font-weight: 800; letter-spacing: 0.02em;
+  border: 1px solid $hb-line; border-radius: 4px; padding: 2px 4px; color: #5C6570;
+}
+.pp { font-weight: 800; font-size: 13px; letter-spacing: -0.03em; }
+.pp b:first-child { color: #003087; }
+.pp b:last-child { color: #009cde; }
+.ll {
+  background: #1F4BFF; color: #fff; font-size: 11px; font-weight: 800; border-radius: 6px; padding: 3px 6px;
+}
+.bal-row {
+  display: flex; align-items: center; justify-content: space-between; margin-top: 8px;
+  padding-top: 10px; border-top: 1px solid $hb-line; font-size: 13px; font-weight: 650;
+}
+.sum { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; padding: 5px 0; color: $hb-ink; }
+.sum.total { margin-top: 6px; padding-top: 10px; border-top: 1px solid $hb-line; font-weight: 750; }
+.due { color: $hb-coral; font-size: 20px; font-weight: 800; }
+.off { color: $hb-coral; font-weight: 700; }
 .err { color: #B91C1C; font-size: 13px; margin: 8px 0; }
-.dock {
-  position: fixed; left: 50%; transform: translateX(-50%); width: min(100vw, 768px); bottom: 0; z-index: 20;
-  background: #fff; border-top: 1px solid #F1EEEA; padding: 12px 16px;
-  display: flex; gap: 12px; align-items: center;
-  padding-bottom: calc(12px + env(safe-area-inset-bottom));
-  box-shadow: 0 -8px 24px rgba(28,36,48,0.06);
-}
-.dock .price { font-size: 20px; }
 .place {
-  flex: 1; height: 52px; border: 0; border-radius: 999px; background: #F96141; color: #fff;
-  font-weight: 700; font-size: 16px; cursor: pointer;
+  width: 100%; height: 52px; border: 0; border-radius: 16px; background: $hb-coral; color: #fff;
+  font-weight: 750; font-size: 16px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  margin-top: 4px;
 }
-.place:disabled { opacity: .5; }
+.place:disabled { opacity: 0.5; }
+.legal { margin: 12px 0 0; text-align: center; color: $hb-muted; font-size: 12px; line-height: 1.5; }
+.legal a { color: $hb-coral; font-weight: 700; }
 .addr-mask {
-  position: fixed; inset: 0; z-index: 70; background: rgba(28,36,48,0.45);
+  position: fixed; inset: 0; z-index: 70; background: rgba(28, 36, 48, 0.45);
   display: flex; align-items: flex-end; justify-content: center;
 }
 .addr-sheet {
   width: min(100%, 768px); background: #fff; border-radius: 20px 20px 0 0;
-  padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+  padding: 16px 16px calc(16px + env(safe-area-inset-bottom)); max-height: 88vh; overflow: auto;
 }
-.addr-sheet h2 { margin: 0 0 10px; font-size: 18px; }
-.addr-sheet .place { width: 100%; margin-top: 8px; }
+.addr-sheet h2 { margin: 0 0 12px; font-size: 18px; }
+.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; font-size: 11px; font-weight: 650; color: $hb-muted; }
+.field input, .field select { height: 42px; }
+.addr-sheet .place { margin-top: 4px; }
 </style>

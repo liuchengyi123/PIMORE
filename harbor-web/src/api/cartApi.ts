@@ -183,7 +183,8 @@ export async function fetchCartServer(): Promise<CartSnapshot> {
   const subtotal = unique.reduce((n, l) => n + l.price * l.qty, 0)
   return {
     ok: true,
-    live: unique.length > 0 || /cart-line/i.test(html),
+    // Real line nodes only. The cart page script mentions ".cart-line" even when the cart is empty.
+    live: unique.length > 0 || /class=["']cart-line["']/i.test(html),
     lines: unique,
     cartCount: unique.reduce((n, l) => n + l.qty, 0),
     subtotal,
