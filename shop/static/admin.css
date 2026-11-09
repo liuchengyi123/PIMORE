@@ -926,6 +926,7 @@ a.btn { text-decoration: none; }
 
 /* Function AD17 order detail */
 .order-detail-toolbar { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; }
+.order-kv { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; }
 .order-kv .kv { margin: 0 0 8px; }
 .order-kv .kv span { display: block; font-size: 11px; color: var(--muted); }
 .order-kv .kv strong { display: block; font-size: 16px; color: #1C2430; }
@@ -1511,6 +1512,9 @@ td.empty { text-align: center; padding: 28px 12px; }
 .login-card .lead { margin: 0 0 14px !important; }
 .login-submit { width: 100% !important; height: 44px !important; margin-top: 4px !important; background: #F96141 !important; border: 0 !important; border-radius: 999px !important; color: #fff !important; }
 .page-head { margin-bottom: 8px; }
+.product-count { margin: 0 0 10px; font-size: 13px; }
+.page-size select { height: 40px; border-radius: 10px; border: 1px solid #E8EAF0; padding: 0 8px; background: #fff; }
+.orders-table td, .table-wrap td { font-size: 13px; }
 .kpi-grid { gap: 8px; }
 .login-foot { margin: 14px 0 0 !important; font-size: 12px !important; color: #8B93A0 !important; }
 
