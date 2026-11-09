@@ -54,28 +54,32 @@ function go(path: string) {
 
 <style lang="scss" scoped>
 @import '@/styles/theme.scss';
-.tab-spacer { height: 72px; }
+.tab-spacer { height: 64px; }
 .tab-bar {
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
   width: min(100vw, 768px);
   bottom: 0;
-  height: calc(58px + env(safe-area-inset-bottom));
+  height: calc(56px + env(safe-area-inset-bottom));
   padding-bottom: env(safe-area-inset-bottom);
   border-radius: 0;
   background: #fff;
   border-top: 1px solid #F1EEEA;
-  display: flex; align-items: center; justify-content: space-around;
+  display: flex; align-items: flex-start; justify-content: space-around;
   z-index: 100;
+}
+.tab-bar.shop .tab {
+  padding: 8px 0 0; gap: 3px;
 }
 .tab {
   position: relative;
   flex: 1; border: 0; background: transparent; padding: 6px 0 4px; cursor: pointer;
-  color: #9AA0A8;
+  color: #A0A6AD;
   display: flex; flex-direction: column; align-items: center; gap: 2px;
   &.on { color: $hb-coral; }
 }
+.tab-bar.shop .label { font-size: 10px; font-weight: 650; }
 .tab-bar.wish .tab.on::after {
   content: ""; position: absolute; left: 22%; right: 22%; bottom: 2px; height: 2px;
   background: $hb-coral; border-radius: 2px;

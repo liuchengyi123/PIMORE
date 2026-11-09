@@ -33,7 +33,7 @@
     <div class="cats">
       <router-link v-for="q in quickLinks" :key="q.to" class="cat" :to="q.to">
         <span class="bubble" :style="{ background: q.bg, color: q.fg }">
-          <component :is="q.icon" :size="20" :stroke-width="1.8" />
+          <component :is="q.icon" :size="18" :stroke-width="1.9" />
         </span>
         <span>{{ q.label }}</span>
       </router-link>
@@ -225,42 +225,42 @@ onMounted(async () => {
   background: #fff; border: 1px solid #EEEAE6; color: #1C2430;
   font-size: 13px; font-weight: 700;
 }
-.search-wrap { margin-top: 16px; }
+.search-wrap { margin-top: 14px; }
 .search-wrap :deep(.search-bar) {
   min-height: 44px; border-radius: 999px; background: #fff; border: 1px solid #EFEAE4; box-shadow: none;
 }
 .hero {
-  margin-top: 16px; position: relative; min-height: 220px;
-  border-radius: 20px; overflow: hidden; color: #fff;
-  background: linear-gradient(100deg, #F97855 0%, #F26A48 46%, #F7B39A 100%);
+  margin-top: 14px; position: relative; min-height: 196px;
+  border-radius: 22px; overflow: hidden; color: #fff;
+  background: linear-gradient(105deg, #F97855 0%, #F96141 42%, #F7B39A 100%);
 }
-.hero-copy { position: relative; z-index: 1; padding: 18px 18px 16px; max-width: 62%; }
-.kicker { font-size: 11px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; }
-.hero h1 { margin: 8px 0 0; font-size: 26px; line-height: 1.12; letter-spacing: -0.03em; font-weight: 800; }
-.hero p { margin: 8px 0 0; font-size: 13px; line-height: 1.35; opacity: 0.95; }
+.hero-copy { position: relative; z-index: 1; padding: 20px 18px 18px; max-width: 56%; }
+.kicker { font-size: 10px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; }
+.hero h1 { margin: 6px 0 0; font-size: 28px; line-height: 1.08; letter-spacing: -0.03em; font-weight: 800; }
+.hero p { margin: 6px 0 0; font-size: 13px; line-height: 1.35; opacity: 0.95; }
 .cta {
-  display: inline-flex; align-items: center; margin-top: 14px; background: #fff; color: #1C2430;
-  height: 36px; border-radius: 999px; padding: 0 16px; font-size: 13px; font-weight: 700;
+  display: inline-flex; align-items: center; margin-top: 12px; background: #fff; color: #1C2430;
+  height: 34px; border-radius: 999px; padding: 0 14px; font-size: 13px; font-weight: 700;
 }
-.dots { display: flex; gap: 5px; margin-top: 14px; }
+.dots { display: flex; gap: 5px; margin-top: 12px; }
 .dots i { width: 6px; height: 6px; border-radius: 99px; background: rgba(255,255,255,0.45); display: block; }
 .dots i.on { width: 14px; background: #fff; }
 .hero-photo {
-  position: absolute; right: 0; top: 0; height: 100%; width: 48%;
-  object-fit: cover; object-position: center;
+  position: absolute; right: 0; top: 0; height: 100%; width: 50%;
+  object-fit: cover; object-position: 70% center;
 }
-.cats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 16px; }
+.cats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 14px; }
 .cat {
-  background: #fff; border-radius: 16px; padding: 12px 6px 10px;
+  background: #fff; border-radius: 18px; padding: 14px 4px 12px;
   display: flex; flex-direction: column; align-items: center; gap: 8px;
-  border: 0; box-shadow: 0 8px 18px rgba(28,36,48,0.06); color: #1C2430;
+  border: 0; box-shadow: 0 6px 16px rgba(28,36,48,0.05); color: #1C2430;
   font-size: 12px; font-weight: 650;
 }
 .bubble {
-  width: 44px; height: 44px; border-radius: 999px;
+  width: 40px; height: 40px; border-radius: 999px;
   display: inline-flex; align-items: center; justify-content: center;
 }
-.block { margin-top: 22px; }
+.block { margin-top: 20px; }
 .sec { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
 .sec-title { display: flex; align-items: center; gap: 6px; font-size: 17px; font-weight: 800; letter-spacing: -0.02em; }
 .sec-sub { margin-top: 2px; font-size: 12px; color: #8E949C; }
@@ -273,7 +273,7 @@ onMounted(async () => {
 .clock span { display: flex; flex-direction: column; align-items: center; line-height: 1; background: #FFF1EC; border-radius: 8px; min-width: 32px; padding: 4px 5px; }
 .clock b { font-size: 13px; }
 .clock small { font-size: 8px; letter-spacing: 0.04em; color: #C47A68; }
-.row { display: flex; gap: 10px; overflow-x: auto; margin-top: 12px; padding-bottom: 4px; scrollbar-width: none; }
+.row { display: flex; gap: 12px; overflow-x: auto; margin-top: 10px; padding-bottom: 4px; scrollbar-width: none; }
 .row::-webkit-scrollbar { display: none; }
 .mini, .wide { flex: 0 0 164px; cursor: pointer; }
 .shot { position: relative; border-radius: 16px; overflow: hidden; background: #F4F1EE; aspect-ratio: 1; border: 0; box-shadow: 0 8px 18px rgba(28,36,48,0.06); }
