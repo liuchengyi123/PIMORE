@@ -5,7 +5,7 @@
         <span class="mark" aria-hidden="true"><Home :size="18" :stroke-width="2.2" /></span>
         <div>
           <div class="logo">Pimo</div>
-          <div class="tagline">{{ t('home_tagline') || 'Better Homes. Happier Days.' }}</div>
+          <div class="tagline">{{ zh ? '更好的家，更开心的一天' : 'Better Homes. Happier Days.' }}</div>
         </div>
       </div>
       <router-link class="locale" to="/locale">
@@ -16,15 +16,15 @@
     </header>
 
     <div class="search-wrap">
-      <AppSearchBar :placeholder="searchPh" navigate-on-focus />
+      <AppSearchBar :placeholder="zh ? '搜索家居好物...' : 'Search home essentials...'" navigate-on-focus />
     </div>
 
     <section class="hero">
       <div class="hero-copy">
-        <div class="kicker">{{ t('home_curated') || 'LIMITED TIME' }}</div>
-        <h1>{{ t('home_for_you') || 'Up to 50% Off Home Essentials' }}</h1>
-        <p>{{ t('home_hero_sub') || 'Refresh your space, for less.' }}</p>
-        <router-link class="cta" to="/sale">{{ t('sale_shop') || 'Shop Sale' }} →</router-link>
+        <div class="kicker">{{ zh ? '限时' : 'LIMITED TIME' }}</div>
+        <h1>{{ zh ? '家居好物最高 5 折' : 'Up to 50% Off Home Essentials' }}</h1>
+        <p>{{ zh ? '把家里刷新一下，少花一点。' : 'Refresh your space, for less.' }}</p>
+        <router-link class="cta" to="/sale">{{ zh ? '去抢购' : 'Shop Sale' }} →</router-link>
         <div class="dots" aria-hidden="true"><i class="on" /><i /><i /><i /></div>
       </div>
       <img class="hero-photo" :src="heroPhoto" alt="" />
@@ -42,8 +42,8 @@
     <section class="block">
       <div class="sec">
         <div>
-          <div class="sec-title"><Zap :size="16" :stroke-width="2.2" class="zap" /> Flash Deals</div>
-          <div class="sec-sub">Big savings. Limited time.</div>
+          <div class="sec-title"><Zap :size="16" :stroke-width="2.2" class="zap" /> {{ zh ? '限时特惠' : 'Flash Deals' }}</div>
+          <div class="sec-sub">{{ zh ? '省一笔，时间有限。' : 'Big savings. Limited time.' }}</div>
         </div>
         <div class="clock" aria-label="02:18:36">
           <Clock :size="14" :stroke-width="2" />
@@ -69,10 +69,10 @@
     <section class="block">
       <div class="sec">
         <div>
-          <div class="sec-title"><Sparkles :size="16" class="spark" /> New Arrivals</div>
-          <div class="sec-sub">Fresh finds for your home.</div>
+          <div class="sec-title"><Sparkles :size="16" class="spark" /> {{ zh ? '新品' : 'New Arrivals' }}</div>
+          <div class="sec-sub">{{ zh ? '刚到的家居好物。' : 'Fresh finds for your home.' }}</div>
         </div>
-        <router-link class="see" to="/new">See All →</router-link>
+        <router-link class="see" to="/new">{{ zh ? '查看全部' : 'See All' }} →</router-link>
       </div>
       <div class="row">
         <article v-for="(item, i) in arrivals" :key="item.name" class="mini" @click="openSlot(i + 4)">
@@ -91,8 +91,8 @@
     <section class="block">
       <div class="sec">
         <div>
-          <div class="sec-title"><UserRound :size="16" /> Just for You</div>
-          <div class="sec-sub">Based on your interests.</div>
+          <div class="sec-title"><UserRound :size="16" /> {{ zh ? '为你推荐' : 'Just for You' }}</div>
+          <div class="sec-sub">{{ zh ? '按你的喜好挑选。' : 'Based on your interests.' }}</div>
         </div>
       </div>
       <div v-if="error" class="state err">{{ error }}</div>
@@ -137,6 +137,7 @@ import just1 from '@/assets/home/just-1.jpg'
 import just2 from '@/assets/home/just-2.jpg'
 
 const { t, lang } = useI18n()
+const zh = computed(() => String(lang.value).startsWith('zh'))
 const cart = useCart()
 const router = useRouter()
 const products = ref<Product[]>([])
@@ -149,12 +150,11 @@ const localeFlag = computed(() => ({ en: '🇺🇸', zh: '🇨🇳', 'zh-Hant': 
 const localeCode = computed(() => ({ en: 'US', zh: 'CN', 'zh-Hant': 'TW', ja: 'JP', de: 'DE' }[lang.value] || 'US'))
 
 const quickLinks = computed(() => {
-  const en = lang.value === 'en'
   return [
-    { to: '/browse?cat=kitchen', label: en ? 'Kitchen' : '厨房', icon: Utensils, bg: '#FFF1EC', fg: '#F96141' },
-    { to: '/browse?cat=storage', label: en ? 'Storage' : '收纳', icon: Archive, bg: '#E8F8EF', fg: '#1F9D62' },
-    { to: '/browse?cat=cleaning', label: en ? 'Cleaning' : '清洁', icon: SprayCan, bg: '#E7F2FF', fg: '#3B82F6' },
-    { to: '/browse?cat=textile', label: en ? 'Textile' : '家纺', icon: Shirt, bg: '#F3EEFF', fg: '#8B5CF6' },
+    { to: '/browse?cat=kitchen', label: zh.value ? '厨房' : 'Kitchen', icon: Utensils, bg: '#FFF1EC', fg: '#F96141' },
+    { to: '/browse?cat=storage', label: zh.value ? '收纳' : 'Storage', icon: Archive, bg: '#E8F8EF', fg: '#1F9D62' },
+    { to: '/browse?cat=cleaning', label: zh.value ? '清洁' : 'Cleaning', icon: SprayCan, bg: '#E7F2FF', fg: '#3B82F6' },
+    { to: '/browse?cat=textile', label: zh.value ? '家纺' : 'Textile', icon: Shirt, bg: '#F3EEFF', fg: '#8B5CF6' },
   ]
 })
 
@@ -223,8 +223,11 @@ onMounted(async () => {
   font-size: 13px; font-weight: 700;
 }
 .search-wrap { margin-top: 14px; }
+.search-wrap :deep(.search-bar) {
+  min-height: 46px; border-radius: 14px; background: #F6F4F2; border: 0; box-shadow: none;
+}
 .hero {
-  margin-top: 14px; position: relative; min-height: 196px;
+  margin-top: 14px; position: relative; min-height: 214px;
   border-radius: 22px; overflow: hidden; color: #fff;
   background: linear-gradient(100deg, #F97855 0%, #F26A48 46%, #F7B39A 100%);
 }

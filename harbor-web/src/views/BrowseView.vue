@@ -3,7 +3,7 @@
     <header class="top">
       <div>
         <div class="logo">Harbor <span>/ Pimo</span></div>
-        <div class="tag">HOME GOODS FOR A BRIGHTER EVERYDAY</div>
+        <div class="tag">{{ zh ? '家居好物，照亮每一天' : 'HOME GOODS FOR A BRIGHTER EVERYDAY' }}</div>
       </div>
       <div class="tools">
         <router-link to="/search" aria-label="Search"><Search :size="22" /></router-link>
@@ -15,7 +15,7 @@
     </header>
 
     <div class="search-wrap">
-      <AppSearchBar placeholder="Search home goods, decor, kitchen..." navigate-on-focus />
+      <AppSearchBar :placeholder="zh ? '搜索家居、装饰、厨房...' : 'Search home goods, decor, kitchen...'" navigate-on-focus />
     </div>
 
     <div class="chips">
@@ -25,8 +25,8 @@
       </button>
     </div>
 
-    <h1>Everyday essentials</h1>
-    <p class="sub">Thoughtful home goods. Better living.</p>
+    <h1>{{ zh ? '日常好物' : 'Everyday essentials' }}</h1>
+    <p class="sub">{{ zh ? '用心的家居小物，生活更好一点。' : 'Thoughtful home goods. Better living.' }}</p>
 
     <div v-if="loading" class="state">{{ t('pdp_loading') }}</div>
     <div v-else class="grid">
@@ -63,7 +63,8 @@ import b4 from '@/assets/browse/b4.jpg'
 import b5 from '@/assets/browse/b5.jpg'
 import b6 from '@/assets/browse/b6.jpg'
 
-const { t } = useI18n()
+const { t, lang } = useI18n()
+const zh = computed(() => String(lang.value).startsWith('zh'))
 const route = useRoute()
 const router = useRouter()
 const cart = useCart()
