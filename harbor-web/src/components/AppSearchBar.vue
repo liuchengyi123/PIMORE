@@ -78,12 +78,16 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
   width: 100%;
-  min-height: 46px;
+  min-height: 44px;
   padding: 0 12px 0 14px;
   border-radius: $hb-radius-pill;
   background: $hb-white;
-  border: 1px solid rgba(18, 24, 22, 0.06);
-  box-shadow: $hb-shadow-soft;
+  border: 1px solid $hb-line;
+  box-shadow: none;
+}
+.search-bar:focus-within {
+  border-color: $hb-coral;
+  box-shadow: 0 0 0 3px rgba(249, 97, 65, 0.16);
 }
 .search-bar.compact { min-height: 40px; padding: 0 10px 0 12px; }
 .ico { flex: 0 0 auto; color: $hb-muted; }
@@ -96,8 +100,10 @@ onMounted(() => {
   font-size: 15px;
   color: $hb-ink;
   height: 44px;
+  box-shadow: none;
 }
-.input::placeholder { color: #9AA39C; }
+.input::placeholder { color: $hb-muted; }
+.search-bar .input:focus { box-shadow: none; border-color: transparent; }
 .go {
   flex: 0 0 auto;
   border: 0;
@@ -110,4 +116,5 @@ onMounted(() => {
   border-radius: $hb-radius-pill;
   cursor: pointer;
 }
+.go:hover { background: $hb-coral-hot; }
 </style>

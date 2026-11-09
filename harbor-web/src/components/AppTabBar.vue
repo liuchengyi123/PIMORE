@@ -64,15 +64,15 @@ function go(path: string) {
   height: calc(58px + env(safe-area-inset-bottom));
   padding-bottom: env(safe-area-inset-bottom);
   border-radius: 0;
-  background: #fff;
-  border-top: 1px solid #F1EEEA;
+  background: $hb-white;
+  border-top: 1px solid $hb-line;
   display: flex; align-items: center; justify-content: space-around;
   z-index: 100;
 }
 .tab {
   position: relative;
   flex: 1; border: 0; background: transparent; padding: 6px 0 4px; cursor: pointer;
-  color: #9AA0A8;
+  color: $hb-muted;
   display: flex; flex-direction: column; align-items: center; gap: 2px;
   &.on { color: $hb-coral; }
 }

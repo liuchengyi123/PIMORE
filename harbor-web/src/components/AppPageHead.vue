@@ -49,7 +49,7 @@ function onBack() {
   position: sticky;
   top: 0;
   z-index: 30;
-  background: rgba(245, 246, 244, 0.92);
+  background: rgba(247, 248, 250, 0.92);
   backdrop-filter: blur(14px);
   margin: 0 -16px;
   padding: calc(8px + env(safe-area-inset-top)) 16px 12px;
@@ -57,20 +57,21 @@ function onBack() {
 .back {
   width: 40px;
   height: 40px;
-  border: 0;
+  border: 1px solid $hb-line;
   border-radius: 14px;
   background: $hb-white;
   color: $hb-ink;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: $hb-shadow-soft;
+  box-shadow: none;
   cursor: pointer;
   flex: 0 0 auto;
 }
 .page-head.light .back {
   background: rgba(255,255,255,0.18);
   color: #fff;
+  border-color: transparent;
   box-shadow: none;
 }
 .main { flex: 1; min-width: 0; }

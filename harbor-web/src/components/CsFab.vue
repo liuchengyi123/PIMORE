@@ -52,12 +52,14 @@ const to = computed(() => {
   gap: 7px;
   padding: 11px 15px;
   border-radius: 999px;
-  background: $hb-forest;
+  background: $hb-coral;
   color: #fff;
   font-weight: 720;
   font-size: 13px;
-  box-shadow: 0 12px 30px rgba(27, 77, 62, 0.32);
+  border: 0;
+  box-shadow: 0 8px 20px rgba(249, 97, 65, 0.28);
 }
+.cs-fab:hover { background: $hb-coral-hot; }
 .ico { display: block; }
 .lab { line-height: 1; }
 @media (min-width: 960px) {

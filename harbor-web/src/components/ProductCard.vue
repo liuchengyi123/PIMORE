@@ -70,18 +70,19 @@ function go() {
 <style lang="scss" scoped>
 @import '@/styles/theme.scss';
 .card {
-  border-radius: 18px;
+  border-radius: 16px;
   overflow: hidden;
   background: $hb-white;
-  box-shadow: $hb-shadow-soft;
+  border: 1px solid $hb-line;
+  box-shadow: none;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.15s ease;
 }
 .card:active { transform: scale(0.985); }
 .thumb {
   aspect-ratio: 1 / 1;
   position: relative;
-  background: $hb-soft;
+  background: $hb-sand;
 }
 .thumb-img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .img-badge {
@@ -101,7 +102,7 @@ function go() {
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.7em;
 }
 .price-row { display: flex; align-items: baseline; gap: 6px; margin-top: 7px; flex-wrap: wrap; }
-.ship-line { margin-top: 4px; font-size: 11px; color: \-muted; }
+.ship-line { margin-top: 4px; font-size: 11px; color: $hb-muted; }
 .price { font-size: 16px; font-weight: 780; color: $hb-price; letter-spacing: -0.02em; }
 .was { font-size: 12px; color: $hb-muted; text-decoration: line-through; }
 .off-badge { font-size: 11px; color: $hb-forest; font-weight: 720; background: $hb-soft; padding: 2px 7px; border-radius: 999px; }
