@@ -35,12 +35,12 @@
     </div>
 
     <div v-if="lines.length && minOrder > 0" class="ship-card">
-      <div class="ship-row"><span>Minimum order</span><span class="tiny">{{ money(Math.max(0, minOrder - subtotal)) }} more</span></div>
+      <div class="ship-row"><span>{{ zhCart ? '起送金额' : 'Minimum order' }}</span><span class="tiny">{{ zhCart ? '还差 ' : '' }}{{ money(Math.max(0, minOrder - subtotal)) }}{{ zhCart ? '' : ' more' }}</span></div>
       <div class="ship-bar"><i :style="{ width: Math.min(100, Math.round(subtotal / minOrder * 100)) + '%' }"></i></div>
-      <div class="tiny">{{ subtotal >= minOrder ? 'Minimum met · free shipping' : ('Minimum order ' + money(minOrder) + ' · free shipping') }}</div>
+      <div class="tiny">{{ subtotal >= minOrder ? (zhCart ? '已满起送 · 包邮' : 'Minimum met · free shipping') : ((zhCart ? '满 ' : 'Minimum order ') + money(minOrder) + (zhCart ? ' 包邮' : ' · free shipping')) }}</div>
     </div>
     <div v-else-if="lines.length" class="ship-card">
-      <div class="tiny">Free shipping on this order</div>
+      <div class="tiny">{{ zhCart ? '本单包邮' : 'Free shipping on this order' }}</div>
     </div>
     <div v-if="lines.length" class="footer">
       <div class="sum">合计 <b>{{ money(subtotal) }}</b></div>
@@ -161,7 +161,7 @@ h1 small { font-size: 12px; color: $hb-muted; font-weight: 600; }
 .body { flex: 1; min-width: 0; }
 .name { font-weight: 680; font-size: 14px; color: $hb-ink; }
 .meta { font-size: 12px; color: $hb-muted; margin-top: 2px; }
-.price { margin-top: 6px; color: $hb-ink; font-weight: 760; }
+.price { margin-top: 6px; color: #F96141; font-weight: 760; }
 .qty { display: flex; align-items: center; gap: 8px; }
 .qty button {
   width: 30px; height: 30px; border: 0; border-radius: 10px; background: $hb-paper; cursor: pointer;

@@ -25,21 +25,32 @@
         <label class="field"><span>{{ zh ? '姓名' : 'Name' }}</span><input v-model="form.name" /></label>
         <label class="field"><span>{{ zh ? '地址' : 'Address' }}</span><input v-model="form.address" /></label>
         <label class="field"><span>{{ zh ? '城市' : 'City' }}</span><input v-model="form.city" /></label>
+        <label class="field"><span>{{ zh ? '地区' : 'Region' }}</span><input v-model="form.region" /></label>
+        <label class="field"><span>{{ zh ? '邮编' : 'Postal' }}</span><input v-model="form.postal" /></label>
+        <label class="field"><span>{{ zh ? '电话' : 'Phone' }}</span><input v-model="form.phone" /></label>
+        <label class="field"><span>{{ zh ? '国家' : 'Country' }}</span>
+          <select v-model="form.ship_country">
+            <option value="US">US</option><option value="CN">CN</option><option value="TW">TW</option>
+            <option value="HK">HK</option><option value="GB">GB</option><option value="CA">CA</option>
+            <option value="JP">JP</option>
+          </select>
+        </label>
         <button type="button" class="place" @click="addrSheet = false">{{ zh ? '完成' : 'Done' }}</button>
       </div>
     </div>
 
     <form class="form" @submit.prevent="place">
-      <label class="field"><span>Contact email</span><input v-model="form.email" type="email" required /></label>
-      <label class="field"><span>Name</span><input ref="nameEl" v-model="form.name" required /></label>
-      <label class="field"><span>Address</span><input v-model="form.address" required /></label>
+      <div class="ship-fields">
+      <label class="field"><span>{{ zh ? '邮箱' : 'Contact email' }}</span><input v-model="form.email" type="email" required /></label>
+      <label class="field"><span>{{ zh ? '姓名' : 'Name' }}</span><input ref="nameEl" v-model="form.name" required /></label>
+      <label class="field"><span>{{ zh ? '地址' : 'Address' }}</span><input v-model="form.address" required /></label>
       <div class="split">
-        <label class="field"><span>City</span><input v-model="form.city" required /></label>
-        <label class="field"><span>Region</span><input v-model="form.region" /></label>
+        <label class="field"><span>{{ zh ? '城市' : 'City' }}</span><input v-model="form.city" required /></label>
+        <label class="field"><span>{{ zh ? '地区' : 'Region' }}</span><input v-model="form.region" /></label>
       </div>
       <div class="split">
-        <label class="field"><span>Postal</span><input v-model="form.postal" required /></label>
-        <label class="field"><span>Country</span>
+        <label class="field"><span>{{ zh ? '邮编' : 'Postal' }}</span><input v-model="form.postal" required /></label>
+        <label class="field"><span>{{ zh ? '国家' : 'Country' }}</span>
           <select v-model="form.ship_country">
             <option value="US">US</option><option value="CN">CN</option><option value="TW">TW</option>
             <option value="HK">HK</option><option value="GB">GB</option><option value="CA">CA</option>
@@ -49,15 +60,16 @@
           </select>
         </label>
       </div>
-      <label class="field"><span>Phone</span><input v-model="form.phone" /></label>
+      <label class="field"><span>{{ zh ? '电话' : 'Phone' }}</span><input v-model="form.phone" /></label>
+      </div>
 
       <div class="card">
         <div class="row between">
           <div class="sec">{{ zh ? '优惠券' : 'Coupon' }}</div>
-          <span class="link">Select ›</span>
+          <span class="link">{{ zh ? '选择' : 'Select' }} ›</span>
         </div>
         <div class="tiny" v-if="form.coupon_code">{{ form.coupon_code }}</div>
-        <input class="coupon-in" v-model="form.coupon_code" placeholder="Code" />
+        <input class="coupon-in" v-model="form.coupon_code" :placeholder="zh ? '优惠码' : 'Code'" />
       </div>
 
       <div class="card">
@@ -67,7 +79,7 @@
             <span class="knob" />
           </button>
         </div>
-        <div class="tiny">Applied at payment when available</div>
+        <div class="tiny">{{ zh ? '有余额时在付款时抵扣' : 'Applied at payment when available' }}</div>
       </div>
 
       <div class="card">
@@ -76,7 +88,7 @@
           <input v-model="form.pay_method" type="radio" value="paypal" /> PayPal
         </label>
         <label class="pay" :class="{ on: form.pay_method === 'card' }">
-          <input v-model="form.pay_method" type="radio" value="card" /> Card · Visa / Mastercard / Amex (Stripe)
+          <input v-model="form.pay_method" type="radio" value="card" /> {{ zh ? '银行卡 · Visa / Mastercard / Amex' : 'Card · Visa / Mastercard / Amex (Stripe)' }}
         </label>
         <label class="pay" :class="{ on: form.pay_method === 'lianlian' }">
           <input v-model="form.pay_method" type="radio" value="lianlian" /> LianLian
@@ -84,10 +96,10 @@
       </div>
 
       <div class="card totals">
-        <div class="row between tiny-row"><span class="tiny">Items</span><span>{{ money(subtotal) }}</span></div>
-        <div class="row between tiny-row"><span class="tiny">Shipping</span><span>Tracked</span></div>
+        <div class="row between tiny-row"><span class="tiny">{{ zh ? '商品' : 'Items' }}</span><span>{{ money(subtotal) }}</span></div>
+        <div class="row between tiny-row"><span class="tiny">{{ zh ? '运费' : 'Shipping' }}</span><span>{{ zh ? '可追踪' : 'Tracked' }}</span></div>
         <div class="row between total-row"><span class="sec">{{ zh ? '合计' : 'Total' }}</span><span class="price">{{ money(subtotal) }}</span></div>
-        <div class="tiny" style="margin-top:8px">Tracked shipping · Est. 7–12 days</div>
+        <div class="tiny" style="margin-top:8px">{{ zh ? '可追踪物流 · 预计 7–12 天' : 'Tracked shipping · Est. 7–12 days' }}</div>
       </div>
 
       <p v-if="error" class="err">{{ error }}</p>
@@ -182,6 +194,7 @@ async function place() {
 <style lang="scss" scoped>
 @import '@/styles/theme.scss';
 .page { min-height: 100vh; background: $hb-paper; padding: 8px 16px 120px; padding-top: calc(8px + env(safe-area-inset-top)); }
+.ship-fields { display: none; }
 .head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
 .back { width: 36px; height: 36px; border: 0; border-radius: 12px; background: #fff; display: inline-flex; align-items: center; justify-content: center; color: $hb-ink; box-shadow: $hb-shadow-soft; }
 h1 { margin: 0; font-size: 22px; font-weight: 800; color: $hb-ink; letter-spacing: -0.03em; }

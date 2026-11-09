@@ -54,8 +54,8 @@ async function submit() {
 @import '@/styles/theme.scss';
 .page { min-height: 100vh; background: #FDF9F6; padding: 16px 20px 32px; padding-top: calc(16px + env(safe-area-inset-top)); }
 .back { width: 40px; height: 40px; border: 0; border-radius: 14px; background: transparent; color: #1C2430; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
-.brand { margin-top: 28px; text-align: center; font-size: 32px; font-weight: 800; color: #F96141; letter-spacing: -0.03em; }
-h1 { margin: 28px 0 6px; font-size: 28px; text-align: center; letter-spacing: -0.03em; }
+.brand { margin-top: 36px; text-align: center; font-size: 34px; font-weight: 800; color: #F96141; letter-spacing: -0.04em; }
+h1 { margin: 32px 0 6px; font-size: 26px; text-align: center; letter-spacing: -0.03em; }
 .sub { color: $hb-muted; font-size: 14px; margin: 0 0 22px; text-align: center; line-height: 1.45; }
 .form { display: flex; flex-direction: column; gap: 12px; background: transparent; padding: 0; }
 label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700; color: $hb-muted; }

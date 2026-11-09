@@ -19,9 +19,9 @@
     </div>
 
     <div class="chips">
-      <button type="button" class="chip" :class="{ on: !activeCat }" @click="pick('')"><Home :size="14" /> All</button>
+      <button type="button" class="chip" :class="{ on: !activeCat }" @click="pick('')"><Home :size="14" /> {{ zh ? '全部' : 'All' }}</button>
       <button v-for="c in chips" :key="c.id" type="button" class="chip" :class="{ on: activeCat === c.id }" @click="pick(c.id)">
-        {{ c.label }}
+        {{ zh ? c.zh : c.label }}
       </button>
     </div>
 
@@ -38,8 +38,8 @@
         <div class="nm" @click="open(item, i)">{{ item.name }}</div>
         <div class="cat">{{ item.cat }}</div>
         <div class="pr">
-          <b>${{ item.price }}</b>
-          <button type="button" class="add" @click.stop="add(item)">Add +</button>
+          <b>{{ money(item.price) }}</b>
+          <button type="button" class="add" @click.stop="add(item)">{{ zh ? '加入' : 'Add' }} +</button>
         </div>
       </article>
     </div>
@@ -51,7 +51,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Home, Search, ShoppingBag } from 'lucide-vue-next'
-import { listByCategory, type Product } from '@/api/products'
+import { listByCategory, money, type Product } from '@/api/products'
 import { useI18n } from '@/composables/i18n'
 import { useCart } from '@/composables/cart'
 import AppTabBar from '@/components/AppTabBar.vue'
@@ -74,10 +74,10 @@ const activeCat = ref('')
 const loading = ref(false)
 
 const chips = [
-  { id: 'bedding', label: 'Bedding' },
-  { id: 'decor', label: 'Decor' },
-  { id: 'kitchen', label: 'Kitchen' },
-  { id: 'bath', label: 'Bath' },
+  { id: 'bedding', label: 'Bedding', zh: '床品' },
+  { id: 'decor', label: 'Decor', zh: '装饰' },
+  { id: 'kitchen', label: 'Kitchen', zh: '厨房' },
+  { id: 'bath', label: 'Bath', zh: '卫浴' },
 ]
 
 const catalog = [
@@ -145,7 +145,7 @@ onMounted(() => {
   font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 .top { display: flex; justify-content: space-between; align-items: flex-start; }
-.logo { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; }
+.logo { font-size: 24px; font-weight: 800; letter-spacing: -0.04em; }
 .logo span { color: #F96141; }
 .tag { margin-top: 2px; font-size: 10px; letter-spacing: 0.08em; color: #9AA0A8; font-weight: 650; }
 .tools { display: flex; gap: 14px; align-items: center; color: #1C2430; }
@@ -160,14 +160,14 @@ onMounted(() => {
 .chips::-webkit-scrollbar { display: none; }
 .chip {
   flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px;
-  height: 34px; padding: 0 12px; border-radius: 999px; border: 0; background: #F4F1EE;
+  height: 36px; padding: 0 14px; border-radius: 999px; border: 0; background: #F4F1EE;
   color: #1C2430; font-weight: 650; font-size: 13px; cursor: pointer;
   &.on { background: #F96141; color: #fff; }
 }
-h1 { margin: 16px 0 0; font-size: 22px; letter-spacing: -0.03em; }
+h1 { margin: 18px 0 0; font-size: 24px; letter-spacing: -0.03em; }
 .sub { margin: 4px 0 12px; color: #8E949C; font-size: 13px; }
-.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 12px; }
-.shot { position: relative; border-radius: 18px; overflow: hidden; background: #F6F3F0; aspect-ratio: 1.15; cursor: pointer; box-shadow: 0 8px 20px rgba(28,36,48,0.05); }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 12px; }
+.shot { position: relative; border-radius: 16px; overflow: hidden; background: #F6F3F0; aspect-ratio: 1.05; cursor: pointer; box-shadow: 0 8px 20px rgba(28,36,48,0.05); }
 .shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .heart {
   position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; border: 0; border-radius: 99px;
@@ -178,7 +178,7 @@ h1 { margin: 16px 0 0; font-size: 22px; letter-spacing: -0.03em; }
 .pr { display: flex; align-items: center; margin-top: 8px; }
 .pr b { font-size: 16px; }
 .add {
-  margin-left: auto; height: 32px; padding: 0 12px; border: 0; border-radius: 999px;
+  margin-left: auto; height: 34px; padding: 0 14px; border: 0; border-radius: 999px;
   background: #F96141; color: #fff; font-weight: 700; cursor: pointer;
 }
 .state { text-align: center; color: #8E949C; padding: 24px 0; }

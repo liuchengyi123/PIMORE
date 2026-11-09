@@ -10,9 +10,9 @@
         <button type="button" class="locale-pill" @click="go('/locale')">{{ localePill }}</button>
       </div>
       <div class="stats">
-        <button type="button" class="stat" @click="go('/balance')"><b>{{ balanceText }}</b><span>Balance</span></button>
-        <button type="button" class="stat" @click="go('/coupons')"><b>{{ couponCount }}</b><span>Coupons</span></button>
-        <button type="button" class="stat" @click="go('/wishlist')"><b>{{ wishCount }}</b><span>Wishlist</span></button>
+        <button type="button" class="stat" @click="go('/balance')"><b>{{ balanceText }}</b><span>{{ lang === 'en' ? 'Balance' : '余额' }}</span></button>
+        <button type="button" class="stat" @click="go('/coupons')"><b>{{ couponCount }}</b><span>{{ lang === 'en' ? 'Coupons' : '优惠券' }}</span></button>
+        <button type="button" class="stat" @click="go('/wishlist')"><b>{{ wishCount }}</b><span>{{ lang === 'en' ? 'Wishlist' : '心愿单' }}</span></button>
       </div>
       <div v-if="!acct.signedIn" class="login-row">
         <button type="button" class="login" @click="go('/login', { next: '/me' })">{{ lang === 'en' ? 'Sign in' : '登录' }}</button>
@@ -137,7 +137,7 @@ onMounted(async () => {
   border: 0; background: #FFF1EC; color: #F96141; font-size: 11px; font-weight: 700;
   padding: 6px 10px; border-radius: 999px; cursor: pointer; white-space: nowrap;
 }
-.stats { display: none; }
+.stats { display: flex; gap: 8px; margin-top: 14px; }
 .stat {
   flex: 1; border: 0; background: #fff; color: #1C2430; border-radius: 12px; padding: 10px; cursor: pointer;
   display: flex; flex-direction: column; align-items: center; gap: 2px;

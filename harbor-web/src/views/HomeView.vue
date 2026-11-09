@@ -47,9 +47,9 @@
         </div>
         <div class="clock" aria-label="02:18:36">
           <Clock :size="14" :stroke-width="2" />
-          <span><b>02</b><small>HRS</small></span>
-          <span><b>18</b><small>MIN</small></span>
-          <span><b>36</b><small>SEC</small></span>
+          <span><b>02</b><small>{{ zh ? '时' : 'HRS' }}</small></span>
+          <span><b>18</b><small>{{ zh ? '分' : 'MIN' }}</small></span>
+          <span><b>36</b><small>{{ zh ? '秒' : 'SEC' }}</small></span>
         </div>
       </div>
       <div class="row">
@@ -205,7 +205,7 @@ onMounted(async () => {
   min-height: 100vh;
   background: #FDFBF9;
   color: #1C2430;
-  padding: 14px 16px 8px;
+  padding: 16px 16px 8px;
   font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 .top { display: flex; align-items: center; justify-content: space-between; }
@@ -214,7 +214,7 @@ onMounted(async () => {
   width: 28px; height: 28px; border-radius: 8px; background: #FFF1EC; color: #F96141;
   display: inline-flex; align-items: center; justify-content: center;
 }
-.logo { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
+.logo { font-size: 24px; font-weight: 800; letter-spacing: -0.04em; line-height: 1; }
 .tagline { margin-top: 2px; font-size: 11px; color: #8E949C; }
 .locale {
   display: inline-flex; align-items: center; gap: 4px;
@@ -222,13 +222,13 @@ onMounted(async () => {
   background: #fff; border: 1px solid #EEEAE6; color: #1C2430;
   font-size: 13px; font-weight: 700;
 }
-.search-wrap { margin-top: 14px; }
+.search-wrap { margin-top: 16px; }
 .search-wrap :deep(.search-bar) {
   min-height: 46px; border-radius: 14px; background: #F6F4F2; border: 0; box-shadow: none;
 }
 .hero {
-  margin-top: 14px; position: relative; min-height: 214px;
-  border-radius: 22px; overflow: hidden; color: #fff;
+  margin-top: 16px; position: relative; min-height: 220px;
+  border-radius: 20px; overflow: hidden; color: #fff;
   background: linear-gradient(100deg, #F97855 0%, #F26A48 46%, #F7B39A 100%);
 }
 .hero-copy { position: relative; z-index: 1; padding: 18px 18px 16px; max-width: 62%; }
@@ -246,7 +246,7 @@ onMounted(async () => {
   position: absolute; right: 0; top: 0; height: 100%; width: 48%;
   object-fit: cover; object-position: center;
 }
-.cats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 14px; }
+.cats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 16px; }
 .cat {
   background: #fff; border-radius: 16px; padding: 12px 6px 10px;
   display: flex; flex-direction: column; align-items: center; gap: 8px;
@@ -254,7 +254,7 @@ onMounted(async () => {
   font-size: 12px; font-weight: 650;
 }
 .bubble {
-  width: 40px; height: 40px; border-radius: 999px;
+  width: 44px; height: 44px; border-radius: 999px;
   display: inline-flex; align-items: center; justify-content: center;
 }
 .block { margin-top: 18px; }
