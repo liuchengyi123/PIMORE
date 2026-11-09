@@ -47,19 +47,20 @@
             <div class="meta">{{ line.size || line.offer || (zh ? '默认' : 'default') }}</div>
             <div class="price">{{ money(line.price) }}</div>
             <div class="qty">
-              <button type="button" @click="bump(line, -1)" :aria-label="zh ? '减少' : 'minus'"><Minus :size="14" :stroke-width="2" /></button>
+              <button type="button" @click="bump(line, -1)" :aria-label="zh ? '减少' : 'minus'"><Minus :size="13" :stroke-width="2" /></button>
               <span>{{ line.qty }}</span>
-              <button type="button" @click="bump(line, 1)" :aria-label="zh ? '增加' : 'plus'"><Plus :size="14" :stroke-width="2" /></button>
+              <button type="button" @click="bump(line, 1)" :aria-label="zh ? '增加' : 'plus'"><Plus :size="13" :stroke-width="2" /></button>
+              <button type="button" class="hold" @click="saveForLater(line)">{{ zh ? '稍后再买' : 'Save for later' }}</button>
             </div>
-            <button type="button" class="hold" @click="saveForLater(line)">{{ zh ? '稍后再买' : 'Save for later' }}</button>
           </div>
           <div class="acts">
             <button type="button" class="act" :class="{ hot: wished.has(line.sku) }" @click="toggleWish(line.sku)">
-              <Heart :size="16" :stroke-width="1.75" :fill="wished.has(line.sku) ? 'currentColor' : 'none'" />
-              <span>{{ wished.has(line.sku) ? (zh ? '移出心愿单' : 'Remove from wishlist') : (zh ? '加入心愿单' : 'Save to wishlist') }}</span>
+              <Heart :size="15" :stroke-width="1.75" :fill="wished.has(line.sku) ? 'currentColor' : 'none'" />
+              <span v-if="zh">{{ wished.has(line.sku) ? '移出' : '加入' }}<br>心愿单</span>
+              <span v-else>{{ wished.has(line.sku) ? 'Remove from wishlist' : 'Save to wishlist' }}</span>
             </button>
             <button type="button" class="act" @click="askRemove(line)">
-              <Trash2 :size="16" :stroke-width="1.75" />
+              <Trash2 :size="15" :stroke-width="1.75" />
               <span>{{ zh ? '移除' : 'Remove' }}</span>
             </button>
           </div>
@@ -277,13 +278,13 @@ h1 { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.03em; colo
   display: flex; justify-content: space-between; margin-top: 3px;
   font-size: 11px; font-weight: 650; color: #8B919A; font-variant-numeric: tabular-nums;
 }
-.sheet { background: #fff; border-radius: 18px; padding: 4px 12px; box-shadow: $hb-shadow-soft; }
-.row { display: flex; gap: 12px; align-items: flex-start; padding: 14px 0; border-bottom: 1px solid $hb-line; }
+.sheet { background: #fff; border-radius: 16px; padding: 2px 10px; box-shadow: $hb-shadow-soft; }
+.row { display: flex; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid $hb-line; }
 .row:last-child { border-bottom: 0; }
 .thumb, .pthumb {
-  width: 84px; height: 84px; border: 0; padding: 0; border-radius: 14px; overflow: hidden;
-  background: #F6F3EF; flex: 0 0 auto; cursor: pointer;
+  border: 0; padding: 0; overflow: hidden; background: #F6F3EF; flex: 0 0 auto; cursor: pointer;
 }
+.thumb { width: 72px; height: 72px; border-radius: 12px; }
 .thumb img, .pthumb img, .sthumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .ph, .sthumb span, .pthumb .ph {
   width: 100%; height: 100%; display: grid; place-items: center; color: $hb-muted; font-weight: 750;
@@ -291,24 +292,24 @@ h1 { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.03em; colo
 .mid { flex: 1; min-width: 0; }
 .name {
   display: block; width: 100%; border: 0; background: transparent; padding: 0; text-align: left;
-  font-size: 15px; font-weight: 750; color: $hb-ink; cursor: pointer;
+  font-size: 14px; font-weight: 750; line-height: 1.25; color: $hb-ink; cursor: pointer;
 }
-.meta { margin-top: 2px; font-size: 12px; color: $hb-muted; }
-.price { margin-top: 6px; font-size: 16px; font-weight: 800; color: $hb-ink; }
-.qty { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.meta { margin-top: 0; font-size: 11px; line-height: 1.2; color: $hb-muted; }
+.price { margin-top: 2px; font-size: 15px; font-weight: 800; line-height: 1.2; color: $hb-ink; }
+.qty { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
 .qty button {
-  width: 28px; height: 28px; border-radius: 50%; border: 1px solid #E4DFD8; background: #fff;
+  width: 26px; height: 26px; border-radius: 50%; border: 1px solid #E4DFD8; background: #fff;
   display: inline-flex; align-items: center; justify-content: center; color: $hb-ink; cursor: pointer;
 }
-.qty span { min-width: 12px; text-align: center; font-weight: 700; font-size: 14px; }
-.hold {
-  margin-top: 6px; border: 0; background: transparent; color: $hb-muted; font-size: 12px;
-  font-weight: 650; cursor: pointer; padding: 0;
+.qty span { min-width: 10px; text-align: center; font-weight: 700; font-size: 13px; }
+.qty .hold {
+  width: auto; height: auto; margin-left: 2px; border: 0; border-radius: 0; background: transparent;
+  color: $hb-muted; font-size: 11px; font-weight: 650; cursor: pointer; padding: 0; white-space: nowrap;
 }
-.acts { display: flex; gap: 4px; flex: 0 0 auto; }
+.acts { display: flex; gap: 2px; flex: 0 0 auto; }
 .act {
-  width: 56px; border: 0; background: transparent; color: $hb-muted; cursor: pointer;
-  display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 10px; line-height: 1.25; padding: 0;
+  width: 46px; border: 0; background: transparent; color: $hb-muted; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 10px; line-height: 1.15; padding: 0;
 }
 .act.hot { color: $hb-coral; }
 .later {
@@ -357,18 +358,18 @@ h1 { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.03em; colo
 }
 .dock {
   position: fixed; left: 50%; transform: translateX(-50%); width: min(100vw, 768px);
-  bottom: calc(58px + env(safe-area-inset-bottom)); z-index: 90; padding: 0 12px 8px;
+  bottom: calc(58px + env(safe-area-inset-bottom)); z-index: 90; padding: 0 10px 6px;
 }
 .dock-bar {
-  background: $hb-coral; color: #fff; border-radius: 18px; min-height: 64px;
-  padding: 10px 12px 10px 16px; display: flex; align-items: center; gap: 12px;
-  box-shadow: 0 10px 24px rgba(249, 97, 65, 0.28);
+  background: $hb-coral; color: #fff; border-radius: 16px; min-height: 56px;
+  padding: 8px 10px 8px 14px; display: flex; align-items: center; gap: 8px;
+  box-shadow: 0 8px 18px rgba(249, 97, 65, 0.24);
 }
-.dmeta { font-size: 12px; opacity: 0.92; }
-.dsum { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; }
+.dmeta { font-size: 11px; line-height: 1.15; opacity: 0.92; }
+.dsum { font-size: 20px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.05; }
 .checkout {
-  margin-left: auto; height: 40px; padding: 0 16px; border: 0; border-radius: 999px;
-  background: #fff; color: $hb-coral; font-weight: 800; cursor: pointer;
+  margin-left: auto; height: 36px; padding: 0 14px; border: 0; border-radius: 999px;
+  background: #fff; color: $hb-coral; font-weight: 800; font-size: 14px; cursor: pointer;
   display: inline-flex; align-items: center; gap: 2px;
 }
 </style>
