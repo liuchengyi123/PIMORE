@@ -113,8 +113,9 @@
       "path": "pages/compare/index",
       "style": {
         "navigationBarTitleText": "Compare",
-        "navigationBarBackgroundColor": "#F7F6F3",
-        "navigationBarTextStyle": "black"
+        "navigationStyle": "custom",
+        "navigationBarBackgroundColor": "#FF6B4A",
+        "navigationBarTextStyle": "white"
       }
     },
     {
