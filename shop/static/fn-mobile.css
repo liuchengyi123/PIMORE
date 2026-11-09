@@ -2493,6 +2493,28 @@ body.fn-acc-page .fn-acc-welcome-title + .fn-acc-sub,
 .fn-acc-welcome-title + .fn-acc-sub {
   color: #64748b !important;
 }
+/* Coupon wallet notes sit on the same sand page. body.fn-acc-sub inherits
+   the hero's rgba(255,255,255,.75), which made the empty copy disappear.
+   Gutter matches Me list row text: .fn-me-mobile-nav margin 16px plus the
+   row's 16px padding, on top of .fn-acc-main's 16px. Type matches those rows. */
+body.fn-acc-page .fn-coupon-lead {
+  margin: 4px 16px 12px !important;
+  padding: 0 16px !important;
+  color: #0F2744 !important;
+  text-align: left !important;
+}
+body.fn-acc-page .fn-coupon-lead p {
+  margin: 0 0 8px !important;
+  padding: 0 !important;
+  color: #0F2744 !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
+  text-align: left !important;
+}
+body.fn-acc-page .fn-coupon-lead p:last-child {
+  margin-bottom: 0 !important;
+}
 .fn-acc-welcome-title {
   color: #0F2744 !important;
   font-size: 20px !important;

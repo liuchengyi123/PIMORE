@@ -1025,6 +1025,24 @@ body.fn-acc-page .fn-acc-welcome-title + .fn-acc-sub,
 .fn-acc-welcome-title + .fn-acc-sub {
   color: #64748b !important;
 }
+/* Same sand-page wallet copy as mobile. Desktop main has no phone gutter,
+   so only the ink and type are shared with the Me list rows. */
+body.fn-acc-page .fn-coupon-lead {
+  margin: 0 0 16px !important;
+  color: #0F2744 !important;
+  text-align: left !important;
+}
+body.fn-acc-page .fn-coupon-lead p {
+  margin: 0 0 8px !important;
+  color: #0F2744 !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
+  text-align: left !important;
+}
+body.fn-acc-page .fn-coupon-lead p:last-child {
+  margin-bottom: 0 !important;
+}
 .fn-acc-welcome-title {
   color: #0F2744 !important;
   font-size: 20px !important;

@@ -421,7 +421,15 @@ def test_guest_me_does_not_list_the_coupon_catalog(client):
     assert _coupon_names(coupons.text) == []
     assert "Sign in to see coupons on your account." in coupons.text
     assert "Storewide saving is the 10% OFF spin." in coupons.text
+    assert 'class="fn-coupon-lead"' in coupons.text
     assert 'href="/login?next=/account/coupons&amp;country=US"' in coupons.text
+    css = client.get("/static/fn-mobile.min.css").text
+    lead = css[css.find(".fn-coupon-lead"):css.find(".fn-coupon-lead") + 700]
+    assert "color:#0F2744" in lead
+    assert "font-size:15px" in lead
+    assert "font-weight:600" in lead
+    assert "line-height:1.35" in lead
+    assert "rgba(255,255,255,.75)" not in lead
     assert "lucky-chip" in coupons.text
     zh = client.get("/account/coupons?country=CN&lang=zh")
     assert _coupon_names(zh.text) == []
@@ -482,4 +490,5 @@ def test_signed_in_wallet_counts_owned_coupons_only(client):
     empty = client.get("/account/coupons?country=US")
     assert _coupon_names(empty.text) == []
     assert "No coupons yet. Check in or share, and they show up here." in empty.text
+    assert 'class="fn-coupon-lead"' in empty.text
     assert 'data-coupon-count="0"' in client.get("/account?country=US").text
