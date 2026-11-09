@@ -221,7 +221,7 @@ function renderBodyHtml(body) {
     const url = b.slice(5).trim().split(/\s+/)[0] || '';
     const src = mediaUrl(url);
     if (!src) return esc(b);
-    return `<img class="bubble-img" src="${esc(src)}" alt="图片" data-full="${esc(src)}" />`;
+    return `<div class="img-bubble"><img class="bubble-img" src="${esc(src)}" alt="图片" data-full="${esc(src)}" /><span class="img-cap">图片</span></div>`;
   }
   const prod = parseProductBody(b);
   if (prod) {
@@ -286,9 +286,9 @@ function renderMessages() {
       if (role === 'system' && rawBody.startsWith('[ops]')) rawBody = rawBody.slice(5);
       const isSpecial = rawBody.startsWith('[img]') || rawBody.startsWith('[product]') || rawBody.startsWith('[order]');
       if (!isSpecial && role === 'user' && m.body_user_original && m.body_user_original !== m.body) {
-        extra = `<div class="orig muted small">原文：${esc(m.body_user_original)}</div>`;
+        extra = `<div class="orig">原文：${esc(m.body_user_original)}</div>`;
       } else if (!isSpecial && role === 'staff' && m.translated && m.body_original && m.lang && m.lang !== 'zh') {
-        extra = `<div class="orig muted small">已译为 ${esc(m.lang)}</div>`;
+        extra = `<div class="orig">已译为 ${esc(m.lang)} · ${esc(m.body_original)}</div>`;
       }
       const showBody = (role === 'system' && String(m.body||'').startsWith('[ops]')) ? String(m.body).slice(5) : m.body;
       return `<div class="bubble ${role}">${renderBodyHtml(showBody)}${extra}<span class="meta">${esc(who)} · ${esc(fmtTime(m.created_at))}</span></div>`;
@@ -1143,6 +1143,9 @@ if (inboxChips) {
     if (!btn) return;
     state.inboxChip = btn.getAttribute('data-chip') || 'all';
     inboxChips.querySelectorAll('[data-chip]').forEach((el) => el.classList.toggle('on', el === btn));
+    const chipHint = document.getElementById('chipHint');
+    const chipCopy = { all: '全部进行中会话', mine: '只看分配给我的', unassigned: '还没有客服接手', hung: '挂起或 AI 接待中' };
+    if (chipHint) chipHint.textContent = chipCopy[state.inboxChip] || chipCopy.all;
     renderRooms();
   });
 }

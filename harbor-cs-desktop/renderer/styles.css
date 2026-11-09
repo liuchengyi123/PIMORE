@@ -272,11 +272,16 @@ input:focus, textarea:focus { outline: 2px solid rgba(224,82,46,0.35); border-co
   max-width: 220px;
   width: auto;
   height: auto;
-  border-radius: 10px;
+  border-radius: 16px;
   display: block;
   cursor: zoom-in;
-  background: rgba(0,0,0,0.2);
+  background: #F4F6FB;
 }
+.img-bubble { display: grid; gap: 4px; }
+.img-cap, .orig { font-size: 11px; color: #C2410C; background: #FFF1EC; border-radius: 8px; padding: 2px 6px; width: max-content; }
+.chip-hint { margin: 6px 0 0; font-size: 12px; color: #8B919A; }
+.status-hint { margin-left: 8px; background: #FFF1EC; color: #C2410C; border-radius: 999px; padding: 2px 8px; }
+.login-card .error { display: block; background: #FEE2E2; color: #B91C1C; border-radius: 10px; padding: 8px 10px; }
 .bubble-img:active { opacity: 0.92; }
 .empty {
   display: grid; place-items: center; color: var(--muted); height: 100%;
@@ -516,6 +521,8 @@ input:focus, textarea:focus { outline: 2px solid rgba(224,82,46,0.35); border-co
 }
 .settings-tabs button.on { background: #F96141; color: #fff; border-color: #F96141; }
 .stab-body label { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; font-size: 12px; font-weight: 600; }
+.stab-body input, .stab-body textarea { width: 100%; box-sizing: border-box; border: 1px solid #E8EAF0; border-radius: 10px; padding: 8px 10px; background: #fff; color: #1C2430; }
+.stab-body input { height: 40px; }
 .stab-body .chk { flex-direction: row; align-items: center; gap: 8px; font-weight: 500; }
 .transfer-label { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; font-size: 12px; font-weight: 600; }
 .agent-box select.away, #agentStatus[value="away"] { outline: 2px solid #B45309; }
