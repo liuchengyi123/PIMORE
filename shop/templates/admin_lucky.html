@@ -1,6 +1,7 @@
 {% extends "admin_base.html" %}
 {% block body %}
 <header class="page-head"><div><h1>幸运抽奖</h1><p class="muted">转盘一定出设定的折扣。免单一人一条，而且始终绑在这个人最近的一笔已付款订单上。自己再付一单，这条免单改绑到新订单，不另开第二条；原来那一单金额够就记一次进度。好友一笔不低于当前金额的已付款订单算一次，同一好友只算一次。</p></div></header>
+<div class="page-lucky">
 <div class="card">
   <h2>规则</h2>
   <form class="pad fields" method="post" action="/admin/lucky">
@@ -71,5 +72,6 @@
       </tbody>
     </table>
   </div>
+</div>
 </div>
 {% endblock %}

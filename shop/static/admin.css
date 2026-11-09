@@ -1660,6 +1660,25 @@ td.empty { text-align: center; padding: 28px 12px; }
 .page-acts { gap: 10px; }
 .page-acts .card > h2 { padding: 10px 12px 0; font-size: 14px; }
 .page-acts .stack input { height: 34px; border-radius: 8px; }
+.page-ads, .page-lucky { display: grid; gap: 10px; }
+.page-ads .card > h2, .page-lucky .card > h2 { padding: 10px 12px 0; font-size: 14px; color: #1C2430; }
+.page-ads .fields input, .page-ads .fields select,
+.page-lucky .fields input, .page-lucky .fields select {
+  height: 34px; border-radius: 8px; padding: 0 8px; font-size: 13px;
+}
+.page-ads form.pad, .page-lucky form.pad { padding: 8px 12px 12px; }
+.page-ads .btn:not(.ghost):not(.quiet):not(.danger),
+.page-lucky .btn:not(.ghost):not(.quiet):not(.danger) {
+  background: #F96141; border: 0; color: #fff; height: 34px; border-radius: 10px;
+}
+.page-ads table th, .page-ads table td,
+.page-lucky table th, .page-lucky table td {
+  padding: 6px 8px; font-size: 12px; line-height: 1.25; vertical-align: middle;
+}
+.page-ads thead th, .page-lucky thead th {
+  height: 32px; background: #F7F8FA; color: #8B919A; font-size: 11px; font-weight: 700;
+}
+.page-lucky td:nth-child(3) { color: #F96141; font-weight: 750; }
 
 /* AD29 / S02 web CS desk */
 .fn-support-shell { margin: 0 !important; }
