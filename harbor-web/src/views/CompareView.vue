@@ -2,7 +2,7 @@
   <div class="page">
     <header class="head">
       <button type="button" class="back" @click="$router.back()" aria-label="back">‹</button>
-      <h1 class="title">Compare</h1>
+      <h1 class="title">对比</h1>
     </header>
     <div v-if="loading" class="state">Loading…</div>
     <div v-else-if="!products.length" class="state">

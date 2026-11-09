@@ -1,12 +1,16 @@
 <template>
   <div class="page">
     <p class="code">404</p>
-    <h1>Page not found</h1>
-    <p class="sub">That link doesn’t lead to a Harbor page.</p>
-    <router-link class="btn" to="/home">Back home</router-link>
+    <h1>{{ zh ? '页面不存在' : 'Page not found' }}</h1>
+    <p class="sub">{{ zh ? '这个链接没有对应的页面。' : 'That link doesn’t lead to a Harbor page.' }}</p>
+    <router-link class="btn" to="/home">{{ zh ? '回首页' : 'Back home' }}</router-link>
   </div>
 </template>
 
+<script setup lang="ts">
+import { computed } from 'vue'
+const zh = computed(() => String(navigator.language || '').toLowerCase().startsWith('zh'))
+</script>
 <style scoped>
 .page {
   min-height: 100vh; background: #FCFAF8; color: #1C2430;

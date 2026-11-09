@@ -1,23 +1,24 @@
 <template>
   <div class="page">
     <button type="button" class="back" @click="$router.back()">←</button>
-    <h1>Request a return</h1>
-    <p class="sub">Tell us what to send back. This opens buyer chat with the same order.</p>
+    <h1>{{ zh ? '申请退货' : 'Request a return' }}</h1>
+    <p class="sub">{{ zh ? '告诉我们要退的商品，然后在客服里继续。' : 'Tell us what to send back. This opens buyer chat with the same order.' }}</p>
     <form @submit.prevent="submit">
-      <label>Order<input v-model="orderId" required placeholder="Order number" /></label>
-      <label>Reason
-        <textarea v-model="reason" required minlength="3" rows="4" placeholder="What went wrong?" />
+      <label>{{ zh ? '订单号' : 'Order' }}<input v-model="orderId" required :placeholder="zh ? '订单号' : 'Order number'" /></label>
+      <label>{{ zh ? '原因' : 'Reason' }}
+        <textarea v-model="reason" required minlength="3" rows="4" :placeholder="zh ? '出了什么问题？' : 'What went wrong?'" />
       </label>
       <p v-if="error" class="err">{{ error }}</p>
-      <button class="btn" type="submit">Continue to chat</button>
+      <button class="btn" type="submit">{{ zh ? '去客服' : 'Continue to chat' }}</button>
     </form>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+const zh = computed(() => String(navigator.language || '').toLowerCase().startsWith('zh'))
 const route = useRoute()
 const router = useRouter()
 const orderId = ref(String(route.query.order || route.query.id || ''))

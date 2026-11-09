@@ -2,12 +2,12 @@
   <div class="page">
     <header class="head">
       <button type="button" class="back" @click="$router.back()" aria-label="back">‹</button>
-      <h1 class="title">Invoice</h1>
+      <h1 class="title">发票</h1>
     </header>
     <div v-if="loading" class="state">Loading…</div>
     <section v-else class="sheet">
       <div class="brand">HARBOR</div>
-      <div class="hl">Invoice</div>
+      <div class="hl">发票</div>
       <div class="meta">Order {{ orderId || '—' }} · {{ dateLabel }}</div>
       <div class="rule" />
       <div v-if="!lines.length" class="state">No invoice lines.</div>

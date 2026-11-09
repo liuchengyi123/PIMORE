@@ -2,7 +2,7 @@
   <div class="page">
     <header class="head">
       <button type="button" class="back" @click="$router.back()" aria-label="back">‹</button>
-      <h1 class="title">Browsing history</h1>
+      <h1 class="title">浏览记录</h1>
       <button v-if="products.length" type="button" class="clear" @click="clearLocal">Clear</button>
     </header>
     <div v-if="loading" class="state">Loading…</div>

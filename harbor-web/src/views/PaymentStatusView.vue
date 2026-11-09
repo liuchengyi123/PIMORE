@@ -2,11 +2,11 @@
   <div class="page">
     <button type="button" class="back" @click="$router.push('/orders')">←</button>
     <p class="brand">Harbor</p>
-    <h1>Payment status</h1>
-    <p class="sub">Refresh pulls the latest orders. If a payment is still open, pay it from the order.</p>
-    <p v-if="orderId" class="amt">Order {{ orderId }}</p>
-    <button type="button" class="btn" @click="refresh">Refresh status</button>
-    <router-link class="ghost" to="/chat">Contact support</router-link>
+    <h1>{{ zh ? '支付状态' : 'Payment status' }}</h1>
+    <p class="sub">{{ zh ? '刷新后查看最新订单。未付订单可以在订单里继续支付。' : 'Refresh pulls the latest orders. If a payment is still open, pay it from the order.' }}</p>
+    <p v-if="orderId" class="amt">{{ zh ? '订单' : 'Order' }} {{ orderId }}</p>
+    <button type="button" class="btn" @click="refresh">{{ zh ? '刷新状态' : 'Refresh status' }}</button>
+    <router-link class="ghost" to="/chat">{{ zh ? '联系客服' : 'Contact support' }}</router-link>
   </div>
 </template>
 
@@ -14,6 +14,7 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+const zh = computed(() => String(navigator.language || '').toLowerCase().startsWith('zh'))
 const route = useRoute()
 const router = useRouter()
 const orderId = computed(() => String(route.query.id || route.query.order || ''))

@@ -1,13 +1,15 @@
 <template>
   <div class="page">
-    <h1>You’re offline</h1>
-    <p class="sub">Check the connection, then try Harbor again.</p>
-    <button type="button" class="btn" @click="retry">Retry</button>
+    <h1>{{ zh ? '当前离线' : 'You’re offline' }}</h1>
+    <p class="sub">{{ zh ? '检查网络后再试一次。' : 'Check the connection, then try Harbor again.' }}</p>
+    <button type="button" class="btn" @click="retry">{{ zh ? '重试' : 'Retry' }}</button>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
+const zh = computed(() => String(navigator.language || '').toLowerCase().startsWith('zh'))
 const router = useRouter()
 function retry() {
   if (navigator.onLine) router.push('/home')
