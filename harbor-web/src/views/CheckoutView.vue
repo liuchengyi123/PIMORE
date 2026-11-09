@@ -48,9 +48,9 @@
       </button>
     </section>
 
-    <section class="card">
+    <section class="card coupon-card">
       <div class="card-h">
-        <Ticket :size="16" :stroke-width="1.75" class="ico" />
+        <Ticket :size="15" :stroke-width="1.85" class="ico" />
         <b>{{ zh ? '使用优惠券' : 'Apply Coupon' }}</b>
       </div>
       <div class="coupon">
@@ -119,18 +119,18 @@
       </div>
     </section>
 
-    <section class="card">
+    <section class="card totals">
       <div class="card-h">
-        <Receipt :size="16" :stroke-width="1.75" class="ico" />
+        <Receipt :size="15" :stroke-width="1.85" class="ico" />
         <b>{{ zh ? '订单摘要' : 'Order Summary' }}</b>
       </div>
-      <div class="sum"><span>{{ zh ? `商品小计（${lines.length} 件）` : `Subtotal (${lines.length} items)` }}</span><span>{{ money(subtotal) }}</span></div>
-      <div class="sum"><span>{{ zh ? '运费' : 'Shipping' }}</span><span>{{ zh ? '免费' : 'Free' }}</span></div>
+      <div class="sum"><span>{{ zh ? `商品小计（${lines.length} 件）` : `Subtotal (${lines.length} items)` }}</span><b>{{ money(subtotal) }}</b></div>
+      <div class="sum"><span>{{ zh ? '运费' : 'Shipping' }}</span><b>{{ zh ? '免费' : 'Free' }}</b></div>
       <div class="sum">
         <span>{{ zh ? '优惠' : 'Coupon' }}</span>
-        <span :class="{ off: couponOn && form.coupon_code }">{{ couponOn && form.coupon_code ? form.coupon_code : (zh ? '未使用' : 'None') }}</span>
+        <b :class="{ off: couponOn && form.coupon_code }">{{ couponOn && form.coupon_code ? form.coupon_code : (zh ? '未使用' : 'None') }}</b>
       </div>
-      <div class="sum total"><span>{{ zh ? '合计' : 'Total' }}</span><span class="due">{{ money(subtotal) }}</span></div>
+      <div class="sum total"><span>{{ zh ? '合计' : 'Total' }}</span><b class="due">{{ money(subtotal) }}</b></div>
       <p class="hint">{{ zh ? '可追踪物流 · 预计 7–12 天 · 包邮' : 'Tracked shipping · est. 7–12 days · free' }}</p>
     </section>
 
@@ -337,17 +337,18 @@ h1 { margin: 0; text-align: center; font-size: 18px; font-weight: 800; }
 .opt-copy b { font-size: 13.5px; line-height: 1.2; }
 .opt-copy small { color: $hb-muted; font-size: 11px; margin-top: 1px; line-height: 1.2; }
 .opt-price { font-weight: 750; font-size: 14px; color: $hb-ink; }
-.coupon { display: flex; gap: 8px; }
+.coupon-card, .totals { padding: 10px 12px 8px; }
+.coupon { display: flex; align-items: center; gap: 6px; }
 .coupon input, .field input, .field select, textarea {
   width: 100%; border: 1px solid $hb-line; border-radius: 12px; background: #fff; color: $hb-ink;
   font-size: 14px; padding: 0 12px;
 }
-.coupon input { height: 44px; flex: 1; }
+.coupon input { height: 38px; flex: 1; min-width: 0; border-radius: 10px; font-size: 13px; }
 .apply {
-  height: 44px; padding: 0 16px; border: 0; border-radius: 12px; background: $hb-coral; color: #fff;
-  font-weight: 750; cursor: pointer;
+  height: 38px; padding: 0 14px; border: 0; border-radius: 10px; background: $hb-coral; color: #fff;
+  font-weight: 750; font-size: 13px; cursor: pointer; flex: 0 0 auto;
 }
-.hint { margin: 8px 0 0; font-size: 12px; color: $hb-muted; line-height: 1.45; }
+.hint { margin: 6px 0 0; font-size: 11px; color: $hb-muted; line-height: 1.3; }
 .toggle {
   width: 44px; height: 26px; border-radius: 13px; border: 0; background: #E4DFD8; position: relative; cursor: pointer;
 }
@@ -382,10 +383,17 @@ textarea { margin-top: 10px; padding: 10px 12px; resize: vertical; min-height: 7
 .toggle.sm { width: 36px; height: 20px; border-radius: 10px; }
 .toggle.sm .knob { width: 14px; height: 14px; top: 3px; left: 3px; }
 .toggle.sm.on .knob { left: 19px; }
-.sum { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; padding: 5px 0; color: $hb-ink; }
-.sum.total { margin-top: 6px; padding-top: 10px; border-top: 1px solid $hb-line; font-weight: 750; }
-.due { color: $hb-coral; font-size: 20px; font-weight: 800; }
-.off { color: $hb-coral; font-weight: 700; }
+.totals .sum {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
+  font-size: 13px; line-height: 1.25; padding: 2px 0; color: $hb-ink;
+}
+.totals .sum span { color: #5C6570; }
+.totals .sum b { font-weight: 700; color: $hb-ink; }
+.totals .sum.total { margin-top: 4px; padding-top: 6px; border-top: 1px solid $hb-line; }
+.totals .sum.total span { color: $hb-ink; font-weight: 750; }
+.totals .due { color: $hb-coral; font-size: 18px; font-weight: 800; line-height: 1.1; }
+.totals .off { color: $hb-coral; font-weight: 700; }
+.totals .hint { margin-top: 4px; }
 .err { color: #B91C1C; font-size: 13px; margin: 8px 0; }
 .place {
   width: 100%; height: 52px; border: 0; border-radius: 16px; background: $hb-coral; color: #fff;
