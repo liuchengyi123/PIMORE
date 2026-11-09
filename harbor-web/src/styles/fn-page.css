@@ -1,21 +1,147 @@
-/* Harbor Function mobile tokens — visual rebuild */
+/* Harbor shared tokens and chrome — Figma Harbor
+   coral #F96141 / hot #FF6B4A · ink #1C2430 · line #E8EAF0 · sand #F7F8FA
+   Page bodies keep their own layout. This file owns the tokens and the
+   button, input, and sheet chrome those pages already use. */
 :root {
   --fn-ink: #1C2430;
+  --fn-coral: #F96141;
+  --fn-coral-hot: #FF6B4A;
+  --fn-coral-soft: #FFF1EC;
   --fn-teal: #F96141;
   --fn-amber: #F96141;
-  --fn-sand: #FCFAF8;
-  --fn-line: #EFEAE4;
+  --fn-sand: #F7F8FA;
+  --fn-line: #E8EAF0;
   --fn-muted: #8B919A;
   --fn-surface: #FFFFFF;
+  --ink: var(--fn-ink);
+  --coral: var(--fn-coral);
+  --coral-hot: var(--fn-coral-hot);
+  --sand: var(--fn-sand);
+  --line: var(--fn-line);
 }
+
 .fn-page {
   --ink: var(--fn-ink);
   --teal: var(--fn-teal);
   --amber: var(--fn-amber);
   --sand: var(--fn-sand);
+  --line: var(--fn-line);
+  --coral: var(--fn-coral);
+  --coral-hot: var(--fn-coral-hot);
   background: var(--fn-sand);
   color: var(--fn-ink);
   min-height: 100%;
   box-sizing: border-box;
 }
-.fn-page *, .fn-page *::before, .fn-page *::after { box-sizing: border-box; }
+
+.fn-page *,
+.fn-page *::before,
+.fn-page *::after {
+  box-sizing: border-box;
+}
+
+.page {
+  background: var(--fn-sand);
+  color: var(--fn-ink);
+}
+
+/* —— Buttons —— */
+.hb-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--fn-coral);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.hb-btn:hover {
+  background: var(--fn-coral-hot);
+}
+
+.hb-btn.outline {
+  background: var(--fn-surface);
+  color: var(--fn-coral);
+  border: 1.5px solid var(--fn-coral);
+}
+
+.hb-btn.outline:hover {
+  background: var(--fn-coral-soft);
+}
+
+.hb-btn:disabled,
+.hb-btn.disabled {
+  background: var(--fn-line);
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.fn-page .btn:not(.outline):not(.ghost):not(.soft):not(.white):not(.disabled):hover,
+.page .btn:not(.outline):not(.ghost):not(.soft):not(.white):not(.disabled):hover,
+.fn-page .place:not(:disabled):hover,
+.page .place:not(:disabled):hover,
+.fn-page .sheet-ok:hover,
+.page .sheet-ok:hover,
+.fn-page .gate-btn:hover,
+.page .gate-btn:hover,
+.fn-page .checkout:hover,
+.page .checkout:hover,
+.fn-page .sheet-btn:hover,
+.page .sheet-btn:hover {
+  background: var(--fn-coral-hot);
+}
+
+/* —— Inputs —— */
+.hb-input {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--fn-line);
+  border-radius: 12px;
+  background: var(--fn-surface);
+  color: var(--fn-ink);
+  font: inherit;
+}
+
+.hb-input::placeholder {
+  color: var(--fn-muted);
+}
+
+.fn-page input:where(:not([type="radio"]):not([type="checkbox"]):not([type="range"])):focus,
+.fn-page textarea:focus,
+.fn-page select:focus,
+.page input:where(:not([type="radio"]):not([type="checkbox"]):not([type="range"])):focus,
+.page textarea:focus,
+.page select:focus,
+.hb-input:focus {
+  outline: none;
+  border-color: var(--fn-coral);
+  box-shadow: 0 0 0 3px rgba(249, 97, 65, 0.16);
+}
+
+/* —— Sheets —— */
+.hb-sheet,
+.fn-page .sheet,
+.page .addr-sheet {
+  background: var(--fn-surface);
+  color: var(--fn-ink);
+}
+
+.fn-page .sheet-mask,
+.page .addr-mask,
+.hb-sheet-mask {
+  background: rgba(28, 36, 48, 0.45);
+}
+
+.fn-page .grab,
+.page .grab,
+.hb-sheet .grab {
+  background: var(--fn-line);
+}

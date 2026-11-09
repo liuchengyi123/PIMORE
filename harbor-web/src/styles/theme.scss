@@ -1,11 +1,17 @@
-﻿/* Harbor H5 tokens aligned to the App Shopper coral system */
+﻿/* Harbor shared tokens — Figma Harbor
+   coral #F96141 / hot #FF6B4A
+   ink   #1C2430
+   line  #E8EAF0
+   sand  #F7F8FA */
 $hb-forest: #1C2430;
 $hb-deep: #F96141;
 $hb-soft: #FFF1EC;
 $hb-coral: #F96141;
+$hb-coral-hot: #FF6B4A;
 $hb-coral-soft: #FFF1EC;
-$hb-paper: #FCFAF8;
-$hb-line: #EFEAE4;
+$hb-paper: #F7F8FA;
+$hb-sand: #F7F8FA;
+$hb-line: #E8EAF0;
 $hb-ink: #1C2430;
 $hb-muted: #8B919A;
 $hb-white: #FFFFFF;
@@ -15,8 +21,8 @@ $hb-radius-sm: 14px;
 $hb-radius-md: 20px;
 $hb-radius-lg: 24px;
 $hb-radius-pill: 999px;
-$hb-shadow-soft: 0 4px 20px rgba(14, 17, 22, 0.06);
-$hb-shadow-float: 0 10px 36px rgba(14, 17, 22, 0.10);
+$hb-shadow-soft: 0 4px 16px rgba(28, 36, 48, 0.06);
+$hb-shadow-float: 0 8px 24px rgba(28, 36, 48, 0.10);
 $hb-icon-stroke: 1.65;
 
 :root {
@@ -24,8 +30,10 @@ $hb-icon-stroke: 1.65;
   --hb-deep: #{$hb-deep};
   --hb-soft: #{$hb-soft};
   --hb-coral: #{$hb-coral};
+  --hb-coral-hot: #{$hb-coral-hot};
   --hb-coral-soft: #{$hb-coral-soft};
   --hb-paper: #{$hb-paper};
+  --hb-sand: #{$hb-sand};
   --hb-line: #{$hb-line};
   --hb-ink: #{$hb-ink};
   --hb-muted: #{$hb-muted};
@@ -42,7 +50,7 @@ $hb-icon-stroke: 1.65;
 
 .hb-page {
   min-height: 100vh;
-  background: var(--hb-paper);
+  background: var(--hb-sand);
   color: var(--hb-ink);
 }
 
