@@ -1,0 +1,314 @@
+(function () {
+  var root = document.getElementById("lucky");
+  var chip = document.querySelector("[data-lucky-chip]");
+  if (!root || !chip) return;
+  var state = null;
+  var browseArmed = false;
+  var payArmed = false;
+
+  function pane(name) {
+    var nodes = root.querySelectorAll("[data-lucky-pane]");
+    for (var i = 0; i < nodes.length; i++) {
+      nodes[i].hidden = nodes[i].getAttribute("data-lucky-pane") !== name;
+    }
+    root.hidden = false;
+  }
+
+  function hide() {
+    root.hidden = true;
+  }
+
+  function percent() {
+    if (state && state.spin && state.spin.percent) return state.spin.percent;
+    return state && state.percent ? state.percent : 10;
+  }
+
+  function paintLabels() {
+    var text = percent() + "% OFF";
+    var nodes = root.querySelectorAll("[data-lucky-pct]");
+    for (var i = 0; i < nodes.length; i++) nodes[i].textContent = text;
+    var lines = root.querySelectorAll("[data-lucky-slice]");
+    for (var j = 0; j < lines.length; j++) lines[j].textContent = percent() + "%";
+  }
+
+  function money(amount, currency) {
+    if (currency === "JPY") return Number(amount).toLocaleString() + "円";
+    var symbols = {USD: "$", EUR: "€", GBP: "£", CAD: "CA$", AUD: "A$", MXN: "MX$", BRL: "R$"};
+    var number = (Number(amount) / 100).toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+    return (symbols[currency] || "") + number;
+  }
+
+  function animate(node, from, to, currency) {
+    var start = 0;
+    function frame(now) {
+      if (!start) start = now;
+      var t = Math.min(1, (now - start) / 800);
+      var eased = 1 - Math.pow(1 - t, 3);
+      node.textContent = money(Math.round(from + (to - from) * eased), currency);
+      if (t < 1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function fillGoods(kind, items) {
+    var box = root.querySelector('[data-lucky-goods="' + kind + '"]');
+    if (!box) return;
+    box.textContent = "";
+    (items || []).forEach(function (item) {
+      var row = document.createElement("div");
+      row.className = "lucky-good";
+      var pic = document.createElement("div");
+      pic.className = "lucky-pic";
+      var img = document.createElement("img");
+      img.alt = "";
+      img.src = item.image || "";
+      pic.appendChild(img);
+      var name = document.createElement("b");
+      name.textContent = item.name || "";
+      var was = document.createElement("s");
+      was.textContent = money(item.from_local, item.currency);
+      var now = document.createElement("span");
+      now.className = "now";
+      var save = document.createElement("span");
+      save.className = "lucky-save";
+      save.textContent = "Save " + money(Math.max(0, item.from_local - item.to_local), item.currency);
+      row.appendChild(pic);
+      row.appendChild(name);
+      row.appendChild(was);
+      row.appendChild(now);
+      row.appendChild(save);
+      box.appendChild(row);
+      animate(now, item.from_local, item.to_local, item.currency);
+    });
+  }
+
+  function secondsLeft() {
+    if (!state || !state.spin || !state.spin.live) return 0;
+    var end = Date.parse(state.spin.expires_at);
+    if (!end) return state.spin.seconds_left || 0;
+    return Math.max(0, Math.floor((end - Date.now()) / 1000));
+  }
+
+  function clock(sec) {
+    function pad(n) { return (n < 10 ? "0" : "") + n; }
+    return pad(Math.floor(sec / 3600)) + ":" + pad(Math.floor((sec % 3600) / 60)) + ":" + pad(sec % 60);
+  }
+
+  function tick() {
+    var text = clock(secondsLeft());
+    var nodes = root.querySelectorAll("[data-lucky-clock]");
+    for (var i = 0; i < nodes.length; i++) nodes[i].textContent = text;
+    if (state && state.spin && state.spin.live && !(state.free)) {
+      chip.textContent = percent() + "% OFF · " + text;
+    }
+  }
+
+  function post(url, body) {
+    return fetch(url, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      credentials: "same-origin",
+      body: JSON.stringify(body || {})
+    }).then(function (res) { return res.json(); });
+  }
+
+  function remembered(key) {
+    try { return sessionStorage.getItem(key); } catch (e) { return ""; }
+  }
+
+  function remember(key, value) {
+    try { sessionStorage.setItem(key, value); } catch (e) {}
+  }
+
+  function recentKeep() {
+    var at = parseInt(remembered("harbor_lucky_keep_at") || "0", 10);
+    return at && Date.now() - at < 60000;
+  }
+
+  function canKeep(kind) {
+    if (!state || !state.spin || !state.spin.live) return false;
+    if (kind === "browse" && state.spin.browse_kept) return false;
+    if (kind === "pay" && state.spin.pay_kept) return false;
+    if (recentKeep()) return false;
+    var items = kind === "pay" ? state.cart_items : state.browse_items;
+    return !!(items && items.length);
+  }
+
+  function openRetain(kind) {
+    if (!canKeep(kind)) return false;
+    fillGoods(kind === "pay" ? "pay" : "browse", kind === "pay" ? state.cart_items : state.browse_items);
+    pane(kind === "pay" ? "pay" : "browse");
+    remember("harbor_lucky_keep_at", String(Date.now()));
+    if (kind === "browse") state.spin.browse_kept = 1;
+    if (kind === "pay") state.spin.pay_kept = 1;
+    post("/api/lucky/keep", {kind: kind});
+    return true;
+  }
+
+  function armBrowse() {
+    if (browseArmed || !state || !state.spin || !state.spin.live) return;
+    browseArmed = true;
+    var started = parseInt(remembered("harbor_browse_at") || "0", 10);
+    if (!started) {
+      remember("harbor_browse_at", String(Date.now()));
+      started = Date.now();
+    }
+    var wait = (state.browse_minutes || 3) * 60000 - (Date.now() - started);
+    setTimeout(function () {
+      if (location.pathname.indexOf("/checkout") === 0) return;
+      document.documentElement.addEventListener("mouseout", function (event) {
+        if (event.clientY > 8 || event.relatedTarget) return;
+        openRetain("browse");
+      });
+      window.addEventListener("popstate", function () {
+        if (location.pathname.indexOf("/checkout") === 0) return;
+        openRetain("browse");
+      });
+    }, Math.max(0, wait));
+  }
+
+  function armPay() {
+    if (payArmed || location.pathname.indexOf("/checkout") !== 0) return;
+    payArmed = true;
+    document.documentElement.addEventListener("mouseout", function (event) {
+      if (event.clientY > 8 || event.relatedTarget) return;
+      openRetain("pay");
+    });
+    document.addEventListener("click", function (event) {
+      var link = event.target.closest ? event.target.closest("a") : null;
+      if (!link || location.pathname.indexOf("/checkout") !== 0) return;
+      var href = link.getAttribute("href") || "";
+      if (!href || href.charAt(0) === "#" || href.indexOf("/checkout") === 0) return;
+      if (openRetain("pay")) event.preventDefault();
+    }, true);
+  }
+
+  function orderId() {
+    var match = location.pathname.match(/\/orders\/(\d+)/);
+    return match ? parseInt(match[1], 10) : 0;
+  }
+
+  function paintStatus() {
+    if (!state || !state.free) return;
+    var free = state.free;
+    var title = root.querySelector("[data-lucky-status-title]");
+    var body = root.querySelector("[data-lucky-status-body]");
+    if (title) title.textContent = free.stamps + " of " + free.needed;
+    if (body) {
+      body.textContent = "Order #" + free.order_id + " · $" + (free.amount_cents / 100).toFixed(2) +
+        " back as credit · by " + String(free.deadline_at || "").replace("T", " ").replace("Z", " UTC") +
+        " · " + free.status;
+    }
+    chip.hidden = false;
+    chip.textContent = "Free order " + free.stamps + "/" + free.needed;
+  }
+
+  function maybeEgg() {
+    var id = orderId();
+    if (!state || !state.egg || !id || state.egg.order_id !== id) return;
+    if (remembered("harbor_egg_seen") === String(id)) {
+      chip.hidden = false;
+      chip.textContent = "Free order";
+      return;
+    }
+    remember("harbor_egg_seen", String(id));
+    pane("placed");
+  }
+
+  function smash(index) {
+    var id = state && state.egg ? state.egg.order_id : orderId();
+    post("/api/lucky/egg", {order_id: id}).then(function (result) {
+      var buttons = root.querySelectorAll("[data-egg]");
+      var misses = ["5% OFF", "No prize"];
+      var used = 0;
+      for (var i = 0; i < buttons.length; i++) {
+        var mine = parseInt(buttons[i].getAttribute("data-egg"), 10) === index;
+        buttons[i].className = mine ? "is-win" : "is-miss";
+        buttons[i].textContent = mine ? "Free\norder" : (misses[used++] === "5% OFF" ? "5%\nOFF" : "No\nprize");
+      }
+      var prize = root.querySelector("[data-lucky-prize]");
+      prize.hidden = false;
+      if (result && result.ok) {
+        prize.textContent = "Free-order coupon";
+        state.free = result.free;
+        state.egg = null;
+        paintStatus();
+      } else {
+        prize.textContent = "This order can't take the coupon.";
+      }
+    });
+  }
+
+  root.addEventListener("click", function (event) {
+    if (event.target.closest("[data-lucky-close]")) {
+      if (state && state.offer_spin && !state.spin) remember("harbor_lucky_dismiss", "1");
+      hide();
+      if (state && (state.offer_spin || (state.spin && state.spin.live) || state.free || state.egg)) chip.hidden = false;
+      return;
+    }
+    if (event.target.closest("[data-lucky-spin]")) {
+      var button = event.target.closest("[data-lucky-spin]");
+      button.disabled = true;
+      post("/api/lucky/spin", {}).then(function (data) {
+        state = data;
+        paintLabels();
+        var wheel = root.querySelector("[data-lucky-wheel]");
+        if (wheel) {
+          wheel.classList.remove("is-spinning");
+          void wheel.offsetWidth;
+          wheel.classList.add("is-spinning");
+        }
+        setTimeout(function () {
+          pane("win");
+          tick();
+          chip.hidden = false;
+        }, 4100);
+      });
+      return;
+    }
+    if (event.target.closest("[data-lucky-eggs]")) {
+      pane("eggs");
+      return;
+    }
+    var egg = event.target.closest("[data-egg]");
+    if (egg && !egg.className) smash(parseInt(egg.getAttribute("data-egg"), 10));
+  });
+
+  chip.addEventListener("click", function () {
+    if (state && state.free) {
+      paintStatus();
+      pane("status");
+      return;
+    }
+    if (state && state.egg) {
+      pane("placed");
+      return;
+    }
+    if (state && state.spin && state.spin.live) {
+      pane("win");
+      return;
+    }
+    if (state && state.offer_spin) pane("wheel");
+  });
+
+  fetch("/api/lucky", {credentials: "same-origin"})
+    .then(function (res) { return res.json(); })
+    .then(function (data) {
+      state = data;
+      if (!state || !state.enabled) return;
+      paintLabels();
+      tick();
+      setInterval(tick, 1000);
+      if (state.free) paintStatus();
+      else if (state.spin && state.spin.live) chip.hidden = false;
+      maybeEgg();
+      if (state.offer_spin && remembered("harbor_lucky_dismiss") !== "1" && !state.egg) pane("wheel");
+      else if (state.offer_spin) chip.hidden = false;
+      armBrowse();
+      armPay();
+    })
+    .catch(function () {});
+})();

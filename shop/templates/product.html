@@ -16,7 +16,14 @@
   <span>{{ item.name }}</span>
 </nav>
 <div class="stage">
-
+  <div class="fn-pdp-float">
+    <a class="fn-pdp-back" href="{{ href('/', country) }}" aria-label="{{ t.back }}" {% if request.query_params.get('from') != 'lp' %}onclick="if (window.history.length > 1) { event.preventDefault(); history.back(); }"{% endif %}>
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg>
+    </a>
+    <a class="fn-pdp-cart" href="{{ href('/cart', country) }}" aria-label="{{ t.cart }}">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5.5 8.5h13l-1.1 11h-10.8z"/><path d="M8.5 8.5V7a3.5 3.5 0 0 1 7 0v1.5"/></svg>
+      {% if cart_count %}<span class="n">{{ cart_count }}</span>{% endif %}
+    </a>
   </div>
   <figure class="gallery">
     <div class="gallery-strip" id="gallery">
@@ -594,6 +601,17 @@
         });
       }
     }
+  })();
+</script>
+<script>
+  (function () {
+    var stage = document.querySelector(".fn-pdp .stage");
+    if (!stage || !window.matchMedia("(max-width: 980px)").matches) return;
+    if (!("IntersectionObserver" in window)) return;
+    var watch = new IntersectionObserver(function (entries) {
+      document.body.classList.toggle("fn-pdp-stuck", !entries[0].isIntersecting);
+    }, { threshold: 0 });
+    watch.observe(stage);
   })();
 </script>
 {% endblock %}

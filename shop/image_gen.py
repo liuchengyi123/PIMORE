@@ -1510,6 +1510,56 @@ def generate_one_sku_shot(conn, root, product_sku, image, editor, backup_root=No
 
 
 
+COVER_MODES = {
+    "1": (1,),
+    "2": (2,),
+    "4": (4,),
+    "12": (1, 2),
+    "124": (1, 2, 4),
+    "24": (2, 4),
+    "14": (1, 4),
+}
+
+
+def normalize_cover(value):
+    text = str(value or "").strip()
+    return text if text in COVER_MODES else "1"
+
+
+def cover_slot(sku, mode):
+    """Which generated main this product leads with. A mix is stable per SKU."""
+    slots = COVER_MODES[normalize_cover(mode)]
+    if len(slots) == 1:
+        return slots[0]
+    n = 2166136261
+    for ch in str(sku or ""):
+        n = (n ^ ord(ch)) * 16777619 & 0xFFFFFFFF
+    return slots[n % len(slots)]
+
+
+def _main_number(url):
+    name = str(url or "").rsplit("/", 1)[-1].split(".", 1)[0]
+    return int(name) if name.isdigit() else 0
+
+
+def order_mains(urls, sku, mode):
+    """Put the chosen main first. A missing slot falls through the mix, then the other files."""
+    urls = [str(url) for url in (urls or []) if url]
+    if not urls:
+        return []
+    slots = COVER_MODES[normalize_cover(mode)]
+    chosen = cover_slot(sku, mode)
+    prefer = (chosen,) + tuple(number for number in slots if number != chosen)
+    by_slot = {}
+    for url in urls:
+        number = _main_number(url)
+        if number in slots and number not in by_slot:
+            by_slot[number] = url
+    ordered = [by_slot[number] for number in prefer if number in by_slot]
+    used = set(ordered)
+    return ordered + [url for url in urls if url not in used]
+
+
 def main_urls(sku, lang, root):
     """Five generated gallery images for this language, in order."""
     folder = Path(root) / "static" / "catalog" / str(sku) / str(lang) / "main"

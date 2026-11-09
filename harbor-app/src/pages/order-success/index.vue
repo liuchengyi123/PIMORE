@@ -7,16 +7,19 @@
       <text class="meta">{{ orderId || '—' }}{{ total ? ' · ' + total : '' }}</text>
       <view class="cta" @click="viewOrder">View order</view>
     </view>
+    <HbLucky />
   </view>
 </template>
 <script setup lang="ts">
 import { ref } from 'vue'
 import { onLoad, onShow } from '@dcloudio/uni-app'
+import { showOrderEgg } from '@/composables/lucky'
 const orderId = ref('')
 const total = ref('')
 onLoad((q) => {
   orderId.value = q?.id ? decodeURIComponent(q.id) : (q?.order ? decodeURIComponent(q.order) : '')
   total.value = q?.total ? decodeURIComponent(q.total) : ''
+  showOrderEgg(orderId.value)
 })
 function viewOrder() {
   if (orderId.value) {

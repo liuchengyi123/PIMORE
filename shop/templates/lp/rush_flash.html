@@ -5,16 +5,6 @@
     {% include "lp/_countdown.html" %}
     {% include "lp/_enter.html" %}
   </header>
-  <div class="lp-ticker" aria-hidden="true">
-    <div class="lp-ticker-track">
-      <span>{{ t.lp_tick_sell }}</span>
-      <span>{{ t.lp_tick_open }}</span>
-      <span>{{ t.lp_tick_one }}</span>
-      <span>{{ t.lp_tick_sell }}</span>
-      <span>{{ t.lp_tick_open }}</span>
-      <span>{{ t.lp_tick_one }}</span>
-    </div>
-  </div>
   {% if cards %}
   <div class="lp-grid">
     {% for item in cards %}

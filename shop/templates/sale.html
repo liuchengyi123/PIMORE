@@ -14,7 +14,7 @@
     {% if sale and sale.ends_at %}<p class="poster-clock tiny" data-ends="{{ sale.ends_at }}">--:--:--</p>{% endif %}
     {% if sale and sale.rules %}<p class="tiny">{{ sale.rules }}</p>{% endif %}
   </div>
-  {% if sale and sale.items %}
+  {% if sale and sale['items'] %}
   <div class="product-grid dense fn-deal-grid">
     {% for item in sale["items"] %}
     <a class="card fn-deal" href="{{ href('/p/' ~ item.sku, country) }}">

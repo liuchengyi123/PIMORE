@@ -39,17 +39,6 @@
         <input type="hidden" name="qty" value="{{ line.qty + 1 }}">
         <button class="btn quiet" type="submit">+</button>
       </form>
-      <form method="post" action="/cart/update" data-confirm-remove>
-        <input type="hidden" name="sku" value="{{ line.sku }}">
-        <input type="hidden" name="country" value="{{ country }}">
-        <input type="hidden" name="qty" value="0">
-        <button class="btn quiet" type="submit">{{ t.remove }}</button>
-      </form>
-      <form method="post" action="/cart/save">
-        <input type="hidden" name="sku" value="{{ line.sku }}">
-        <input type="hidden" name="country" value="{{ country }}">
-        <button class="text-act" type="submit">{{ t.save_later }}</button>
-      </form>
       </div>
     </div>
       <div class="cart-line-actions">
@@ -124,6 +113,7 @@
   <p class="you-save">{{ t.you_save.format(amount=save_text) }}</p>
   {% endif %}
   {% if deal_met %}<p class="met">{{ t.discount }} {{ discount_text }} <span class="tick" aria-hidden="true">✓</span></p>{% endif %}
+  {% if lucky_percent %}<p class="met"><span class="lucky-applied">{{ t.lucky_applied.format(percent=lucky_percent) }}</span></p>{% endif %}
   <p class="ship-row met" data-shipping-cents="0">
     <span>{{ t.free_shipping }} <span class="tick" aria-hidden="true">✓</span></span>
   </p>
@@ -200,7 +190,7 @@
       </div>
       <h3 class="gap-like">{{ t.you_may_like }}</h3>
     </div>
-    <div class="atc-grid" id="gap-grid" data-gap-grid></div>
+    <div class="atc-grid" id="gap-grid" data-gap-grid data-page="0" data-more="1" data-key=""></div>
     <div class="gap-foot">
       {% if bill %}
       <span class="gap-pay">
@@ -222,35 +212,119 @@
   var modal = document.getElementById("gap-modal");
   if (!modal) return;
   var grid = document.getElementById("gap-grid");
+  var pickMem = {};
+  var pickGen = 0;
+  function pickKey(tab, q) { return (tab || "recommended") + "\n" + (q || ""); }
+  function country() {
+    var m = location.search.match(/[?&]country=([A-Za-z]{2})/);
+    return m ? m[1] : "";
+  }
+  function takeCards(html, fresh) {
+    var box = document.createElement("div");
+    box.innerHTML = html || "";
+    var seen = {};
+    if (!fresh && grid) {
+      grid.querySelectorAll("input[name=sku]").forEach(function (node) { seen[node.value] = 1; });
+    }
+    var nodes = [];
+    Array.prototype.forEach.call(box.querySelectorAll(".atc-card"), function (node) {
+      var sku = node.querySelector("input[name=sku]");
+      var id = sku ? sku.value : "";
+      if (id && seen[id]) return;
+      if (id) seen[id] = 1;
+      nodes.push(node);
+    });
+    return nodes;
+  }
+  function maybeFill() {
+    if (!grid || grid.getAttribute("data-more") !== "1" || grid.getAttribute("data-loading") === "1") return;
+    if (grid.classList.contains("is-loading")) return;
+    var page = parseInt(grid.getAttribute("data-page") || "1", 10) || 1;
+    if (page >= 3) return;
+    if (grid.scrollHeight > grid.clientHeight + 40) return;
+    load(true, { append: true });
+  }
+  function load(ignoreQuery, opts) {
+    opts = opts || {};
+    if (!grid) return;
+    var tabBtn = modal.querySelector(".atc-tabs .on");
+    var tab = opts.tab || (tabBtn ? tabBtn.getAttribute("data-tab") : "recommended");
+    var input = modal.querySelector(".atc-search input");
+    var typed = input ? (input.value || "").trim() : "";
+    var q = ignoreQuery ? "" : typed;
+    var append = !!opts.append;
+    if (append) {
+      var saved = (grid.getAttribute("data-key") || "recommended").split("\n");
+      tab = saved[0] || tab;
+      q = saved.slice(1).join("\n");
+      if (grid.getAttribute("data-more") === "0" || grid.getAttribute("data-loading") === "1" || grid.classList.contains("is-loading")) return;
+    }
+    var page = opts.page || (append ? (parseInt(grid.getAttribute("data-page") || "1", 10) || 1) + 1 : 1);
+    var key = pickKey(tab, q);
+    if (!append && page === 1 && pickMem[key]) {
+      grid.innerHTML = pickMem[key].html;
+      grid.setAttribute("data-key", key);
+      grid.setAttribute("data-page", String(pickMem[key].page));
+      grid.setAttribute("data-more", pickMem[key].more);
+      grid.setAttribute("data-loading", "0");
+      grid.classList.remove("is-loading");
+      requestAnimationFrame(maybeFill);
+      return;
+    }
+    if (!append) {
+      grid.classList.add("is-loading");
+      grid.setAttribute("data-loading", "0");
+    } else {
+      grid.setAttribute("data-loading", "1");
+    }
+    var gen = ++pickGen;
+    var url = "/cart/picks?tab=" + encodeURIComponent(tab || "recommended") + "&q=" + encodeURIComponent(q) + "&page=" + page + "&stay=" + encodeURIComponent("/cart?gap=1");
+    var c = country();
+    if (c) url += "&country=" + encodeURIComponent(c);
+    fetch(url, { credentials: "same-origin", headers: { "Accept": "text/html" } })
+      .then(function (r) {
+        var more = r.headers.get("X-Harbor-Has-More") === "1" ? "1" : "0";
+        return r.text().then(function (html) { return { html: html, more: more }; });
+      })
+      .then(function (pack) {
+        if (gen !== pickGen) return;
+        var nodes = takeCards(pack.html, !append);
+        if (!nodes.length) pack.more = "0";
+        if (!append) grid.innerHTML = "";
+        nodes.forEach(function (node) { grid.appendChild(node); });
+        if (!nodes.length && !append) grid.innerHTML = pack.html || "";
+        pickMem[key] = { html: grid.innerHTML, page: page, more: pack.more };
+        grid.setAttribute("data-key", key);
+        grid.setAttribute("data-page", String(page));
+        grid.setAttribute("data-more", pack.more);
+        grid.setAttribute("data-loading", "0");
+        grid.classList.remove("is-loading");
+        requestAnimationFrame(maybeFill);
+      })
+      .catch(function () {
+        if (gen !== pickGen) return;
+        grid.setAttribute("data-loading", "0");
+        grid.classList.remove("is-loading");
+      });
+  }
   function open() {
     modal.hidden = false;
     document.body.classList.add("gap-open");
     /* harborOpenGap */
     try { sessionStorage.setItem("harbor-interrupt", "1"); } catch (err) {}
-    load(false);
+    load(true);
   }
   function close() { modal.hidden = true; document.body.classList.remove("gap-open"); }
   modal.querySelectorAll("[data-gap-close]").forEach(function (n) { n.addEventListener("click", close); });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
-  function country() {
-    var m = location.search.match(/[?&]country=([A-Za-z]{2})/);
-    return m ? m[1] : "";
-  }
-  function load(ignoreQuery) {
-    if (!grid) return;
-    var tabBtn = modal.querySelector(".atc-tabs .on");
-    var tab = tabBtn ? tabBtn.getAttribute("data-tab") : "recommended";
-    var input = modal.querySelector(".atc-search input");
-    var typed = input ? (input.value || "").trim() : "";
-    var preset = input ? (input.getAttribute("data-preset") || "") : "";
-    var q = ignoreQuery ? "" : (typed || preset);
-    var url = "/cart/picks?tab=" + encodeURIComponent(tab || "recommended") + "&q=" + encodeURIComponent(q) + "&stay=" + encodeURIComponent("/cart?gap=1");
-    var c = country();
-    if (c) url += "&country=" + encodeURIComponent(c);
-    fetch(url, { credentials: "same-origin", headers: { "Accept": "text/html" } })
-      .then(function (r) { return r.text(); })
-      .then(function (html) { grid.innerHTML = html; })
-      .catch(function () {});
+  if (grid && !grid.dataset.scroll) {
+    grid.dataset.scroll = "1";
+    grid.addEventListener("scroll", function () {
+      if (grid.getAttribute("data-more") !== "1" || grid.getAttribute("data-loading") === "1") return;
+      if (grid.classList.contains("is-loading")) return;
+      if (grid.scrollTop + grid.clientHeight < grid.scrollHeight - 240) return;
+      load(true, { append: true });
+    });
   }
   var search = document.getElementById("gap-search");
   if (search) search.addEventListener("submit", function (event) {
@@ -262,6 +336,8 @@
       modal.querySelectorAll(".atc-tabs button").forEach(function (other) {
         other.classList.toggle("on", other === node);
       });
+      var input = modal.querySelector(".atc-search input");
+      if (input) input.value = "";
       load(true);
     });
   });

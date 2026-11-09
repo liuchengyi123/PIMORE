@@ -12,7 +12,7 @@
     <input type="hidden" name="country" value="{{ country }}">
     <input type="hidden" name="qty" value="1">
     {% if pick_next %}<input type="hidden" name="next" value="{{ pick_next }}">{% endif %}
-    <button type="submit">{{ t.add_on }}</button>
+    <button type="button" data-peek="{{ item.sku }}">{{ t.add_on }}</button>
   </form>
 </article>
 {% endfor %}

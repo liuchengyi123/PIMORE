@@ -18,19 +18,50 @@ def postal_fields(body):
     }
 
 
+# House number follows the street in these countries. Elsewhere it leads.
+_NUMBER_AFTER = {
+    "DE", "AT", "NL", "CH", "BE", "PL", "CZ", "IT", "ES", "SE", "NO", "DK", "FI",
+    "JP", "CN", "KR", "TW", "BR",
+}
+# These forms keep the number, or the district, in its own box.
+_SPLIT_NUMBER = {"BR", "MX", "NL"}
+_SPLIT_DISTRICT = {"BR", "MX", "CN", "TW", "HK", "MO"}
+
+
 def here_fields(body):
     address = body.get("address") if isinstance(body, dict) else None
     if not isinstance(address, dict):
         return {}
+    country = (address.get("country_code") or "").upper()
     city = address.get("city") or address.get("town") or address.get("village") or address.get("hamlet") or ""
     region = address.get("state") or address.get("province") or address.get("county") or ""
-    line = " ".join(part for part in (address.get("house_number"), address.get("road")) if part)
+    road = address.get("road") or ""
+    number = address.get("house_number") or ""
+    district = (
+        address.get("suburb")
+        or address.get("neighbourhood")
+        or address.get("quarter")
+        or address.get("city_district")
+        or ""
+    )
+    if country in _SPLIT_NUMBER:
+        line = road
+    elif country in _NUMBER_AFTER:
+        line = " ".join(part for part in (road, number) if part)
+        number = ""
+    else:
+        line = " ".join(part for part in (number, road) if part)
+        number = ""
+    if country not in _SPLIT_DISTRICT:
+        district = ""
     return {
         "city": city,
         "region": region,
         "postal": address.get("postcode") or "",
-        "country": (address.get("country_code") or "").upper(),
+        "country": country,
         "line": line,
+        "number": number,
+        "district": district,
     }
 
 

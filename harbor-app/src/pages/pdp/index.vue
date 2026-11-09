@@ -83,6 +83,7 @@
   <view v-else class="empty">
     <text>{{ t('pdp_loading') }}</text>
   </view>
+  <HbLucky />
 </template>
 
 <script setup lang="ts">

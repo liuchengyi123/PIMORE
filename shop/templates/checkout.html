@@ -99,7 +99,7 @@
       {% endfor %}
     </div>
     <p>{{ t.merchandise }} {{ merchandise_text }}</p>
-    <p>{{ t.discount }} {{ discount_text }}</p>
+    <p>{{ t.discount }} {{ discount_text }}{% if lucky_percent %} <span class="lucky-applied">{{ t.lucky_applied.format(percent=lucky_percent) }}</span>{% endif %}</p>
     {% if coupon_text %}<p>{{ t.coupon }} {{ coupon_text }}</p>{% endif %}
     <p class="met">{{ t.free_shipping }}</p>
     {% if checkout_ok is defined and checkout_ok == false %}
@@ -120,7 +120,7 @@
     <div class="fn-checkout-paybar">
   <div class="fn-checkout-due">{{ t.due }} <strong class="price">{{ due_text }}</strong></div>
   {% if checkout_ok is defined and checkout_ok == false %}
-  <button class="btn place-order" type="button" disabled>{{ t.checkout_blocked }}</button>
+  <button class="btn place-order" type="button" data-open-gap>{{ t.checkout_blocked }}</button>
   {% else %}
   <button class="btn place-order" type="submit">{{ t.place_order }}</button>
   {% endif %}
@@ -143,6 +143,21 @@
     {% for item in addons %}{% include "pick.html" %}{% endfor %}
   </div>
 </section>
+{% endif %}
+{% if checkout_ok is defined and checkout_ok == false and gap_title %}
+<script type="application/json" id="checkout-gap">{{ {"gap_title": gap_title, "gap_body": gap_body, "progress": gap_progress, "subtotal": merchandise_text, "ship_line": min_gap_text, "save_text": ""}|tojson }}</script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    var node = document.getElementById("checkout-gap");
+    if (!node || !window.harborOpenAtcGap) return;
+    var data = JSON.parse(node.textContent || "{}");
+    function open() { window.harborOpenAtcGap(data, true); }
+    document.querySelectorAll("[data-open-gap]").forEach(function (btn) {
+      btn.addEventListener("click", open);
+    });
+    open();
+  });
+</script>
 {% endif %}
 <script>
   document.addEventListener("DOMContentLoaded", function () {

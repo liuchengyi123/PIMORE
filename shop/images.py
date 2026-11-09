@@ -11,8 +11,8 @@ PHOTO_EDGE = 1600
 DETAIL_WIDTH = 2200
 DETAIL_HEIGHT = 4400
 JPEG_QUALITY = 85
-CARD_EDGE = 640
-CARD_QUALITY = 80
+CARD_EDGE = 360
+CARD_QUALITY = 60
 
 
 def safe_image_url(url):
@@ -94,7 +94,7 @@ PHONE_QUALITY = 82
 
 
 def card_image(url, root):
-    return fitted_image(url, root, CARD_EDGE, "card", CARD_QUALITY, 120_000)
+    return fitted_image(url, root, CARD_EDGE, "fit", CARD_QUALITY, 36_000)
 
 
 def phone_image(url, root):
@@ -148,7 +148,14 @@ def _write_fit(src, dest, edge, quality, skip_under):
         if not src.is_file():
             return
         if dest.is_file() and dest.stat().st_mtime >= src.stat().st_mtime:
-            return
+            if dest.stat().st_size <= 36_000:
+                return
+            try:
+                with Image.open(dest) as image:
+                    if max(image.size) <= edge:
+                        return
+            except Exception:
+                return
         if max(src.stat().st_size, 1) <= skip_under and src.suffix.lower() in {".jpg", ".jpeg"}:
             try:
                 with Image.open(src) as image:
@@ -195,7 +202,7 @@ def fitted_image(url, root, edge, folder, quality, skip_under):
     returns the card path after a stat. A miss returns the original immediately.
     """
     text = str(url or "")
-    if not text.startswith("/static/catalog/") or "/card/" in text or "/view/" in text:
+    if not text.startswith("/static/catalog/") or "/fit/" in text or "/view/" in text:
         return url
     path = Path(root) / "static" / text[len("/static/"):]
     try:

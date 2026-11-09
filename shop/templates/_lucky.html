@@ -1,0 +1,80 @@
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560;9..144,640&amp;display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560;9..144,640&amp;display=swap"></noscript>
+<div id="lucky" class="lucky" hidden>
+  <div class="lucky-sheet" role="dialog" aria-modal="true" aria-labelledby="lucky-title">
+    <button class="lucky-x" type="button" data-lucky-close aria-label="Close">×</button>
+    <div data-lucky-pane="wheel">
+      <h2 id="lucky-title">Spin your luck.</h2>
+      <div class="lucky-wheel-wrap">
+        <div class="lucky-pointer"></div>
+        <div class="lucky-wheel" data-lucky-wheel>
+          <span class="lab on-navy" style="--a:0"><b data-lucky-slice>10%</b><b>OFF</b></span>
+          <span class="lab on-cream" style="--a:60"><b>5%</b><b>OFF</b></span>
+          <span class="lab on-navy" style="--a:120"><b>NO</b><b>PRIZE</b></span>
+          <span class="lab on-cream" style="--a:180"><b>5%</b><b>OFF</b></span>
+          <span class="lab on-navy" style="--a:240"><b>NO</b><b>PRIZE</b></span>
+          <span class="lab on-cream" style="--a:300"><b>SPIN</b><b>AGAIN</b></span>
+        </div>
+        <div class="lucky-hub"></div>
+      </div>
+      <button class="lucky-go" type="button" data-lucky-spin>Spin</button>
+      <p class="lucky-rules">The top slice is the one you get. It starts when you win, covers the merchandise with no cap, and does not combine with other coupons.</p>
+    </div>
+    <div data-lucky-pane="win" hidden>
+      <div class="lucky-wheel-wrap is-small">
+        <div class="lucky-pointer"></div>
+        <div class="lucky-wheel is-won">
+          <span class="lab on-navy" style="--a:0"><b data-lucky-slice>10%</b><b>OFF</b></span>
+          <span class="lab on-cream" style="--a:60"><b>5%</b><b>OFF</b></span>
+          <span class="lab on-navy" style="--a:120"><b>NO</b><b>PRIZE</b></span>
+          <span class="lab on-cream" style="--a:180"><b>5%</b><b>OFF</b></span>
+          <span class="lab on-navy" style="--a:240"><b>NO</b><b>PRIZE</b></span>
+          <span class="lab on-cream" style="--a:300"><b>SPIN</b><b>AGAIN</b></span>
+        </div>
+        <div class="lucky-hub"></div>
+      </div>
+      <p class="lucky-kicker">You hit the top prize</p>
+      <p class="lucky-winpct" data-lucky-pct>10% OFF</p>
+      <p class="lucky-clock" data-lucky-clock>06:00:00</p>
+      <p class="lucky-lead">Starts now. Gone in 6 hours.</p>
+      <p class="lucky-rules">10% off your items. No cap. Shipping stays free.</p>
+      <button class="lucky-go" type="button" data-lucky-close>Shop now</button>
+    </div>
+    <div data-lucky-pane="browse" hidden>
+      <h2>Order today. These are still <span data-lucky-pct>10% off</span>.</h2>
+      <p class="lucky-lead">The items you just viewed, now with a little extra savings.</p>
+      <p class="lucky-clock" data-lucky-clock>06:00:00</p>
+      <div class="lucky-goods" data-lucky-goods="browse"></div>
+      <a class="lucky-go" href="/cart">Shop these</a>
+    </div>
+    <div data-lucky-pane="pay" hidden>
+      <h2>Your <span data-lucky-pct>10% off</span> is still on this order.</h2>
+      <p class="lucky-clock" data-lucky-clock>06:00:00</p>
+      <div class="lucky-goods" data-lucky-goods="pay"></div>
+      <button class="lucky-go" type="button" data-lucky-close>Stay and pay</button>
+    </div>
+    <div data-lucky-pane="placed" hidden>
+      <h2>Your order is in.</h2>
+      <p class="lucky-lead">Next, smash an egg for a free-order coupon.</p>
+      <button class="lucky-go" type="button" data-lucky-eggs>Smash the eggs</button>
+    </div>
+    <div data-lucky-pane="eggs" hidden>
+      <h2>Pick an egg</h2>
+      <div class="lucky-eggs" data-lucky-eggbox>
+        <button type="button" data-egg="0" aria-label="Egg"></button>
+        <button type="button" data-egg="1" aria-label="Egg"></button>
+        <button type="button" data-egg="2" aria-label="Egg"></button>
+      </div>
+      <p class="lucky-prize" data-lucky-prize hidden>Free-order coupon</p>
+      <p class="lucky-rules">One coupon, on your latest paid order. Five later paid orders in the window, from you or a friend, bring that merchandise total back as store credit.</p>
+    </div>
+    <div data-lucky-pane="status" hidden>
+      <p class="lucky-kicker">Free-order coupon</p>
+      <h2 data-lucky-status-title>0 of 5</h2>
+      <p class="lucky-lead" data-lucky-status-body></p>
+      <p class="lucky-rules">One coupon per customer, always on your latest paid order. A newer order of yours moves it there.</p>
+    </div>
+  </div>
+</div>
+<button class="lucky-chip" type="button" data-lucky-chip hidden>10% OFF</button>
+<script src="/static/lucky.min.js?v=1" defer></script>

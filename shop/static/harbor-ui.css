@@ -160,7 +160,7 @@
   overflow: hidden;
   min-height: 2.6em;
 }
-.fcard .pr .was { font-size: 12px; color: #999; text-decoration: line-through; font-weight: 400; margin-left: 6px; }
+.fcard .pr .was { font-size: 12px; color: #4B5563; text-decoration: line-through; font-weight: 400; margin-left: 6px; }
 
 .firstrow { margin: 0 0 22px; }
 .firstrow .fb { color: #0E7490; font-weight: 700; white-space: nowrap; text-decoration: none; }
@@ -168,7 +168,7 @@
 .firstrow .fmini .fp { width: 34px; height: 34px; flex: none; display: flex; align-items: center; justify-content: center; background: #fff; border-radius: 14px; overflow: hidden; }
 .firstrow .fmini .fp img { width: 100%; height: 100%; object-fit: contain; }
 .firstrow .fmini b { color: #0F2744; white-space: nowrap; }
-.firstrow .was { font-size: 11px; color: #999; text-decoration: line-through; font-weight: 400; }
+.firstrow .was { font-size: 11px; color: #4B5563; text-decoration: line-through; font-weight: 400; }
 
 a.card {
   display: flex;
@@ -193,6 +193,8 @@ a.card .pic {
   overflow: hidden;
 }
 a.card .pic img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   aspect-ratio: auto;
@@ -201,6 +203,7 @@ a.card .pic img {
   background: transparent;
   border-radius: 0;
 }
+.pic-cap { display: none; }
 a.card .body { display: flex; flex-direction: column; gap: 4px; flex: 1; padding: 10px 12px 12px; }
 a.card .name {
   display: -webkit-box;
@@ -216,7 +219,7 @@ a.card .name {
 }
 a.card .pr { display: flex; align-items: baseline; gap: 8px; margin-top: auto; padding-top: 8px; }
 a.card .price { margin: 0; font-size: 17px; font-weight: 700; color: #B45309; }
-a.card .was { margin: 0; font-size: 13px; color: #999; text-decoration: line-through; font-weight: 400; }
+a.card .was { margin: 0; font-size: 13px; color: #4B5563; text-decoration: line-through; font-weight: 400; }
 
 .product-grid.dense { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (min-width: 768px) {
@@ -508,14 +511,17 @@ main:has(form[action*="/account/password"]) {
   border-radius: 20px;
 }
 .cookiebar button {
-  background: #0F2744;
-  color: #fff;
+  background: #fff;
+  color: #0F2744;
   border-radius: 999px;
   min-height: 36px;
   min-width: 0;
   width: auto;
   padding: 7px 16px;
+  position: relative;
+  z-index: 2;
 }
+body.is-checkout .cookiebar { display: none !important; }
 
 @media (max-width: 767px) {
   .announce {
@@ -756,7 +762,7 @@ main:has(form[action*="/account/password"]) {
 .bcard img { width: 100%; height: 100%; object-fit: contain; }
 .bcard .nm { display: block; font-size: 12px; font-weight: 700; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .bcard .pr { font-size: 14px; font-weight: 700; color: #0F2744; }
-.bcard .was, .fcard .was { font-size: 11px; color: #999; text-decoration: line-through; font-weight: 400; margin-left: 4px; }
+.bcard .was, .fcard .was { font-size: 11px; color: #4B5563; text-decoration: line-through; font-weight: 400; margin-left: 4px; }
 .b1 { background: linear-gradient(120deg, #FDEAE4, #F6C9B8); }
 .b2 { background: linear-gradient(120deg, #E4EDE6, #C9DCCE); }
 .b3 { background: linear-gradient(120deg, #EDEDF2, #D9DCE8); }
@@ -2345,7 +2351,7 @@ a.card .was,
 .fcard .pr .was,
 .deal .was {
   font-size: 12px;
-  color: #9A9A9A;
+  color: #4B5563;
   text-decoration: line-through;
   font-weight: 500;
 }
@@ -2382,7 +2388,7 @@ a.card .pr { flex-wrap: wrap; gap: 6px 8px; align-items: center; }
 .sku-summary .was {
   margin: 0 0 6px;
   font-size: 14px;
-  color: #9A9A9A;
+  color: #4B5563;
 }
 .sku-summary .you-save {
   margin: 0 0 10px;
@@ -2753,20 +2759,45 @@ a.peek-hit { color: inherit; text-decoration: none; display: flex; flex-directio
 .peek-price { margin: 0; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
 .peek-price b { color: #0F2744; font-size: 22px; }
 .peek-price s { color: #999; font-size: 13px; }
-.peek-offers { display: flex; gap: 8px; overflow-x: auto; }
-.peek-offer {
-  flex: none;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  width: 72px;
-  font-size: 11px;
-  color: #0F2744;
+.peek-offers {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
 }
-.peek-offer input { position: absolute; opacity: 0; }
-.peek-offer img { width: 72px; height: 72px; object-fit: contain; background: #f6f5f2; border-radius: 20px; border: 1px solid transparent; }
-.peek-offer:has(input:checked) img,
-.peek-offer:has(input:checked) span { border-color: #0F2744; }
+label.peek-offer {
+  position: relative;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: 6px;
+  min-width: 0;
+  padding: 6px;
+  border: 1px solid #E2E6EE;
+  border-radius: 16px;
+  background: #fff;
+  font-size: 12px;
+  line-height: 1.3;
+  color: #0F2744;
+  text-align: left;
+}
+.peek-offer input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.peek-offer img {
+  width: 100%;
+  aspect-ratio: 1;
+  height: auto;
+  object-fit: cover;
+  background: #f6f5f2;
+  border-radius: 8px;
+  border: 0;
+}
+.peek-offer span {
+  display: -webkit-box;
+  min-height: 2.6em;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.peek-offer:has(input:checked) { border-color: #2F6BFF; background: #fff4ee; }
 .peek-qty { display: flex; align-items: center; gap: 8px; }
 .peek-add { min-height: 46px; border-radius: 999px; background: #0F2744; color: #fff; font-weight: 800; }
 @media (min-width: 721px) {
@@ -2930,19 +2961,27 @@ a.peek-hit { color: inherit; text-decoration: none; display: flex; flex-directio
   font-size: 13px;
   line-height: 1.45;
 }
-.atc-tools { display: flex; gap: 10px; align-items: center; margin: 10px 0; min-width: 0; }
+.atc-tools {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  margin: 10px 0;
+  min-width: 0;
+}
 .atc-search {
   display: flex;
   align-items: center;
   gap: 6px;
-  flex: 1 1 180px;
+  flex: none;
+  width: 100%;
   min-width: 0;
 }
 .atc-search input {
-  flex: 1;
-  width: auto;
+  flex: 1 1 auto;
+  width: 100%;
   min-width: 0;
-  height: 36px;
+  height: 40px;
   border: 1px solid #e4e4e4;
   border-radius: 999px;
   padding: 0 14px;
@@ -2995,6 +3034,7 @@ a.peek-hit { color: inherit; text-decoration: none; display: flex; flex-directio
   flex: 1;
   padding-bottom: 4px;
 }
+.atc-grid.is-loading { opacity: 0.55; }
 .atc-card {
   display: flex;
   flex-direction: column;
@@ -3065,6 +3105,7 @@ body.atc-open .cookiebar { display: none; }
   .atc-gap { display: grid; place-items: center; }
   .atc-gap-panel {
     width: min(880px, calc(100vw - 64px));
+    height: min(84dvh, 780px);
     max-height: min(84dvh, 780px);
     border-radius: 16px;
     padding: 18px 18px 14px;
@@ -3084,8 +3125,8 @@ body.atc-open .cookiebar { display: none; }
   .atc-gap { display: flex; align-items: flex-end; }
   .atc-gap-panel {
     width: 100%;
-    height: auto;
-    max-height: min(74dvh, 620px);
+    height: min(86dvh, 760px);
+    max-height: min(86dvh, 760px);
     border-radius: 18px 18px 0 0;
     padding: 12px 12px 0;
   }
@@ -3204,7 +3245,7 @@ a.card .price, .card .price, .price, .buy > .price, .sku-head .price { color: #B
 .interest-count { color: #5C6570; font-size: 13px; margin: 6px 0 0; }
 .ship-badge, .badge.ship, .tag.ship {
   background: #E6F7EF;
-  color: #128A5E;
+  color: #065F46;
   border-radius: 999px;
   font-weight: 600;
 }

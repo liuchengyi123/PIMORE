@@ -72,18 +72,23 @@ from shop.adtrack import (
     start_smart_job,
 )
 from shop.lp_links import (
+    clean_scene as clean_lp_scene,
     create_link as create_lp_link,
     get_by_code as get_lp_link,
     list_recent as list_lp_links,
     preview_path as lp_preview_path,
+    set_scene_image as set_lp_scene,
 )
 from shop.lp_modules import (
     SKINS as LP_SKINS,
     TEMPLATES as LP_TEMPLATES,
     LpChoiceError,
     band_groups,
+    needs_hero,
     resolve_module,
+    uses_scene,
 )
+from shop.lp_scene_hits import SCENE_HITS
 from shop.alibaba import (
     AlibabaFormatError,
     apply_intercept_rules,
@@ -191,6 +196,8 @@ from shop.image_gen import (
     list_pending_sku_shot_units,
     count_pending_sku_shots,
     main_urls,
+    normalize_cover,
+    order_mains,
     missing_story_slots,
     has_pending_shot,
     pending_rows,
@@ -205,7 +212,7 @@ from shop.image_gen import (
     story_urls,
     task_progress,
 )
-from shop.images import card_image, phone_image, save_image_bytes, save_remote_image
+from shop.images import card_image, image_extension, phone_image, prepare_image, save_image_bytes, save_remote_image
 from shop.package import PackageError, describe_preview, is_jushuitan_sheet, preview_sheets, read_package
 from shop.net import outbound_proxy, remembered_proxy
 from shop.ops import board, record
@@ -225,9 +232,13 @@ from shop.reco import (
 )
 from shop.translate import LANGS, fill_from_english, fill_languages, has_cjk, translate_fields, translator_from_env
 from shop.writer import CURSOR_LANES, ai_from_env, ai_pair, cursor_product, prepare_cursor_lanes, supplier_link
-from shop.address_format import compose_street, formats_for, label_lines
+from shop.address_format import compose_street, extra_regions, extra_required, formats_for, label_lines, required_keys
+from shop.cn_areas import cities as cn_cities
+from shop.cn_areas import districts as cn_districts
+from shop.cn_areas import provinces as cn_provinces
 from shop.divisions import city_choices, country_choices, region_choices
 from shop.geo import country_for, lookup_here, lookup_postal
+from shop.places import read_address, suggest_places
 from shop.coefficients import coefficient_for, load as load_coefficients, rows_for_admin as coefficient_rows, save as save_coefficients, DEFAULTS as COEF_DEFAULTS
 from shop.interest import account_weights, merge_weights, note_click
 from shop.i18n import CATEGORIES, UI
@@ -264,7 +275,7 @@ from shop.staff import (
     start_session,
 )
 from shop.admin_money import cents_to_dollars_str, dollars_to_cents, format_usd
-from shop.suggest import BROWSE_SHARE, blend_order, category_weights, choose, diverse_order, fit_add, for_you, personal_order, ranked_choose, ranked_for_you
+from shop.suggest import BROWSE_SHARE, blend_order, category_weights, choose, diverse_order, fit_add, for_you, personal_order, ranked_choose, ranked_for_you, visit_window
 from shop.taxonomy import CHILDREN, HOME_FACE, ZH, children, known, labels_for
 
 ROOT = Path(__file__).resolve().parent
@@ -1150,6 +1161,15 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             (key, value),
         )
 
+    def cover_mode_value():
+        cached = getattr(app.state, "cover_mode", None)
+        if cached in {"1", "2", "4", "12", "124", "24", "14"}:
+            return cached
+        row = conn.execute("select value from settings where key = 'cover_slot'").fetchone()
+        mode = normalize_cover(row["value"] if row is not None else "")
+        app.state.cover_mode = mode
+        return mode
+
     def apply_checkout():
         paypal_id = saved_or_env("paypal_client_id", "PAYPAL_CLIENT_ID")
         paypal_secret = saved_or_env("paypal_client_secret", "PAYPAL_CLIENT_SECRET")
@@ -1827,11 +1847,24 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 else:
                     response.headers["Cache-Control"] = "public, max-age=86400, must-revalidate"
             return response
-        response.headers["Cache-Control"] = "no-store"
+        if path == "/":
+            # Allow the back button to restore the homepage instead of rebuilding it.
+            response.headers["Cache-Control"] = "private, no-cache"
+        else:
+            response.headers["Cache-Control"] = "no-store"
         vid = request.cookies.get("harbor_vid") or getattr(request.state, "visitor", "")
         if not request.cookies.get("harbor_vid") and vid:
             response.set_cookie(
                 "harbor_vid", vid, max_age=31536000, httponly=True, samesite="lax", path="/"
+            )
+        if getattr(request.state, "home_mix_set", False) and getattr(request.state, "home_mix", ""):
+            response.set_cookie(
+                "home_mix",
+                request.state.home_mix,
+                max_age=86400,
+                httponly=True,
+                samesite="lax",
+                path="/",
             )
         # Persist ad click IDs / UTM / seg for checkout attribution (90 days).
         try:
@@ -1931,10 +1964,60 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         app.state.memo["guarantees"] = data
         return data
 
+    def begin_visit(request):
+        """New assortment for this category open. Does not move the homepage list."""
+        request.state.list_mix = secrets.token_hex(4)
+
+    def pin_home_mix(request, *, rotate=False):
+        """Keep the homepage assortment until the visitor reloads."""
+        if rotate:
+            request.state.home_mix = secrets.token_hex(4)
+            request.state.home_mix_set = True
+            return
+        existing = (request.cookies.get("home_mix") or "").strip()
+        if existing:
+            request.state.home_mix = existing
+            request.state.home_mix_set = False
+            return
+        request.state.home_mix = secrets.token_hex(4)
+        request.state.home_mix_set = True
+
+    def _home_url_without_fresh(request):
+        from urllib.parse import urlencode
+        pairs = [(key, value) for key, value in request.query_params.multi_items() if key != "fresh"]
+        query = urlencode(pairs)
+        return request.url.path + (("?" + query) if query else "")
+
+    def current_mix(request):
+        mix = getattr(request.state, "list_mix", None)
+        if mix:
+            return str(mix)
+        mix = getattr(request.state, "home_mix", None)
+        if mix:
+            return str(mix)
+        return request.cookies.get("home_mix") or ""
+
+    def _salt_from(crumb):
+        n = 0x9E3779B9
+        for ch in crumb:
+            n = (n * 33 + ord(ch)) & 0xFFFFFFFF
+        return n
+
+    def home_salt(request):
+        """Homepage order. Ignores history collected after the list was pinned."""
+        mix = getattr(request.state, "home_mix", None) or request.cookies.get("home_mix") or ""
+        vid = request.cookies.get("harbor_vid") or getattr(request.state, "visitor", "") or ""
+        return _salt_from(str(mix) + "|" + str(vid))
+
     def rec_salt(request):
-        # Stable for this browser's taste. Page 2 must continue page 1.
+        # Category pages rotate list_mix per open. The visitor id keeps two
+        # people from sharing one assortment. Homepage uses home_salt instead.
         crumb = (
-            (request.cookies.get("interest") or "")
+            current_mix(request)
+            + "|"
+            + (request.cookies.get("harbor_vid") or getattr(request.state, "visitor", "") or "")
+            + "|"
+            + (request.cookies.get("interest") or "")
             + "|"
             + (request.cookies.get("history") or "")
             + "|"
@@ -1942,10 +2025,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             + "|"
             + (request.cookies.get("buyer_session") or "")
         )
-        n = 0x9E3779B9
-        for ch in crumb:
-            n = (n * 33 + ord(ch)) & 0xFFFFFFFF
-        return n
+        return _salt_from(crumb)
 
     def scarcity_left(sku, stock):
         stock = int(stock or 0)
@@ -2469,13 +2549,13 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         "source_zh",
         "published",
         "offers",
+        "markets",
     )
     _CATALOG_FAT_KEYS = (
         "description",
         "bullets",
         "specs",
         "listing",
-        "markets",
         "markets_lock",
         "gen_at",
         "uploaded_at",
@@ -2522,9 +2602,25 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         return rows
 
     def catalog_list_rows():
-        """Slim published catalog for home/list/api cards — no description/listing blobs."""
+        """Slim published catalog for home/list/api cards — no description/listing blobs.
+
+        The markets column rides along so a country can push or hold a product back.
+        The cache rebuilds when the database file changes, so a market backfill shows
+        up without another process restart.
+        """
+        stamp = 0
+        for name in ("shop.sqlite", "shop.sqlite-wal"):
+            path = os.path.join(os.path.dirname(db_path), name) if db_path and db_path != ":memory:" else ""
+            if not path:
+                continue
+            try:
+                stamp = max(stamp, int(os.path.getmtime(path) * 1000))
+            except OSError:
+                pass
         cached = app.state.cache.get("shop:catalog-slim")
-        if cached is not None:
+        if isinstance(cached, tuple) and cached[0] == stamp:
+            return cached[1]
+        if stamp == 0 and cached is not None and not isinstance(cached, tuple):
             return cached
         cols = ", ".join(_CATALOG_SLIM_COLS)
         rows = [
@@ -2533,7 +2629,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 f"select {cols} from products where published = 1 order by rowid"
             ).fetchall()
         ]
-        app.state.cache.set("shop:catalog-slim", rows)
+        app.state.cache.set("shop:catalog-slim", (stamp, rows) if stamp else rows)
         return rows
 
     def catalog_index():
@@ -2706,15 +2802,16 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             item["images"] = mains
             item["image"] = mains[0]
         for offer in item.get("offers") or []:
-            # Generated SKU packshots are shared across all languages (no en/ja sidecars).
-            if offer.get("generated"):
-                offer["image"] = offer.get("image") or ""
-            else:
-                offer["image"] = shown(offer.get("image") or "")
-                # Quantity packs are not redrawn, so the file is still the Chinese upload.
-                # On a non-Chinese page, show the generated main instead of that poster.
-                if mains and not str(ctx["lang"]).startswith("zh"):
-                    offer["image"] = mains[0]
+            image = str(offer.get("image") or "")
+            name = Path(image.split("?", 1)[0]).name.lower()
+            own_sku = bool(re.match(r"^[cs]\d+\.(jpg|jpeg|png|webp)$", name)) and catalog_file_exists(image, ROOT)
+            # Generated SKU packshots live on the c*/s* file and are shared by every language.
+            if offer.get("generated") or own_sku:
+                offer["image"] = image
+                continue
+            offer["image"] = shown(image)
+            if mains and not str(ctx["lang"]).startswith("zh"):
+                offer["image"] = mains[0]
         first = item["images"][0] if item["images"] else item["image"]
         item["image_phone"] = phone_src(first)
         sale_cents, list_cents = sale_list_cents(row)
@@ -2735,13 +2832,14 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         return item
 
     def listing_photo(sku, lang, fallback):
-        """Thumbnail. Chinese keeps the upload. Any other language uses its generated main, then the English one."""
+        """List and card thumbnail. Chinese keeps the upload. The product page keeps file order."""
         if str(lang or "").startswith("zh"):
             return storefront_image(fallback, lang, ROOT)
         mains = main_urls(sku, lang, ROOT)
         if not mains and lang != "en":
             mains = main_urls(sku, "en", ROOT)
         if mains:
+            mains = order_mains(mains, sku, cover_mode_value())
             return mains[0]
         return storefront_image(fallback, lang, ROOT)
 
@@ -2928,8 +3026,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
 
     def selected_lines(request):
         buy = request.query_params.get("buy") == "1"
-        raw = request.cookies.get("checkout_line") if buy else request.cookies.get("cart")
-        return load_lines(raw), buy
+        return load_lines(request.cookies.get("cart")), buy
 
     def line_views(request, raw_lines):
         ctx = view(request)
@@ -2977,7 +3074,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             shown.append(item)
         return ctx, shown, merchandise
 
-    def quote_for(ctx, merchandise, ship_country, coupon=None, balance_cents=0, use_balance=False):
+    def quote_for(ctx, merchandise, ship_country, coupon=None, balance_cents=0, use_balance=False, lucky_off_cents=0):
         if ctx["units"] is None:
             return None
         return build_quote(
@@ -2991,7 +3088,68 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             coupon_threshold_cents=coupon["threshold_cents"] if coupon else 0,
             balance_cents=balance_cents,
             use_balance=use_balance,
+            lucky_off_cents=lucky_off_cents,
         )
+
+    def lucky_token(request):
+        token = (request.cookies.get("lucky_spin") or "").strip()
+        if not token:
+            token = str(request.query_params.get("lucky_spin") or "").strip()
+        return token[:80]
+
+    def lucky_off_for(request, email, merchandise):
+        from shop.lucky import lookup_off
+        return lookup_off(conn, lucky_token(request), email or "", merchandise)
+
+    def lucky_price_pair(ctx, cents, percent):
+        if ctx.get("units") is None or not cents:
+            return None
+        off = max(0, int(cents) * (100 - int(percent)) // 100)
+        return {
+            "from_local": goods_local(int(cents), ctx["units"], ctx["currency"]),
+            "to_local": goods_local(off, ctx["units"], ctx["currency"]),
+            "currency": ctx["currency"],
+        }
+
+    def lucky_browse_items(request, percent):
+        ctx = view(request)
+        by_sku = catalog_index()
+        items = []
+        for sku in read_skus(request.cookies.get("history"))[:4]:
+            row = by_sku.get(sku)
+            if row is None:
+                continue
+            try:
+                card = present_card(row, ctx)
+            except Exception:
+                continue
+            pair = lucky_price_pair(ctx, card.get("price_cents") or 0, percent)
+            if not pair:
+                continue
+            items.append({"name": card.get("name") or sku, "image": card.get("image") or "", **pair})
+        return items
+
+    def lucky_cart_items(request, percent):
+        ctx, shown, _merchandise = line_views(request, load_lines(request.cookies.get("cart")))
+        items = []
+        for line in shown[:4]:
+            pair = lucky_price_pair(ctx, line.get("line_cents") or 0, percent)
+            if not pair:
+                continue
+            items.append({"name": line.get("name") or line.get("sku") or "", "image": line.get("image") or "", **pair})
+        return items
+
+    def lucky_view(request, email=None):
+        from shop.lucky import actor_email, snapshot
+        token = lucky_token(request)
+        who = actor_email(conn, token, buyer_email(request) if email is None else email)
+        data = snapshot(conn, token, who)
+        if token:
+            data["token"] = token
+        percent = data["spin"]["percent"] if data.get("spin") else data["percent"]
+        data["browse_items"] = lucky_browse_items(request, percent)
+        data["cart_items"] = lucky_cart_items(request, percent)
+        return data
 
     def money(ctx, cents):
         if ctx["units"] is None:
@@ -3114,6 +3272,13 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
     def listing(request, forced_category=None, forced_sub=""):
         ctx = view(request)
         params = request.query_params
+        sort = params.get("sort", "featured")
+        if sort not in SORTS:
+            sort = "featured"
+        partial = (params.get("partial") or "") in {"1", "cards", "true"}
+        shuffle_visit = sort == "featured" and not (params.get("q") or "").strip()
+        if shuffle_visit and not partial:
+            begin_visit(request)
         catalog_list_rows()
         key = "page:list:{lang}:{zh}:{country}:{category}:{sub}:{q}:{sort}:{low}:{high}:{page}:{partial}:{token}".format(
             lang=ctx["lang"],
@@ -3129,14 +3294,12 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             partial=params.get("partial") or "",
             token=app.state.catalog_token,
         )
-        hit = cached_public(request, key)
-        if hit is not None:
-            if forced_category in CATEGORIES:
-                remember(hit, request, forced_category, 1)
-            return _listing_ads(request, hit)
-        sort = params.get("sort", "featured")
-        if sort not in SORTS:
-            sort = "featured"
+        if not shuffle_visit:
+            hit = cached_public(request, key)
+            if hit is not None:
+                if forced_category in CATEGORIES:
+                    remember(hit, request, forced_category, 1)
+                return _listing_ads(request, hit)
         category = params.get("category") or forced_category
         sub = forced_sub if category and known(category, forced_sub) else ""
         rows = list(catalog_list_rows())
@@ -3157,7 +3320,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         if sub:
             rows = [row for row in rows if (row.get("subcategory") or "") == sub]
         if params.get("q"):
-            needle = " ".join(str(params.get("q") or "").lower().split())
+            needle = " ".join(str(params.get("q") or "").casefold().split())
             tokens = [t for t in re.split(r"[\s,，+/|；;]+", needle) if t]
 
             def _search_haystack(row):
@@ -3165,6 +3328,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                     str(row.get("names") or ""),
                     str(row.get("description") or ""),
                     str(row.get("source_zh") or ""),
+                    str(row.get("offers") or ""),
                     str(row.get("sku") or ""),
                     str(row.get("category") or ""),
                     str(row.get("subcategory") or ""),
@@ -3172,11 +3336,11 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 bullets = row.get("bullets")
                 if bullets:
                     parts.append(str(bullets))
-                return " ".join(parts).lower()
+                return " ".join(parts).casefold()
 
             def _search_score(row):
                 hay = _search_haystack(row)
-                names = str(row.get("names") or "").lower()
+                names = str(row.get("names") or "").casefold()
                 if not tokens:
                     return 1 if (not needle or needle in hay) else -1
                 if not all(t in hay for t in tokens):
@@ -3238,6 +3402,11 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 browse_share=browse_share_for(interest, taste, rules),
                 heat_unit=rules["heat_per_click"],
             )
+            rows = visit_window(
+                rows,
+                rec_salt(request),
+                {row["sku"]: rank(row, ctx["country"]) for row in rows},
+            )
         else:
             rows.sort(key=lambda row: 0 if row["sku"] in promoted else 1)
         total = len(rows)
@@ -3264,8 +3433,13 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 "list_has_more": page * page_size < total,
             }
         )
-        if (params.get("partial") or "") in {"1", "cards", "true"}:
-            response = store_public(request, key, "home_cards.html", {**ctx, "products": items})
+        def listed(template_name, data):
+            if shuffle_visit:
+                return HTMLResponse(templates.env.get_template(template_name).render(data))
+            return store_public(request, key, template_name, data)
+
+        if partial:
+            response = listed("home_cards.html", {**ctx, "products": items})
             response.headers["X-Harbor-Has-More"] = "1" if page * page_size < total else "0"
             response.headers["X-Harbor-Page"] = str(page)
             return _listing_ads(request, response)
@@ -3279,7 +3453,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             if sub and ctx["sub_name"]:
                 crumbs.append((ctx["sub_name"], public_url(f"/c/{category}/{sub}", ctx["lang"])))
             ctx["seo_jsonld"] = [_breadcrumb(crumbs)]
-        response = store_public(request, key, "listing.html", ctx)
+        response = listed("listing.html", ctx)
         if forced_category in CATEGORIES:
             remember(response, request, forced_category, 1)
         return _listing_ads(request, response)
@@ -3368,15 +3542,17 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         """Card image URL, cached so a shelf does not glob the catalog per request."""
         sku = str(row["sku"] if "sku" in row.keys() else "")
         lang = str(lang or "en")
-        key = ("card", sku, lang, int(app.state.catalog_token))
+        key = ("card", sku, lang, int(app.state.catalog_token), cover_mode_value())
         hit = _card_src_cache.get(key)
         now = time.monotonic()
         if hit and (hit[1] or now - hit[2] < 60):
             return hit[0]
         image = (row["image_url"] if "image_url" in row.keys() and row["image_url"] else "") or f"/static/products/{sku}.svg"
-        image = resolve_catalog_image(image, row, lang, ROOT) or image
-        image = card_image(listing_photo(sku, lang, image), ROOT)
-        _card_src_cache[key] = (image, "/card/" in image, time.monotonic())
+        shot = listing_photo(sku, lang, image)
+        if not (str(shot).startswith("/static/catalog/") and catalog_file_exists(shot, ROOT)):
+            shot = resolve_catalog_image(image, row, lang, ROOT) or shot
+        image = card_image(shot, ROOT)
+        _card_src_cache[key] = (image, "/fit/" in image, time.monotonic())
         return image
 
     def phone_src(url):
@@ -3447,7 +3623,10 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             if fresh(hit, time.monotonic()):
                 return hit[1]
             prior_map = {row["sku"]: rank(row, country) for row in rows}
-            images = {row["sku"]: card_src(row, lang) for row in rows}
+            # Card URLs are resolved only for the rows a page actually renders.
+            # Resolving every SKU here globs the whole catalog and blocks the
+            # checkout gap popup for tens of seconds on a cold cache.
+            images = {}
             rails = {}
             for cat in CATEGORIES:
                 cat_rows = [row for row in rows if row["category"] == cat]
@@ -3493,7 +3672,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                     _home_pools.pop(oldest, None)
             return data
 
-    def home_feed_cards(request, ctx, tab="recommended", page=1, page_size=20, q="", exclude=()):
+    def home_feed_cards(request, ctx, tab="recommended", page=1, page_size=20, q="", exclude=(), pinned=False):
         """Liked items first, then the rest of this shelf. Order is stable across pages."""
         pool = home_candidate_pool(ctx["country"], ctx["lang"])
         catalog = pool["rows"]
@@ -3506,7 +3685,9 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                     names = json.loads(row["names"] or "{}")
                 except (json.JSONDecodeError, TypeError):
                     names = {}
-                blob = " ".join(str(value) for value in names.values()).casefold()
+                blob = " ".join(
+                    str(value) for value in list(names.values()) + [row.get("source_zh") or "", row.get("offers") or ""]
+                ).casefold()
                 if needle in blob or needle in str(row["sku"]).casefold():
                     matched.append(row)
             rows = matched
@@ -3516,7 +3697,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         cart_skus = [line["sku"].split("~", 1)[0] for line in load_lines(request.cookies.get("cart"))]
         interest = interest_profile(request, by_sku=by_sku, cart_skus=cart_skus)
         taste = read_taste(request.cookies.get("taste"))
-        salt = rec_salt(request)
+        salt = home_salt(request) if pinned else rec_salt(request)
         tab = (tab or "recommended").strip().lower()
         page = max(1, int(page or 1))
         page_size = max(4, min(48, int(page_size or 20)))
@@ -3535,10 +3716,16 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             salt = (salt ^ (sum(ord(ch) for ch in tab) * 131)) & 0xFFFFFFFF
         else:
             base = list(rows)
-        # Cold visitors reuse the cached click-heat order and only shuffle it.
-        # Search, a cart, or enough browse signals re-rank with the admin share.
+        # A pinned homepage keeps this shuffle until the visitor reloads.
+        # Search, a cart, or enough browse signals re-rank everywhere else.
         cold = share <= 0 and not needle and not cart_skus
-        if cold and tab not in CATEGORIES:
+        if pinned and not needle:
+            ordered = light_shuffle(pool["diverse"] if tab not in CATEGORIES else base, salt)
+            if promoted and tab not in CATEGORIES:
+                ordered.sort(key=lambda row: 0 if row["sku"] in promoted else 1)
+            if feed_exclude:
+                ordered = [row for row in ordered if str(row.get("sku") or "") not in feed_exclude]
+        elif cold and tab not in CATEGORIES:
             ordered = light_shuffle(pool["diverse"], salt)
             if promoted:
                 ordered.sort(key=lambda row: 0 if row["sku"] in promoted else 1)
@@ -3563,6 +3750,9 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 exclude=feed_exclude,
                 heat_unit=rules["heat_per_click"],
             )
+        ordered = visit_window(ordered, salt, prior_map)
+        if promoted:
+            ordered.sort(key=lambda row: 0 if row["sku"] in promoted and prior_map.get(row["sku"], 0) == 0 else 1)
         start = (page - 1) * page_size
         slice_rows = ordered[start : start + page_size]
         has_more = start + page_size < len(ordered)
@@ -3576,6 +3766,10 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
 
     @app.get("/", response_class=HTMLResponse)
     def home(request: Request):
+        fresh = (request.query_params.get("fresh") or "") == "1"
+        pin_home_mix(request, rotate=fresh)
+        if fresh:
+            return RedirectResponse(_home_url_without_fresh(request), status_code=302)
         ctx = view(request)
         shelf = home_candidate_pool(ctx["country"], ctx["lang"])
         rows = shelf["rows"]
@@ -3591,19 +3785,24 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             with_photo = [row for row in stocked_rows if (row.get("image_url") or "").strip()]
             return (with_photo or stocked_rows)[:limit]
 
-        salt = rec_salt(request)
+        salt = home_salt(request)
         rules = shelf["rules"]
         heat_map = shelf["heat_map"]
         prior_map = shelf["prior_map"]
         rail_rows = {}
         for key in CATEGORIES:
-            ordered = shelf["rails"].get(key) or []
+            ordered = visit_window(
+                shelf["rails"].get(key) or [],
+                (salt ^ (sum(ord(ch) for ch in key) * 17)) & 0xFFFFFFFF,
+                prior_map,
+            )
             picked = pictured(ordered, 4)
             if picked:
                 random.Random((salt ^ (sum(ord(ch) for ch in key) * 17)) & 0xFFFFFFFF).shuffle(picked)
                 rail_rows[key] = picked
+        forward_deals = [row for row in shelf["deals"] if prior_map.get(row["sku"], 0) == 0]
         deal_rows = mix_price_bands(
-            shelf["deals"],
+            forward_deals,
             heat_map,
             limit=8,
             under_cents=300,
@@ -3616,18 +3815,16 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         interest = interest_profile(request, by_sku=by_sku, cart_skus=cart_skus)
         seen = read_skus(request.cookies.get("history"), 24) or [sku for sku in interest if sku in by_sku]
         recent_rows = [by_sku[sku] for sku in seen if sku in by_sku][:8]
-        light = shelf["light"]
+        light = [item for item in shelf["light"] if prior_map.get(item["sku"], 0) == 0] or shelf["light"]
         taste = read_taste(request.cookies.get("taste"))
         share = browse_share_for(interest, taste, rules)
         boost_map = {sku: 4.0 for sku in promoted}
         stocked = shelf["stocked"]
-        # In the shop: system random only — no browse interest, cross-category.
-        # Skip recently viewed SKUs so this strip does not echo what they just opened.
-        recent_skus = set(seen[:16])
+        # In the shop: one shuffle for this visit. It stays put until reload.
         shop_pick_rows = diverse_order(
             stocked or rows,
             salt=(salt ^ 0x11111111) & 0xFFFFFFFF,
-            exclude=recent_skus,
+            exclude=set(),
             heat=heat_map,
             prior=prior_map,
             boost=boost_map,
@@ -3637,14 +3834,14 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         shop_skus = {row["sku"] for row in shop_pick_rows}
         # Recommended feed first so Featured / For you can exclude its SKUs.
         feed_rows_cards, feed_has_more, _tab = home_feed_cards(
-            request, ctx, tab="recommended", page=1, page_size=20, exclude=shop_skus
+            request, ctx, tab="recommended", page=1, page_size=20, exclude=shop_skus, pinned=True
         )
         feed_skus = {item["sku"] for item in feed_rows_cards}
         # Prefer feed cards that do not repeat the In the shop strip on first paint.
         overlap = feed_skus & shop_skus
         if overlap and feed_has_more:
             alt_cards, alt_more, _alt_tab = home_feed_cards(
-                request, ctx, tab="recommended", page=2, page_size=20, exclude=shop_skus
+                request, ctx, tab="recommended", page=2, page_size=20, exclude=shop_skus, pinned=True
             )
             replaced = []
             used = set()
@@ -3666,7 +3863,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         featured_rows = diverse_order(
             stocked or rows,
             salt=(salt ^ 0x22222222) & 0xFFFFFFFF,
-            exclude=shop_skus | feed_skus | recent_skus,
+            exclude=shop_skus | feed_skus,
             heat=heat_map,
             prior=prior_map,
             boost=boost_map,
@@ -3735,9 +3932,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             row = by_sku.get(parent)
             if row is not None:
                 cart_preview.append(card(row))
-        pull = category_weights(interest, rows, read_taste(request.cookies.get("taste")))
-        liked = sorted(CATEGORIES, key=lambda key: (-pull.get(key, 0.0), CATEGORIES.index(key)))
-        home_tabs = ["recommended", *liked]
+        home_tabs = ["recommended", *CATEGORIES]
         ctx.update({
             "cart_preview": cart_preview,
             "products": feed_rows_cards,
@@ -3758,13 +3953,14 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
 
     @app.get("/home/feed", response_class=HTMLResponse)
     def home_feed(request: Request):
+        pin_home_mix(request, rotate=False)
         ctx = view(request)
         tab = (request.query_params.get("tab") or "recommended").strip().lower()
         try:
             page = int(request.query_params.get("page") or 1)
         except ValueError:
             page = 1
-        cards, has_more, tab = home_feed_cards(request, ctx, tab=tab, page=page, page_size=20)
+        cards, has_more, tab = home_feed_cards(request, ctx, tab=tab, page=page, page_size=20, pinned=True)
         # partial: cards only
         if (request.query_params.get("partial") or "") in {"1", "cards", "true"}:
             html = templates.env.get_template("home_cards.html").render({**ctx, "products": cards})
@@ -3791,13 +3987,44 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         })
         return render(request, "home.html", ctx=ctx)
 
+    def picks_ctx(request):
+        """Currency and language only. The gap grid must not rebuild the whole page."""
+        country = country_for(request)
+        lang, currency = resolve(country)
+        forced = getattr(request.state, "seo_lang", None)
+        if forced in OPEN_LANGS:
+            lang = forced
+        lang = ui_lang_for(request, lang)
+        now = datetime.now(timezone.utc)
+        try:
+            rate = app.state.book.rate_for(currency, now)
+            units = rate.units_per_usd
+            coef = coefficient_for(conn, country)
+            if coef != 1.0:
+                units = float(units) * float(coef)
+        except NoRate:
+            units = None
+        return {
+            "request": request,
+            "t": UI.get(lang) or UI["en"],
+            "lang": lang,
+            "country": country,
+            "currency": currency,
+            "units": units,
+            "ads": cached_ads(lang),
+        }
+
     @app.get("/cart/picks", response_class=HTMLResponse)
     def cart_pick_cards(request: Request):
-        ctx = view(request)
+        ctx = picks_ctx(request)
         tab = (request.query_params.get("tab") or "recommended").strip().lower()
         q = (request.query_params.get("q") or "").strip()
-        cards, _has_more, tab = home_feed_cards(request, ctx, tab=tab, page=1, page_size=8, q=q)
-        if q and cards and len(cards) < 8:
+        try:
+            page = max(1, int(request.query_params.get("page") or 1))
+        except ValueError:
+            page = 1
+        cards, has_more, tab = home_feed_cards(request, ctx, tab=tab, page=page, page_size=8, q=q)
+        if page == 1 and q and cards and len(cards) < 8:
             extra, _extra_more, _extra_tab = home_feed_cards(
                 request, ctx, tab=ctx.get("gap_tab") or "recommended", page=1, page_size=8, q=""
             )
@@ -3813,7 +4040,10 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         if not stay.startswith("/cart"):
             stay = ""
         html = templates.env.get_template("gap_picks.html").render({**ctx, "products": cards, "pick_tab": tab, "pick_next": stay})
-        return HTMLResponse(html)
+        response = HTMLResponse(html)
+        response.headers["X-Harbor-Has-More"] = "1" if has_more else "0"
+        response.headers["X-Harbor-Page"] = str(page)
+        return response
 
     def campaign_block(ctx, kind, limit=16):
         camp = active_campaign(conn, kind)
@@ -4538,17 +4768,16 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         gift = str(form.get("gift") or "") == "1"
         buy = str(form.get("buy") or "") == "1"
         nxt = safe_next(form.get("next"))
-        if buy and nxt == "/checkout":
-            lines = merge_line(load_lines(request.cookies.get("checkout_line")), code, qty)
-            response = redirect("/checkout?buy=1", country, checkout_line=dump_lines(lines))
+        lines = merge_line(load_lines(request.cookies.get("cart")), code, qty)
+        packed = dump_lines(lines)
+        if wants_ajax:
+            response = JSONResponse({"ok": True, "sku": sku, "qty": qty})
+            response.set_cookie("cart", packed, max_age=31536000, path="/", samesite="lax")
+        elif buy:
+            response = redirect("/checkout", country, cart=packed)
         else:
-            lines = merge_line(load_lines(request.cookies.get("cart")), code, qty)
-            if wants_ajax and not buy:
-                # Build JSON rail payload; cookies still set on JSONResponse.
-                response = JSONResponse({"ok": True, "sku": sku, "qty": qty})
-                response.set_cookie("cart", dump_lines(lines), max_age=31536000, path="/", samesite="lax")
-            else:
-                response = redirect(nxt, country, cart=dump_lines(lines))
+            response = redirect(nxt, country, cart=packed)
+        response.delete_cookie("checkout_line", path="/")
         stamp_promo_notice(response, request, code, qty, lines)
         if gift:
             sold = find_sellable(conn, code)
@@ -4584,7 +4813,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             )
         except Exception:
             ad_event = None
-        if wants_ajax and not buy and isinstance(response, JSONResponse):
+        if wants_ajax and isinstance(response, JSONResponse):
             # Refresh view-like rail summary using the new cart cookie value.
             fake = request
             # Manually compute rail from `lines`
@@ -4741,11 +4970,10 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         qty = int(form.get("qty") or 1)
         if not stock_ok(code, qty):
             return redirect(f"/p/{sku}", country)
-        response = redirect("/checkout", country, checkout_line=dump_lines([{"sku": code, "qty": qty}]))
+        lines = merge_line(load_lines(request.cookies.get("cart")), code, qty)
+        response = redirect("/checkout", country, cart=dump_lines(lines))
+        response.delete_cookie("checkout_line", path="/")
         _track(request, "cart", sku, qty=qty, country=country)
-        target = href("/checkout", country)
-        join = "&" if "?" in target else "?"
-        response.headers["location"] = f"{target}{join}buy=1"
         return response
 
     @app.post("/cart/update")
@@ -4856,7 +5084,8 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
     @app.get("/cart", response_class=HTMLResponse)
     def cart(request: Request):
         ctx, shown, merchandise = line_views(request, load_lines(request.cookies.get("cart")))
-        bill = quote_for(ctx, merchandise, ctx["country"]) if shown else None
+        lucky_off = lucky_off_for(request, buyer_email(request) or "", merchandise) if shown else 0
+        bill = quote_for(ctx, merchandise, ctx["country"], lucky_off_cents=lucky_off) if shown else None
         ship_text = money(ctx, bill.shipping_cents) if bill else ""
         due_text = format_money(bill.due_local, ctx["currency"]) if bill else ""
         have = {line["sku"] for line in shown}
@@ -4951,6 +5180,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             "ship_text": ship_text,
             "due_text": due_text,
             "discount_text": discount_text,
+            "lucky_percent": (lucky_off * 100 // merchandise) if lucky_off and merchandise else 0,
             "bundle_groups": bundle_groups,
             "nudge": nudge,
             "original_text": format_money(original_local, ctx["currency"]) if show_original else "",
@@ -5110,8 +5340,10 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         email = posted["email"]
         coupons = list_coupons(conn, email, merchandise)
         # Do not auto-apply a coupon until the shopper selects one.
+        # A live 10% spin replaces coupons for this checkout.
         picked = None
-        bill = quote_for(ctx, merchandise, ship_country, coupon=picked)
+        lucky_off = lucky_off_for(request, email, merchandise)
+        bill = quote_for(ctx, merchandise, ship_country, coupon=picked, lucky_off_cents=lucky_off)
         due_text = format_money(bill.due_local, ctx["currency"]) if bill else "—"
         ship_text = money(ctx, bill.shipping_cents) if bill else "—"
         email = buyer_email(request) or posted["email"]
@@ -5185,6 +5417,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 "best_id": picked["id"] if picked else None,
                 "merchandise_text": money(ctx, merchandise) if bill else "",
                 "discount_text": money(ctx, bill.discount_cents) if bill else "",
+                "lucky_percent": (lucky_off * 100 // merchandise) if lucky_off and merchandise else 0,
                 "coupon_text": money(ctx, bill.coupon_cents) if bill and bill.coupon_cents else "",
                 "balance_text": money(ctx, bill.balance_cents) if bill and bill.balance_cents else "",
                 "buy": buy,
@@ -5201,8 +5434,29 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 "min_gap_text": (ctx["t"].get("gap_min") or "Add {amount} to check out").format(
                     amount=money(ctx, max(0, int(ctx.get("checkout_min_cents") or 0) - merchandise))
                 ),
+                "gap_title": "",
+                "gap_body": "",
+                "gap_progress": 0,
             }
         )
+        min_cents = int(ctx.get("checkout_min_cents") or 0)
+        if not ctx["checkout_ok"] and min_cents and ctx.get("units") is not None:
+            need_cents = max(0, min_cents - merchandise)
+            need_text = money(ctx, need_cents)
+            target_text = money(ctx, min_cents)
+            ctx["gap_title"] = ctx["t"]["gap_modal_min_title"].format(
+                need=f'<em class="m">{need_text}</em>',
+                target=f'<em class="m">{target_text}</em>',
+            )
+            ctx["gap_body"] = ctx["t"]["gap_modal_min_body"].format(target=target_text)
+            ctx["gap_progress"] = max(0, min(100, int(100 * merchandise / min_cents)))
+            try:
+                gap_cards, _gap_more, _gap_tab = home_feed_cards(
+                    request, ctx, tab="recommended", page=1, page_size=8
+                )
+            except Exception:
+                gap_cards = []
+            ctx["gap_products"] = gap_cards
         response = templates.TemplateResponse(request, "checkout.html", ctx)
         if request.method == "GET":
             contents = []
@@ -5227,16 +5481,49 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         return response
 
     @app.get("/lookup/regions")
-    def regions_lookup(country: str = ""):
-        return {"regions": region_choices(country)}
+    def regions_lookup(country: str = "", lang: str = ""):
+        if country.upper()[:2] == "CN":
+            return {"regions": [{"code": name, "name": name} for name in cn_provinces()], "cities": True}
+        rows = region_choices(country)
+        if rows:
+            return {"regions": rows, "cities": True}
+        return {"regions": extra_regions(country, lang), "cities": False}
 
     @app.get("/lookup/cities")
     def cities_lookup(country: str = "", region: str = ""):
+        if country.upper()[:2] == "CN":
+            return {"cities": cn_cities(region[:40])}
         return {"cities": city_choices(country, region[:80])}
+
+    @app.get("/lookup/districts")
+    def districts_lookup(country: str = "", region: str = "", city: str = ""):
+        if country.upper()[:2] == "CN":
+            return {"districts": cn_districts(region[:40], city[:40])}
+        return {"districts": []}
 
     @app.get("/lookup/postal")
     def postal_lookup(country: str = "", code: str = ""):
         return lookup_postal(country, code)
+
+    @app.get("/lookup/places")
+    def places_lookup(country: str = "", q: str = "", region: str = "", lang: str = ""):
+        return {"places": suggest_places(country, q, region, lang)}
+
+    @app.post("/lookup/read")
+    async def read_lookup(request: Request):
+        try:
+            body = await request.json()
+        except Exception:
+            body = {}
+        country = str((body or {}).get("country") or "")[:2]
+        parsed = read_address(country, str((body or {}).get("text") or ""))
+        if parsed.get("postal") and not (parsed.get("city") and parsed.get("region")):
+            extra = lookup_postal(country, parsed["postal"])
+            if extra.get("city") and not parsed.get("city"):
+                parsed["city"] = extra["city"]
+            if extra.get("region") and not parsed.get("region"):
+                parsed["region"] = extra["region"]
+        return parsed
 
     @app.get("/lookup/here")
     def here_lookup(lat: float | None = None, lon: float | None = None):
@@ -5251,10 +5538,76 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         _lang, currency = resolve(country)
         return {"ok": True, "country": country, "currency": currency}
 
+    @app.get("/api/lucky")
+    def api_lucky(request: Request):
+        return lucky_view(request)
+
+    @app.post("/api/lucky/spin")
+    def api_lucky_spin(request: Request):
+        from shop.lucky import actor_email, snapshot, spin
+        token = lucky_token(request)
+        who = actor_email(conn, token, buyer_email(request) or "")
+        fresh = spin(conn, token, who)
+        if fresh:
+            token = fresh
+        data = snapshot(conn, token, who)
+        if token:
+            data["token"] = token
+        percent = data["spin"]["percent"] if data.get("spin") else data["percent"]
+        data["browse_items"] = lucky_browse_items(request, percent)
+        data["cart_items"] = lucky_cart_items(request, percent)
+        response = JSONResponse(data)
+        if fresh:
+            response.set_cookie(
+                "lucky_spin", fresh, max_age=60 * 60 * 24 * 90, path="/", samesite="lax"
+            )
+        return response
+
+    @app.post("/api/lucky/keep")
+    async def api_lucky_keep(request: Request):
+        from shop.lucky import mark_kept
+        try:
+            body = await request.json()
+        except Exception:
+            body = {}
+        kind = str((body or {}).get("kind") or "")
+        return {"ok": mark_kept(conn, lucky_token(request), kind)}
+
+    @app.post("/api/lucky/egg")
+    async def api_lucky_egg(request: Request):
+        from shop.lucky import actor_email, smash
+        try:
+            body = await request.json()
+        except Exception:
+            body = {}
+        try:
+            order_id = int((body or {}).get("order_id") or 0)
+        except (TypeError, ValueError):
+            order_id = 0
+        token = lucky_token(request) or str((body or {}).get("token") or "")[:80]
+        who = actor_email(conn, token, buyer_email(request) or "")
+        pending = str(request.cookies.get("pending_password") or "")
+        if pending and pending == str(order_id):
+            row = conn.execute("select email from orders where id = ?", (order_id,)).fetchone()
+            if row is not None:
+                who = row["email"]
+        return smash(conn, who, order_id)
+
     @app.get("/checkout", response_class=HTMLResponse)
     def checkout(request: Request):
-        raw_lines, buy = selected_lines(request)
-        return checkout_page(request, raw_lines=raw_lines, buy=buy)
+        cart_lines = load_lines(request.cookies.get("cart"))
+        extra = load_lines(request.cookies.get("checkout_line"))
+        merged = list(cart_lines)
+        for line in extra:
+            merged = merge_line(merged, line["sku"], line["qty"])
+        response = checkout_page(request, raw_lines=merged, buy=False)
+        spun = lucky_token(request)
+        if spun and not request.cookies.get("lucky_spin"):
+            response.set_cookie("lucky_spin", spun, max_age=60 * 60 * 24 * 90, path="/", samesite="lax")
+        if extra:
+            response.set_cookie("cart", dump_lines(merged), max_age=31536000, path="/", samesite="lax")
+            response.delete_cookie("checkout_line", path="/")
+        return response
 
     def start_paypal(order_id, due_local, currency, due_cents):
         gateway = app.state.gateways.get("paypal")
@@ -5284,8 +5637,8 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         return await asyncio.to_thread(_submit_checkout, request, form)
 
     def _submit_checkout(request, form):
-        buy = str(form.get("buy") or "") == "1"
-        raw_lines = load_lines(request.cookies.get("checkout_line") if buy else request.cookies.get("cart"))
+        buy = False
+        raw_lines = load_lines(request.cookies.get("cart"))
         values = {key: str(form.get(key) or "") for key in (
             "email", "name", "address", "city", "region", "postal", "ship_country", "phone",
             "street_number", "district",
@@ -5311,6 +5664,20 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             coupon_id = int(coupon_raw) if coupon_raw else None
         except ValueError:
             coupon_id = -1
+        lucky_off = lucky_off_for(request, values["email"], merchandise)
+        spun_token = lucky_token(request)
+        if lucky_off:
+            coupon_id = None
+        missing = [key for key in required_keys(values["ship_country"]) if not str(values.get(key) or "").strip()]
+        if values["email"].strip() and "@" not in values["email"] and "email" not in missing:
+            missing.append("email")
+        for key in extra_required(values["ship_country"]):
+            if not str(values.get(key) or "").strip() and key not in missing:
+                missing.append(key)
+        if missing:
+            return checkout_page(
+                request, raw_lines=raw_lines, buy=buy, errors=missing, values=values, submit_id=submit_id
+            )
         try:
             order_id = place_order(
                 conn,
@@ -5335,6 +5702,8 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 gift_sku=request.cookies.get("gift_sku") or "",
                 returning=request.cookies.get("harbor_bought") == "1",
                 hold=parse_hold(request.cookies.get("harbor_hold")),
+                lucky_off_cents=lucky_off,
+                lucky_token=spun_token,
             )
         except CheckoutError as exc:
             return checkout_page(
@@ -5414,10 +5783,8 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             if session and session.get("url"):
                 response = RedirectResponse(session["url"], status_code=303)
                 response.set_cookie("pending_password", str(order_id), path="/", max_age=60 * 60 * 24 * 14)
-        if buy:
-            response.delete_cookie("checkout_line", path="/")
-        else:
-            response.delete_cookie("cart", path="/")
+        response.delete_cookie("cart", path="/")
+        response.delete_cookie("checkout_line", path="/")
         if request.cookies.get("desktop_pending") == "1":
             grant_templates(conn, values["email"].strip().lower(), "desktop", "once")
             response.delete_cookie("desktop_pending", path="/")
@@ -6728,6 +7095,38 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         rows = conn.execute("select * from withdrawals order by id desc").fetchall()
         return render(request, "admin.html", panel="withdrawals", withdrawals=rows)
 
+    @app.get("/admin/lucky", response_class=HTMLResponse)
+    def admin_lucky(request: Request):
+        require_admin(request)
+        from shop.lucky import admin_rows
+        settings, frees, spins = admin_rows(conn)
+        return render(request, "admin_lucky.html", lucky_settings=settings, lucky_frees=frees, lucky_spins=spins)
+
+    @app.post("/admin/lucky")
+    async def admin_lucky_save(request: Request):
+        require_admin(request)
+        from shop.lucky import save_settings
+        form = await request.form()
+        save_settings(conn, {
+            "enabled": form.get("enabled") or "",
+            "percent": form.get("percent"),
+            "hours": form.get("hours"),
+            "browse_minutes": form.get("browse_minutes"),
+            "stamps_needed": form.get("stamps_needed"),
+            "window_days": form.get("window_days"),
+            "return_days": form.get("return_days"),
+        })
+        return flash_redirect("/admin/lucky", "lucky_saved")
+
+    @app.post("/admin/lucky/void")
+    async def admin_lucky_void(request: Request):
+        require_admin(request)
+        from shop.lucky import void_free
+        form = await request.form()
+        if not void_free(conn, str(form.get("email") or "")):
+            return flash_redirect("/admin/lucky", "lucky_void_no")
+        return flash_redirect("/admin/lucky", "lucky_void")
+
     @app.get("/admin/promos", response_class=HTMLResponse)
     def admin_promos(request: Request):
         require_admin(request)
@@ -7935,7 +8334,18 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             sku_gen_queue=sku_gen_queue_view(spage),
             sku_gen_plan=getattr(request.state, "sku_gen_plan", None),
             sku_gen_job=sku_gen_job_read(),
+            cover_mode=cover_mode_value(),
         )
+
+    @app.post("/admin/images/cover")
+    async def admin_cover_save(request: Request):
+        require_admin(request)
+        form = await request.form()
+        mode = normalize_cover(form.get("cover"))
+        save_setting("cover_slot", mode)
+        app.state.cover_mode = mode
+        forget_public()
+        return flash_redirect("/admin/images", "cover_saved")
 
     def gen_queue_view(page):
         snapshot = app.state.gen_queue_snapshot
@@ -8378,6 +8788,8 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         join = "&" if "?" in dest else "?"
         if "country=" not in dest:
             dest = f"{dest}{join}country={country}"
+        if "from=" not in dest:
+            dest = f"{dest}{'&' if '?' in dest else '?'}from=lp"
         return RedirectResponse(dest, status_code=302)
 
     def _traffic_redirect(platform: str, acct_code: str = "", notice: str = "") -> RedirectResponse:
@@ -8655,7 +9067,72 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             "acct": _lp_text(source, "acct"),
             "country": (_lp_text(source, "country", "US") or "US").upper()[:2],
             "label": _lp_text(source, "label"),
+            "hero_sku": _lp_text(source, "hero_sku"),
+            "scene_image": clean_lp_scene(_lp_text(source, "scene_image")),
         }
+
+    def _save_lp_scene(data):
+        cooked = prepare_image(data or b"", "photo")
+        ext = image_extension(cooked)
+        if ext not in {".jpg", ".png", ".webp", ".gif"}:
+            return ""
+        folder = ROOT / "static" / "lp-scenes"
+        folder.mkdir(parents=True, exist_ok=True)
+        name = secrets.token_hex(8) + ext
+        (folder / name).write_bytes(cooked)
+        return "/static/lp-scenes/" + name
+
+    def _lp_label(row):
+        raw = row.get("source_zh") or ""
+        if isinstance(raw, str) and raw[:1] in "{[":
+            try:
+                data = json.loads(raw)
+            except json.JSONDecodeError:
+                data = None
+            if isinstance(data, dict):
+                raw = data.get("name") or data.get("zh") or data.get("title") or ""
+        if str(raw or "").strip():
+            return str(raw).strip()[:80]
+        try:
+            names = json.loads(row.get("names") or "{}")
+        except (json.JSONDecodeError, TypeError):
+            names = {}
+        if isinstance(names, dict):
+            return str(names.get("zh") or names.get("en") or row.get("sku") or "")[:80]
+        return str(row.get("sku") or "")
+
+    def _lp_hero_row(category, sku):
+        sku = str(sku or "").strip()
+        if not sku:
+            return None
+        for row in catalog_rows():
+            if str(row.get("sku") or "") != sku:
+                continue
+            if str(row.get("category") or "") != category:
+                return None
+            if int(row.get("published") or 0) != 1 or int(row.get("stock") or 0) <= 0:
+                return None
+            return row
+        return None
+
+    def _pin_lp_hero(chosen, pool, sku):
+        hero = _lp_hero_row_in(pool, sku)
+        if hero is None:
+            return chosen
+        rest = [row for row in chosen if str(row.get("sku") or "") != sku]
+        return [hero, *rest]
+
+    def _lp_hero_row_in(pool, sku):
+        sku = str(sku or "").strip()
+        if not sku:
+            return None
+        for row in pool:
+            if str(row.get("sku") or "") != sku:
+                continue
+            if int(row.get("published") or 0) != 1 or int(row.get("stock") or 0) <= 0:
+                return None
+            return row
+        return None
 
     def _lp_market(request, ctx, preview):
         """Ad LP language follows the IP country. Preview may pass ?country=.
@@ -8691,7 +9168,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 market["units"] = None
         return market
 
-    def _lp_cards(request, category, preview):
+    def _lp_cards(request, category, preview, hero_sku=""):
         ctx = view(request)
         market = _lp_market(request, ctx, preview)
         rows = []
@@ -8717,6 +9194,8 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             salt=salt,
             rules=rules,
         )
+        if hero_sku:
+            chosen = _pin_lp_hero(chosen, rows, hero_sku)
         cards = []
         for row in chosen:
             card = present_card(row, market)
@@ -8725,8 +9204,9 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             cards.append(card)
         return cards, market
 
-    def _lp_response(request, spec, *, preview=False, code=""):
-        cards, ctx = _lp_cards(request, spec["category"], preview)
+    def _lp_response(request, spec, *, preview=False, code="", hero_sku="", scene_image=""):
+        pin = hero_sku if spec.get("needs_hero") or spec.get("optional_hero") else ""
+        cards, ctx = _lp_cards(request, spec["category"], preview, pin)
         bands, overflow = band_groups(cards)
         ends_at, _set_cookie = lp_flash_window(request)
         enter_base = href(f"/c/{spec['category']}", ctx["country"])
@@ -8740,7 +9220,40 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             "preview": preview,
             "code": code,
             "product_count": len(cards),
+            "scene_image": f"/static/lp-scenes/{spec['category']}.png" if spec.get("scene") else "",
+            "elements": [],
+            "hits": [],
         }
+        if spec.get("scene"):
+            names = labels_for(ctx["lang"])
+            fallback = labels_for("en")
+            lp["elements"] = [
+                {"id": slug, "name": names.get(slug) or fallback.get(slug) or slug}
+                for slug in children(spec["category"])
+            ]
+            lp["hits"] = []
+            for hit in SCENE_HITS.get(spec["category"]) or []:
+                slug = hit["id"]
+                base = href(f"/c/{spec['category']}/{slug}", ctx["country"])
+                join = "&" if "?" in base else "?"
+                eid = new_event_id("enter")
+                lp["hits"].append({
+                    "id": slug,
+                    "name": names.get(slug) or fallback.get(slug) or slug,
+                    "href": f"{base}{join}ad_enter=1&eid={eid}",
+                    "l": hit["l"],
+                    "t": hit["t"],
+                    "w": hit["w"],
+                    "h": hit["h"],
+                })
+        scene_hero = None
+        scene_cards = cards
+        if spec.get("scene"):
+            if pin and cards and str(cards[0].get("sku") or "") == str(pin):
+                scene_hero = cards[0]
+                scene_cards = cards[1:]
+            else:
+                scene_cards = cards
         if not preview:
             try:
                 attrs = getattr(request.state, "ad_attrs", None) or {}
@@ -8764,6 +9277,8 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             cards=cards,
             hero=cards[0] if cards else None,
             rest=cards[1:] if len(cards) > 1 else [],
+            scene_hero=scene_hero,
+            scene_cards=scene_cards,
             bands=bands,
             overflow=overflow,
             lang=ctx["lang"],
@@ -8799,7 +9314,13 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             )
         except LpChoiceError:
             return render(request, "not_found.html", status_code=404)
-        return _lp_response(request, spec, preview=True)
+        return _lp_response(
+            request,
+            spec,
+            preview=True,
+            hero_sku=str(request.query_params.get("hero") or ""),
+            scene_image=str(request.query_params.get("scene") or ""),
+        )
 
     @app.get("/lp/ad/{code}", response_class=HTMLResponse)
     def lp_ad_saved(request: Request, code: str):
@@ -8810,12 +9331,21 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             spec = resolve_module(row["template"], row["category"], row["skin"])
         except LpChoiceError:
             return render(request, "not_found.html", status_code=404)
-        return _lp_response(request, spec, preview=False, code=row["code"])
+        return _lp_response(
+            request,
+            spec,
+            preview=False,
+            code=row["code"],
+            hero_sku=row.get("hero_sku") or "",
+            scene_image=row.get("scene_image") or "",
+        )
 
     _LP_ERRORS = {
         "template": "请选择有效的落地页模块。",
         "category": "请选择有效的类目。",
         "skin": "请选择有效的皮肤。",
+        "hero": "爆款头条要先选主商品。在「主商品」里输入标题或 SKU，点下面出现的那一条，再生成链接。",
+        "hero_match": "主商品不在这个类目里，或已经没有库存。",
     }
 
     def _launch_page(request, form_state, notice="", error="", built=None):
@@ -8845,6 +9375,8 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 form_state["category"],
                 form_state["skin"],
                 form_state["country"],
+                form_state.get("hero_sku") or "",
+                form_state.get("scene_image") or "",
             )
         except LpChoiceError:
             preview_src = lp_preview_path("dense_flash", "kitchen", "kitchen", "US")
@@ -8853,6 +9385,8 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             "admin_launch.html",
             lp_templates=LP_TEMPLATES,
             lp_skins=LP_SKINS,
+            hero_template_ids=[row["id"] for row in LP_TEMPLATES if row.get("hero")],
+            scene_template_ids=[row["id"] for row in LP_TEMPLATES if row.get("scene")],
             form_state=form_state,
             preview_src=preview_src,
             launch_notice=notice,
@@ -8878,6 +9412,51 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             body_class="admin-launch",
         )
 
+    @app.get("/admin/launch/products")
+    def admin_launch_products(request: Request, category: str = "", q: str = ""):
+        require_admin(request)
+        needle = " ".join(str(q or "").split()).lower()
+        if len(needle) < 1:
+            return JSONResponse([])
+        safe = needle.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        like = f"%{safe}%"
+        category = str(category or "").strip()
+        found = conn.execute(
+            """
+            select sku, category, names, source_zh, price_cents
+            from products
+            where published = 1 and stock > 0
+              and (
+                lower(sku) like ? escape '\\'
+                or lower(ifnull(source_zh, '')) like ? escape '\\'
+                or lower(ifnull(names, '')) like ? escape '\\'
+                or lower(ifnull(offers, '')) like ? escape '\\'
+              )
+            order by case when category = ? then 0 else 1 end, sku
+            limit 40
+            """,
+            (like, like, like, like, category),
+        ).fetchall()
+        labels = {item["id"]: item["label_zh"] for item in LP_SKINS}
+
+        def pack(row, same):
+            item = dict(row)
+            name = _lp_label(item)
+            cents = int(item.get("price_cents") or 0)
+            cat = str(item.get("category") or "")
+            return {
+                "sku": str(item.get("sku") or ""),
+                "name": name[:120],
+                "price": f"${cents / 100:.2f}",
+                "category": cat,
+                "category_zh": labels.get(cat) or cat,
+                "match": bool(same),
+            }
+
+        same_rows = [row for row in found if not category or str(row["category"] or "") == category]
+        picked = same_rows[:20] if same_rows else list(found)[:8]
+        return JSONResponse([pack(row, bool(same_rows)) for row in picked])
+
     @app.get("/admin/launch", response_class=HTMLResponse)
     def admin_launch(request: Request):
         require_admin(request)
@@ -8890,6 +9469,16 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         require_admin(request)
         form = await request.form()
         state = _lp_form_state(form)
+        upload = form.get("scene_file")
+        if uses_scene(state["template"]) and upload is not None and hasattr(upload, "read"):
+            saved_scene = _save_lp_scene(await upload.read())
+            if saved_scene:
+                state["scene_image"] = saved_scene
+        if needs_hero(state["template"]):
+            if not state["hero_sku"]:
+                return _launch_page(request, state, error=_LP_ERRORS["hero"])
+            if _lp_hero_row(state["category"], state["hero_sku"]) is None:
+                return _launch_page(request, state, error=_LP_ERRORS["hero_match"])
         try:
             built = create_lp_link(
                 conn,
@@ -8905,10 +9494,34 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 acct=state["acct"],
                 country=state["country"],
                 label=state["label"],
+                hero_sku=state["hero_sku"],
+                scene_image=state["scene_image"],
             )
         except LpChoiceError as exc:
             return _launch_page(request, state, error=_LP_ERRORS.get(exc.field, "无法生成链接。"))
         return _launch_page(request, state, notice="built", built=built)
+
+    @app.post("/admin/launch/scene")
+    async def admin_launch_scene_upload(request: Request):
+        require_admin(request)
+        form = await request.form()
+        upload = form.get("scene_file")
+        data = await upload.read() if upload is not None and hasattr(upload, "read") else b""
+        url = _save_lp_scene(data)
+        if not url:
+            return JSONResponse({"error": "bad"}, status_code=400)
+        return JSONResponse({"url": url})
+
+    @app.post("/admin/launch/{code}/scene")
+    async def admin_launch_scene_replace(request: Request, code: str):
+        require_admin(request)
+        form = await request.form()
+        upload = form.get("scene_file")
+        data = await upload.read() if upload is not None and hasattr(upload, "read") else b""
+        url = _save_lp_scene(data)
+        if not url or set_lp_scene(conn, code, url) is None:
+            return RedirectResponse("/admin/launch?notice=scene_bad", status_code=303)
+        return RedirectResponse("/admin/launch?notice=scene", status_code=303)
 
     @app.post("/admin/launch/test")
     async def admin_launch_test(request: Request):

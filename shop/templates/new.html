@@ -13,7 +13,7 @@
     <h1>{{ t.new_title }}</h1>
     {% if fresh and fresh.ends_at %}<p class="poster-clock tiny" data-ends="{{ fresh.ends_at }}">--:--:--</p>{% endif %}
   </div>
-  {% if fresh and fresh.items %}
+  {% if fresh and fresh['items'] %}
   <div class="product-grid dense fn-deal-grid">
     {% for item in fresh["items"] %}
     <a class="card fn-deal" href="{{ href('/p/' ~ item.sku, country) }}">

@@ -23,11 +23,13 @@
       <HbProductCard v-for="p in products" :key="p.id" :product="p" />
     </view>
     <view v-if="products.length && hasMore" class="more" @click="loadMore">{{ t('nav_load_more') }}</view>
+    <HbLucky />
   </view>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { handleLuckyBack } from '@/composables/lucky'
 import { onLoad, onShow } from '@dcloudio/uni-app'
 import {
   SUBCATEGORIES,
@@ -75,6 +77,7 @@ async function loadMore() {
 }
 
 function goBack() {
+  if (handleLuckyBack()) return
   uni.navigateBack({ fail: () => uni.navigateTo({ url: '/pages/categories/index' }) })
 }
 

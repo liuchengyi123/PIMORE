@@ -1,0 +1,17 @@
+// Harbor social sign-in placeholders.
+// Replace the YOUR_* values. Leave them as-is to build and run without secrets.
+// Sign in with Apple also needs DEVELOPMENT_TEAM (Apple Developer Team ID).
+
+DEVELOPMENT_TEAM =
+
+FACEBOOK_APP_ID = YOUR_FACEBOOK_APP_ID
+FACEBOOK_CLIENT_TOKEN = YOUR_FACEBOOK_CLIENT_TOKEN
+
+// X (Twitter) OAuth 2.0 public client. Register the redirect URI on the X app.
+TWITTER_CLIENT_ID = YOUR_TWITTER_CLIENT_ID
+TWITTER_REDIRECT_URI = harbor://oauth/x
+
+// Not shown. Sign-in is Apple, Facebook, and X. Instagram is not a separate
+// button; Meta sign-in is the Facebook button.
+INSTAGRAM_APP_ID = YOUR_INSTAGRAM_APP_ID
+INSTAGRAM_REDIRECT_URI = harbor://oauth/instagram

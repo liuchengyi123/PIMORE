@@ -186,6 +186,11 @@ def test_listing_exposes_sort_and_filters(client):
     search = client.get("/search?country=US&q=rack&sort=newest")
     assert search.status_code == 200
     assert "Dish rack" in search.text
+    spanish = client.get("/search?country=US&lang=en&q=Escurridor")
+    assert "Dish rack" in spanish.text
+    assert "Escurridor de platos" not in spanish.text
+    japanese = client.get("/search?country=US&lang=en&q=水切りラック")
+    assert "Dish rack" in japanese.text
 
 
 def test_checkout_amount_matches_quote_and_has_no_ad_slot(client):
@@ -259,6 +264,35 @@ def test_english_heat_label_and_single_locale_pill(client):
             rendered = heat_line(UI[code], 8)
             assert "关注" not in rendered
             assert "有人" not in rendered
+
+
+def _home_feed_skus(html):
+    import re
+    chunk = html.split('class="m01-grid"', 1)[-1].split("m01-more", 1)[0]
+    return re.findall(r'href="/p/([^"?]+)', chunk)
+
+
+def test_home_list_stays_until_reload(client):
+    first = client.get("/")
+    assert first.status_code == 200
+    mix = first.cookies.get("home_mix")
+    assert mix
+    assert "private, no-cache" in first.headers.get("cache-control", "")
+    assert 'nav.type !== "reload"' in first.text
+    client.get("/p/drain-rack")
+    client.get("/c/kitchen")
+    second = client.get("/", headers={"Cache-Control": "max-age=0"})
+    assert client.cookies.get("home_mix") == mix
+    assert _home_feed_skus(first.text) == _home_feed_skus(second.text)
+    assert _home_feed_skus(first.text)
+    refreshed = client.get("/?fresh=1", follow_redirects=False)
+    assert refreshed.status_code == 302
+    assert refreshed.headers["location"] == "/"
+    assert refreshed.cookies.get("home_mix")
+    assert refreshed.cookies.get("home_mix") != mix
+    landed = client.get("/")
+    assert client.cookies.get("home_mix") == refreshed.cookies.get("home_mix")
+    assert "fresh=" not in str(landed.url)
 
 
 def test_visual_rules_in_stylesheet(client):

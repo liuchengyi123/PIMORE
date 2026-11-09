@@ -831,6 +831,11 @@ def mark_paid(conn, order_id):
             _credit(conn, order["email"], order["self_rebate_cents"])
             _credit(conn, order["referrer_email"], order["direct_rebate_cents"])
             note_paid(conn, order)
+            try:
+                from shop.lucky import on_paid
+                on_paid(conn, order_id)
+            except Exception:
+                pass
             paid_snapshot = dict(order)
             conn.commit()
             try:
@@ -921,6 +926,11 @@ def refund_order(conn, stripe, order_id):
                 )
             conn.execute("update orders set status = 'refunded' where id = ?", (order_id,))
             note_refund(conn, order, lines)
+            try:
+                from shop.lucky import on_refund
+                on_refund(conn, order_id)
+            except Exception:
+                pass
             conn.commit()
             return True
         except Exception:

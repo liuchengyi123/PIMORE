@@ -1,6 +1,6 @@
 from shop.db import connect, migrate
 from shop.interest import account_weights, decayed, note_click
-from shop.suggest import BROWSE_SHARE, blend_order, choose, diverse_order, fit_add, for_you, gap, ranked_for_you
+from shop.suggest import BROWSE_SHARE, blend_order, choose, diverse_order, fit_add, for_you, gap, ranked_for_you, visit_window
 
 
 def test_goals_advance_one_threshold_at_a_time():
@@ -188,3 +188,30 @@ def test_home_rails_can_be_mutually_exclusive():
     assert you_skus.isdisjoint(feed_skus)
     # Featured may be re-opened only if catalog too small; with 40 SKUs keep exclusive.
     assert you_skus.isdisjoint(featured_skus)
+
+
+def test_held_back_item_stays_behind_even_when_it_is_hot():
+    items = [
+        {"sku": "plain", "category": "tableware", "stock": 1, "price_cents": 200},
+        {"sku": "sticks", "category": "tableware", "stock": 1, "price_cents": 72},
+    ]
+    ordered = diverse_order(
+        items,
+        salt=3,
+        heat={"plain": 0, "sticks": 9000},
+        prior={"plain": 0, "sticks": 1},
+        heat_unit=98,
+    )
+    assert [item["sku"] for item in ordered] == ["plain", "sticks"]
+
+
+def test_each_visit_opens_on_a_different_pushed_item():
+    items = [{"sku": f"p{i}", "category": "kitchen", "stock": 1} for i in range(30)]
+    items.append({"sku": "sticks", "category": "kitchen", "stock": 1})
+    prior = {item["sku"]: (1 if item["sku"] == "sticks" else 0) for item in items}
+    first = [item["sku"] for item in visit_window(items, salt=1, prior=prior)]
+    second = [item["sku"] for item in visit_window(items, salt=2, prior=prior)]
+    assert first[0] != second[0]
+    assert first[-1] == "sticks"
+    assert second[-1] == "sticks"
+    assert "sticks" not in first[:20]

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>{{ seo_title }}</title>
-  <link rel="stylesheet" href="/static/lp-ad.css?v=2">
+  <link rel="stylesheet" href="/static/lp-ad.css?v=8">
   {% if ad_pixels is defined and (ad_pixels.meta_ok or ad_pixels.tiktok_ok) %}
   <script>
   window.__harborLp = {
@@ -30,10 +30,20 @@
 </head>
 <body class="lp-ad" data-lp-template="{{ lp.template_id }}" data-lp-skin="{{ lp.skin_id }}" data-lp-category="{{ lp.category }}" data-lp-lang="{{ lang }}" data-lp-master="{{ '1' if lp.master else '0' }}"{% if lp.code %} data-lp-code="{{ lp.code }}"{% endif %} style="--accent: {{ lp.accent }}; --ink: {{ lp.ink }}; --wash: {{ lp.wash }}; --deep: {{ lp.deep }};">
   <header class="lp-top">
-    <a class="lp-brand" href="{{ lp.enter_href }}">Harbor</a>
+    <a class="lp-brand" href="{{ lp.enter_href }}">Harbor<sup>flash</sup></a>
     <span class="lp-top-cat">{{ t.categories[lp.category] }}</span>
     <span class="lp-ship">{{ t.lp_ship }}</span>
   </header>
+  <div class="lp-ticker" aria-hidden="true">
+    <div class="lp-ticker-track">
+      <span>{{ t.lp_tick_sell }}</span>
+      <span>{{ t.lp_tick_open }}</span>
+      <span>{{ t.lp_tick_one }}</span>
+      <span>{{ t.lp_tick_sell }}</span>
+      <span>{{ t.lp_tick_open }}</span>
+      <span>{{ t.lp_tick_one }}</span>
+    </div>
+  </div>
   <main class="lp-main">
     {% include lp.partial %}
   </main>
@@ -78,7 +88,7 @@
         });
       }
     } catch (e) {}
-    document.querySelectorAll("a.lp-enter, a.lp-brand").forEach(function (node) {
+    document.querySelectorAll("a.lp-enter, a.lp-brand, a.lp-cat").forEach(function (node) {
       node.addEventListener("click", function () {
         var eid = "";
         try { eid = new URL(node.href, location.origin).searchParams.get("eid") || cfg.enterEid || ""; } catch (e) { eid = cfg.enterEid || ""; }
@@ -95,18 +105,18 @@
       if (!end) return;
       var left = end - Date.now();
       if (left < 0) left = 0;
+      var cs = Math.floor(left / 10) % 100;
       var total = Math.floor(left / 1000);
-      var h = Math.floor(total / 3600);
-      var m = Math.floor((total % 3600) / 60);
+      var m = Math.floor(total / 60);
       var s = total % 60;
       function z(n) { return (n < 10 ? "0" : "") + n; }
-      node.textContent = (h ? z(h) + ":" : "") + z(m) + ":" + z(s);
+      node.innerHTML = z(m) + ":" + z(s) + ":<span class=\"cd-cs\">" + z(cs) + "</span>";
     }
     function tick() {
       document.querySelectorAll(".lp-cd[data-ends]").forEach(paint);
     }
     tick();
-    setInterval(tick, 1000);
+    setInterval(tick, 40);
   })();
   </script>
 </body>

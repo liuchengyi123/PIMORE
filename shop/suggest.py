@@ -258,9 +258,9 @@ def diverse_order(items, *, salt=0, exclude=(), heat=None, prior=None, boost=Non
 
         pool_items.sort(
             key=lambda item: (
+                int(prior.get(item["sku"], 0) or 0),
                 -float(boost.get(item["sku"], 0) or 0),
                 _heat_key(item),
-                int(prior.get(item["sku"], 1) or 0),
                 _jitter(item["sku"], salt),
                 str(item.get("sku") or ""),
             )
@@ -292,6 +292,27 @@ def diverse_order(items, *, salt=0, exclude=(), heat=None, prior=None, boost=Non
             break
         keys = [key for key in keys if key in buckets]
     return result
+
+
+def visit_window(items, salt, prior=None):
+    """Each visit starts at a different pushed item. Held-back items stay after them.
+
+    Page 2 keeps following this same order when the salt does not change.
+    """
+    prior = prior or {}
+    forward = []
+    held = []
+    for item in items or []:
+        sku = item.get("sku")
+        if int(prior.get(sku, 0) or 0) > 0:
+            held.append(item)
+        else:
+            forward.append(item)
+    if len(forward) > 1:
+        start = (int(salt) & 0xFFFFFFFF) % len(forward)
+        if start:
+            forward = forward[start:] + forward[:start]
+    return forward + held
 
 def blend_order(
     items,
@@ -524,15 +545,16 @@ def personal_order(items, *, interest=None, catalog=(), cart_skus=(), taste=None
             unit = max(float(heat_unit), 1.0)
             # One click (heat_unit points) outranks jitter, but not a real category hit (×20).
             score += (hot + _jitter(sku, salt) * unit * 0.35) * 0.01
-        rank_n = int(prior.get(sku, 1) or 0)
+        rank_n = int(prior.get(sku, 0) or 0)
         if rank_n <= 0:
             score += 1.0
         score += float(boost.get(sku, 0) or 0)
-        return score
+        return score, rank_n
     decorated = []
     for item in items:
         stock = int(item.get("stock") or 0)
-        decorated.append((1 if stock <= 0 else 0, -score_of(item), str(item.get("sku") or "")))
+        score, rank_n = score_of(item)
+        decorated.append((1 if stock <= 0 else 0, 1 if rank_n > 0 else 0, -score, str(item.get("sku") or "")))
     order = sorted(range(len(decorated)), key=lambda i: decorated[i])
     return [items[i] for i in order]
 

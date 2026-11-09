@@ -61,8 +61,8 @@ def test_card_image_shrinks_a_large_photo(tmp_path):
     assert url == "/static/catalog/sku1/0.jpg"
     assert drain_fits(timeout=3)
     again = card_image("/static/catalog/sku1/0.jpg", tmp_path)
-    assert again == "/static/catalog/sku1/card/0.jpg"
-    with Image.open(folder / "card" / "0.jpg") as saved:
+    assert again == "/static/catalog/sku1/fit/0.jpg"
+    with Image.open(folder / "fit" / "0.jpg") as saved:
         assert max(saved.size) <= CARD_EDGE
     phone = phone_image("/static/catalog/sku1/0.jpg", tmp_path)
     assert phone == "/static/catalog/sku1/0.jpg"
@@ -71,6 +71,18 @@ def test_card_image_shrinks_a_large_photo(tmp_path):
     assert phone == "/static/catalog/sku1/view/0.jpg"
     with Image.open(folder / "view" / "0.jpg") as saved:
         assert max(saved.size) <= PHONE_EDGE
+
+
+def test_card_image_shrinks_a_photo_that_already_lives_in_card(tmp_path):
+    folder = tmp_path / "static" / "catalog" / "sku2" / "en" / "card"
+    folder.mkdir(parents=True)
+    Image.new("RGB", (1200, 1200), (30, 60, 90)).save(folder / "c0.jpg", quality=90)
+    url = "/static/catalog/sku2/en/card/c0.jpg"
+    assert card_image(url, tmp_path) == url
+    assert drain_fits(timeout=3)
+    assert card_image(url, tmp_path) == "/static/catalog/sku2/en/card/fit/c0.jpg"
+    with Image.open(folder / "fit" / "c0.jpg") as saved:
+        assert max(saved.size) <= CARD_EDGE
 
 
 def test_unreadable_bytes_are_stored_unchanged(tmp_path):

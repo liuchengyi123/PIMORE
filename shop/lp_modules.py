@@ -27,6 +27,7 @@ TEMPLATES = (
         "label_en": "Headline SKU",
         "blurb_zh": "大号主推 SKU + 横滑列表",
         "partial": "lp/hero_headline.html",
+        "hero": True,
     },
     {
         "id": "countdown_grid",
@@ -48,6 +49,15 @@ TEMPLATES = (
         "label_en": "Rush flash",
         "blurb_zh": "抢购闪购壳 + 密铺",
         "partial": "lp/rush_flash.html",
+    },
+    {
+        "id": "scene",
+        "label_zh": "换图落地页",
+        "label_en": "Scene page",
+        "blurb_zh": "选类目就换成这一套版面。下面商品按后台选入，单品广告再指定主商品。",
+        "partial": "lp/scene.html",
+        "scene": True,
+        "optional_hero": True,
     },
 )
 
@@ -75,6 +85,25 @@ TEMPLATE_BY_ID = {row["id"]: row for row in TEMPLATES}
 SKIN_BY_ID = {row["id"]: row for row in SKINS}
 
 
+def _template(template_id):
+    return TEMPLATE_BY_ID.get(str(template_id or "").strip())
+
+
+def needs_hero(template_id):
+    row = _template(template_id)
+    return bool(row and row.get("hero"))
+
+
+def keeps_hero(template_id):
+    row = _template(template_id)
+    return bool(row and (row.get("hero") or row.get("optional_hero")))
+
+
+def uses_scene(template_id):
+    row = _template(template_id)
+    return bool(row and row.get("scene"))
+
+
 class LpChoiceError(ValueError):
     def __init__(self, field):
         super().__init__(field)
@@ -99,6 +128,9 @@ def resolve_module(template_id, category, skin_id=""):
         "template_label": tpl["label_zh"],
         "template_en": tpl["label_en"],
         "partial": tpl["partial"],
+        "needs_hero": bool(tpl.get("hero")),
+        "optional_hero": bool(tpl.get("optional_hero")),
+        "scene": bool(tpl.get("scene")),
         "category": cat["id"],
         "category_en": cat["label_en"],
         "category_zh": cat["label_zh"],

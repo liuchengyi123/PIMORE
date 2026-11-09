@@ -30,6 +30,7 @@
       <HbProductCard v-for="p in products" :key="p.id" :product="p" />
     </view>
     <view v-if="products.length && hasMore" class="more" @click="loadMore">{{ t('search_load_more') }}</view>
+    <HbLucky />
   </view>
 </template>
 
@@ -38,6 +39,7 @@ import { useI18n } from '@/composables/i18n'
 import { ref } from 'vue'
 import { onLoad, onShow } from '@dcloudio/uni-app'
 import { searchProducts, type Product } from '@/api/products'
+import { handleLuckyBack } from '@/composables/lucky'
 import HbProductCard from '@/components/HbProductCard.vue'
 
 const { t } = useI18n()
@@ -82,6 +84,7 @@ function quick(h: string) {
 }
 
 function goBack() {
+  if (handleLuckyBack()) return
   uni.navigateBack({ fail: () => uni.reLaunch({ url: '/pages/home/index' }) })
 }
 

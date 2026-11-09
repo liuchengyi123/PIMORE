@@ -23,6 +23,7 @@
         </view>
       </view>
     </view>
+    <HbLucky />
   </view>
 </template>
 <script setup lang="ts">
@@ -30,6 +31,7 @@ import { onShow } from '@dcloudio/uni-app'
 import { useI18n } from '@/composables/i18n'
 import { ref, onMounted } from 'vue'
 import { listNewProducts, type Product } from '@/api/products'
+import { handleLuckyBack } from '@/composables/lucky'
 const { t } = useI18n()
 const products = ref<Product[]>([])
 const loading = ref(true)
@@ -47,7 +49,10 @@ function ph(p: Product) {
 function open(p: Product) {
   uni.navigateTo({ url: '/pages/pdp/index?sku=' + encodeURIComponent(String(p.sku || p.id)) })
 }
-function goBack() { uni.navigateBack({ fail: () => uni.reLaunch({ url: '/pages/home/index' }) }) }
+function goBack() {
+  if (handleLuckyBack()) return
+  uni.navigateBack({ fail: () => uni.reLaunch({ url: '/pages/home/index' }) })
+}
 onShow(() => uni.setNavigationBarTitle({ title: t('new_title') }))
 </script>
 <style scoped>

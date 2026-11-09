@@ -12,7 +12,7 @@
     <a class="{% if panel == 'balance' or panel == 'withdraw' %}on{% endif %}" href="{{ href('/account/balance', country) }}">{{ t.balance }} / {{ t.withdraw }}</a>
     <a href="{{ href('/check-in', country) }}">{{ t.checkin }} / {{ t.my_balance }}</a>
     <a href="{{ href('/share', country) }}">{{ t.share }}</a>
-    <a href="{{ href('/', country) }}?country={{ country }}">{{ country }} · {{ currency }}</a>
+    <form method="get" action="{{ request.url.path }}" style="margin:0">{% set _lang_class = 'fn-acc-langrow' %}{% include "_lang_switch.html" %}</form>
     <a href="{{ href('/help', country) }}">{{ t.help }} · {{ t.contact }}</a>
     <a href="{% if h5_origin %}{{ h5_origin }}/chat{% else %}/chat{% endif %}">{{ t.support }}</a>
   </nav>

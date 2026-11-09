@@ -25,37 +25,43 @@
 
     <view class="card">
       <view class="row"><text class="tiny">Items</text><text>{{ money(subtotal) }}</text></view>
-      <view class="row total"><text class="sec">Total</text><text class="price">{{ money(subtotal) }}</text></view>
+      <view v-if="off" class="row"><text class="tiny">{{ lucky.percent }}% off</text><text>-{{ money(off) }}</text></view>
+      <view class="row total"><text class="sec">Total</text><text class="price">{{ money(due) }}</text></view>
     </view>
 
     <view class="dock">
-      <text class="price">{{ money(subtotal) }}</text>
+      <text class="price">{{ money(due) }}</text>
       <view class="place" :class="{ disabled: !lines.length }" @click="place">{{ t('checkout_place') }}</view>
     </view>
     <text class="alt" @click="openBrowser">{{ t('checkout_browser') }}</text>
+    <HbLucky />
   </view>
 </template>
 <script setup lang="ts">
+import { computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { useI18n } from '@/composables/i18n'
-import { money, LIVE_ORIGIN } from '@/api/products'
+import { money } from '@/api/products'
 import { checkoutHandoffUrl } from '@/api/http'
 import { useCart } from '@/composables/cart'
+import { lucky, luckyToken, openPayRetain, closeLucky } from '@/composables/lucky'
 const { t } = useI18n()
 
 const { lines, subtotal, live } = useCart()
+const off = computed(() => (lucky.spin?.live ? Math.round(subtotal.value * lucky.percent) / 100 : 0))
+const due = computed(() => Math.max(0, Math.round((subtotal.value - off.value) * 100) / 100))
 
 function place() {
   if (!lines.value.length) {
     uni.showToast({ title: t('checkout_empty'), icon: 'none' })
     return
   }
-  const url = encodeURIComponent(checkoutHandoffUrl(false))
+  const url = encodeURIComponent(checkoutHandoffUrl(false, luckyToken()))
   uni.navigateTo({ url: '/pages/webview/index?url=' + url })
 }
 
 function openBrowser() {
-  const url = LIVE_ORIGIN + '/checkout'
+  const url = checkoutHandoffUrl(false, luckyToken())
   // #ifdef H5
   place()
   // #endif
@@ -70,7 +76,14 @@ function openBrowser() {
   // #endif
 }
 
-function goBack() { uni.navigateBack({ fail: () => uni.switchTab({ url: '/pages/cart/index' }) }) }
+function goBack() {
+  if (lucky.pane) {
+    closeLucky()
+    return
+  }
+  if (openPayRetain()) return
+  uni.navigateBack({ fail: () => uni.reLaunch({ url: '/pages/cart/index' }) })
+}
 onShow(() => {
   uni.setNavigationBarTitle({ title: t('checkout_title') })
 })

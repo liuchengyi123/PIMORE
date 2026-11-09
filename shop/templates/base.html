@@ -9,6 +9,7 @@
   <meta name="apple-mobile-web-app-title" content="Harbor">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="application-name" content="Harbor">
+  {% block head %}{% endblock %}
   <title>{{ seo_title }}</title>
   {% if seo_description %}<meta name="description" content="{{ seo_description }}">{% endif %}
   <meta name="robots" content="{{ seo_robots }}">
@@ -23,14 +24,13 @@
   {% for block in seo_jsonld %}
   <script type="application/ld+json">{{ block|tojson }}</script>
   {% endfor %}
-  <link rel="stylesheet" href="/static/shop.css?v=99">
-  <link rel="stylesheet" href="/static/harbor-ui.css?v=71">
-  {% if is_mobile|default(false) %}
-  <link rel="stylesheet" href="/static/fn-mobile.css?v=55">
-  {% else %}
-  <link rel="stylesheet" href="/static/fn-desktop.css?v=34">
-  {% endif %}
-  {% block head %}{% endblock %}
+  <link rel="stylesheet" href="/static/shop.min.css?v=2">
+  <link rel="stylesheet" href="/static/fn-mobile.min.css?v=2" media="(max-width: 980px)">
+  <link rel="stylesheet" href="/static/fn-desktop.min.css?v=2" media="(min-width: 981px)">
+  <link rel="stylesheet" href="/static/harbor-ui.min.css?v=2" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="/static/harbor-ui.min.css?v=2"></noscript>
+  <link rel="stylesheet" href="/static/lucky.min.css?v=2" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="/static/lucky.min.css?v=2"></noscript>
 
   {% if ad_pixels is defined and (ad_pixels.meta_ok or ad_pixels.google_ok or ad_pixels.tiktok_ok) %}
   <script>
@@ -81,18 +81,16 @@
   <link rel="icon" type="image/png" sizes="512x512" href="/static/harbor-icon-512.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/static/harbor-apple-touch-180.png">
 
-  <script>
-  (function(){
-    try {
-      var q = new URLSearchParams(location.search);
-      var c = q.get("chrome");
-      if (c === "app") {
-        document.cookie = "fn_chrome=app;path=/;max-age=604800;SameSite=Lax";
-      } else if (c === "h5" || c === "off") {
-        document.cookie = "fn_chrome=;path=/;max-age=0;SameSite=Lax";
-      }
-    } catch (e) {}
-  })();
+  <script type="module">
+  try {
+    var q = new URLSearchParams(location.search);
+    var c = q.get("chrome");
+    if (c === "app") {
+      document.cookie = "fn_chrome=app;path=/;max-age=604800;SameSite=Lax";
+    } else if (c === "h5" || c === "off") {
+      document.cookie = "fn_chrome=;path=/;max-age=0;SameSite=Lax";
+    }
+  } catch (e) {}
   </script>
 </head>
 {% set _fn_chrome = request.query_params.get('chrome') or request.cookies.get('fn_chrome') %}
@@ -113,7 +111,7 @@
   <div class="top-inner row1">
     <div class="brand">
       {% if request.url.path != '/' %}
-      <a class="back" href="{{ href('/', country) }}" aria-label="{{ t.back }}" onclick="if (window.history.length > 1) { event.preventDefault(); history.back(); }">
+      <a class="back" href="{{ href('/', country) }}" aria-label="{{ t.back }}" {% if request.query_params.get('from') != 'lp' %}onclick="if (window.history.length > 1) { event.preventDefault(); history.back(); }"{% endif %}>
         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg>
       </a>
       {% endif %}
@@ -128,7 +126,7 @@
             <div class="fn-country ht" style="position:relative">
         <form method="get" action="{{ request.url.path }}">
           <label class="fn-country" style="position:relative;display:inline-flex;align-items:center;gap:6px;cursor:pointer">
-            <span class="fn-locale-pill">{{ country }} · {{ currency }}</span>
+            <span class="fn-locale-pill">{% include "_lang_mark.html" %}</span>
             <select name="lang" aria-label="{{ t.locale }}" onchange="harborLang(this)" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%">
               {% for code, label in [('en', 'English'), ('zh', '简体中文'), ('zh-Hant', '繁體中文'), ('ja', '日本語'), ('de', 'Deutsch'), ('fr', 'Français'), ('es', 'Español'), ('pt', 'Português')] %}
               <option value="{{ code }}" {% if lang == code %}selected{% endif %}>{{ label }}</option>
@@ -283,8 +281,8 @@
     <p class="foot-geo"><a href="https://db-ip.com/" rel="noopener">IP Geolocation by DB-IP</a></p>
   </footer>
   {% include '_auth_modal.html' %}
-  <script src="/static/auth-modal.js?v=1" defer></script>
-  <nav class="tabbar fn-tabbar-mob" {% set _path = request.url.path %}{% if _path.startswith('/p/') or _path == '/cart' or _path == '/checkout' or _path == '/payment' or _path.startswith('/orders') %}style="" hidden{% else %}style="flex-direction:row !important;align-items:stretch !important;justify-content:flex-start !important;position:fixed !important;left:12px !important;right:auto !important;{% if _fn_chrome == 'app' %}bottom:22px !important{% else %}bottom:10px !important{% endif %};width:366px !important;max-width:366px !important;min-width:366px !important;height:54px !important;box-sizing:border-box !important;padding:0 8px !important;gap:0 !important;overflow:hidden !important;background:#ffffff !important;border-radius:18px !important;box-shadow:0 4px 16px rgba(15,26,41,.12) !important;z-index:40 !important"{% endif %}>
+  <script src="/static/auth-modal.js?v=2" defer></script>
+  <nav class="tabbar fn-tabbar-mob" {% set _path = request.url.path %}{% if _path.startswith('/p/') or _path == '/cart' or _path == '/checkout' or _path == '/payment' or _path.startswith('/orders') %}style="" hidden{% else %}style="display:flex !important;flex-direction:row !important;align-items:stretch !important;justify-content:space-between !important;position:fixed !important;left:16px !important;right:16px !important;{% if _fn_chrome == 'app' %}bottom:22px !important{% else %}bottom:10px !important{% endif %};width:auto !important;max-width:none !important;min-width:0 !important;height:54px !important;box-sizing:border-box !important;padding:0 8px !important;gap:0 !important;overflow:hidden !important;background:#ffffff !important;border-radius:18px !important;box-shadow:0 4px 16px rgba(15,26,41,.12) !important;z-index:40 !important"{% endif %}>
     <a style="flex:1 1 0% !important;width:0 !important;min-width:0 !important;display:flex !important;flex-direction:column !important;align-items:center !important;justify-content:center !important;gap:4px !important;padding:8px 0 6px !important;background:transparent !important;background-image:none !important;border:0 !important;box-shadow:none !important;text-decoration:none !important;box-sizing:border-box !important;overflow:hidden !important" class="{% if request.url.path == '/' %}on{% endif %}" href="{{ href('/', country) }}">
       <svg class="tab-ico" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5.5v-6h-5v6H4a1 1 0 0 1-1-1V10.5z"/></svg>
       <span>{{ t.home }}</span>
@@ -535,7 +533,7 @@
     </div>
     <div class="ft">
       <a class="btn ghost" href="{{ href('/cart', country) }}">{{ t.cart_rail_go }}</a>
-      {% if cart_count and not cart_ship_met %}
+      {% if cart_count and cart_gap_role == 'min' %}
       <a class="btn" href="{{ href('/cart?pay=1', country) }}">{{ t.cart_rail_checkout }}</a>
       {% else %}
       <a class="btn" href="{{ href('/checkout', country) }}">{{ t.cart_rail_checkout }}</a>
@@ -574,7 +572,7 @@
           {% endfor %}
         </div>
       </div>
-      <div class="atc-grid" data-atc-grid></div>
+      <div class="atc-grid" data-atc-grid data-key="recommended" data-page="1" data-more="{% if (gap_products|default([]))|length >= 8 %}1{% else %}0{% endif %}">{% if gap_products|default([]) %}{% with products=gap_products, pick_tab='recommended', pick_next='' %}{% include "gap_picks.html" %}{% endwith %}{% endif %}</div>
       <div class="atc-foot">
         <span class="gap-pay">
           <span>{{ t.cart_rail_total }} <strong data-atc-sum></strong></span>
@@ -674,11 +672,16 @@
       if (closer) closer.addEventListener("click", shut);
       if (scrim) scrim.addEventListener("click", shut);
       var bar = document.getElementById("cookiebar");
-      if (bar && localStorage.getItem("harbor-cookie") !== "1") bar.hidden = false;
+      var onCheckout = document.body.classList.contains("is-checkout");
+      if (bar && !onCheckout && localStorage.getItem("harbor-cookie") !== "1") {
+        bar.hidden = false;
+        document.body.classList.add("cookie-open");
+      }
       var ok = document.querySelector("[data-cookie-ok]");
       if (ok) ok.addEventListener("click", function () {
         localStorage.setItem("harbor-cookie", "1");
         if (bar) bar.hidden = true;
+        document.body.classList.remove("cookie-open");
       });
     })();
     (function () {
@@ -710,17 +713,22 @@
         var left = end - Date.now();
         var key = node.getAttribute("data-ends") + (msMode ? ":ms" : "");
         if (left <= 0) {
-          node.textContent = (msMode || node.classList.contains("urg-cd") || node.id === "hold-clock") ? "00:00" : "00:00:00";
+          node.textContent = (node.classList.contains("urg-cd") || node.id === "hold-clock") ? "00:00" : "00:00:00";
           if (crossed[key] && !node.classList.contains("urg-cd")) location.reload();
           return;
         }
         crossed[key] = true;
-        if (msMode || node.classList.contains("urg-cd") || node.id === "hold-clock") {
-          // mm:ss only — never show centiseconds in shopper-facing timers
+        if (msMode) {
+          var cs = Math.floor(left / 10) % 100;
           var sMs = Math.floor(left / 1000);
           var mMs = Math.floor(sMs / 60);
           var secMs = sMs % 60;
-          node.textContent = String(mMs).padStart(2, "0") + ":" + String(secMs).padStart(2, "0");
+          node.textContent = String(mMs).padStart(2, "0") + ":" + String(secMs).padStart(2, "0") + ":" + String(cs).padStart(2, "0");
+        } else if (node.classList.contains("urg-cd") || node.id === "hold-clock") {
+          var sHold = Math.floor(left / 1000);
+          var mHold = Math.floor(sHold / 60);
+          var secHold = sHold % 60;
+          node.textContent = String(mHold).padStart(2, "0") + ":" + String(secHold).padStart(2, "0");
         } else {
           var s = Math.floor(left / 1000);
           var h = Math.floor(s / 3600);
@@ -737,7 +745,7 @@
         document.querySelectorAll("[data-ends]").forEach(paint);
       }
       tickAll();
-      setInterval(tickAll, 250);
+      setInterval(tickAll, document.querySelector("[data-cd=ms]") ? 40 : 1000);
     })();
     var toTop = document.querySelector(".to-top");
     function placeTop() {
@@ -747,7 +755,6 @@
     toTop.addEventListener("click", function () {
       window.scrollTo({ top: 0, behavior: "smooth" });
     });
-    placeTop();
     (function () {
       var standalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true || window.matchMedia("(display-mode: minimal-ui)").matches;
       var guide = document.getElementById("pwa-guide");
@@ -1434,7 +1441,7 @@ var hold = document.getElementById("pop-hold");
   }
   function paintCount(count) {
     var text = String(count);
-    document.querySelectorAll(".cartbtn, .tabbar a[href*='/cart']").forEach(function (host) {
+    document.querySelectorAll(".cartbtn, .fn-pdp-cart, .tabbar a[href*='/cart']").forEach(function (host) {
       var badge = host.querySelector(".n");
       if (!badge) {
         badge = document.createElement("span");
@@ -1476,24 +1483,110 @@ var hold = document.getElementById("pop-hold");
     if (root) root.hidden = true;
     document.body.classList.remove("atc-open");
   }
-  function loadPicks(root, ignoreQuery) {
+  var pickMem = {};
+  var pickGen = 0;
+  function pickKey(tab, q) { return (tab || "recommended") + "\n" + (q || ""); }
+  function loadPicks(root, ignoreQuery, done, opts) {
+    opts = opts || {};
     var grid = root.querySelector("[data-atc-grid]");
-    if (!grid) return;
+    if (!grid) {
+      if (done) done();
+      return;
+    }
     var tabBtn = root.querySelector(".atc-tabs .on");
-    var tab = tabBtn ? tabBtn.getAttribute("data-tab") : "recommended";
+    var tab = opts.tab || (tabBtn ? tabBtn.getAttribute("data-tab") : "recommended");
     var input = root.querySelector(".atc-search input");
     var typed = input ? (input.value || "").trim() : "";
-    var preset = input ? (input.getAttribute("data-preset") || "") : "";
-    var q = ignoreQuery ? "" : (typed || preset);
+    var q = ignoreQuery ? "" : typed;
+    var append = !!opts.append;
+    if (append) {
+      var saved = (grid.getAttribute("data-key") || "recommended").split("\n");
+      tab = saved[0] || tab;
+      q = saved.slice(1).join("\n");
+      if (grid.getAttribute("data-more") === "0" || grid.getAttribute("data-loading") === "1") {
+        if (done) done();
+        return;
+      }
+    }
+    var page = opts.page || (append ? (parseInt(grid.getAttribute("data-page") || "1", 10) || 1) + 1 : 1);
+    var key = pickKey(tab, q);
+    if (!append && !opts.prefetch && page === 1 && pickMem[key]) {
+      grid.innerHTML = pickMem[key].html;
+      grid.setAttribute("data-key", key);
+      grid.setAttribute("data-page", String(pickMem[key].page));
+      grid.setAttribute("data-more", pickMem[key].more);
+      grid.classList.remove("is-loading");
+      if (done) done();
+      maybeFill(root);
+      return;
+    }
+    if (opts.prefetch && pickMem[key]) {
+      if (done) done();
+      return;
+    }
+    if (!opts.prefetch && !append) grid.classList.add("is-loading");
+    if (append) grid.setAttribute("data-loading", "1");
+    var gen = opts.prefetch ? 0 : ++pickGen;
     var country = "";
     var match = location.search.match(/[?&]country=([A-Za-z]{2})/);
     if (match) country = match[1];
-    var url = "/cart/picks?tab=" + encodeURIComponent(tab || "recommended") + "&q=" + encodeURIComponent(q);
+    var url = "/cart/picks?tab=" + encodeURIComponent(tab || "recommended") + "&q=" + encodeURIComponent(q) + "&page=" + page;
     if (country) url += "&country=" + encodeURIComponent(country);
     fetch(url, { credentials: "same-origin", headers: { "Accept": "text/html" } })
-      .then(function (r) { return r.text(); })
-      .then(function (html) { grid.innerHTML = html; })
-      .catch(function () {});
+      .then(function (r) {
+        var more = r.headers.get("X-Harbor-Has-More") === "1" ? "1" : "0";
+        return r.text().then(function (html) { return { html: html, more: more }; });
+      })
+      .then(function (pack) {
+        if (!pack.html) pack.more = "0";
+        var slot = pickMem[key] || { html: "", page: 0, more: "1" };
+        if (page > 1) slot.html += pack.html;
+        else slot.html = pack.html;
+        slot.page = page;
+        slot.more = pack.more;
+        pickMem[key] = slot;
+        if (opts.prefetch || (gen && gen !== pickGen)) {
+          if (done) done();
+          return;
+        }
+        var liveBtn = root.querySelector(".atc-tabs .on");
+        var liveTab = liveBtn ? liveBtn.getAttribute("data-tab") : "recommended";
+        var liveQ = ignoreQuery || append ? q : ((input && input.value || "").trim());
+        if (pickKey(liveTab, append ? q : liveQ) !== key) {
+          if (done) done();
+          return;
+        }
+        if (append) grid.insertAdjacentHTML("beforeend", pack.html);
+        else grid.innerHTML = slot.html;
+        grid.setAttribute("data-key", key);
+        grid.setAttribute("data-page", String(slot.page));
+        grid.setAttribute("data-more", slot.more);
+        grid.setAttribute("data-loading", "0");
+        grid.classList.remove("is-loading");
+        if (done) done();
+        maybeFill(root);
+      })
+      .catch(function () {
+        grid.setAttribute("data-loading", "0");
+        grid.classList.remove("is-loading");
+        if (done) done();
+      });
+  }
+  function maybeFill(root) {
+    var grid = root.querySelector("[data-atc-grid]");
+    if (!grid || grid.getAttribute("data-more") !== "1" || grid.getAttribute("data-loading") === "1") return;
+    if (grid.scrollHeight > grid.clientHeight + 24) return;
+    loadPicks(root, true, null, { append: true });
+  }
+  function prefetchBeside(root) {
+    var tabs = Array.prototype.slice.call(root.querySelectorAll(".atc-tabs button"));
+    var on = root.querySelector(".atc-tabs .on");
+    var idx = Math.max(0, tabs.indexOf(on));
+    var next = tabs[idx + 1] || tabs[1];
+    if (!next || next === on) return;
+    var tab = next.getAttribute("data-tab") || "";
+    if (!tab || pickMem[pickKey(tab, "")]) return;
+    loadPicks(root, true, null, { prefetch: true, tab: tab, page: 1 });
   }
   function bindGap(root) {
     root.querySelectorAll("[data-atc-close]").forEach(function (node) {
@@ -1512,14 +1605,26 @@ var hold = document.getElementById("pop-hold");
         root.querySelectorAll(".atc-tabs button").forEach(function (other) {
           other.classList.toggle("on", other === node);
         });
+        var input = root.querySelector(".atc-search input");
+        if (input) input.value = "";
         loadPicks(root, true);
       });
     });
+    var grid = root.querySelector("[data-atc-grid]");
+    if (grid && !grid.dataset.scroll) {
+      grid.dataset.scroll = "1";
+      grid.addEventListener("scroll", function () {
+        if (grid.getAttribute("data-more") !== "1" || grid.getAttribute("data-loading") === "1") return;
+        if (grid.scrollTop + grid.clientHeight < grid.scrollHeight - 140) return;
+        loadPicks(root, true, null, { append: true });
+      });
+    }
   }
   function openGap(data, keep) {
     var root = document.getElementById("atc-gap");
     if (!root) return;
-    if (!data || data.ship_met || !data.gap_title) {
+    // Shipping is always free. The popup is the checkout-minimum gap, so ship_met must not close it.
+    if (!data || !data.gap_title) {
       closeGap();
       return;
     }
@@ -1552,11 +1657,33 @@ var hold = document.getElementById("pop-hold");
       bindGap(root);
       root.dataset.ready = "1";
     }
-    root.hidden = false;
-    document.body.classList.add("atc-open");
     try { sessionStorage.setItem("harbor-interrupt", "1"); } catch (err) {}
-    loadPicks(root);
+    var grid = root.querySelector("[data-atc-grid]");
+    var primed = grid && grid.querySelector(".atc-card");
+    function reveal() {
+      root.hidden = false;
+      document.body.classList.add("atc-open");
+    }
+    if (primed) {
+      var seed = pickKey("recommended", "");
+      if (!pickMem[seed]) {
+        pickMem[seed] = {
+          html: grid.innerHTML,
+          page: parseInt(grid.getAttribute("data-page") || "1", 10) || 1,
+          more: grid.getAttribute("data-more") || "1"
+        };
+      }
+      reveal();
+      maybeFill(root);
+      setTimeout(function () { prefetchBeside(root); }, 400);
+      return;
+    }
+    loadPicks(root, true, function () {
+      reveal();
+      setTimeout(function () { prefetchBeside(root); }, 400);
+    });
   }
+  window.harborOpenAtcGap = openGap;
   document.addEventListener("submit", function (ev) {
     var form = ev.target;
     if (!form || form.tagName !== "FORM") return;
@@ -1609,6 +1736,10 @@ var hold = document.getElementById("pop-hold");
           window.harborTrack(data.ad_event.name, data.ad_event.params || {}, data.ad_event.event_id, !!data.ad_event.custom);
         } catch (e) {}
       }
+      if (location.pathname.indexOf("/checkout") !== -1) {
+        location.reload();
+        return;
+      }
       var sheet = document.getElementById("sku-sheet");
       if (sheet) {
         sheet.classList.remove("is-open");
@@ -1617,8 +1748,11 @@ var hold = document.getElementById("pop-hold");
       }
       var fromGap = form.closest("#atc-gap");
       if (fromPeek && window.closePeek) window.closePeek();
-      showAdded(data);
-      if (fromGap) openGap(data, true);
+      if (data.gap_title) openGap(data, !!fromGap);
+      else {
+        closeGap();
+        showAdded(data);
+      }
     }).catch(function () {
       // fallback classic submit
       var ajax = form.querySelector("input[name=ajax]");
@@ -1684,7 +1818,7 @@ var hold = document.getElementById("pop-hold");
       return;
     }
     var hit = ev.target.closest("[data-peek]");
-    if (!hit || !hit.closest("#gap-modal, #atc-gap")) return;
+    if (!hit || !hit.closest("#gap-modal, #atc-gap") || hit.closest("#peek")) return;
     ev.preventDefault();
     openPeek(hit.getAttribute("data-peek"));
   });
@@ -1737,5 +1871,6 @@ var hold = document.getElementById("pop-hold");
 
 
 
+{% include "_lucky.html" %}
 </body>
 </html>

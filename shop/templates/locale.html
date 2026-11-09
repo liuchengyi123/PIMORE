@@ -2,7 +2,7 @@
 {% block body %}
 <div class="fn-policy" style="max-width:720px;margin:0 auto;padding:32px 48px">
   <h1 class="fn-acc-title">{{ t.locale }}</h1>
-  <p class="tiny" style="margin-top:6px">{{ country }} · {{ currency }}</p>
+  <p class="tiny" style="margin-top:6px">{% include "_lang_mark.html" %}</p>
   <div class="fn-locale-list" style="margin-top:16px">
     {% for code, label in [('en', 'English'), ('zh', '简体中文'), ('zh-Hant', '繁體中文'), ('ja', '日本語'), ('de', 'Deutsch'), ('fr', 'Français'), ('es', 'Español'), ('pt', 'Português')] %}
     <form method="get" action="/?lang={{ code }}" style="margin:0">

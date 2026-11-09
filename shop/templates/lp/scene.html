@@ -1,0 +1,26 @@
+<section class="lp-scene">
+  <figure class="lp-scene-shot">
+    <img src="{{ lp.scene_image }}" alt="{{ t.categories[lp.category] }}" width="486" height="760" decoding="async" fetchpriority="high">
+    <div class="lp-cats">
+      {% for hit in lp.hits %}
+      <a class="lp-cat" href="{{ hit.href }}" style="left:{{ hit.l }}%;top:{{ hit.t }}%;width:{{ hit.w }}%;height:{{ hit.h }}%" aria-label="{{ hit.name }}"></a>
+      {% endfor %}
+    </div>
+  </figure>
+  {% if scene_hero %}
+  <div class="lp-scene-hero" data-lp-hero="{{ scene_hero.sku }}">
+    {% with item=scene_hero, eager=true %}
+    {% include "lp/_card.html" %}
+    {% endwith %}
+  </div>
+  {% endif %}
+  {% if scene_cards %}
+  <div class="lp-grid">
+    {% for item in scene_cards %}
+    {% include "lp/_card.html" %}
+    {% endfor %}
+  </div>
+  {% elif not scene_hero %}
+  <p class="lp-empty">{{ t.lp_empty_short }}</p>
+  {% endif %}
+</section>

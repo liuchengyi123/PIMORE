@@ -474,6 +474,11 @@ def migrate(conn):
     from shop.lp_links import ensure_table as ensure_lp_links
 
     ensure_lp_links(conn)
+    try:
+        from shop.lucky import ensure as ensure_lucky
+        ensure_lucky(conn)
+    except Exception:
+        pass
     conn.execute("create index if not exists reviews_sku on reviews (sku)")
     conn.execute("create index if not exists questions_sku on questions (sku)")
     conn.execute("create index if not exists order_lines_order_id on order_lines (order_id)")

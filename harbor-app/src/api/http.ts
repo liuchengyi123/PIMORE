@@ -67,9 +67,15 @@ export function storefrontPath(path: string): string {
   return LIVE_ORIGIN + (path.startsWith('/') ? path : '/' + path)
 }
 
-/** Absolute checkout URL on the real storefront (payment handoff). */
-export function checkoutHandoffUrl(buy = false): string {
-  return storefrontPath(buy ? '/checkout?buy=1' : '/checkout')
+/** Checkout URL. Local H5 stays on the proxied shop so the spin cookie applies. */
+export function checkoutHandoffUrl(buy = false, luckyToken = ''): string {
+  const path = buy ? '/checkout?buy=1' : '/checkout'
+  const root = apiRoot()
+  let url = root.startsWith('/') && typeof location !== 'undefined'
+    ? location.origin + root + path
+    : storefrontPath(path)
+  if (luckyToken) url += (url.includes('?') ? '&' : '?') + 'lucky_spin=' + encodeURIComponent(luckyToken)
+  return url
 }
 
 export interface HarborRequestOptions {

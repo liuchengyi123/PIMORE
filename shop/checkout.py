@@ -5,6 +5,7 @@ import sqlite3
 import threading
 from datetime import datetime, timedelta, timezone
 
+from shop.address_format import required_keys
 from shop.campaigns import price_for
 from shop.locale import shipping_tier
 from shop.pricing import quote
@@ -92,7 +93,7 @@ def merge_line(lines, sku, qty):
     return updated
 
 
-def build_quote(promos, *, merchandise_cents, ship_country, units, currency, minor_units, coupon_cents=0, coupon_threshold_cents=0, balance_cents=0, use_balance=False):
+def build_quote(promos, *, merchandise_cents, ship_country, units, currency, minor_units, coupon_cents=0, coupon_threshold_cents=0, balance_cents=0, use_balance=False, lucky_off_cents=0):
     # Always-free shipping policy: charge $0 shipping regardless of threshold/country.
     # UI copy must match (no "free over $X" when under threshold).
     _ = (ship_country, promos.get("free_shipping_cents"), promos.get("shipping"))
@@ -107,6 +108,7 @@ def build_quote(promos, *, merchandise_cents, ship_country, units, currency, min
         use_balance=use_balance,
         units_per_usd=units,
         minor_units=minor_units,
+        lucky_off_cents=lucky_off_cents,
     )
 
 
@@ -321,6 +323,8 @@ def place_order(
     gift_sku="",
     returning=False,
     hold=None,
+    lucky_off_cents=0,
+    lucky_token="",
 ):
     email = (email or "").strip().lower()
     ship_country = (ship_country or "").strip().upper()
@@ -346,7 +350,7 @@ def place_order(
                 if existing:
                     conn.rollback()
                     return existing["id"]
-            missing = [key for key in REQUIRED if not str(fields[key] or "").strip()]
+            missing = [key for key in required_keys(ship_country) if not str(fields[key] or "").strip()]
             if email and "@" not in email and "email" not in missing:
                 missing.append("email")
             if missing:
@@ -364,17 +368,18 @@ def place_order(
                 row = conn.execute("select stock from products where sku = ?", (parent,)).fetchone()
                 if row is None or row["stock"] < qty:
                     raise CheckoutError("stock", sku=parent)
-            eligible = list_coupons(conn, email, merchandise)
             coupon = None
-            if coupon_id:
-                try:
-                    coupon = allowed_coupon(conn, email, merchandise, coupon_id)
-                except CheckoutError as exc:
-                    if exc.code != "coupon":
-                        raise
-                    coupon = None
-            if coupon is None:
-                coupon = best_coupon(eligible)
+            if not lucky_off_cents:
+                eligible = list_coupons(conn, email, merchandise)
+                if coupon_id:
+                    try:
+                        coupon = allowed_coupon(conn, email, merchandise, coupon_id)
+                    except CheckoutError as exc:
+                        if exc.code != "coupon":
+                            raise
+                        coupon = None
+                if coupon is None:
+                    coupon = best_coupon(eligible)
             available = _lock_balance(conn, email) if use_balance else 0
             bill = build_quote(
                 promos,
@@ -387,6 +392,7 @@ def place_order(
                 coupon_threshold_cents=coupon["threshold_cents"] if coupon else 0,
                 balance_cents=available,
                 use_balance=use_balance,
+                lucky_off_cents=lucky_off_cents,
             )
             bound = _bind_referrer(conn, email, referrer)
             base = max(0, merchandise - bill.discount_cents - bill.coupon_cents)
@@ -439,6 +445,9 @@ def place_order(
                 ),
             )
             order_id = cursor.lastrowid
+            if lucky_off_cents and lucky_token:
+                from shop.lucky import consume_spin
+                consume_spin(conn, lucky_token, email, order_id)
             for line in priced:
                 conn.execute(
                     """

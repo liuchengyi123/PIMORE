@@ -1,6 +1,9 @@
 {% from "shot.html" import shot %}
 <section class="lp-headline">
-  <p class="lp-kicker">{{ t.lp_hero_kicker }}</p>
+  <header class="lp-hero">
+    <p class="lp-kicker">{{ t.lp_hero_kicker }}</p>
+    {% include "lp/_countdown.html" %}
+  </header>
   {% if hero %}
   <article class="lp-hero-sku" data-lp-hero="{{ hero.sku }}">
     <a class="lp-hero-shot" href="{{ hero.grab_href }}">
@@ -18,7 +21,6 @@
   <p class="lp-empty">{{ t.lp_empty_short }}</p>
   {% endif %}
   <div class="lp-hero-tools">
-    {% include "lp/_countdown.html" %}
     {% include "lp/_enter.html" %}
   </div>
   {% if rest %}

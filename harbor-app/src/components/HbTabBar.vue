@@ -1,4 +1,5 @@
 <template>
+  <HbLucky />
   <view class="tab-spacer" />
   <view class="tab-bar">
     <view class="homeind" aria-hidden="true" />

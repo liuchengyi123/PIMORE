@@ -8,13 +8,15 @@
 </header>
 
 {% if launch_notice == "built" %}<p class="ok">链接已生成（含所选账户 acct），可复制到广告后台。右侧预览与公开页同一套模板。</p>{% endif %}
+{% if launch_notice == "scene" %}<p class="ok">大图已换上。原来的投放链接不用改。</p>{% endif %}
+{% if launch_notice == "scene_bad" %}<p class="error">大图没有换上。请传一张图片，并且这条链接是换图落地页。</p>{% endif %}
 {% if launch_notice == "test_ok" %}<p class="ok">测试回传已发送，请到 Meta Events Manager / TikTok Events 查看；下方「最近回传」也会刷新。</p>{% endif %}
 {% if launch_notice == "test_fail" %}<p class="error">测试回传失败：先到「投放回传」配好该账户 Pixel / CAPI，再回来测。</p>{% endif %}
 {% if launch_error %}<p class="error">{{ launch_error }}</p>{% endif %}
 
 <div class="launch-split">
   <div class="launch-left">
-  <form id="lp-launch-form" class="card" method="post" action="/admin/launch">
+  <form id="lp-launch-form" class="card" method="post" action="/admin/launch" enctype="multipart/form-data">
     <h2>选择落地页模块</h2>
     <div class="pad">
       <div class="lp-mod-picks" role="radiogroup" aria-label="落地页模块">
@@ -27,14 +29,22 @@
       </div>
 
       <div class="fields" style="margin-top:14px">
-        <label>类目（商品池）
+        <div class="wide" id="lp-hero-field" {% if form_state.template not in hero_template_ids and form_state.template not in scene_template_ids %}hidden{% endif %}>
+          主商品
+          <input id="lp-hero-q" type="search" placeholder="输入标题或 SKU，再点下面的一条" autocomplete="off">
+          <input type="hidden" name="hero_sku" id="lp-hero-sku" value="{{ form_state.hero_sku }}">
+          <p id="lp-hero-picked" class="muted small">{% if form_state.hero_sku %}已选 <code>{{ form_state.hero_sku }}</code>。再点底部「生成投放链接」，这件就会固定在第一位。{% else %}类目广告可以不选。要做单品广告，输入标题或 SKU，点下面出现的商品。{% endif %}</p>
+          <div id="lp-hero-results" class="lp-hero-results" hidden></div>
+        </div>
+        <label id="lp-category-field"><span id="lp-category-label">类目（商品池）</span>
           <select name="category" id="lp-category">
             {% for skin in lp_skins %}
-            <option value="{{ skin.id }}" {% if form_state.category == skin.id %}selected{% endif %}>{{ skin.label_zh }} · {{ skin.label_en }}</option>
+            <option value="{{ skin.id }}" {% if form_state.category == skin.id %}selected{% endif %}>{{ skin.label_zh }}</option>
             {% endfor %}
           </select>
+          <span id="lp-scene-hint" class="muted small" {% if form_state.template not in scene_template_ids %}hidden{% endif %}>换这个类目，右边整套版面跟着换。</span>
         </label>
-        <label>皮肤（配色）
+        <label id="lp-skin-field" {% if form_state.template in scene_template_ids %}hidden{% endif %}>皮肤（配色）
           <select name="skin" id="lp-skin">
             {% for skin in lp_skins %}
             <option value="{{ skin.id }}" {% if form_state.skin == skin.id %}selected{% endif %}>{{ skin.label_zh }}{% if skin.master %} · 主色{% endif %}</option>
@@ -165,17 +175,19 @@
   <h2>已生成的链接</h2>
   <div class="table-wrap">
     <table>
-      <thead><tr><th>备注</th><th>模块</th><th>类目 / 皮肤</th><th>链接</th></tr></thead>
+      <thead><tr><th>备注</th><th>模块</th><th>类目 / 皮肤</th><th>主商品</th><th>版面</th><th>链接</th></tr></thead>
       <tbody>
       {% for row in launch_links %}
       <tr>
         <td>{{ row.label or "—" }}</td>
         <td>{{ row.template_label }} <code>{{ row.template }}</code></td>
         <td>{{ row.category_zh }} / {{ row.skin_zh }}</td>
+        <td>{% if row.hero_sku %}<code>{{ row.hero_sku }}</code>{% else %}—{% endif %}</td>
+        <td>{% if row.template == "scene" %}{{ row.category_zh }}{% else %}—{% endif %}</td>
         <td><a href="{{ row.path }}">{{ row.url }}</a></td>
       </tr>
       {% else %}
-      <tr><td class="empty" colspan="4">还没有投放链接。</td></tr>
+        <tr><td class="empty" colspan="6">还没有投放链接。</td></tr>
       {% endfor %}
       </tbody>
     </table>
@@ -190,6 +202,8 @@
   var platformEl = document.getElementById("lp-platform");
   var acctEl = document.getElementById("lp-acct");
   var accountsByPlat = {{ accounts_by_plat | tojson }};
+  var heroTemplates = {{ hero_template_ids | tojson }};
+  var sceneTemplates = {{ scene_template_ids | tojson }};
   if (!form || !frame) return;
   function rebuildAcct() {
     if (!acctEl || !platformEl) return;
@@ -262,7 +276,106 @@
     q.set("skin", data.get("skin") || cat);
     q.set("preview", "1");
     q.set("country", (data.get("country") || "US").toString().slice(0, 2));
+    if (heroOn()) {
+      var hero = data.get("hero_sku") || "";
+      if (hero) q.set("hero", hero);
+    }
+    if (sceneOn()) {
+      var scene = data.get("scene_image") || "";
+      if (scene) q.set("scene", scene);
+    }
     return "/lp/ad/preview?" + q.toString();
+  }
+  function pickedTemplate() {
+    var picked = form.querySelector("input[name=template]:checked");
+    return picked ? picked.value : "";
+  }
+  function heroOn() {
+    var id = pickedTemplate();
+    return heroTemplates.indexOf(id) >= 0 || sceneTemplates.indexOf(id) >= 0;
+  }
+  function sceneOn() {
+    return sceneTemplates.indexOf(pickedTemplate()) >= 0;
+  }
+  function syncHero() {
+    var box = document.getElementById("lp-hero-field");
+    var skinField = document.getElementById("lp-skin-field");
+    if (box) box.hidden = !heroOn();
+    if (skinField) skinField.hidden = sceneOn();
+    var catLabel = document.getElementById("lp-category-label");
+    var sceneHint = document.getElementById("lp-scene-hint");
+    if (catLabel) catLabel.textContent = sceneOn() ? "类目（换这一套版面）" : "类目（商品池）";
+    if (sceneHint) sceneHint.hidden = !sceneOn();
+    if (sceneOn() && skin && category) skin.value = category.value;
+  }
+  var heroQ = document.getElementById("lp-hero-q");
+  var heroSku = document.getElementById("lp-hero-sku");
+  var heroResults = document.getElementById("lp-hero-results");
+  var heroPicked = document.getElementById("lp-hero-picked");
+  var heroTimer = 0;
+  function clearHero() {
+    if (heroSku) heroSku.value = "";
+    if (heroPicked) heroPicked.textContent = "输入标题或 SKU，点下面出现的商品。选中后，再点底部「生成投放链接」。";
+  }
+  function pickHero(row) {
+    if (category && row.category && category.value !== row.category) {
+      category.value = row.category;
+      if (skin && !skinLocked) skin.value = row.category;
+    }
+    if (heroSku) heroSku.value = row.sku;
+    if (heroQ) heroQ.value = row.name;
+    if (heroPicked) heroPicked.textContent = "已选 " + row.sku + "。再点底部「生成投放链接」，这件就会固定在第一位。";
+    if (heroResults) heroResults.hidden = true;
+    schedule();
+  }
+  function searchHero() {
+    if (!heroOn() || !heroQ) return;
+    var q = (heroQ.value || "").trim();
+    if (q.length < 1) {
+      if (heroResults) heroResults.hidden = true;
+      return;
+    }
+    var cat = category ? category.value : "kitchen";
+    fetch("/admin/launch/products?category=" + encodeURIComponent(cat) + "&q=" + encodeURIComponent(q), { credentials: "same-origin" })
+      .then(function (res) {
+        if (!res.ok) throw new Error("search");
+        return res.json();
+      })
+      .then(function (rows) {
+        if (!heroResults) return;
+        heroResults.innerHTML = "";
+        if (!rows || !rows.length) {
+          var empty = document.createElement("div");
+          empty.className = "lp-hero-empty";
+          empty.textContent = "没有找到。换个标题或 SKU 再试。";
+          heroResults.appendChild(empty);
+          heroResults.hidden = false;
+          return;
+        }
+        rows.forEach(function (row) {
+          var btn = document.createElement("button");
+          btn.type = "button";
+          var title = document.createElement("b");
+          title.textContent = row.name;
+          var meta = document.createElement("span");
+          var where = row.match ? "" : (" · 在" + (row.category_zh || row.category));
+          meta.textContent = row.sku + " · " + row.price + where;
+          btn.appendChild(title);
+          btn.appendChild(meta);
+          btn.addEventListener("click", function () { pickHero(row); });
+          heroResults.appendChild(btn);
+        });
+        heroResults.hidden = false;
+      })
+      .catch(function () {
+        if (!heroResults) return;
+        heroResults.innerHTML = "";
+        var empty = document.createElement("div");
+        empty.className = "lp-hero-empty";
+        empty.textContent = "搜索没有返回，再试一次。";
+        heroResults.appendChild(empty);
+        heroResults.hidden = false;
+      });
   }
   function fitPreview() {
     try {
@@ -297,12 +410,52 @@
     window.clearTimeout(timer);
     timer = window.setTimeout(paint, 120);
   }
-  if (skin) skin.addEventListener("change", function () { skinLocked = true; });
+  if (skin) skin.addEventListener("change", function () {
+    if (sceneOn() && category) {
+      skin.value = category.value;
+      return;
+    }
+    skinLocked = true;
+  });
   if (category && skin) {
     category.addEventListener("change", function () {
-      if (!skinLocked) skin.value = category.value;
+      if (sceneOn() || !skinLocked) skin.value = category.value;
+      clearHero();
     });
   }
+  var sceneFile = document.getElementById("lp-scene-file");
+  var sceneImage = document.getElementById("lp-scene-image");
+  var sceneState = document.getElementById("lp-scene-state");
+  if (sceneFile) sceneFile.addEventListener("change", function () {
+    var file = sceneFile.files && sceneFile.files[0];
+    if (!file) return;
+    var body = new FormData();
+    body.append("scene_file", file);
+    if (sceneState) sceneState.textContent = "正在上传大图…";
+    fetch("/admin/launch/scene", { method: "POST", body: body, credentials: "same-origin" })
+      .then(function (res) {
+        if (!res.ok) throw new Error("upload");
+        return res.json();
+      })
+      .then(function (data) {
+        if (sceneImage) sceneImage.value = data.url || "";
+        if (sceneState) sceneState.textContent = "大图已上传。图上不要写价格。生成链接后，这条广告一直用这张，直到你再换。";
+        schedule();
+      })
+      .catch(function () {
+        if (sceneState) sceneState.textContent = "大图没有传上，再选一次。";
+      });
+  });
+  form.addEventListener("change", function (event) {
+    if (event.target && event.target.name === "template") syncHero();
+  });
+  if (heroQ) heroQ.addEventListener("input", function () {
+    if (heroSku) heroSku.value = "";
+    if (heroPicked && heroOn()) heroPicked.textContent = "点下面的一条才算选中。选中后，再点底部「生成投放链接」。";
+    window.clearTimeout(heroTimer);
+    heroTimer = window.setTimeout(searchHero, 180);
+  });
+  syncHero();
   form.addEventListener("input", schedule);
   form.addEventListener("change", schedule);
   document.querySelectorAll("[data-copy]").forEach(function (btn) {

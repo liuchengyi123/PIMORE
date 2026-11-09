@@ -735,6 +735,26 @@
 {% endif %}
 {% elif panel == 'images' %}
 <header class="page-head"><div><h1>图片</h1><p class="muted">图片翻译与商品图生成。</p></div></header>
+<div class="card" style="margin-bottom:16px">
+  <h2>主图用第几张</h2>
+  <form class="pad stack" method="post" action="/admin/images/cover">
+    <p class="note">第一张是场景，第二张是角色使用，第四张是白底。只改首页、列表和卡片上的缩略图。点进商品页，图片仍按原来的顺序。混用时按货号分到这几张，同一件商品的缩略图不会每次变。缺的那张会用这一组里有的图。中文页仍用原来上传的图。</p>
+    <div class="fields">
+      <label>主图
+        <select name="cover">
+          <option value="1" {% if cover_mode == '1' %}selected{% endif %}>第一张 · 场景</option>
+          <option value="2" {% if cover_mode == '2' %}selected{% endif %}>第二张 · 使用</option>
+          <option value="4" {% if cover_mode == '4' %}selected{% endif %}>第四张 · 白底</option>
+          <option value="12" {% if cover_mode == '12' %}selected{% endif %}>12 混用</option>
+          <option value="124" {% if cover_mode == '124' %}selected{% endif %}>124 混用</option>
+          <option value="24" {% if cover_mode == '24' %}selected{% endif %}>24 混用</option>
+          <option value="14" {% if cover_mode == '14' %}selected{% endif %}>14 混用</option>
+        </select>
+      </label>
+    </div>
+    <button class="btn ink" type="submit">保存</button>
+  </form>
+</div>
 <div class="growth-split">
 <div class="card">
   <h2>图片翻译</h2>
@@ -987,7 +1007,7 @@
   </form>
   <form class="pad stack" method="post" action="/admin/images/sku/rest">
     <p class="note">点「跑剩余规格图」会按「张」入队：已上架商品下、路径为 c*/s* 的规格图、文件存在、且尚未 generated=1（除非勾选强制）。<b>总数 = 待出规格图张数</b>，不是商品件数。当前待出约 <b>{{ sku_gen_left }}</b> 张；队列里 {{ sku_gen_queue.pending }} 张待跑 / {{ sku_gen_queue.shots }} 张会打接口。</p>
-    {% if sku_gen_queue.items %}
+    {% if sku_gen_queue['items'] %}
     <ul class="gen-compare">
       {% for item in sku_gen_queue["items"] %}
       <li class="note">

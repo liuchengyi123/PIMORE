@@ -14,7 +14,7 @@
         <h1 class="fn-acc-hi">{% if email %}{{ email.split('@')[0]|title }}{% else %}{{ t.guest }}{% endif %}</h1>
         <p class="fn-acc-sub">{% if email %}{{ email }}{% else %}Guest checkout available{% endif %}</p>
       </div>
-      <span class="fn-acc-geo">{{ country }} · {{ currency }}</span>
+      <form method="get" action="{{ request.url.path }}" style="margin:0;flex:none;display:flex">{% set _lang_class = 'fn-acc-geo' %}{% include "_lang_switch.html" %}</form>
     </div>
     <div class="fn-asset-grid fn-asset-in-hero">
       <a class="fn-asset" href="{{ href('/account/balance', country) }}"><b class="price">{{ balance_text }}</b><span class="tiny">{{ t.balance }}</span></a>
@@ -54,7 +54,7 @@
     <a href="{{ href('/account/history', country) }}">{{ t.history }}</a>
     <a href="{{ href('/account/coupons', country) }}">{{ t.my_coupons }} · {{ t.checkin }} · {{ t.my_balance }}</a>
     <a href="{{ href('/share', country) }}">{{ t.share }}</a>
-    <a href="{{ href('/', country) }}?country={{ country }}">{{ country }} · {{ currency }}</a>
+    <form method="get" action="{{ request.url.path }}" style="margin:0">{% set _lang_class = 'fn-acc-langrow' %}{% include "_lang_switch.html" %}</form>
     <a href="{{ href('/help', country) }}">{{ t.help }} · {{ t.contact }}</a>
   </nav>
 
@@ -66,12 +66,12 @@
   {% for order in recent_orders[:3] %}
   <div class="fn-order-row">
     <div class="fn-order-thumbs">
-      {% for item in order.items[:2] %}
+      {% for item in order['items'][:2] %}
       {% if item.image %}<img src="{{ item.image }}" alt="" width="56" height="56">{% endif %}
       {% endfor %}
       <div>
         <div class="fn-order-id">{{ order.id }}</div>
-        <div class="tiny">{% if order.status == 'pending' %}{{ t.awaiting }}{% elif order.status == 'paid' %}{{ t.paid }}{% elif order.status == 'shipped' %}{{ t.shipped }}{% else %}{{ order.status }}{% endif %} · {{ order.due }}{% if order.items %} · {{ order.items|length }} {% endif %}</div>
+        <div class="tiny">{% if order.status == 'pending' %}{{ t.awaiting }}{% elif order.status == 'paid' %}{{ t.paid }}{% elif order.status == 'shipped' %}{{ t.shipped }}{% else %}{{ order.status }}{% endif %} · {{ order.due }}{% if order['items'] %} · {{ order['items']|length }} {% endif %}</div>
       </div>
     </div>
     <div class="fn-order-actions">
@@ -121,12 +121,12 @@
     </div>
     <div class="fn-order-card-body">
       <div class="fn-order-thumbs">
-        {% for item in order.items[:2] %}
+        {% for item in order['items'][:2] %}
         {% if item.image %}<img src="{{ item.image }}" alt="" width="64" height="64">{% endif %}
         {% endfor %}
         <div>
-          <div class="nm">{% if order.items|length == 1 %}{{ order.items[0].name }}{% else %}{{ order.items|length }} items{% endif %}</div>
-          {% if order.items|length > 1 %}<div class="tiny">{% for item in order.items[:2] %}{{ item.name }}{% if not loop.last %} + {% endif %}{% endfor %}</div>{% endif %}
+          <div class="nm">{% if order['items']|length == 1 %}{{ order['items'][0].name }}{% else %}{{ order['items']|length }} items{% endif %}</div>
+          {% if order['items']|length > 1 %}<div class="tiny">{% for item in order['items'][:2] %}{{ item.name }}{% if not loop.last %} + {% endif %}{% endfor %}</div>{% endif %}
           {% if order.tracking %}<div class="tiny">{{ order.tracking }}</div>{% endif %}
         </div>
       </div>

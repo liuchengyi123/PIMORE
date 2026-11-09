@@ -1,0 +1,75 @@
+{% extends "admin_base.html" %}
+{% block body %}
+<header class="page-head"><div><h1>幸运抽奖</h1><p class="muted">转盘一定出设定的折扣。免单一人一条，而且始终绑在这个人最近的一笔已付款订单上。自己再付一单，这条免单改绑到新订单，不另开第二条；原来那一单金额够就记一次进度。好友一笔不低于当前金额的已付款订单算一次，同一好友只算一次。</p></div></header>
+<div class="card">
+  <h2>规则</h2>
+  <form class="pad fields" method="post" action="/admin/lucky">
+    <label>开启 <input type="checkbox" name="enabled" value="1" {% if lucky_settings.enabled %}checked{% endif %}></label>
+    <label>折扣 % <input name="percent" value="{{ lucky_settings.percent }}" inputmode="numeric"></label>
+    <label>折扣小时 <input name="hours" value="{{ lucky_settings.hours }}" inputmode="numeric"></label>
+    <label>浏览分钟后才挽留 <input name="browse_minutes" value="{{ lucky_settings.browse_minutes }}" inputmode="numeric"></label>
+    <label>免单需要次数 <input name="stamps_needed" value="{{ lucky_settings.stamps_needed }}" inputmode="numeric"></label>
+    <label>完成天数 <input name="window_days" value="{{ lucky_settings.window_days }}" inputmode="numeric"></label>
+    <label>满次后再等退货天 <input name="return_days" value="{{ lucky_settings.return_days }}" inputmode="numeric"></label>
+    <div class="wide"><button class="btn" type="submit">保存</button></div>
+  </form>
+  <div class="pad">
+    <p class="muted small">折扣没有金额上限，不和别的券叠加，过期或用掉都不追回。免单返的是该单实付商品金额，进余额，不能当现金提现。绑定的那单全额退款，未返现的免单作废。进度里的某一单全额退款，这一次不算。60 天没凑满就作废。快到截止 10 天内、次数还没满的，列表会标「该提醒」。</p>
+  </div>
+</div>
+<div class="card">
+  <h2>免单</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>邮箱</th><th>绑定订单</th><th>金额</th><th>进度</th><th>状态</th><th>是否仍是最近一单</th><th>截止</th><th></th></tr></thead>
+      <tbody>
+      {% for row in lucky_frees %}
+      <tr>
+        <td>{{ row.email }}</td>
+        <td>#{{ row.order_id }}</td>
+        <td>${{ '%.2f'|format(row.amount_cents / 100) }}</td>
+        <td>{{ row.stamps }}/{{ row.needed }}{% if row.remind %} · 该提醒{% endif %}
+          {% if row.stamp_rows %}<br><span class="muted small">{% for stamp in row.stamp_rows %}{{ '自己' if stamp.source == 'self' else '好友 ' ~ stamp.friend_email }} #{{ stamp.order_id }}{% if not loop.last %} · {% endif %}{% endfor %}</span>{% endif %}
+        </td>
+        <td>{{ row.status }}{% if row.hold_until %} · 返现 {{ row.hold_until }}{% endif %}</td>
+        <td>{% if row.still_latest %}是{% else %}否，最近是 #{{ row.latest_order_id }}。进行中的会在下一笔付款时改绑过去；已凑满或已返现的不再改。{% endif %}</td>
+        <td>{{ row.deadline_at }}</td>
+        <td>
+          {% if row.status in ['open', 'held'] %}
+          <form method="post" action="/admin/lucky/void">
+            <input type="hidden" name="email" value="{{ row.email }}">
+            <button class="btn ghost sm" type="submit">作废</button>
+          </form>
+          {% else %}—{% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="8">还没有免单。</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<div class="card">
+  <h2>折扣券</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>时间</th><th>邮箱</th><th>折扣</th><th>到期</th><th>已用订单</th><th>挽留</th></tr></thead>
+      <tbody>
+      {% for row in lucky_spins %}
+      <tr>
+        <td>{{ row['won_at'] }}</td>
+        <td>{{ row['email'] or '—' }}</td>
+        <td>{{ row['percent'] }}%</td>
+        <td>{{ row['expires_at'] }}</td>
+        <td>{% if row['order_id'] %}#{{ row['order_id'] }}{% else %}未使用{% endif %}</td>
+        <td>{% if row['browse_kept'] %}浏览{% endif %} {% if row['pay_kept'] %}结算{% endif %}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6">还没有人抽。</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

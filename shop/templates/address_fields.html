@@ -1,8 +1,13 @@
-{% set spec = address_formats[values.ship_country] if values.ship_country in address_formats else address_formats['US'] %}
+{% set spec = address_formats[values.ship_country] if values.ship_country in address_formats else address_formats['*'] %}
 <button class="btn quiet" id="use-here" type="button">{{ t.locate }}</button>
-<p class="note">{{ t.locate_note }}</p>
+<p class="note" id="addr-note">{{ spec.hint or t.locate_note }}</p>
 <input type="hidden" name="ship_country" id="ship-country" value="{{ values.ship_country }}">
-<p class="locked-country">{{ t.country }} <strong>{{ values.ship_country }}{% for code, label in ship_countries %}{% if code == values.ship_country %} · {{ label }}{% endif %}{% endfor %}</strong></p>
+<p class="locked-country">{{ t.country }} <strong>{{ values.ship_country }}{% if spec.place %} · {{ spec.place }}{% endif %}{% for code, label in ship_countries %}{% if code == values.ship_country %} · {{ label }}{% endif %}{% endfor %}</strong></p>
+<div class="addr-paste">
+  <span>{{ t.paste_address }}</span>
+  <textarea id="addr-paste" rows="2" placeholder="{{ t.paste_hint }}"></textarea>
+  <button class="btn quiet" id="addr-read" type="button">{{ t.read_address }}</button>
+</div>
 <div class="addr-fields" id="addr-fields">
   <label class="addr-field{% if 'region' in errors %} field-error{% endif %}" data-part="region"{% if 'region' in errors %} data-field="region"{% endif %}>
     <span class="caption">{{ spec.labels.region }}</span>
@@ -25,46 +30,94 @@
   </label>
   <label class="addr-field{% if 'address' in errors %} field-error{% endif %}" data-part="line"{% if 'address' in errors %} data-field="address"{% endif %}>
     <span class="caption">{{ spec.labels.line }}</span>
-    <input name="address" value="{{ values.address }}" autocomplete="address-line1">
+    <input name="address" value="{{ values.address }}" autocomplete="off">
     {% if 'address' in errors %}<span class="need">{{ t.required }}</span>{% endif %}
   </label>
-  <label class="addr-field" data-part="number" hidden>
+  <label class="addr-field{% if 'street_number' in errors %} field-error{% endif %}" data-part="number" hidden>
     <span class="caption">{{ spec.labels.number }}</span>
-    <input name="street_number" value="{{ values.street_number }}" inputmode="numeric" autocomplete="off">
+    <input name="street_number" value="{{ values.street_number }}" inputmode="text" autocomplete="off">
+    {% if 'street_number' in errors %}<span class="need">{{ t.required }}</span>{% endif %}
   </label>
-  <label class="addr-field" data-part="district" hidden>
+  <label class="addr-field{% if 'district' in errors %} field-error{% endif %}" data-part="district" hidden>
     <span class="caption">{{ spec.labels.district }}</span>
-    <input name="district" value="{{ values.district }}" autocomplete="address-level3">
+    <select id="ship-district" autocomplete="address-level3" hidden disabled></select>
+    <input id="ship-district-text" name="district" value="{{ values.district }}" autocomplete="address-level3">
+    {% if 'district' in errors %}<span class="need">{{ t.required }}</span>{% endif %}
   </label>
 </div>
+<div class="addr-suggest" id="addr-suggest" hidden></div>
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     var formats = {{ address_formats | tojson }};
+    var uiLang = {{ (lang or 'en') | tojson }};
     var ship = document.getElementById("ship-country");
     var region = document.getElementById("ship-region");
     var city = document.getElementById("ship-city");
+    var districtSelect = document.getElementById("ship-district");
+    var districtText = document.getElementById("ship-district-text");
     var postal = document.querySelector('[name="postal"]');
     var line = document.querySelector('[name="address"]');
     var button = document.getElementById("use-here");
+    var note = document.getElementById("addr-note");
+    var box = document.getElementById("addr-fields");
     if (!ship || !region || !city) return;
     var pickRegion = {{ t.pick_region | tojson }};
     var pickCity = {{ t.pick_city | tojson }};
+    var pickDistrict = {{ t.choose | tojson }};
 
     function specFor() {
-      return formats[ship.value] || formats.US;
+      return formats[ship.value] || formats["*"] || formats.US;
     }
 
     function applyFormat() {
       var spec = specFor();
       var labels = (spec.regions && spec.regions[region.value]) || spec.labels;
-      document.querySelectorAll(".addr-field").forEach(function (node) {
+      document.querySelectorAll("#addr-fields .addr-field").forEach(function (node) {
         var part = node.getAttribute("data-part");
         var index = spec.order.indexOf(part);
         node.hidden = index < 0;
         node.style.order = index < 0 ? "0" : String(index);
         var caption = node.querySelector(".caption");
         if (caption && labels[part]) caption.textContent = labels[part];
+        var typed = node.querySelector("input[data-typed]");
+        if (typed && caption) typed.setAttribute("aria-label", caption.textContent);
       });
+      if (note && spec.hint) note.textContent = spec.hint;
+      var postalAt = spec.order.indexOf("postal");
+      var cityAt = spec.order.indexOf("city");
+      if (box) box.classList.toggle("is-postal-city", postalAt >= 0 && cityAt >= 0 && Math.abs(postalAt - cityAt) === 1);
+    }
+
+    function typedInput(select, autocomplete) {
+      var label = select.closest("label");
+      var input = label.querySelector("input[data-typed]");
+      if (!input) {
+        input = document.createElement("input");
+        input.setAttribute("data-typed", "1");
+        input.autocomplete = autocomplete;
+        select.insertAdjacentElement("afterend", input);
+      }
+      if (!input.value && select.value) input.value = select.value;
+      input.name = select.name;
+      var caption = label.querySelector(".caption");
+      if (caption) input.setAttribute("aria-label", caption.textContent);
+      input.disabled = false;
+      input.hidden = false;
+      select.disabled = true;
+      select.hidden = true;
+      return input;
+    }
+
+    function typedSelect(select) {
+      var label = select.closest("label");
+      var input = label.querySelector("input[data-typed]");
+      if (input) {
+        input.disabled = true;
+        input.hidden = true;
+        input.removeAttribute("name");
+      }
+      select.disabled = false;
+      select.hidden = false;
     }
 
     function blank(select, text) {
@@ -77,10 +130,12 @@
 
     function choose(select, value) {
       if (!value) return;
-      var wanted = String(value).toLowerCase();
+      var wanted = String(value).trim().toLowerCase();
       for (var i = 0; i < select.options.length; i++) {
         var option = select.options[i];
-        if (option.value === value || option.textContent === value || option.textContent.toLowerCase() === wanted) {
+        var text = option.textContent.toLowerCase();
+        var en = (option.getAttribute("data-en") || "").toLowerCase();
+        if (option.value === value || option.value.toLowerCase() === wanted || text === wanted || en === wanted) {
           select.selectedIndex = i;
           return;
         }
@@ -92,43 +147,221 @@
       select.value = value;
     }
 
-    function loadCities(cityValue) {
-      var code = region.value;
-      blank(city, pickCity);
-      if (!code) return Promise.resolve();
-      return fetch("/lookup/cities?country=" + encodeURIComponent(ship.value) + "&region=" + encodeURIComponent(code))
+    function regionNode() {
+      var input = region.parentNode.querySelector("input[data-typed]");
+      if (input && !input.disabled && !input.hidden) return input;
+      return region;
+    }
+
+    function cityNode() {
+      var input = city.parentNode.querySelector("input[data-typed]");
+      if (input && !input.disabled && !input.hidden) return input;
+      return city;
+    }
+
+    function useCityText(cityValue) {
+      if (specFor().order.indexOf("city") < 0) return Promise.resolve();
+      var typed = typedInput(city, "address-level2");
+      typed.value = cityValue || "";
+      bindPlaceInput(typed, "city");
+      return Promise.resolve();
+    }
+
+    function showDistrictText(value) {
+      if (!districtText) return;
+      if (districtSelect) {
+        districtSelect.hidden = true;
+        districtSelect.disabled = true;
+        districtSelect.removeAttribute("name");
+      }
+      districtText.hidden = false;
+      districtText.disabled = false;
+      districtText.name = "district";
+      if (value) districtText.value = value;
+    }
+
+    function showDistrictSelect(names, value) {
+      if (!districtSelect) return;
+      if (districtText) {
+        districtText.hidden = true;
+        districtText.disabled = true;
+        districtText.removeAttribute("name");
+      }
+      districtSelect.hidden = false;
+      districtSelect.disabled = false;
+      districtSelect.name = "district";
+      blank(districtSelect, pickDistrict);
+      names.forEach(function (name) {
+        var option = document.createElement("option");
+        option.value = name;
+        option.textContent = name;
+        districtSelect.appendChild(option);
+      });
+      choose(districtSelect, value || "");
+    }
+
+    function loadDistricts(districtValue) {
+      if (specFor().order.indexOf("district") < 0) return Promise.resolve();
+      var cityName = cityNode() ? (cityNode().value || "") : "";
+      var regionName = regionNode() ? (regionNode().value || "") : "";
+      if (!cityName) {
+        if (ship.value === "CN") showDistrictSelect([], districtValue || "");
+        else showDistrictText(districtValue || "");
+        return Promise.resolve();
+      }
+      var url = "/lookup/districts?country=" + encodeURIComponent(ship.value)
+        + "&region=" + encodeURIComponent(regionName)
+        + "&city=" + encodeURIComponent(cityName);
+      return fetch(url)
         .then(function (response) { return response.json(); })
         .then(function (data) {
-          (data.cities || []).forEach(function (name) {
+          var names = data.districts || [];
+          if (!names.length) showDistrictText(districtValue || "");
+          else showDistrictSelect(names, districtValue || "");
+        })
+        .catch(function () { showDistrictText(districtValue || ""); });
+    }
+
+    function loadCities(cityValue, districtValue) {
+      var spec = specFor();
+      if (spec.order.indexOf("city") < 0) return loadDistricts(districtValue);
+      var code = "";
+      if (spec.order.indexOf("region") >= 0 && regionNode() && regionNode().tagName === "SELECT") {
+        code = regionNode().value || "";
+      }
+      if (spec.order.indexOf("region") >= 0 && !code) {
+        typedSelect(city);
+        blank(city, pickCity);
+        return loadDistricts("");
+      }
+      var url = "/lookup/cities?country=" + encodeURIComponent(ship.value) + "&region=" + encodeURIComponent(code);
+      return fetch(url)
+        .then(function (response) { return response.json(); })
+        .then(function (data) {
+          var names = data.cities || [];
+          if (!names.length || (names.length > 400 && !code)) return useCityText(cityValue || "").then(function () {
+            return loadDistricts(districtValue);
+          });
+          typedSelect(city);
+          blank(city, pickCity);
+          names.forEach(function (name) {
             var option = document.createElement("option");
             option.value = name;
             option.textContent = name;
             city.appendChild(option);
           });
           choose(city, cityValue || "");
+          return loadDistricts(districtValue);
         })
+        .catch(function () { return useCityText(cityValue || ""); });
+    }
+
+    function hideSuggest() {
+      var menu = document.getElementById("addr-suggest");
+      if (menu) menu.hidden = true;
+    }
+
+    function queryFrom(input, mode) {
+      var value = input.value || "";
+      if (mode === "city") return value.trim();
+      var han = value.match(/[\u4e00-\u9fff]{1,12}$/);
+      if (han) return han[0];
+      var word = value.match(/[A-Za-z][A-Za-z .'-]{1,40}$/);
+      return word ? word[0].trim() : "";
+    }
+
+    function choosePlace(input, place, mode) {
+      if (mode === "line") {
+        var q = queryFrom(input, "line");
+        if (q) {
+          var escaped = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          input.value = input.value.replace(new RegExp(escaped, "i"), "").replace(/\s+/g, " ").replace(/\s+,/g, ",").trim();
+        }
+      }
+      var cityInput = cityNode();
+      if (cityInput && cityInput.tagName === "SELECT") {
+        choose(cityInput, place.city);
+        loadDistricts("");
+      } else if (cityInput) cityInput.value = place.city;
+      var node = regionNode();
+      if (node && node.tagName === "SELECT") choose(node, place.region);
+      else if (node) node.value = place.region_name || place.region;
+      hideSuggest();
+    }
+
+    function showSuggest(input, places, mode) {
+      var menu = document.getElementById("addr-suggest");
+      if (!menu) return;
+      menu.innerHTML = "";
+      if (!places.length) { menu.hidden = true; return; }
+      places.forEach(function (place) {
+        var button = document.createElement("button");
+        button.type = "button";
+        button.textContent = place.label;
+        button.addEventListener("mousedown", function (ev) {
+          ev.preventDefault();
+          choosePlace(input, place, mode);
+        });
+        menu.appendChild(button);
+      });
+      var field = input.closest(".addr-field") || input.parentNode;
+      field.appendChild(menu);
+      menu.hidden = false;
+    }
+
+    function bindPlaceInput(input, mode) {
+      if (!input || input.dataset.places) return;
+      input.dataset.places = mode;
+      var timer = 0;
+      input.addEventListener("input", function () {
+        window.clearTimeout(timer);
+        var q = queryFrom(input, mode);
+        if (q.length < 1) { hideSuggest(); return; }
+        timer = window.setTimeout(function () { fetchPlaces(input, q, mode); }, 180);
+      });
+      input.addEventListener("blur", function () {
+        window.setTimeout(hideSuggest, 150);
+      });
+    }
+
+    function fetchPlaces(input, q, mode) {
+      var regionCode = "";
+      if (mode === "city" && regionNode() && regionNode().tagName === "SELECT") regionCode = regionNode().value || "";
+      var url = "/lookup/places?country=" + encodeURIComponent(ship.value)
+        + "&q=" + encodeURIComponent(q)
+        + "&region=" + encodeURIComponent(regionCode)
+        + "&lang=" + encodeURIComponent(uiLang);
+      fetch(url)
+        .then(function (response) { return response.json(); })
+        .then(function (data) { if (document.activeElement === input) showSuggest(input, data.places || [], mode); })
         .catch(function () {});
     }
 
-    function loadRegions(regionValue, cityValue) {
+    function loadRegions(regionValue, cityValue, districtValue) {
       var spec = specFor();
+      if (spec.order.indexOf("region") < 0) {
+        return loadCities(cityValue || "", districtValue);
+      }
       blank(region, pickRegion);
-      blank(city, pickCity);
-      return fetch("/lookup/regions?country=" + encodeURIComponent(ship.value))
+      return fetch("/lookup/regions?country=" + encodeURIComponent(ship.value) + "&lang=" + encodeURIComponent(uiLang))
         .then(function (response) { return response.json(); })
         .then(function (data) {
-          (data.regions || []).forEach(function (item) {
+          var rows = data.regions || [];
+          if (!rows.length) {
+            var typed = typedInput(region, "address-level1");
+            if (regionValue) typed.value = regionValue;
+            return loadCities(cityValue || "", districtValue);
+          }
+          typedSelect(region);
+          rows.forEach(function (item) {
             var option = document.createElement("option");
             option.value = item.code;
             option.textContent = item.name;
+            if (item.en) option.setAttribute("data-en", item.en);
             region.appendChild(option);
           });
-          if (spec.order.indexOf("region") < 0 && region.options.length > 1) {
-            region.selectedIndex = 1;
-          } else {
-            choose(region, regionValue || "");
-          }
-          return loadCities(cityValue || "");
+          choose(region, regionValue || "");
+          return loadCities(cityValue || "", districtValue);
         })
         .catch(function () {});
     }
@@ -138,20 +371,27 @@
       applyFormat();
       if (data.postal && postal && !postal.value) postal.value = data.postal;
       if (data.line && line && !line.value) line.value = data.line;
+      var number = document.querySelector('[name="street_number"]');
+      var district = document.querySelector('[name="district"]');
+      if (data.number && number && !number.value) number.value = data.number;
+      if (data.district && district && !district.value) district.value = data.district;
       var spec = specFor();
       var regionValue = spec.order.indexOf("region") < 0 ? "" : (data.region || "");
-      loadRegions(regionValue, data.city || "");
+      loadRegions(regionValue, data.city || "", data.district || "");
     }
 
     ship.addEventListener("change", function () {
       region.setAttribute("data-current", "");
       city.setAttribute("data-current", "");
       applyFormat();
-      loadRegions("", "");
+      loadRegions("", "", "");
     });
     region.addEventListener("change", function () {
       applyFormat();
-      loadCities("");
+      loadCities("", "");
+    });
+    city.addEventListener("change", function () {
+      if (city.tagName === "SELECT" && !city.disabled) loadDistricts("");
     });
     if (postal) {
       postal.addEventListener("change", function () {
@@ -172,7 +412,37 @@
       });
     }
     applyFormat();
-    loadRegions(region.getAttribute("data-current"), city.getAttribute("data-current"));
+    loadRegions(region.getAttribute("data-current"), city.getAttribute("data-current"), districtText ? districtText.value : "");
+    bindPlaceInput(line, "line");
+    var paste = document.getElementById("addr-paste");
+    var read = document.getElementById("addr-read");
+    if (read && paste) {
+      read.addEventListener("click", function () {
+        var text = paste.value.trim();
+        if (!text) return;
+        fetch("/lookup/read", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({country: ship.value, text: text})
+        })
+          .then(function (response) { return response.json(); })
+          .then(function (data) {
+            var name = document.querySelector('[name="name"]');
+            var phone = document.querySelector('[name="phone"]');
+            if (data.name && name) name.value = data.name;
+            if (data.phone && phone) phone.value = data.phone;
+            if (postal && data.postal) postal.value = data.postal;
+            if (line) line.value = data.line || "";
+            var district = document.querySelector('[name="district"]');
+            if (district && data.district) district.value = data.district;
+            loadRegions(data.region || "", data.city || "", data.district || "");
+          })
+          .catch(function () {});
+      });
+    }
+    document.addEventListener("click", function (ev) {
+      if (!ev.target.closest(".addr-suggest, [data-places]")) hideSuggest();
+    });
 
     var bookNode = document.getElementById("addr-book");
     var book = [];
@@ -187,7 +457,7 @@
         if (phone) phone.value = row.phone || "";
         if (line) line.value = row.address || "";
         if (postal) postal.value = row.postal || "";
-        loadRegions(row.region || "", row.city || "");
+        loadRegions(row.region || "", row.city || "", row.district || "");
         return;
       }
       if (line) line.value = "";

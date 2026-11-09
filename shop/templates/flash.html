@@ -20,7 +20,7 @@
     <a class="chip" href="{{ href('/c/' ~ key, country) }}">{{ t.categories[key] }}</a>
     {% endfor %}
   </div>
-  {% if sale and sale.items %}
+  {% if sale and sale['items'] %}
   <div class="product-grid dense fn-deal-grid fn-flash-grid">
     {% for item in sale["items"] %}
     <a class="card fn-deal" href="{{ href('/p/' ~ item.sku, country) }}">

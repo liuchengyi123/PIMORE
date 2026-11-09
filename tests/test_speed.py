@@ -121,7 +121,7 @@ def test_fitted_image_miss_does_not_call_pil_on_the_request_thread(tmp_path, mon
     assert elapsed < 0.15
     assert drain_fits(timeout=3)
     assert seen and seen[0] != caller
-    assert card_image("/static/catalog/sku1/0.jpg", tmp_path) == "/static/catalog/sku1/card/0.jpg"
+    assert card_image("/static/catalog/sku1/0.jpg", tmp_path) == "/static/catalog/sku1/fit/0.jpg"
 
 
 def test_empty_cart_renders_at_most_12_cards():

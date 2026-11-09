@@ -1,6 +1,8 @@
+import io
 from pathlib import Path
 
 from fastapi.testclient import TestClient
+from PIL import Image
 
 from shop.app import create_app
 from shop.lp_modules import TEMPLATES, band_groups, resolve_module
@@ -46,6 +48,7 @@ def test_registry_maps_five_templates_to_partials():
         "countdown_grid",
         "price_waterfall",
         "rush_flash",
+        "scene",
     ]
     for row in TEMPLATES:
         assert (ROOT / "shop" / "templates" / row["partial"]).is_file()
@@ -114,6 +117,7 @@ def test_generate_link_and_open_saved_template():
             "utm_content": "cleaning",
             "country": "US",
             "label": "清洁头条",
+            "hero_sku": "lint-roller",
         },
     )
     assert made.status_code == 200
@@ -136,6 +140,7 @@ def test_generate_link_and_open_saved_template():
     assert 'data-lp-category="cleaning"' in saved.text
     assert 'data-lp-code="' + row["code"] + '"' in saved.text
     assert "lp-headline" in saved.text
+    assert 'data-lp-hero="lint-roller"' in saved.text
     assert "Lint roller" in saved.text
     assert "Enter the store" in saved.text
     assert "/c/cleaning?country=" in saved.text
@@ -454,3 +459,128 @@ def test_language_resolution_does_not_call_remote_geo():
         assert resolve("DE") == ("de", "EUR")
         assert resolve("US")[0] == "en"
     assert time.perf_counter() - start < 0.1
+
+
+def test_headline_pins_the_creative_product_and_requires_it():
+    client = _client()
+    _login(client)
+    page = client.get("/admin/launch")
+    assert 'id="lp-hero-field"' in page.text
+    assert "hero_headline" in page.text
+    missing = client.post(
+        "/admin/launch",
+        data={
+            "template": "hero_headline",
+            "category": "kitchen",
+            "skin": "kitchen",
+            "platform": "meta",
+            "utm_source": "meta",
+            "utm_medium": "paid",
+            "country": "US",
+            "label": "缺主商品",
+        },
+    )
+    assert missing.status_code == 200
+    assert "主商品" in missing.text
+    assert "链接已生成" not in missing.text
+    wrong = client.post(
+        "/admin/launch",
+        data={
+            "template": "hero_headline",
+            "category": "kitchen",
+            "skin": "kitchen",
+            "platform": "meta",
+            "utm_source": "meta",
+            "utm_medium": "paid",
+            "country": "US",
+            "hero_sku": "lint-roller",
+        },
+    )
+    assert "不在这个类目" in wrong.text
+    pinned = client.get(
+        "/lp/ad/preview",
+        params={
+            "template": "hero_headline",
+            "category": "kitchen",
+            "skin": "kitchen",
+            "preview": "1",
+            "hero": "drain-rack",
+        },
+    )
+    assert 'data-lp-hero="drain-rack"' in pinned.text
+    assert "Dish rack" in pinned.text
+    assert "Oil sprayer" in pinned.text
+    grid = client.get(
+        "/lp/ad/preview",
+        params={
+            "template": "dense_flash",
+            "category": "kitchen",
+            "skin": "kitchen",
+            "preview": "1",
+            "hero": "drain-rack",
+        },
+    )
+    assert 'data-lp-hero=' not in grid.text
+    found = client.get("/admin/launch/products", params={"category": "cleaning", "q": "lint"})
+    assert found.status_code == 200
+    assert found.json()[0]["sku"] == "lint-roller"
+    titled = client.get("/admin/launch/products", params={"category": "kitchen", "q": "Dish rack"})
+    assert any(item["sku"] == "drain-rack" and item["match"] for item in titled.json())
+
+
+def _jpeg(color):
+    buf = io.BytesIO()
+    Image.new("RGB", (32, 40), color).save(buf, format="JPEG")
+    return buf.getvalue()
+
+
+def test_scene_page_swaps_the_top_image_and_keeps_the_product_pick():
+    client = _client()
+    _login(client)
+    bare = client.get(
+        "/lp/ad/preview",
+        params={"template": "scene", "category": "kitchen", "skin": "kitchen", "preview": "1"},
+    )
+    assert bare.status_code == 200
+    assert 'data-lp-template="scene"' in bare.text
+    assert "/static/lp-scenes/kitchen.png" in bare.text
+    assert "/c/kitchen/cookware" in bare.text
+    assert "/c/kitchen/foodkeep" in bare.text
+    assert "facebook" not in bare.text.lower()
+    assert "Oil sprayer" in bare.text
+    assert 'data-lp-hero=' not in bare.text
+    assert "orders over" not in bare.text.lower()
+    other = client.get(
+        "/lp/ad/preview",
+        params={"template": "scene", "category": "storage", "skin": "storage", "preview": "1"},
+    )
+    assert "/static/lp-scenes/storage.png" in other.text
+    assert "/c/storage/boxes" in other.text
+    assert "/static/lp-scenes/kitchen.png" not in other.text
+    made = client.post(
+        "/admin/launch",
+        data={
+            "template": "scene",
+            "category": "kitchen",
+            "skin": "kitchen",
+            "platform": "meta",
+            "utm_source": "meta",
+            "utm_medium": "paid",
+            "country": "US",
+            "label": "厨房换图",
+            "hero_sku": "oil-sprayer",
+        },
+    )
+    assert "链接已生成" in made.text
+    assert "厨房 · Kitchen" not in made.text
+    assert 'id="lp-skin-field" hidden' in made.text
+    assert "换这个类目，右边整套版面跟着换" in made.text
+    row = client.app.state.db.execute(
+        "select code, hero_sku, template from ad_launch_links"
+    ).fetchone()
+    assert row["template"] == "scene"
+    assert row["hero_sku"] == "oil-sprayer"
+    page = client.get(f"/lp/ad/{row['code']}")
+    assert "/static/lp-scenes/kitchen.png" in page.text
+    assert 'data-lp-hero="oil-sprayer"' in page.text
+    assert "Oil sprayer" in page.text

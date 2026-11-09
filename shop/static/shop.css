@@ -1402,7 +1402,70 @@ fieldset {
   z-index: 1;
 }
 
+.lucky-applied {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #F3E6C8;
+  color: #8A5A12;
+  font-size: 12px;
+  font-weight: 700;
+}
+.addr-paste { display: grid; gap: 8px; }
+.addr-paste textarea {
+  min-height: 64px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  font: inherit;
+  resize: vertical;
+}
+.addr-paste .btn { justify-self: start; }
 .addr-fields { display: flex; flex-direction: column; gap: 12px; }
+.addr-field { position: relative; }
+.addr-suggest {
+  position: absolute;
+  z-index: 6;
+  left: 0;
+  right: 0;
+  top: calc(100% - 6px);
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: #fff;
+  border: 1px solid #E2E6EE;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(15, 39, 68, 0.12);
+  max-height: 220px;
+  overflow: auto;
+}
+.addr-suggest[hidden] { display: none !important; }
+.addr-suggest button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: #fff;
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font: inherit;
+  font-weight: 600;
+  color: #0F2744;
+  cursor: pointer;
+}
+.addr-suggest button:hover,
+.addr-suggest button:focus { background: #F7F4EF; }
+.addr-field[hidden] { display: none !important; }
+.addr-field select[hidden],
+.addr-field input[hidden] { display: none !important; }
+.addr-fields.is-postal-city {
+  display: grid;
+  grid-template-columns: minmax(7.5rem, 0.42fr) minmax(0, 1fr);
+}
+.addr-fields.is-postal-city > .addr-field { grid-column: 1 / -1; min-width: 0; }
+.addr-fields.is-postal-city > .addr-field[data-part="postal"],
+.addr-fields.is-postal-city > .addr-field[data-part="city"] { grid-column: auto; }
 .addr-book { display: grid; gap: 8px; margin: 0 0 14px; }
 .addr-pick { display: flex; gap: 10px; align-items: flex-start; border: 1px solid #E7E7E7; border-radius: 10px; padding: 10px 12px; background: #fff; cursor: pointer; }
 .addr-pick:has(input:checked) { border-color: #2F6BFF; background: #EEF3FF; }
@@ -3113,7 +3176,7 @@ a.card .was,
 .fcard .pr .was,
 .deal .was {
   font-size: 12px;
-  color: #9A9A9A;
+  color: #4B5563;
   text-decoration: line-through;
   font-weight: 500;
 }
@@ -3150,7 +3213,7 @@ a.card .pr { flex-wrap: wrap; gap: 6px 8px; align-items: center; }
 .sku-summary .was {
   margin: 0 0 6px;
   font-size: 14px;
-  color: #9A9A9A;
+  color: #4B5563;
 }
 .sku-summary .you-save {
   margin: 0 0 10px;

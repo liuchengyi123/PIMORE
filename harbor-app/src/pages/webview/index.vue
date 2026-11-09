@@ -192,6 +192,10 @@ async function bridgeThenOpen() {
     bridging.value = false
     return
   }
+  if (/harbor-api|127\.0\.0\.1|localhost/.test(src.value)) {
+    bridging.value = false
+    return
+  }
   const items = cart.handoffPayload()
   if (!items.length) {
     bridging.value = false

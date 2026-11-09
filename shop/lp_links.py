@@ -9,7 +9,8 @@ import secrets
 from datetime import datetime, timezone
 from urllib.parse import urlencode
 
-from shop.lp_modules import LpChoiceError, resolve_module
+from shop.images import safe_image_url
+from shop.lp_modules import LpChoiceError, keeps_hero, needs_hero, resolve_module, uses_scene
 from shop.seo import ORIGIN
 
 UTM_KEYS = ("utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term")
@@ -33,10 +34,35 @@ def ensure_table(conn):
             acct text not null default '',
             country text not null default 'US',
             label text not null default '',
+            hero_sku text not null default '',
+            scene_image text not null default '',
             created_at text not null default ''
         )
         """
     )
+    cols = {row[1] for row in conn.execute("pragma table_info(ad_launch_links)").fetchall()}
+    if "hero_sku" not in cols:
+        conn.execute(
+            "alter table ad_launch_links add column hero_sku text not null default ''"
+        )
+    if "scene_image" not in cols:
+        conn.execute(
+            "alter table ad_launch_links add column scene_image text not null default ''"
+        )
+
+
+def clean_scene(value):
+    """A scene image is a file we stored, or an http(s) picture. Nothing else."""
+    text = str(value or "").strip()
+    prefix = "/static/lp-scenes/"
+    if text.startswith(prefix):
+        name = text[len(prefix):]
+        if name and "/" not in name and "\\" not in name and ".." not in name:
+            return prefix + name
+        return ""
+    if safe_image_url(text):
+        return text[:500]
+    return ""
 
 
 def _clip(value, limit):
@@ -86,7 +112,7 @@ def absolute_url(path):
     return ORIGIN + text
 
 
-def preview_path(template, category, skin="", country="US"):
+def preview_path(template, category, skin="", country="US", hero="", scene=""):
     query = {
         "template": template,
         "category": category,
@@ -94,6 +120,12 @@ def preview_path(template, category, skin="", country="US"):
         "preview": "1",
         "country": (country or "US").upper()[:2],
     }
+    hero = _clip(hero, 80)
+    if hero:
+        query["hero"] = hero
+    scene = clean_scene(scene)
+    if scene:
+        query["scene"] = scene
     return "/lp/ad/preview?" + urlencode(query)
 
 
@@ -128,9 +160,18 @@ def create_link(
     acct="",
     country="US",
     label="",
+    hero_sku="",
+    scene_image="",
 ):
     ensure_table(conn)
     spec = resolve_module(template, category, skin)
+    hero_sku = _clip(hero_sku, 80)
+    if needs_hero(spec["template_id"]):
+        if not hero_sku:
+            raise LpChoiceError("hero")
+    elif not keeps_hero(spec["template_id"]):
+        hero_sku = ""
+    scene_image = clean_scene(scene_image) if uses_scene(spec["template_id"]) else ""
     country = _clip(country, 2).upper() or "US"
     if len(country) != 2 or not country.isalpha():
         country = "US"
@@ -141,8 +182,8 @@ def create_link(
         insert into ad_launch_links (
             code, template, category, skin, platform,
             utm_source, utm_medium, utm_campaign, utm_content, utm_term,
-            acct, country, label, created_at
-        ) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            acct, country, label, hero_sku, scene_image, created_at
+        ) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             code,
@@ -158,6 +199,8 @@ def create_link(
             _clip(acct, 64),
             country,
             _clip(label, 80),
+            hero_sku,
+            scene_image,
             _now(),
         ),
     )
@@ -174,6 +217,19 @@ def get_by_code(conn, code):
         (text,),
     ).fetchone()
     return _pack(row)
+
+
+def set_scene_image(conn, code, scene_image):
+    ensure_table(conn)
+    image = clean_scene(scene_image)
+    row = get_by_code(conn, code)
+    if row is None or not image or not uses_scene(row.get("template")):
+        return None
+    conn.execute(
+        "update ad_launch_links set scene_image = ? where code = ?",
+        (image, row["code"]),
+    )
+    return get_by_code(conn, row["code"])
 
 
 def list_recent(conn, limit=30):

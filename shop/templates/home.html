@@ -1,5 +1,20 @@
 {% extends "base.html" %}
 {% from "shot.html" import shot %}
+{% block head %}
+<script>
+(function () {
+  try {
+    var nav = performance.getEntriesByType("navigation")[0];
+    if (!nav || nav.type !== "reload") return;
+    var url = new URL(location.href);
+    if (url.searchParams.get("fresh") === "1") return;
+    url.searchParams.set("fresh", "1");
+    location.replace(url.pathname + url.search + url.hash);
+  } catch (e) {}
+})();
+</script>
+{% if products %}<link rel="preload" as="image" href="{{ shot(products[0].image) }}" fetchpriority="high">{% endif %}
+{% endblock %}
 {% block body_class %} fn-home-page{% endblock %}
 {% block body %}
 {% set dept_keys = ['kitchen', 'cleaning', 'storage', 'pet', 'tableware', 'textile', 'decor', 'office', 'personal', 'paper'] %}
@@ -43,7 +58,7 @@
     <div class="fn-feat">
       {% for item in pick_strip[:5] %}
       <a class="card" href="{{ href('/p/' ~ item.sku, country) }}">
-        <span class="pic"><img src="{{ shot(item.image) }}" alt="" loading="lazy" decoding="async"></span>
+        <span class="pic"><img src="{{ shot(item.image) }}" alt="" width="480" height="480" {% if loop.first %}fetchpriority="high"{% else %}loading="lazy"{% endif %} decoding="async"></span>
         <span class="body">
           <span class="name">{{ item.name }}</span>
           <span class="pr"><span class="price">{{ item.price }}</span></span>
@@ -165,7 +180,7 @@
       <small>Cross-border household</small>
     </a>
     <form method="get" action="{{ request.url.path }}">
-      <label class="m01-loc">{{ country }} · {{ currency }}
+      <label class="m01-loc">{% include "_lang_mark.html" %}
         <select name="lang" aria-label="{{ t.locale }}" onchange="harborLang(this)">
           {% for code, label in [('en', 'English'), ('zh', '简体中文'), ('zh-Hant', '繁體中文'), ('ja', '日本語'), ('de', 'Deutsch'), ('fr', 'Français'), ('es', 'Español'), ('pt', 'Português')] %}
           <option value="{{ code }}" {% if lang == code %}selected{% endif %}>{{ label }}</option>
@@ -210,7 +225,7 @@
     <h3>In the shop</h3>
   </div>
   <div class="m01-grid" data-home-grid>
-    {% for item in products[:20] %}{% include "card.html" %}{% endfor %}
+    {% for item in products[:20] %}{% set eager = loop.index <= 2 %}{% include "card.html" %}{% endfor %}
   </div>
   <div class="m01-more-wrap">
     <div class="m01-more" id="m01-more" data-home-more data-page="{{ home_page|default(1) }}" data-tab="{{ home_tab|default('recommended') }}" {% if home_has_more is defined and not home_has_more %}hidden{% endif %} aria-hidden="true">
