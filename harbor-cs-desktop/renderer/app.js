@@ -930,9 +930,30 @@ replyBody.addEventListener('keydown', (e) => {
   }
 });
 
+function askConfirm(message) {
+  var modal = document.getElementById('askModal');
+  var body = document.getElementById('askModalBody');
+  var yes = document.getElementById('askModalYes');
+  var no = document.getElementById('askModalNo');
+  body.textContent = message;
+  modal.hidden = false;
+  return new Promise(function (resolve) {
+    function done(ok) {
+      modal.hidden = true;
+      yes.removeEventListener('click', onYes);
+      no.removeEventListener('click', onNo);
+      resolve(ok);
+    }
+    function onYes() { done(true); }
+    function onNo() { done(false); }
+    yes.addEventListener('click', onYes);
+    no.addEventListener('click', onNo);
+  });
+}
+
 document.getElementById('btnCloseRoom').addEventListener('click', async () => {
   if (!state.activeId) return;
-  if (!confirm('确认结束该会话？')) return;
+  if (!(await askConfirm('确认结束该会话？'))) return;
   await window.csDesk.closeRoom(state.activeId);
   state.activeId = null;
   chatPanel.hidden = true;
@@ -1148,7 +1169,7 @@ if (btnToAi) {
       alert('桌面桥接未更新，请重启客服台');
       return;
     }
-    if (!confirm('确认把当前会话转给 AI 自动接待？\n之后用户发言将由 AI 回复；你再手动回复会接回人工。')) return;
+    if (!(await askConfirm('确认把当前会话转给 AI 自动接待？之后用户发言将由 AI 回复；你再手动回复会接回人工。'))) return;
     btnToAi.disabled = true;
     try {
       const res = await window.csDesk.toAi({ roomId: state.activeId });

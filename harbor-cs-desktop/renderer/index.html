@@ -206,6 +206,16 @@
   <audio id="pingSound" preload="auto">
     <source src="ping.wav" type="audio/wav" />
   </audio>
+  <div id="askModal" class="sku-modal" hidden>
+    <div class="sku-modal-card" role="dialog" aria-modal="true">
+      <div class="sku-modal-head"><strong>请确认</strong></div>
+      <p id="askModalBody" class="muted"></p>
+      <div class="sku-modal-head">
+        <button type="button" id="askModalNo" class="btn ghost">取消</button>
+        <button type="button" id="askModalYes" class="btn primary">确定</button>
+      </div>
+    </div>
+  </div>
   <script src="app.js"></script>
 </body>
 </html>

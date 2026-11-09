@@ -270,5 +270,45 @@
   </div>
 </div>
 {% endblock %}
+<div id="hb-confirm" class="hb-confirm" hidden>
+  <div class="hb-confirm-card" role="dialog" aria-modal="true" aria-labelledby="hb-confirm-title">
+    <h2 id="hb-confirm-title">请确认</h2>
+    <p id="hb-confirm-body"></p>
+    <div class="hb-confirm-actions">
+      <button type="button" id="hb-confirm-no" class="btn ghost">取消</button>
+      <button type="button" id="hb-confirm-yes" class="btn">确定</button>
+    </div>
+  </div>
+</div>
+<script>
+(function () {
+  var root = document.getElementById("hb-confirm");
+  var text = document.getElementById("hb-confirm-body");
+  var yesBtn = document.getElementById("hb-confirm-yes");
+  var noBtn = document.getElementById("hb-confirm-no");
+  var armed = false;
+  var replay = null;
+  function close() { root.hidden = true; replay = null; }
+  noBtn.addEventListener("click", close);
+  yesBtn.addEventListener("click", function () {
+    var run = replay;
+    close();
+    if (run) run();
+  });
+  root.addEventListener("click", function (e) { if (e.target === root) close(); });
+  window.confirm = function (message) {
+    if (armed) { armed = false; return true; }
+    var el = document.activeElement;
+    text.textContent = String(message || "请确认这个操作。");
+    replay = function () {
+      armed = true;
+      if (el && typeof el.click === "function") el.click();
+    };
+    root.hidden = false;
+    yesBtn.focus();
+    return false;
+  };
+})();
+</script>
 </body>
 </html>

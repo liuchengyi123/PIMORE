@@ -1783,6 +1783,21 @@ body { background: #F4F6FB; color: #1C2430; }
   background: #fff; border-radius: 16px; padding: 20px;
   box-shadow: 0 18px 50px rgba(28,36,48,0.16);
 }
+.hb-confirm {
+  position: fixed; inset: 0; z-index: 80;
+  background: rgba(28, 36, 48, 0.45);
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+}
+.hb-confirm[hidden] { display: none !important; }
+.hb-confirm-card {
+  width: min(420px, 100%); background: #fff; border-radius: 16px; padding: 22px 22px 18px;
+  box-shadow: 0 18px 50px rgba(28,36,48,0.18);
+}
+.hb-confirm-card h2 { margin: 0 0 8px; font-size: 18px; color: #1C2430; }
+.hb-confirm-card p { margin: 0; color: #5C6570; font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
+.hb-confirm-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+.hb-confirm-actions .btn { background: #F96141; color: #fff; border: 0; }
+.hb-confirm-actions .btn.ghost { background: #fff; color: #1C2430; border: 1px solid #E6E8EE; }
 #launch-postback .funnel-totals span { font-size: 12px; color: #5C6570; }
 
 

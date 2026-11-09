@@ -29,7 +29,7 @@
           <button type="button" @click="bump(line, -1)" aria-label="minus"><Minus :size="14" :stroke-width="2" /></button>
           <span>{{ line.qty }}</span>
           <button type="button" @click="bump(line, 1)" aria-label="plus"><Plus :size="14" :stroke-width="2" /></button>
-          <button type="button" class="trash" @click="bump(line, -line.qty)" aria-label="remove">×</button>
+          <button type="button" class="trash" @click="askRemove(line)" aria-label="remove">×</button>
         </div>
       </div>
     </div>
@@ -47,11 +47,21 @@
       <button type="button" class="checkout" @click="$router.push('/checkout')">去结算</button>
     </div>
     <AppTabBar active="cart" />
+    <div v-if="pendingRemove" class="confirm-mask" @click.self="pendingRemove = null">
+      <div class="confirm-card" role="dialog">
+        <h2>{{ zhCart ? '移除商品' : 'Remove item' }}</h2>
+        <p>{{ zhCart ? '确定从购物车移除这件商品？' : 'Remove this item from the cart?' }}</p>
+        <div class="confirm-actions">
+          <button type="button" class="ghost" @click="pendingRemove = null">{{ zhCart ? '取消' : 'Cancel' }}</button>
+          <button type="button" class="ok" @click="confirmRemove">{{ zhCart ? '移除' : 'Remove' }}</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { Minus, Plus, ShoppingBag } from 'lucide-vue-next'
 import { money } from '@/api/products'
@@ -60,7 +70,9 @@ import { useI18n } from '@/composables/i18n'
 import AppTabBar from '@/components/AppTabBar.vue'
 import AppSearchBar from '@/components/AppSearchBar.vue'
 
-const { t } = useI18n()
+const { t, lang } = useI18n()
+const zhCart = computed(() => String(lang.value).startsWith('zh'))
+const pendingRemove = ref<LocalCartLine | null>(null)
 const cart = useCart()
 const router = useRouter()
 const lines = computed(() => cart.lines.value)
@@ -68,6 +80,12 @@ const subtotal = computed(() => cart.subtotal.value)
 /** Minimum checkout amount from live cart snapshot; 0 = no minimum. */
 const minOrder = computed(() => Number(cart.minOrderAmount?.value ?? cart.freeShipThreshold?.value ?? 0) || 0)
 
+function askRemove(line: LocalCartLine) { pendingRemove.value = line }
+function confirmRemove() {
+  const line = pendingRemove.value
+  pendingRemove.value = null
+  if (line) bump(line, -line.qty)
+}
 function bump(line: LocalCartLine, delta: number) {
   cart.setQty(line.sku, line.offer || '', line.qty + delta)
 }
@@ -95,6 +113,19 @@ h1 { margin: 0; font-size: 24px; color: $hb-ink; font-weight: 780; }
 h1 small { font-size: 12px; color: $hb-muted; font-weight: 600; }
 .count { margin: 2px 0 0; font-size: 13px; color: $hb-muted; }
 .trash { border: 0; background: transparent; color: #9AA0A8; font-size: 18px; cursor: pointer; }
+.confirm-mask {
+  position: fixed; inset: 0; z-index: 80; background: rgba(28,36,48,0.45);
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.confirm-card {
+  width: min(100%, 768px); background: #fff; border-radius: 18px 18px 0 0; padding: 20px 16px 24px;
+}
+.confirm-card h2 { margin: 0 0 8px; font-size: 18px; }
+.confirm-card p { margin: 0; color: #5C6570; }
+.confirm-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.confirm-actions button { height: 40px; padding: 0 16px; border-radius: 999px; font-weight: 700; cursor: pointer; }
+.confirm-actions .ghost { background: #fff; border: 1px solid #E6E8EE; color: #1C2430; }
+.confirm-actions .ok { background: #F96141; border: 0; color: #fff; }
 .clear { border: 0; background: transparent; color: $hb-muted; cursor: pointer; font-weight: 650; }
 .empty { text-align: center; padding: 64px 12px; color: $hb-muted; }
 .empty-ico { color: $hb-muted; opacity: 0.55; margin-bottom: 10px; }
