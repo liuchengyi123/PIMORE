@@ -45,7 +45,7 @@
           <div class="oid">{{ displayId(o.id) }}</div>
           <div class="status-wrap">
             <div class="status" :class="tone(o)">
-              <component :is="toneIcon(o)" :size="12" :stroke-width="2.2" />
+              <component :is="toneIcon(o)" :size="11" :stroke-width="2.4" />
               <span>{{ statusText(o) }}</span>
             </div>
             <ChevronRight :size="16" :stroke-width="2" class="chev" />
@@ -230,15 +230,15 @@ async function act(o: OrderRow) {
   font-style: normal; display: inline-flex; align-items: center; justify-content: center;
 }
 h1 { margin: 18px 0 0; font-size: 28px; font-weight: 800; letter-spacing: -0.03em; }
-.tabs-wrap { margin: -16px 16px 14px; }
+.tabs-wrap { margin: -14px 16px 8px; }
 .tabs {
-  display: flex; gap: 2px; background: #fff; border-radius: 999px;
-  padding: 5px; box-shadow: 0 8px 24px rgba(28, 36, 48, 0.06);
+  display: flex; gap: 1px; background: #fff; border-radius: 999px;
+  padding: 3px; box-shadow: 0 6px 16px rgba(28, 36, 48, 0.05);
 }
 .tab {
-  flex: 1 1 0; height: 34px; padding: 0 4px; border: 0; border-radius: 999px;
-  background: transparent; color: #6B7280; font-size: 12px; font-weight: 700; cursor: pointer;
-  white-space: nowrap;
+  flex: 1 1 0; height: 28px; padding: 0 2px; border: 0; border-radius: 999px;
+  background: transparent; color: #6B7280; font-size: 11px; font-weight: 700; cursor: pointer;
+  white-space: nowrap; letter-spacing: -0.02em;
   &.on { background: #F96141; color: #fff; }
 }
 .list { display: flex; flex-direction: column; gap: 10px; padding: 0 16px; }
@@ -250,8 +250,8 @@ h1 { margin: 18px 0 0; font-size: 28px; font-weight: 800; letter-spacing: -0.03e
 .oid { font-size: 15px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; }
 .status-wrap { display: inline-flex; align-items: center; gap: 1px; flex: 0 0 auto; }
 .status {
-  display: inline-flex; align-items: center; gap: 3px; height: 24px; padding: 0 8px;
-  border-radius: 999px; font-size: 12px; font-weight: 700; letter-spacing: -0.01em;
+  display: inline-flex; align-items: center; gap: 2px; height: 20px; padding: 0 6px;
+  border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: -0.02em; line-height: 1;
   background: #FFF1EC; color: #F96141;
 }
 .status.paid { background: #E7F8EE; color: #1B9A52; }
