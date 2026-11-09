@@ -53,7 +53,7 @@
             class="bubble-row"
             :class="m.role"
           >
-            <div v-if="m.role === 'staff'" class="avatar"><Headset :size="16" :stroke-width="2" /></div>
+            <div v-if="m.role === 'staff'" class="avatar"><Headset :size="14" :stroke-width="2.2" /></div>
             <div class="bubble-col">
               <div v-if="m.role === 'user'" class="when">{{ timeLabel(m) }}</div>
               <div v-else-if="m.role === 'staff'" class="who-line"><b>{{ whoLabel(m) }}</b><span>{{ timeLabel(m) }}</span></div>
@@ -92,7 +92,7 @@
               <div v-else class="body">{{ m.body }}</div>
             </div>
             </div>
-            <div v-if="m.role === 'user'" class="avatar me"><UserRound :size="16" :stroke-width="2" /></div>
+            <div v-if="m.role === 'user'" class="avatar me"><UserRound :size="14" :stroke-width="2.2" /></div>
           </div>
           <div v-if="typingHint" class="typing-row">
             <span class="typing">{{ typingHint }}</span>
@@ -135,7 +135,7 @@
           </div>
 
           <div class="composer-row">
-            <button type="button" class="plus" :class="{ on: plusOpen }" @click.stop="plusOpen = !plusOpen" aria-label="more"><Plus :size="20" :stroke-width="2.2" /></button>
+            <button type="button" class="plus" :class="{ on: plusOpen }" @click.stop="plusOpen = !plusOpen" aria-label="more"><Plus :size="16" :stroke-width="2.2" /></button>
             <input
               class="inp"
               v-model="draft"
@@ -885,37 +885,37 @@ onUnmounted(() => {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 8px 16px 12px;
+  padding: 6px 12px 8px;
   -webkit-overflow-scrolling: touch;
 }
 .empty { text-align: center; color: $hb-muted; padding: 40px 8px; font-size: 13px; }
 .greet { text-align: center; color: #9AA1A9; font-size: 13px; line-height: 1.55; padding: 28px 36px 8px; }
 .greet p { margin: 0; }
-.bubble-row { display: flex; align-items: flex-end; gap: 8px; margin-bottom: 14px; }
+.bubble-row { display: flex; align-items: flex-end; gap: 6px; margin-bottom: 8px; }
 .bubble-row.user { justify-content: flex-end; }
 .bubble-row.staff, .bubble-row.system { justify-content: flex-start; }
 .bubble-col { max-width: 78%; display: flex; flex-direction: column; }
 .bubble-row.user .bubble-col { align-items: flex-end; }
-.when, .who-line { font-size: 11px; color: #9AA1A9; margin-bottom: 4px; }
-.who-line { display: flex; gap: 6px; align-items: baseline; }
-.who-line b { color: #1C2430; font-size: 12px; }
+.when, .who-line { font-size: 10px; color: #9AA1A9; margin-bottom: 2px; line-height: 1.2; }
+.who-line { display: flex; gap: 4px; align-items: baseline; }
+.who-line b { color: #1C2430; font-size: 11px; }
 .avatar {
-  width: 36px; height: 36px; border-radius: 50%; background: #F96141; color: #fff; flex: 0 0 auto;
+  width: 28px; height: 28px; border-radius: 50%; background: #F96141; color: #fff; flex: 0 0 auto;
   display: inline-flex; align-items: center; justify-content: center;
 }
 .bubble {
-  border-radius: 16px 16px 16px 4px;
-  padding: 10px 12px;
+  border-radius: 14px 14px 14px 4px;
+  padding: 6px 10px;
   background: #F3F4F6;
   box-shadow: none;
 }
-.bubble-row.user .bubble { background: #F96141; border-radius: 16px 16px 4px 16px; }
+.bubble-row.user .bubble { background: #F96141; border-radius: 14px 14px 4px 14px; }
 .bubble-row.user .body { color: #fff; }
 .bubble-row.staff .bubble { background: #F3F4F6; color: #1C2430; }
 .bubble-row.system { justify-content: center; }
-.bubble-row.system .bubble { background: transparent; box-shadow: none; padding: 4px 0; max-width: 100%; }
-.bubble-row.system .body { color: #9AA1A9; text-align: center; font-size: 13px; }
-.body { font-size: 14px; line-height: 1.5; color: #1C2430; white-space: pre-wrap; word-break: break-word; }
+.bubble-row.system .bubble { background: transparent; box-shadow: none; padding: 2px 0; max-width: 100%; }
+.bubble-row.system .body { color: #9AA1A9; text-align: center; font-size: 12px; }
+.body { font-size: 13px; line-height: 1.35; color: #1C2430; white-space: pre-wrap; word-break: break-word; }
 .bubble-img { display: block; max-width: 220px; width: 220px; border-radius: 10px; margin-top: 4px; cursor: zoom-in; }
 .tail { height: 8px; }
 .typing-row { padding: 0 4px 8px; }
@@ -975,7 +975,7 @@ onUnmounted(() => {
 }
 .emoji-btn.on { outline: 2px solid rgba(15, 90, 60, 0.25); }
 .emoji { border: 0; background: transparent; display: inline-block; font-size: 22px; padding: 4px 8px; cursor: pointer; }
-.composer-row { display: flex; gap: 10px; align-items: center; width: 100%; }
+.composer-row { display: flex; gap: 8px; align-items: center; width: 100%; }
 .quick { display: flex; gap: 8px; padding: 0 0 8px; overflow: auto; }
 .quick button {
   display: inline-flex; align-items: center; gap: 4px; height: 32px; padding: 0 10px;
@@ -991,23 +991,23 @@ onUnmounted(() => {
   font-size: 12px; font-weight: 700; cursor: pointer;
 }
 .plus {
-  width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid #E7DFD8; background: #fff; color: #1C2430;
+  width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid #E7DFD8; background: #fff; color: #1C2430;
   display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex: 0 0 auto;
 }
 .plus.on { border-color: #F96141; color: #F96141; }
 .composer {
   display: flex; flex-direction: column; gap: 0; align-items: stretch;
-  padding: 8px 12px calc(10px + env(safe-area-inset-bottom));
+  padding: 6px 10px calc(6px + env(safe-area-inset-bottom));
   background: #fff;
   border-top: 1px solid #F1EEEA;
   flex: 0 0 auto;
 }
 .inp {
-  flex: 1; border: 0; outline: none; background: #F6F4F2; border-radius: 999px; padding: 12px 14px; font-size: 14px;
+  flex: 1; border: 0; outline: none; background: #F6F4F2; border-radius: 999px; padding: 7px 12px; font-size: 13px;
 }
 .send {
-  border: 0; min-width: 64px; height: 40px; padding: 0 14px; border-radius: 999px; background: #F7C7BB; color: #fff;
-  display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; cursor: pointer;
+  border: 0; min-width: 52px; height: 32px; padding: 0 12px; border-radius: 999px; background: #F7C7BB; color: #fff;
+  display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; cursor: pointer;
   &.on { background: #F96141; color: #fff; }
   &:disabled { cursor: default; }
 }
