@@ -18,7 +18,6 @@
 {% block body_class %} fn-home-page{% endblock %}
 {% block body %}
 {% set dept_keys = ['kitchen', 'cleaning', 'storage', 'pet', 'tableware', 'textile', 'decor', 'office', 'personal', 'paper'] %}
-{% set icon_bg = { 'kitchen':'#EFEAE2','cleaning':'#EFEAE2','storage':'#EFEAE2','pet':'#EFEAE2','tableware':'#EFEAE2','textile':'#EFEAE2','decor':'#EFEAE2','office':'#EFEAE2','personal':'#EFEAE2','paper':'#EFEAE2' } %}
 
 {# Mobile / narrow still uses compact trust; desktop trust lives in header announce #}
 <section class="trust-strip fn-mobile-trust" aria-label="{{ t.trust_strip_label }}">
@@ -28,14 +27,31 @@
 </section>
 
 <div class="fn-home fn-home-desk">
-  <aside class="fn-left" aria-label="{{ t.departments }}">
-    <h5>{{ t.departments }}</h5>
-    {% for key in dept_keys %}
-    <a href="{{ href('/c/' ~ key, country) }}">{{ t.categories[key] }}</a>
-    {% endfor %}
+  <aside class="fn-left">
+    <nav class="fn-depts" aria-label="{{ t.departments }}">
+      <h5>{{ t.departments }}</h5>
+      {% for key in dept_keys %}
+      <a href="{{ href('/c/' ~ key, country) }}">{{ t.categories[key] }}</a>
+      {% endfor %}
+    </nav>
+    {% set side_ad = ads.get('hero') if ads is defined and ads else none %}
+    <div class="fn-ad-slot">
+      {% if side_ad %}
+      {% set creative = side_ad %}{% set slot = 'hero' %}{% set width = 480 %}{% set height = 640 %}
+      {% include "ad.html" %}
+      {% endif %}
+    </div>
   </aside>
 
-  <div class="fn-center">
+  <div class="fn-maincol">
+    <nav class="fn-icons" hidden aria-hidden="true">
+      {% for key in dept_keys[:8] %}
+      <a class="fn-icon" href="{{ href('/c/' ~ key, country) }}">
+        <img src="/static/dept/{{ key }}.svg" width="28" height="28" alt="">
+        {{ t.categories[key] }}
+      </a>
+      {% endfor %}
+    </nav>
     <div class="fn-hero-row">
       <a class="fn-hero fn-hero1" href="{{ href('/sale', country) }}">
         <div class="kicker">{{ t.sale_kicker }}</div>
@@ -48,15 +64,17 @@
         <span class="cta">{{ t.new_open }}</span>
       </a>
     </div>
+  </div>
 
-    {% set pick_strip = shop_picks if shop_picks is defined and shop_picks else products %}
-    {% if pick_strip %}
+  {% set pick_strip = shop_picks if shop_picks is defined and shop_picks else products %}
+  {% if pick_strip %}
+  <div class="fn-shop">
     <div class="fn-sec">
       <h3>{{ t.shop_picks }}</h3>
       <div class="tiny">{{ t.recommended if t.recommended is defined else t.featured }}</div>
     </div>
     <div class="fn-feat">
-      {% for item in pick_strip[:5] %}
+        {% for item in pick_strip[:6] %}
       <a class="card" href="{{ href('/p/' ~ item.sku, country) }}">
         <span class="pic"><img src="{{ shot(item.image) }}" alt="" width="480" height="480" {% if loop.first %}fetchpriority="high"{% else %}loading="lazy"{% endif %} decoding="async"></span>
         <span class="body">
@@ -67,32 +85,23 @@
       </a>
       {% endfor %}
     </div>
-    {% endif %}
+  </div>
+  {% endif %}
 
-    <nav class="fn-icons" aria-label="{{ t.departments }}">
-      {% for key in dept_keys[:8] %}
-      <a class="fn-icon" href="{{ href('/c/' ~ key, country) }}">
-        <div class="b" style="background:{{ icon_bg.get(key, '#E0F2FE') }}">
-          <img src="/static/dept/{{ key }}.svg" width="28" height="28" alt="">
-        </div>
-        {{ t.categories[key] }}
-      </a>
-      {% endfor %}
-    </nav>
-
+  <div class="fn-feed">
     {% if products or home_tabs is defined %}
-    <div class="fn-sec">
-      <div class="fn-tabs home-tabs" id="home-tabs" data-home-tabs>
-        <h3 style="margin-right:4px">{{ t.home_feed if t.home_feed is defined else t.for_you }}</h3>
-        {% set tabs = home_tabs if home_tabs is defined else ['recommended'] %}
-        {% set cur = home_tab if home_tab is defined else 'recommended' %}
-        {% for key in tabs %}
-        <button type="button" class="home-tab chip{% if key == cur %} on{% endif %}" data-home-tab="{{ key }}" {% if key == cur %}aria-current="true"{% endif %}>
-          {% if key == 'recommended' %}{{ t.recommended if t.recommended is defined else t.featured }}{% else %}{{ t.categories[key] }}{% endif %}
-        </button>
-        {% endfor %}
-      </div>
-      <div class="tiny">{{ t.for_you }}</div>
+    <div class="fn-feed-head">
+      <h3>{{ t.home_feed if t.home_feed is defined else t.for_you }}</h3>
+      <span class="tiny">{{ t.for_you }}</span>
+    </div>
+    <div class="fn-tabs home-tabs" id="home-tabs" data-home-tabs>
+      {% set tabs = home_tabs if home_tabs is defined else ['recommended'] %}
+      {% set cur = home_tab if home_tab is defined else 'recommended' %}
+      {% for key in tabs %}
+      <button type="button" class="home-tab chip{% if key == cur %} on{% endif %}" data-home-tab="{{ key }}" {% if key == cur %}aria-current="true"{% endif %}>
+        {% if key == 'recommended' %}{{ t.recommended if t.recommended is defined else t.featured }}{% else %}{{ t.categories[key] }}{% endif %}
+      </button>
+      {% endfor %}
     </div>
     <div class="product-grid feed dense fn-grid" id="home-feed-grid" data-home-grid>
       {% for item in products %}{% set eager = loop.first %}{% include "card.html" %}{% endfor %}
@@ -105,7 +114,7 @@
     {% endif %}
 
     {% if recent %}
-    <div class="fn-sec">
+    <div class="fn-sec fn-recent-sec">
       <h3>{{ t.recent }}</h3>
       <div class="tiny">{{ t.recent_views if t.recent_views is defined else t.recent }}</div>
     </div>
@@ -159,12 +168,16 @@
     </div>
     {% endif %}
     {% if recent %}
-    <div class="fn-widget">
+    <div class="fn-widget fn-continue">
       <h4>{{ t.recent }}</h4>
-      <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
-        {% for item in recent[:4] %}
-        <a href="{{ href('/p/' ~ item.sku, country) }}" title="{{ item.name }}">
-          <img src="{{ shot(item.image) }}" alt="" width="48" height="48" style="border-radius:8px;object-fit:cover;display:block;background:#E2E6EE" loading="lazy">
+      <div class="fn-continue-list">
+        {% for item in recent[:5] %}
+        <a class="fn-continue-row" href="{{ href('/p/' ~ item.sku, country) }}">
+          <img src="{{ shot(item.image) }}" alt="" width="56" height="56" loading="lazy">
+          <span>
+            <span class="nm">{{ item.name }}</span>
+            <span class="price">{{ item.price }}</span>
+          </span>
         </a>
         {% endfor %}
       </div>

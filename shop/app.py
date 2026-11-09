@@ -2971,6 +2971,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 ctx["flash"] = str(extra.get("flash") or "")
         ctx.setdefault("ad_slots", [
             ("announcement", "顶部公告条"),
+            ("hero", "首页左侧广告"),
             ("sponsored", "首页赞助商品"),
             ("pdp-sponsored", "商品页推荐"),
             ("cart-recommend", "购物车推荐"),
@@ -9918,7 +9919,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
     async def admin_ad_save(request: Request):
         require_staff(request)
         form = await request.form()
-        allowed = {"announcement", "sponsored", "pdp-sponsored", "cart-recommend"}
+        allowed = {"announcement", "hero", "sponsored", "pdp-sponsored", "cart-recommend"}
         slot = str(form.get("slot") or "").strip()
         if slot not in allowed:
             return flash_redirect("/admin/ads", "ads_bad_slot")
