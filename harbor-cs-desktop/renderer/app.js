@@ -146,6 +146,12 @@ function syncWorkspace(open) {
   if (ws) ws.classList.toggle('room-open', !!open);
 }
 
+function syncRail(key) {
+  document.querySelectorAll('.rail-item').forEach((btn) => {
+    btn.classList.toggle('on', btn.getAttribute('data-rail') === key);
+  });
+}
+
 function showCtx(name) {
   const key = name || 'visitor';
   document.querySelectorAll('[data-ctx]').forEach((btn) => {
@@ -156,6 +162,7 @@ function showCtx(name) {
     if (el) el.hidden = k !== key;
   });
   syncWorkspace(true);
+  syncRail(key);
 }
 
 function renderCannedBar() {
@@ -1520,8 +1527,13 @@ if (skuSearch && skuSearchResults) {
       if (admin) admin.href = (typeof deskBase === 'function' ? deskBase() : '') + '/admin/cs';
     } catch (_) {}
   }
-  function closeSettings() { if (settingsPanel) settingsPanel.hidden = true; }
-  settingsBtn?.addEventListener('click', openSettings);
+  function closeSettings() {
+    if (settingsPanel) settingsPanel.hidden = true;
+    const ctx = document.querySelector('.context');
+    const on = document.querySelector('.ctx-tabs button.on');
+    syncRail(ctx && !ctx.hidden && on ? on.getAttribute('data-ctx') : 'inbox');
+  }
+  settingsBtn?.addEventListener('click', () => { openSettings(); syncRail('settings'); });
   settingsClose?.addEventListener('click', closeSettings);
   $('settingsCancel')?.addEventListener('click', closeSettings);
   settingsPanel?.addEventListener('click', (e) => { if (e.target === settingsPanel) closeSettings(); });
@@ -1573,7 +1585,26 @@ if (skuSearch && skuSearchResults) {
   document.querySelectorAll('[data-ctx]').forEach((btn) => {
     btn.addEventListener('click', () => showCtx(btn.getAttribute('data-ctx')));
   });
-  $('ctxClose')?.addEventListener('click', () => syncWorkspace(false));
+  $('ctxClose')?.addEventListener('click', () => { syncWorkspace(false); syncRail('inbox'); });
+  document.querySelectorAll('.rail-item').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const key = btn.getAttribute('data-rail') || 'inbox';
+      if (key === 'settings') {
+        openSettings();
+        syncRail('settings');
+        return;
+      }
+      if (key === 'inbox') {
+        syncRail('inbox');
+        return;
+      }
+      if (!state.activeId) {
+        syncRail('inbox');
+        return;
+      }
+      showCtx(key);
+    });
+  });
   $('btnVisitor')?.addEventListener('click', () => showCtx('visitor'));
   $('btnSku')?.addEventListener('click', () => showCtx('sku'));
   $('btnOrders')?.addEventListener('click', () => showCtx('orders'));
