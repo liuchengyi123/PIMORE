@@ -49,6 +49,7 @@
     <AppTabBar active="cart" />
     <div v-if="showGap" class="confirm-mask" @click.self="gapOff = true">
       <div class="confirm-card" role="dialog">
+        <div class="mark" aria-hidden="true">🎁</div>
         <h2>{{ zhCart ? '再买一点就包邮' : 'A bit more for free shipping' }}</h2>
         <p>{{ zhCart ? '还差 ' + money(Math.max(0, minOrder - subtotal)) + '。加一件凑单商品即可。' : 'Add ' + money(Math.max(0, minOrder - subtotal)) + ' more.' }}</p>
         <div class="confirm-actions">
@@ -59,6 +60,7 @@
     </div>
     <div v-if="pendingRemove" class="confirm-mask" @click.self="pendingRemove = null">
       <div class="confirm-card" role="dialog">
+        <div class="mark" aria-hidden="true">×</div>
         <h2>{{ zhCart ? '移除商品' : 'Remove item' }}</h2>
         <p>{{ zhCart ? '确定从购物车移除这件商品？' : 'Remove this item from the cart?' }}</p>
         <div class="confirm-actions">
@@ -132,6 +134,10 @@ h1 small { font-size: 12px; color: $hb-muted; font-weight: 600; }
 .confirm-card {
   width: min(100%, 768px); background: #fff; border-radius: 18px 18px 0 0; padding: 20px 16px 24px;
 }
+.confirm-card .mark {
+  width: 48px; height: 48px; border-radius: 16px; background: #FFF1EC; color: #F96141;
+  display: grid; place-items: center; font-size: 22px; font-weight: 800; margin-bottom: 10px;
+}
 .confirm-card h2 { margin: 0 0 8px; font-size: 18px; }
 .confirm-card p { margin: 0; color: #5C6570; }
 .confirm-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
@@ -141,8 +147,10 @@ h1 small { font-size: 12px; color: $hb-muted; font-weight: 600; }
 @media (min-width: 960px) {
   .page {
     position: fixed; top: 0; right: 0; width: min(420px, 100vw); height: 100vh;
-    overflow: auto; z-index: 40; box-shadow: -12px 0 40px rgba(28,36,48,0.12);
+    overflow: auto; z-index: 40; background: #fff;
+    border-left: 1px solid #EFEAE4; box-shadow: -12px 0 40px rgba(28,36,48,0.12);
   }
+  .sticky { background: #fff; }
 }
 .clear { border: 0; background: transparent; color: $hb-muted; cursor: pointer; font-weight: 650; }
 .empty { text-align: center; padding: 72px 16px; color: $hb-muted; }

@@ -1,8 +1,9 @@
 <template>
   <div v-if="kind" class="mask" @click.self="close">
     <div class="card" role="dialog" aria-modal="true">
+      <div class="grab" aria-hidden="true"></div>
       <button type="button" class="x" @click="close">×</button>
-      <div v-if="kind !== 'locale'" class="mark" aria-hidden="true">{{ mark }}</div>
+      <div v-if="kind !== 'locale'" class="mark" aria-hidden="true">{{ glyph }}</div>
 
       <template v-if="kind === 'gift'">
         <h2>{{ zh ? '满额包邮' : 'Free shipping gift' }}</h2>
@@ -50,7 +51,7 @@ const { lang, setCountry } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const zh = computed(() => String(lang.value).startsWith('zh'))
-const mark = computed(() => ({ gift: '🎁', pwa: '＋', checkin: '✓', invite: '↗' }[kind.value] || '•'))
+const glyph = computed(() => ({ gift: '🎁', pwa: '＋', checkin: '✓', invite: '↗' }[kind.value] || '•'))
 const kind = ref('')
 const busy = ref(false)
 const ios = /iphone|ipad|ipod/i.test(navigator.userAgent || '')
@@ -67,7 +68,7 @@ const queue = ['gift', 'pwa', 'checkin', 'invite']
 function seen(id: string) {
   try { return sessionStorage.getItem('hb-nudge-' + id) === '1' } catch { return false }
 }
-function mark(id: string) {
+function remember(id: string) {
   try { sessionStorage.setItem('hb-nudge-' + id, '1') } catch { /* */ }
 }
 
@@ -86,7 +87,7 @@ function openNext() {
 }
 
 function close() {
-  if (kind.value && kind.value !== 'locale') mark(kind.value)
+  if (kind.value && kind.value !== 'locale') remember(kind.value)
   kind.value = ''
   if (route.query.locale) {
     const q = { ...route.query }
@@ -140,6 +141,7 @@ watch(() => [route.name, route.query.locale], openNext)
   padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); position: relative;
   box-shadow: 0 -12px 32px rgba(28,36,48,0.08);
 }
+.grab { width: 36px; height: 4px; border-radius: 99px; background: #E6E2DC; margin: 0 auto 8px; }
 .x { position: absolute; right: 12px; top: 8px; border: 0; background: transparent; font-size: 22px; cursor: pointer; color: #8B919A; }
 .mark {
   width: 56px; height: 56px; border-radius: 18px; background: #FFF1EC; color: #F96141;
