@@ -1,15 +1,19 @@
 <template>
   <div class="fn-page page" data-figma="M17">
     <button type="button" class="back" @click="$router.back()" aria-label="back"><ChevronLeft :size="22" :stroke-width="1.75" /></button>
-    <h1>{{ t('me_sign_in') }}</h1>
-    <p class="sub">应用内登录 · Cookie 同步到店铺</p>
+    <div class="brand">Harbor</div>
+    <h1>Welcome back!</h1>
+    <p class="sub">{{ t('me_sign_in') }} · Harbor</p>
     <form class="form" @submit.prevent="submit">
       <label>Email<input v-model="email" type="email" required autocomplete="email" /></label>
       <label>Password<input v-model="password" type="password" required autocomplete="current-password" /></label>
       <p v-if="error" class="err">{{ error }}</p>
       <button type="submit" class="btn" :disabled="busy">{{ busy ? '…' : t('me_sign_in') }}</button>
     </form>
-    <router-link class="link" :to="{ path: '/register', query: $route.query }">注册账号</router-link>
+    <div class="auth-links">
+      <router-link to="/reset">Forgot password?</router-link>
+      <router-link :to="{ path: '/register', query: $route.query }">Register</router-link>
+    </div>
   </div>
 </template>
 <script setup lang="ts">
@@ -47,16 +51,17 @@ async function submit() {
 </script>
 <style lang="scss" scoped>
 @import '@/styles/theme.scss';
-.page { min-height: 100vh; background: $hb-paper; padding: 16px; padding-top: calc(16px + env(safe-area-inset-top)); max-width: 480px; margin: 0 auto; }
-.back { width: 40px; height: 40px; border: 0; border-radius: 14px; background: #fff; color: #121816; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(18,24,22,0.06); cursor: pointer; }
-h1 { margin: 18px 0 6px; font-size: 26px; }
-.sub { color: $hb-muted; font-size: 13px; margin-bottom: 18px; }
-.form { display: flex; flex-direction: column; gap: 12px; background: $hb-white; padding: 16px; border-radius: 18px; box-shadow: $hb-shadow-soft; }
+.page { min-height: 100vh; background: #FDF9F6; padding: 16px 20px 32px; padding-top: calc(16px + env(safe-area-inset-top)); }
+.back { width: 40px; height: 40px; border: 0; border-radius: 14px; background: transparent; color: #1C2430; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.brand { margin-top: 28px; text-align: center; font-size: 32px; font-weight: 800; color: #F96141; letter-spacing: -0.03em; }
+h1 { margin: 28px 0 6px; font-size: 28px; text-align: center; letter-spacing: -0.03em; }
+.sub { color: $hb-muted; font-size: 14px; margin: 0 0 22px; text-align: center; line-height: 1.45; }
+.form { display: flex; flex-direction: column; gap: 12px; background: transparent; padding: 0; }
 label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700; color: $hb-muted; }
-input { border: 1px solid $hb-line; border-radius: 12px; padding: 12px; font-size: 15px; color: $hb-ink; }
-.btn { border: 0; height: 48px; border-radius: 14px; background: $hb-forest; color: #fff; font-weight: 740; cursor: pointer; }
-.err { color: $hb-coral; font-size: 13px; margin: 0; }
-.link { display: inline-block; margin-top: 16px; color: $hb-forest; font-weight: 680; }
+input { border: 1.5px solid #E7DFD8; border-radius: 16px; padding: 14px 16px; font-size: 15px; color: $hb-ink; background: #fff; }
+.btn { border: 0; height: 52px; border-radius: 999px; background: #F96141; color: #fff; font-weight: 740; cursor: pointer; margin-top: 4px; }
+.err { color: #E11D2E; font-size: 13px; margin: 0; }
+.auth-links { display: flex; justify-content: space-between; margin-top: 16px; color: #F96141; font-weight: 700; font-size: 14px; }
 
 .fn-page { --ink:#0F2744; --teal:#0E7490; --amber:#B45309; --sand:#F7F4EF; }
 </style>

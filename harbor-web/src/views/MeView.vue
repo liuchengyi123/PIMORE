@@ -107,35 +107,34 @@ onMounted(async () => {
 })
 </script>
 <style scoped>
-.page { min-height: 100vh; background: #F7F4EF; color: #0F2744; padding-bottom: 90px; }
+.page { min-height: 100vh; background: #FCFAF8; color: #1C2430; padding-bottom: 90px; }
 .hero {
-  padding: 16px 16px 18px; padding-top: calc(16px + env(safe-area-inset-top));
-  background-image: linear-gradient(172deg, #0F2744 8%, #1A3A5C 92%); color: #fff;
-  border-bottom-left-radius: 24px; border-bottom-right-radius: 24px;
+  padding: 16px 16px 8px; padding-top: calc(16px + env(safe-area-inset-top));
+  background: #FCFAF8; color: #1C2430;
 }
 .top { display: flex; align-items: center; gap: 12px; }
 .avatar {
-  width: 52px; height: 52px; border-radius: 26px; background: #0E7490;
+  width: 64px; height: 64px; border-radius: 32px; background: #F96141; color: #fff;
   display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; flex-shrink: 0;
 }
 .who { flex: 1; min-width: 0; }
 .name { font-size: 18px; font-weight: 700; }
 .email { margin-top: 2px; font-size: 12px; opacity: 0.75; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .locale-pill {
-  border: 0; background: rgba(255,255,255,0.15); color: #fff; font-size: 11px; font-weight: 600;
-  padding: 4px 10px; border-radius: 999px; cursor: pointer; white-space: nowrap;
+  border: 0; background: #FFF1EC; color: #F96141; font-size: 11px; font-weight: 700;
+  padding: 6px 10px; border-radius: 999px; cursor: pointer; white-space: nowrap;
 }
-.stats { display: flex; gap: 8px; margin-top: 18px; }
+.stats { display: none; }
 .stat {
-  flex: 1; border: 0; background: rgba(255,255,255,0.1); color: #fff; border-radius: 12px; padding: 10px; cursor: pointer;
+  flex: 1; border: 0; background: #fff; color: #1C2430; border-radius: 12px; padding: 10px; cursor: pointer;
   display: flex; flex-direction: column; align-items: center; gap: 2px;
 }
 .stat b { font-size: 16px; }
 .stat span { font-size: 10px; opacity: 0.75; }
 .login-row { margin-top: 12px; }
 .login {
-  border: 0; background: #fff; color: #0F2744; font-weight: 700; font-size: 13px;
-  height: 36px; padding: 0 16px; border-radius: 12px; cursor: pointer;
+  border: 0; background: #F96141; color: #fff; font-weight: 700; font-size: 14px;
+  height: 40px; padding: 0 18px; border-radius: 999px; cursor: pointer;
 }
 .card { margin: 14px 16px 0; background: #fff; border: 1px solid #E8E4DC; border-radius: 16px; overflow: hidden; }
 .ord-head { display: flex; justify-content: space-between; align-items: center; padding: 14px 14px 0; }
@@ -156,9 +155,5 @@ onMounted(async () => {
 }
 .menu .row:last-child { border-bottom: 0; }
 .chev { color: #6B7280; }
-.cs-fab {
-  position: fixed; right: 16px; bottom: 86px; z-index: 40;
-  width: 48px; height: 48px; border-radius: 24px; border: 0; background: #0F2744; color: #fff;
-  font-size: 10px; font-weight: 700; box-shadow: 0 8px 10px rgba(15,39,68,0.25); cursor: pointer;
-}
+.cs-fab { display: none; }
 </style>

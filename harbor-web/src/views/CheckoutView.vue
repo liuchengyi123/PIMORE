@@ -189,7 +189,7 @@ h1 { margin: 0; font-size: 18px; font-weight: 800; color: $hb-ink; }
 .toggle {
   width: 40px; height: 24px; border-radius: 12px; border: 0; background: #E2E6EE; position: relative; cursor: pointer;
 }
-.toggle.on { background: $hb-ink; }
+.toggle.on { background: $hb-coral; }
 .knob {
   position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 9px; background: #fff; transition: left .15s;
 }
@@ -198,7 +198,7 @@ h1 { margin: 0; font-size: 18px; font-weight: 800; color: $hb-ink; }
   display: block; padding: 12px; border: 1px solid $hb-line; border-radius: 12px; margin-bottom: 8px;
   font-size: 13px; font-weight: 600; color: $hb-ink; cursor: pointer;
 }
-.pay.on { border-width: 2px; border-color: $hb-ink; }
+.pay.on { border-width: 2px; border-color: $hb-coral; background: #FFF6F3; }
 .pay input { margin-right: 8px; }
 .tiny-row { margin-bottom: 6px; font-size: 13px; color: $hb-ink; }
 .total-row { margin-top: 8px; padding-top: 8px; border-top: 1px solid $hb-line; }
@@ -211,7 +211,7 @@ h1 { margin: 0; font-size: 18px; font-weight: 800; color: $hb-ink; }
   padding-bottom: calc(12px + env(safe-area-inset-bottom));
 }
 .place {
-  flex: 1; height: 48px; border: 0; border-radius: 14px; background: $hb-ink; color: #fff;
+  flex: 1; height: 48px; border: 0; border-radius: 999px; background: $hb-coral; color: #fff;
   font-weight: 700; font-size: 15px; cursor: pointer;
 }
 .place:disabled { opacity: .5; }

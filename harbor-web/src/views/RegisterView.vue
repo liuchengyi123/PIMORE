@@ -43,7 +43,7 @@ h1 { margin: 18px 0 16px; }
 .form { display: flex; flex-direction: column; gap: 12px; background: $hb-white; padding: 16px; border-radius: 18px; box-shadow: $hb-shadow-soft; }
 label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700; color: $hb-muted; }
 input { border: 1px solid $hb-line; border-radius: 12px; padding: 12px; font-size: 15px; }
-.btn { border: 0; height: 48px; border-radius: 14px; background: $hb-coral; color: #fff; font-weight: 740; cursor: pointer; }
+.btn { border: 0; height: 52px; border-radius: 999px; background: #F96141; color: #fff; font-weight: 740; cursor: pointer; }
 .err { color: $hb-coral; font-size: 13px; margin: 0; }
 .link { display: inline-block; margin-top: 16px; color: $hb-forest; font-weight: 680; }
 

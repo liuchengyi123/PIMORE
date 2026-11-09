@@ -101,7 +101,7 @@ onMounted(() => {
 .go {
   flex: 0 0 auto;
   border: 0;
-  background: $hb-forest;
+  background: $hb-coral;
   color: #fff;
   font-size: 13px;
   font-weight: 700;

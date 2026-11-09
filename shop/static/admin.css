@@ -1303,9 +1303,9 @@ a.btn { text-decoration: none; }
 
 :root {
   --brand: #0F2744;
-  --brand-2: #0E7490;
-  --brand-soft: #E0F2FE;
-  --bg: #F7F4EF;
+  --brand-2: #F96141;
+  --brand-soft: #FFF1EC;
+  --bg: #F4F6FB;
   --amber: #F59E0B;
   --amber-soft: #FEF3C7;
   --side-w: 220px;
@@ -1326,7 +1326,7 @@ a.btn { text-decoration: none; }
 .brand-mark {
   width: 30px !important; height: 30px !important;
   border-radius: 9px !important;
-  background: #0E7490 !important;
+  background: #F96141 !important;
   color: #fff !important;
   font-size: 14px !important;
 }
@@ -1454,22 +1454,35 @@ a.btn { text-decoration: none; }
 .btn.teal, .btn.primary-teal { background: #0E7490 !important; border-color: #0E7490 !important; color: #fff !important; }
 .btn.ghost { background: #fff !important; color: #0F2744 !important; border: 1px solid #E2E6EE !important; }
 
-/* AD01 Login */
+/* AD01 Login — Chinese admin */
 .login-wrap {
+  min-height: 100vh !important;
+  display: grid !important;
+  grid-template-columns: minmax(280px, 1fr) minmax(320px, 1.1fr) !important;
+  align-items: center !important;
+  gap: 32px !important;
+  padding: 48px !important;
   background:
-    radial-gradient(900px 420px at 10% -10%, rgba(14,116,144,.16), transparent 60%),
-    radial-gradient(700px 380px at 100% 0%, rgba(15,39,68,.10), transparent 55%),
-    #F7F4EF !important;
+    linear-gradient(160deg, #FFE8DF 0%, #FFF7F4 42%, #F4F7FB 100%) !important;
 }
+.login-brand strong {
+  display: block; font-size: 28px; color: #1C2430; letter-spacing: -0.03em;
+}
+.login-brand p { margin: 8px 0 0; color: #8B919A; }
 .login-card {
-  width: min(408px, 100%) !important;
-  padding: 28px 28px 24px !important;
-  border-radius: 16px !important;
-  border: 1px solid #E2E6EE !important;
-  box-shadow: 0 8px 28px rgba(15,39,68,0.08) !important;
+  width: min(440px, 100%) !important;
+  justify-self: center !important;
+  padding: 36px 32px 28px !important;
+  border-radius: 20px !important;
+  border: 0 !important;
+  box-shadow: 0 18px 50px rgba(28, 36, 48, 0.08) !important;
+  text-align: center !important;
 }
-.login-card h1 { font-size: 22px !important; font-weight: 750 !important; color: #0F2744 !important; margin: 0 0 4px !important; }
-.login-card .lead { font-size: 13px !important; color: #5C6570 !important; margin: 0 0 16px !important; }
+.login-card h1 { font-size: 28px !important; font-weight: 800 !important; color: #1C2430 !important; margin: 0 0 6px !important; }
+.login-card .lead { font-size: 14px !important; color: #8B919A !important; margin: 0 0 22px !important; }
+.login-row { display: flex; justify-content: space-between; align-items: center; margin: 0 0 16px; font-size: 13px; }
+.remember { display: flex !important; flex-direction: row !important; align-items: center; gap: 8px !important; margin: 0 !important; font-weight: 500 !important; }
+.forgot { color: #F96141; font-weight: 650; }
 .login-error {
   background: #FEE2E2 !important; color: #B91C1C !important;
   border: 1px solid #FECACA !important; border-radius: 10px !important;
@@ -1483,7 +1496,7 @@ a.btn { text-decoration: none; }
   height: 40px !important; border: 1px solid #E2E6EE !important; border-radius: 10px !important;
   padding: 0 12px !important; font-size: 14px !important; color: #0F2744 !important;
 }
-.login-submit { width: 100% !important; height: 42px !important; margin-top: 6px !important; background: #0F2744 !important; }
+.login-submit { width: 100% !important; height: 48px !important; margin-top: 6px !important; background: #F96141 !important; border: 0 !important; border-radius: 12px !important; color: #fff !important; }
 .login-foot { margin: 14px 0 0 !important; font-size: 12px !important; color: #8B93A0 !important; }
 
 /* AD29 / S02 web CS desk */

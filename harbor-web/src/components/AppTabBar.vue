@@ -19,7 +19,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { Home, LayoutGrid, ShoppingBag, UserRound } from 'lucide-vue-next'
+import { Home, Search, ShoppingBag, UserRound } from 'lucide-vue-next'
 import { useI18n } from '@/composables/i18n'
 import { useCart } from '@/composables/cart'
 
@@ -32,7 +32,7 @@ const cartCount = computed(() => cart.count.value)
 
 const tabs = computed(() => [
   { id: 'home' as const, label: t('tab_home'), path: '/home', icon: Home },
-  { id: 'browse' as const, label: t('tab_browse'), path: '/browse', icon: LayoutGrid },
+  { id: 'browse' as const, label: t('tab_browse'), path: '/browse', icon: Search },
   { id: 'cart' as const, label: t('tab_cart'), path: '/cart', icon: ShoppingBag },
   { id: 'me' as const, label: t('tab_me'), path: '/me', icon: UserRound },
 ])
@@ -44,33 +44,34 @@ function go(path: string) {
 
 <style lang="scss" scoped>
 @import '@/styles/theme.scss';
-.tab-spacer { height: 92px; }
+.tab-spacer { height: 72px; }
 .tab-bar {
   position: fixed;
-  left: 14px; right: 14px;
-  bottom: calc(10px + env(safe-area-inset-bottom));
-  height: 64px;
-  border-radius: 24px;
-  background: rgba(255,255,255,0.92);
-  border: 1px solid rgba(255,255,255,0.7);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(100vw, 768px);
+  bottom: 0;
+  height: calc(58px + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  border-radius: 0;
+  background: #fff;
+  border-top: 1px solid #F1EEEA;
   display: flex; align-items: center; justify-content: space-around;
   z-index: 100;
-  backdrop-filter: blur(18px);
-  box-shadow: $hb-shadow-float;
 }
 .tab {
   position: relative;
-  width: 68px; border: 0; background: transparent; padding: 6px 0; cursor: pointer;
-  color: $hb-muted;
+  flex: 1; border: 0; background: transparent; padding: 6px 0 4px; cursor: pointer;
+  color: #9AA0A8;
   display: flex; flex-direction: column; align-items: center; gap: 2px;
-  &.on { color: $hb-forest; }
+  &.on { color: $hb-coral; }
 }
 .ico { display: block; }
-.label { display: block; font-size: 10px; font-weight: 680; letter-spacing: 0.01em; }
+.label { display: block; font-size: 11px; font-weight: 650; letter-spacing: 0; }
 .badge {
-  position: absolute; top: 2px; right: 12px;
+  position: absolute; top: 2px; right: 22%;
   min-width: 16px; height: 16px; border-radius: 999px; padding: 0 4px;
-  background: $hb-price; color: #fff; font-size: 10px; font-weight: 700;
+  background: $hb-coral; color: #fff; font-size: 10px; font-weight: 700;
   display: flex; align-items: center; justify-content: center;
 }
 </style>

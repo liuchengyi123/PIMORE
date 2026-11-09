@@ -3,8 +3,8 @@
     <header class="sticky-top">
       <div class="brand-row">
         <div>
-          <div class="logo">Harbor <span class="sg">small goods</span></div>
-          <div class="tagline">{{ t('home_tagline') || 'Cross-border household essentials' }}</div>
+          <div class="logo">Pimo</div>
+          <div class="tagline">{{ t('home_tagline') || 'Better Homes. Happier Days.' }}</div>
         </div>
         <div class="right-actions">
           <router-link class="locale-pill" to="/locale">{{ localeLabel }}</router-link>
@@ -20,8 +20,9 @@
     </header>
 
     <section class="hero">
-      <div class="hero-kicker">{{ t('home_curated') || 'THIS WEEK' }}</div>
-      <div class="hero-title">{{ t('home_for_you') || 'Kitchen refresh up to 30% off' }}</div>
+      <div class="hero-kicker">{{ t('home_curated') || 'LIMITED TIME' }}</div>
+      <div class="hero-title">{{ t('home_for_you') || 'Up to 50% Off Home Essentials' }}</div>
+      <p class="hero-sub">{{ t('home_hero_sub') || 'Refresh your space, for less.' }}</p>
       <router-link class="hero-cta" to="/sale">{{ t('sale_shop') || 'Shop Sale' }} →</router-link>
     </section>
 
@@ -78,7 +79,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { ShoppingBag, Percent, Sparkles, Zap, CalendarCheck, Ticket, Wallet, Gift, Heart, Package, LifeBuoy } from 'lucide-vue-next'
+import { ShoppingBag, Utensils, Archive, SprayCan, Shirt } from 'lucide-vue-next'
 import { CATEGORIES, listProducts, listByCategory, money, type Product } from '@/api/products'
 import { useI18n } from '@/composables/i18n'
 import { useCart } from '@/composables/cart'
@@ -113,16 +114,10 @@ const localeLabel = computed(() => {
 const quickLinks = computed(() => {
   const en = lang.value === 'en'
   return [
-    { to: '/sale', label: en ? 'Sale' : '特卖', icon: Percent, bg: '#FEF3C7', fg: '#B45309' },
-    { to: '/new', label: en ? 'New' : '新品', icon: Sparkles, bg: '#D1FAE5', fg: '#047857' },
-    { to: '/ship-lp', label: en ? 'Flash' : '闪购', icon: Zap, bg: '#E0F2FE', fg: '#0E7490' },
-    { to: '/coupons', label: en ? 'Coupons' : '优惠券', icon: Ticket, bg: '#FCE7F3', fg: '#9D174D' },
-    { to: '/checkin', label: en ? 'Check-in' : '签到', icon: CalendarCheck, bg: '#EDE9FE', fg: '#5B21B6' },
-    { to: '/balance', label: en ? 'Balance' : '余额', icon: Wallet, bg: '#FFEDD5', fg: '#B45309' },
-    { to: '/invite', label: en ? 'Invite' : '邀请', icon: Gift, bg: '#CCFBF1', fg: '#0F766E' },
-    { to: '/wishlist', label: en ? 'Wishlist' : '愿望单', icon: Heart, bg: '#F3F4F6', fg: '#0F2744' },
-    { to: '/orders', label: en ? 'Orders' : '订单', icon: Package, bg: '#FEE2E2', fg: '#B91C1C' },
-    { to: '/help', label: en ? 'Help' : '帮助', icon: LifeBuoy, bg: '#E0E7FF', fg: '#3730A3' },
+    { to: '/browse?cat=kitchen', label: en ? 'Kitchen' : '厨房', icon: Utensils, bg: '#FFF1E8', fg: '#F96141' },
+    { to: '/browse?cat=storage', label: en ? 'Storage' : '收纳', icon: Archive, bg: '#E7F8EF', fg: '#128A5E' },
+    { to: '/browse?cat=cleaning', label: en ? 'Cleaning' : '清洁', icon: SprayCan, bg: '#E7F3FF', fg: '#2563EB' },
+    { to: '/browse?cat=textile', label: en ? 'Textile' : '家纺', icon: Shirt, bg: '#F3EEFF', fg: '#7C3AED' },
   ]
 })
 
@@ -188,27 +183,29 @@ onMounted(() => loadFeed(''))
 }
 .search-wrap { margin-top: 12px; }
 .hero {
-  margin: 12px 16px 0; border-radius: 18px; overflow: hidden;
-  background: linear-gradient(120deg, #0F2744 0%, #1A3A5C 45%, #0E7490 100%);
-  color: #fff; padding: 18px;
+  margin: 12px 16px 0; border-radius: 22px; overflow: hidden;
+  background: linear-gradient(115deg, #FF8A62 0%, #F96141 55%, #FFB199 100%);
+  color: #fff; padding: 22px 20px 20px;
 }
-.hero-kicker { font-size: 11px; opacity: 0.8; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
-.hero-title { font-size: 22px; font-weight: 800; margin-top: 6px; line-height: 1.2; }
+.hero-kicker { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; }
+.hero-title { font-size: 28px; font-weight: 800; margin-top: 8px; line-height: 1.15; letter-spacing: -0.03em; max-width: 16ch; }
+.hero-sub { margin: 8px 0 0; font-size: 14px; opacity: 0.92; }
 .hero-cta {
-  display: inline-flex; margin-top: 14px; background: #fff; color: $hb-ink;
-  padding: 8px 14px; border-radius: 999px; font-size: 12px; font-weight: 700; text-decoration: none;
+  display: inline-flex; margin-top: 16px; background: #fff; color: #1C2430;
+  padding: 10px 16px; border-radius: 999px; font-size: 14px; font-weight: 700; text-decoration: none;
 }
 .body { padding: 14px 16px 0; }
 .quick {
-  display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px 4px; margin-bottom: 8px;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 8px;
 }
 .quick-item {
   display: flex; flex-direction: column; align-items: center; gap: 6px;
   color: inherit; text-decoration: none;
 }
 .q-ico {
-  width: 44px; height: 44px; border-radius: 14px;
+  width: 56px; height: 56px; border-radius: 18px;
   display: inline-flex; align-items: center; justify-content: center;
+  box-shadow: 0 6px 16px rgba(28, 36, 48, 0.04);
 }
 .q-lab { font-size: 10px; font-weight: 600; color: $hb-ink; text-align: center; }
 .cats {
@@ -219,7 +216,7 @@ onMounted(() => loadFeed(''))
 .cat-pill {
   flex: 0 0 auto; border: 1px solid $hb-line; background: $hb-white;
   border-radius: 999px; padding: 8px 13px; font-size: 13px; font-weight: 650; color: $hb-ink; cursor: pointer;
-  &.on { background: $hb-ink; color: #fff; border-color: $hb-ink; }
+  &.on { background: $hb-coral; color: #fff; border-color: $hb-coral; }
 }
 .sec-head { display: flex; justify-content: space-between; align-items: end; margin-bottom: 10px; }
 .section-title { font-size: 16px; font-weight: 800; color: $hb-ink; }

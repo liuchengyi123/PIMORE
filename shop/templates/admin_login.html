@@ -1,20 +1,27 @@
 {% extends "admin_base.html" %}
 {% block screen %}
 <div class="login-wrap">
+  <aside class="login-brand">
+    <strong>Harbor/Pimo</strong>
+    <p>让数据赋能业务</p>
+  </aside>
   <form class="login-card" method="post" action="/admin/login" data-figma="AD01">
-    <h1>Harbor 后台</h1>
-    <p class="lead">使用分配给你的账号和密码</p>
+    <h1>后台登录</h1>
+    <p class="lead">欢迎回来，请登录您的账号</p>
     {% if error %}
     <div class="login-error" role="alert">{{ error }}</div>
     {% endif %}
-    <label>账号
-      <input name="username" autocomplete="username" placeholder="admin" autofocus>
+    <label>邮箱
+      <input name="username" autocomplete="username" placeholder="请输入邮箱地址" autofocus>
     </label>
     <label>密码
-      <input name="password" type="password" autocomplete="current-password">
+      <input name="password" type="password" autocomplete="current-password" placeholder="请输入密码">
     </label>
+    <div class="login-row">
+      <label class="remember"><input type="checkbox" name="remember" value="1"> 记住我</label>
+      <span class="forgot" title="请联系管理员在员工页重置">忘记密码</span>
+    </div>
     <button class="btn login-submit" type="submit">登录</button>
-    <p class="muted small login-foot">忘记密码请联系管理员，在「员工」页重置。</p>
   </form>
 </div>
 {% endblock %}
