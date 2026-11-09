@@ -1566,6 +1566,43 @@ td.empty { text-align: center; padding: 28px 12px; }
 .order-split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: start; }
 .order-split > .card:last-child { grid-column: 1 / -1; }
 @media (max-width: 900px) { .order-split, .order-page .order-kv { grid-template-columns: 1fr; } }
+.product-edit { display: grid; gap: 10px; }
+.product-edit .fields { gap: 8px 12px; }
+.product-edit .fields input,
+.product-edit .fields select,
+.product-edit table input {
+  height: 34px;
+  border-radius: 8px;
+  padding: 0 8px;
+  font-size: 13px;
+}
+.product-edit textarea { min-height: 56px; height: auto; padding: 8px; border-radius: 8px; font-size: 13px; }
+.product-edit .detail-shots {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px;
+}
+.product-edit .detail-shots figure,
+.product-edit .detail-shots img,
+.product-edit .detail-shots .shot {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  object-fit: cover;
+  background: #F4F6FB;
+  margin: 0;
+}
+.product-edit .actions .btn {
+  background: #F96141;
+  border: 0;
+  color: #fff;
+  height: 36px;
+  border-radius: 10px;
+}
+.product-edit .card > h2 { padding: 10px 12px 0; font-size: 14px; }
+.product-edit .pad { padding: 8px 12px 12px; }
+.product-edit table td, .product-edit table th { padding: 4px 6px; font-size: 12px; }
 
 /* AD29 / S02 web CS desk */
 .fn-support-shell { margin: 0 !important; }
