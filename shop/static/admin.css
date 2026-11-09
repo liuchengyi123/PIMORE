@@ -1603,6 +1603,22 @@ td.empty { text-align: center; padding: 28px 12px; }
 .product-edit .card > h2 { padding: 10px 12px 0; font-size: 14px; }
 .product-edit .pad { padding: 8px 12px 12px; }
 .product-edit table td, .product-edit table th { padding: 4px 6px; font-size: 12px; }
+.ad11-wizard .ad11-steps { gap: 6px; margin: 0 0 8px; }
+.ad11-wizard .ad11-step {
+  height: 28px; padding: 0 10px; font-size: 12px; font-weight: 700;
+  display: inline-flex; align-items: center; border-radius: 999px;
+  background: #fff; color: #5C6570; border: 1px solid #E8EAF0;
+}
+.ad11-wizard .ad11-step.on { background: #F96141; border-color: #F96141; color: #fff; }
+.ad11-wizard .import-split { gap: 10px; }
+.ad11-wizard .import-split .card { border-radius: 12px; }
+.ad11-wizard .import-split .card h2 { font-size: 14px; padding: 10px 12px 0; color: #1C2430; }
+.ad11-wizard .btn:not(.quiet):not(.ghost):not(.danger) {
+  background: #F96141; border-color: transparent; color: #fff;
+  height: 34px; border-radius: 10px;
+}
+.ad11-wizard .import-split .progress > span,
+.ad11-wizard #package-file-progress .bar > i { background: #F96141; }
 
 /* AD29 / S02 web CS desk */
 .fn-support-shell { margin: 0 !important; }
