@@ -1638,6 +1638,28 @@ td.empty { text-align: center; padding: 28px 12px; }
 .page-staff thead th, .page-coupons thead th {
   height: 32px; background: #F7F8FA; color: #8B919A; font-size: 11px; font-weight: 700;
 }
+.page-pay .gateway {
+  border: 1px solid #E8EAF0; border-radius: 12px; padding: 10px 12px 12px; margin: 0 0 10px; background: #F7F8FA;
+}
+.page-pay .gateway h2 { margin: 0 0 8px; padding: 0; font-size: 14px; color: #1C2430; }
+.page-pay .fields input, .page-pay .fields select, .page-pay textarea {
+  height: 34px; border-radius: 8px; font-size: 13px;
+}
+.page-pay textarea { height: auto; min-height: 72px; padding: 8px; }
+.page-pay .btn, .page-cash .btn:not(.ghost), .page-acts .btn:not(.ghost) {
+  background: #F96141; border: 0; color: #fff; height: 34px; border-radius: 10px;
+}
+.page-cash table th, .page-cash table td,
+.page-acts table th, .page-acts table td {
+  padding: 6px 8px; font-size: 12px; line-height: 1.25; vertical-align: middle;
+}
+.page-cash thead th, .page-acts thead th {
+  height: 32px; background: #F7F8FA; color: #8B919A; font-size: 11px; font-weight: 700;
+}
+.page-cash td:nth-child(2) { color: #F96141; font-weight: 750; }
+.page-acts { gap: 10px; }
+.page-acts .card > h2 { padding: 10px 12px 0; font-size: 14px; }
+.page-acts .stack input { height: 34px; border-radius: 8px; }
 
 /* AD29 / S02 web CS desk */
 .fn-support-shell { margin: 0 !important; }
