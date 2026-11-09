@@ -95,7 +95,8 @@
       "path": "pages/new/index",
       "style": {
         "navigationBarTitleText": "New",
-        "navigationBarBackgroundColor": "#F7F6F3",
+        "navigationStyle": "custom",
+        "navigationBarBackgroundColor": "#FCF3E7",
         "navigationBarTextStyle": "black"
       }
     },
