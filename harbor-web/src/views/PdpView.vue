@@ -7,6 +7,15 @@
         <span v-if="discount" class="pill coral">-{{ discount }}%</span>
       </div>
       <button type="button" class="back" @click="goBack" aria-label="back"><ChevronLeft :size="22" :stroke-width="1.75" /></button>
+      <div class="gtools">
+        <button type="button" @click="doWish" aria-label="save"><Heart :size="18" /></button>
+        <button type="button" @click="share" aria-label="share"><Share2 :size="18" /></button>
+      </div>
+    </div>
+    <div v-if="thumbs.length > 1" class="thumbs">
+      <button v-for="(src, i) in thumbs" :key="src + i" type="button" :class="{ on: activeShot === i }" @click="activeShot = i">
+        <img :src="src" alt="" />
+      </button>
     </div>
 
     <div class="body">
@@ -15,7 +24,7 @@
       <div class="price-row">
         <span class="price" :class="{ oos: isOos }">{{ money(displayPrice) }}</span>
         <span v-if="displayCompare" class="was">{{ money(displayCompare) }}</span>
-        <span v-if="discount" class="off">-{{ discount }}%</span>
+        <span v-if="discount" class="off">{{ zh ? ('省' + discount + '%') : (discount + '% OFF') }}</span>
       </div>
       <p v-if="interestCount > 0" class="interest">{{ t('pdp_interest', { n: interestCount }) }}</p>
       <div class="ship-bar">{{ t('pdp_ship_tracked') }} · {{ product.shipsIn || t('pdp_ships_default') }}</div>
@@ -24,6 +33,20 @@
         <span class="sku-v">{{ sizeSummary }} · {{ zh ? '数量' : 'Qty' }} {{ qty }}</span>
         <ChevronRight :size="18" :stroke-width="1.7" class="chev" />
       </button>
+      <div v-if="optionLabels.length" class="opt-block">
+        <div class="opt-lab">{{ t('common_option') }}</div>
+        <div class="opts">
+          <button v-for="opt in optionLabels" :key="'p'+opt" type="button" class="opt" :class="{ on: size === opt }" @click="size = opt">{{ opt }}</button>
+        </div>
+      </div>
+      <div class="qty-row page-qty">
+        <span class="qty-lab">{{ zh ? '数量' : 'Qty' }}</span>
+        <div class="qty-ctrl">
+          <button type="button" @click="qty = Math.max(1, qty - 1)">−</button>
+          <span>{{ qty }}</span>
+          <button type="button" @click="qty = qty + 1">+</button>
+        </div>
+      </div>
       <div class="reviews-box">
         <div class="rev-head"><strong>{{ t('reviews') || '评价' }}</strong></div>
         <div class="rev-empty">{{ t('reviews_empty') || '暂无评价' }}</div>
@@ -39,14 +62,23 @@
       <p v-if="notifyMsg" class="tiny" style="margin-top:8px">{{ notifyMsg }}</p>
       </template>
       <template v-else>
-        <button type="button" class="btn outline" @click="doAdd">{{ t('common_add') }}</button>
-        <button type="button" class="btn solid" @click="doBuy">{{ t('common_buy_now') }}</button>
+        <button type="button" class="btn outline" @click="doAdd"><ShoppingCart :size="16" /> {{ t('common_add') }}</button>
+        <button type="button" class="btn solid" @click="doBuy"><Zap :size="16" /> {{ t('common_buy_now') }}</button>
       </template>
     </div>
 
     <div v-if="sheetOpen" class="sheet-mask" @click="sheetOpen = false">
       <div class="sheet" @click.stop>
         <div class="grab" aria-hidden="true"></div>
+        <div class="sheet-head">
+          <img v-if="gallerySrc" :src="gallerySrc" alt="" />
+          <div>
+            <strong>{{ product.name }}</strong>
+            <div class="sheet-price">{{ money(displayPrice) }}</div>
+            <div class="muted">{{ product.blurb || t('pdp_blurb_default') }}</div>
+          </div>
+          <button type="button" class="x" @click="sheetOpen = false" aria-label="close">×</button>
+        </div>
         <div class="sheet-title">{{ t('common_option') }}</div>
         <div class="opts">
           <button
@@ -67,7 +99,7 @@
             <button type="button" @click="qty = qty + 1">+</button>
           </div>
         </div>
-        <button type="button" class="sheet-ok" @click="confirmSheet">{{ t('common_add') }}</button>
+        <button type="button" class="sheet-ok" @click="confirmSheet">{{ zh ? '确认加入购物车' : 'Confirm add to cart' }}</button>
       </div>
     </div>
   </div>
@@ -79,7 +111,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { ChevronLeft, ChevronRight, ShoppingBag, MessageCircle } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight, Heart, Share2, ShoppingCart, Zap } from 'lucide-vue-next'
 import { useRoute, useRouter } from 'vue-router'
 import { fetchProductInterest, getProduct, money, type Product } from '@/api/products'
 import { useCart } from '@/composables/cart'
@@ -109,7 +141,20 @@ const discount = computed(() => {
   return Math.round((1 - p.price / p.compareAt) * 100)
 })
 
-const gallerySrc = computed(() => product.value?.images?.[0] || product.value?.image || '')
+const activeShot = ref(0)
+const thumbs = computed(() => {
+  const p = product.value
+  const list = (p?.images || []).filter(Boolean)
+  if (list.length) return list.slice(0, 5)
+  return p?.image ? [p.image] : []
+})
+const gallerySrc = computed(() => thumbs.value[activeShot.value] || product.value?.image || '')
+function share() {
+  const url = location.href
+  const title = product.value?.name || 'Pimo'
+  if (navigator.share) navigator.share({ title, url }).catch(() => {})
+  else navigator.clipboard?.writeText(url).catch(() => {})
+}
 const galleryBg = computed(() =>
   gallerySrc.value ? {} : { background: 'linear-gradient(160deg, #E8F1EC 0%, #D8E4DC 55%, #EDE8E1 100%)' },
 )
@@ -210,6 +255,7 @@ async function load() {
   err.value = ''
   const p = await getProduct(decodeURIComponent(sku))
   product.value = p || null
+  activeShot.value = 0
   if (!p) {
     err.value = 'Not found'
     return
@@ -299,8 +345,18 @@ async function notifyMe() {
   position: absolute; top: -4px; right: -4px; min-width: 16px; height: 16px; border-radius: 999px;
   background: $hb-price; color: #fff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center;
 }
+.gtools { position: absolute; right: 12px; top: calc(12px + env(safe-area-inset-top)); display: flex; gap: 8px; z-index: 2; }
+.gtools button { width: 40px; height: 40px; border: 0; border-radius: 14px; background: rgba(255,255,255,0.92); color: #1C2430; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.thumbs { display: flex; gap: 8px; padding: 10px 16px 0; background: #fff; }
+.thumbs button { width: 56px; height: 56px; padding: 0; border-radius: 12px; border: 1px solid #E8E4DC; overflow: hidden; background: #F6F4F2; cursor: pointer; }
+.thumbs button.on { border: 2px solid #F96141; }
+.thumbs img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.opt-block { margin-top: 14px; }
+.opt-lab { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+.page-qty { margin-top: 14px; }
 .btn {
   height: 52px; border-radius: 999px; font-weight: 740; cursor: pointer; flex: 1; font-size: 15px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   &.outline { background: #fff; color: #F96141; border: 1.5px solid #F96141; }
   &.solid { background: #F96141; color: #fff; border: 0; }
 }
@@ -309,7 +365,13 @@ async function notifyMe() {
 .sheet-mask { position: fixed; inset: 0; background: rgba(28,36,48,0.45); z-index: 60; display: flex; align-items: flex-end; justify-content: center; }
 .sheet { width: min(100%, 768px); background: #fff; border-radius: 22px 22px 0 0; padding: 10px 16px calc(16px + env(safe-area-inset-bottom)); }
 .grab { width: 36px; height: 4px; border-radius: 99px; background: #E6E2DC; margin: 0 auto 12px; }
-.sheet-title { font-weight: 800; font-size: 16px; margin-bottom: 12px; letter-spacing: -0.02em; }
+.sheet-head { display: grid; grid-template-columns: 64px 1fr auto; gap: 10px; align-items: start; margin-bottom: 14px; }
+.sheet-head img { width: 64px; height: 64px; border-radius: 12px; object-fit: cover; background: #F6F4F2; }
+.sheet-head strong { display: block; font-size: 15px; }
+.sheet-price { color: #F96141; font-weight: 800; margin-top: 2px; }
+.sheet-head .muted { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.x { border: 0; background: transparent; font-size: 22px; color: #8B919A; cursor: pointer; line-height: 1; }
+.sheet-title { font-weight: 800; font-size: 14px; margin-bottom: 10px; letter-spacing: -0.02em; color: #5C6570; }
 .opts { display: flex; flex-wrap: wrap; gap: 8px; }
 .opt {
   height: 36px; border: 1px solid #E8E4DC; background: #FCFAF8; border-radius: 999px; padding: 0 14px; cursor: pointer; font-weight: 650;
