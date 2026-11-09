@@ -266,6 +266,89 @@ def test_english_heat_label_and_single_locale_pill(client):
             assert "有人" not in rendered
 
 
+def test_zh_mobile_chrome_follows_locale(client):
+    """H5 home, Me, and the bottom tab follow 中文; English storefront stays English."""
+    from shop.i18n import UI
+
+    zh_home = client.get("/?country=CN&lang=zh").text
+    for text in (
+        "搜索厨房、收纳、清洁",
+        "本周",
+        "厨房焕新 · 最高省 30%",
+        "去逛逛 →",
+        "特卖",
+        "新品",
+        "闪购",
+        "优惠券",
+        "签到",
+        "余额",
+        "邀请",
+        "愿望单",
+        "订单",
+        "帮助",
+        "为你推荐",
+        "厨房",
+        "清洁",
+        "收纳",
+        "宠物",
+        "洗护",
+        "店内推荐",
+        ">我的<",
+        'data-lucky-off="{pct}% 优惠"',
+        ">10% 优惠<",
+    ):
+        assert text in zh_home, text
+    for text in (
+        "Search kitchen, storage, cleaning",
+        "THIS WEEK",
+        "Kitchen refresh",
+        "Shop →",
+        ">For you<",
+        ">Bath<",
+        ">In the shop<",
+        ">Me<",
+        'data-lucky-off="{pct}% OFF"',
+    ):
+        assert text not in zh_home, text
+
+    en_home = client.get("/?country=US&lang=en").text
+    for text in (
+        "Search kitchen, storage, cleaning",
+        "THIS WEEK",
+        "Kitchen refresh · up to 30% off",
+        "Shop →",
+        ">For you<",
+        ">Bath<",
+        ">In the shop<",
+        ">Me<",
+        'data-lucky-off="{pct}% OFF"',
+        ">10% OFF<",
+    ):
+        assert text in en_home, text
+    assert "搜索厨房" not in en_home
+    assert "店内推荐" not in en_home
+
+    zh_me = client.get("/account?country=CN&lang=zh").text
+    assert "游客" in zh_me
+    assert "支持游客下单" in zh_me
+    assert "欢迎来到 Harbor" in zh_me
+    assert "登录后同步订单与愿望单" in zh_me
+    assert ">全部<" in zh_me or ">全部 ›<" in zh_me or "全部 ›" in zh_me
+    assert ">我的<" in zh_me
+    assert "Guest checkout available" not in zh_me
+    assert "Welcome to Harbor" not in zh_me
+    css = client.get("/static/fn-mobile.min.css").text
+    assert "body.fn-acc-page .fn-acc-welcome .fn-acc-sub" in css
+    assert "#64748b" in css
+
+    assert UI["zh"]["me"] == "我的"
+    assert UI["zh-Hant"]["me"] == "我的"
+    assert UI["zh-Hant"]["m_flash"] == "閃購"
+    assert UI["en"]["me"] == "Me"
+    assert UI["es"]["guest_checkout"] == "Guest checkout available"
+    assert UI["ja"]["lucky_chip"] == "{pct}% OFF"
+
+
 def _home_feed_skus(html):
     import re
     chunk = html.split('class="m01-grid"', 1)[-1].split("m01-more", 1)[0]

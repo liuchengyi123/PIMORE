@@ -23,6 +23,11 @@
     return state && state.percent ? state.percent : 10;
   }
 
+  function offLabel() {
+    var pattern = chip.getAttribute("data-lucky-off") || "{pct}% OFF";
+    return String(pattern).replace(/\{pct\}/g, String(percent()));
+  }
+
   function paintLabels() {
     var text = percent() + "% OFF";
     var nodes = root.querySelectorAll("[data-lucky-pct]");
@@ -102,7 +107,7 @@
     var nodes = root.querySelectorAll("[data-lucky-clock]");
     for (var i = 0; i < nodes.length; i++) nodes[i].textContent = text;
     if (state && state.spin && state.spin.live && !(state.free)) {
-      chip.textContent = percent() + "% OFF · " + text;
+      chip.textContent = offLabel() + " · " + text;
     }
   }
 
