@@ -33,7 +33,11 @@
     <h1>{{ zh ? '日常好物' : 'Everyday essentials' }}</h1>
     <p class="sub">{{ zh ? '用心的家居小物，生活更好一点。' : 'Thoughtful home goods. Better living.' }}</p>
 
+    <div v-if="isTree" class="chips" style="flex-wrap:wrap">
+      <button v-for="c in departments" :key="c.id" type="button" class="chip" :class="{ on: activeCat === c.id }" @click="pick(c.id)">{{ c.name }}</button>
+    </div>
     <div v-if="loading" class="state">{{ t('pdp_loading') }}</div>
+    <div v-else-if="!shown.length" class="state">{{ zh ? '这个分类还没有商品' : 'No products in this aisle yet.' }}</div>
     <div v-else class="grid">
       <article v-for="(item, i) in shown" :key="item.sku" class="card">
         <div class="shot" @click="open(item, i)">
@@ -62,12 +66,8 @@ import { useI18n } from '@/composables/i18n'
 import { useCart } from '@/composables/cart'
 import AppTabBar from '@/components/AppTabBar.vue'
 import AppSearchBar from '@/components/AppSearchBar.vue'
-import b1 from '@/assets/browse/b1.jpg'
-import b2 from '@/assets/browse/b2.jpg'
-import b3 from '@/assets/browse/b3.jpg'
-import b4 from '@/assets/browse/b4.jpg'
-import b5 from '@/assets/browse/b5.jpg'
-import b6 from '@/assets/browse/b6.jpg'
+import { ALL_CATEGORIES } from '@/api/products'
+import { toggleWishlist } from '@/api/cartApi'
 
 const { t, lang } = useI18n()
 const zh = computed(() => String(lang.value).startsWith('zh'))
@@ -91,31 +91,17 @@ function priceLabel(n: number) {
   return Number.isInteger(n) ? `$${n}` : money(n)
 }
 
-const catalog = [
-  { sku: 'stoneware-mug', name: 'Stoneware Mug', cat: 'Kitchen', price: 8, image: b1 },
-  { sku: 'linen-pillow', name: 'Linen Throw Pillow', cat: 'Decor', price: 12, image: b2 },
-  { sku: 'waffle-throw', name: 'Waffle Weave Throw', cat: 'Bedding', price: 15, image: b3 },
-  { sku: 'ceramic-planter', name: 'Ceramic Planter', cat: 'Decor', price: 10, image: b4 },
-  { sku: 'bamboo-board', name: 'Bamboo Cutting Board', cat: 'Kitchen', price: 6, image: b5 },
-  { sku: 'bath-towels', name: 'Bath Towel Set', cat: 'Bath', price: 13, image: b6 },
-]
+const isTree = computed(() => route.name === 'categories')
+const departments = ALL_CATEGORIES
 
-const shown = computed(() => {
-  if (activeCat.value && live.value.length) {
-    return applySort(live.value.slice(0, 8).map((p) => ({
-      sku: p.sku,
-      name: p.name,
-      cat: p.category || activeCat.value,
-      price: Math.round(p.price),
-      image: p.image || b1,
-      live: p,
-    })))
-  }
-  const id = activeCat.value
-  const rows = id ? catalog.filter((c) => c.cat.toLowerCase() === id) : catalog
-  const list = rows.map((c) => ({ ...c, live: undefined as Product | undefined }))
-  return applySort(list)
-})
+const shown = computed(() => applySort(live.value.map((p) => ({
+  sku: p.sku,
+  name: p.name,
+  cat: p.category || activeCat.value,
+  price: p.price,
+  image: p.image || '',
+  live: p,
+}))))
 
 function applySort<T extends { price: number }>(rows: T[]) {
   if (sort.value === 'low') return [...rows].sort((a, b) => a.price - b.price)
@@ -127,33 +113,33 @@ async function pick(id: string) {
   activeCat.value = id
   loading.value = true
   try {
-    live.value = id ? await listByCategory(id) : []
+    live.value = await listByCategory(id || '')
   } catch {
     live.value = []
   } finally {
     loading.value = false
   }
-  router.replace({ path: '/browse', query: id ? { cat: id } : {} })
+  if (route.name !== 'categories') {
+    router.replace({ path: '/browse', query: id ? { cat: id } : {} })
+  }
 }
 
 function open(item: { sku: string; live?: Product }, _i: number) {
-  const sku = item.live?.sku || ''
-  if (sku && live.value.length) router.push({ path: '/pdp', query: { sku } })
-  else router.push('/pdp')
+  const sku = item.live?.sku || item.sku
+  if (sku) router.push({ path: '/pdp', query: { sku } })
 }
 
-function add(item: { sku: string; name: string; price: number; image: string; live?: Product }) {
-  if (item.live) cart.add(item.live)
-  else cart.add({ id: item.sku, sku: item.sku, name: item.name, price: item.price, category: 'home', image: item.image })
+async function add(item: { live?: Product }) {
+  if (item.live) await cart.addServer(item.live)
 }
 
-function wish(item: { sku: string }) {
-  router.push({ path: '/wishlist', query: { sku: item.sku } })
+async function wish(item: { sku: string }) {
+  await toggleWishlist(item.sku)
 }
 
 onMounted(() => {
   const cat = route.query.cat ? String(route.query.cat) : ''
-  if (cat) pick(cat)
+  pick(cat)
 })
 </script>
 

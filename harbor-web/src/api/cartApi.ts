@@ -135,7 +135,20 @@ export async function syncLocalLinesToServer(
 }
 
 
+export async function fetchCartJson(): Promise<CartSnapshot | null> {
+  const res = await harborRequest<Record<string, unknown>>('/api/cart', { method: 'GET', json: true })
+  const data = res.data
+  if (res.statusCode >= 400 || !data || typeof data !== 'object' || !Array.isArray(data.lines)) return null
+  return fromAddJson({ ...data, rail: data.lines, ok: true })
+}
+
 export async function fetchCartServer(): Promise<CartSnapshot> {
+  try {
+    const live = await fetchCartJson()
+    if (live) return live
+  } catch {
+    /* HTML cart is the fallback */
+  }
   const res = await harborRequest<string>('/cart', { method: 'GET' })
   const html = typeof res.data === 'string' ? res.data : ''
   const lines: CartRailItem[] = []
@@ -196,10 +209,49 @@ export async function fetchCartServer(): Promise<CartSnapshot> {
 }
 
 export async function updateCartServer(skuCode: string, qty: number, country = 'US'): Promise<CartSnapshot> {
-  await harborRequest('/cart/update', {
+  const res = await harborRequest<Record<string, unknown>>('/cart/update', {
     method: 'POST',
     form: true,
-    data: { sku: skuCode, qty, country },
+    json: true,
+    data: { sku: skuCode, qty, country, ajax: '1' },
   })
+  const data = res.data
+  if (data && typeof data === 'object' && Array.isArray(data.lines)) {
+    return fromAddJson({ ...data, rail: data.lines, ok: true })
+  }
   return fetchCartServer()
+}
+
+export async function toggleWishlist(sku: string): Promise<boolean> {
+  const res = await harborRequest<{ wished?: boolean }>('/wishlist', {
+    method: 'POST',
+    form: true,
+    json: true,
+    data: { sku, ajax: '1', country: 'US' },
+  })
+  return Boolean(res.data && res.data.wished)
+}
+
+export interface CheckoutQuote {
+  ok?: boolean
+  shipping_cents?: number
+  tax_cents?: number
+  tax_text?: string
+  due_text?: string
+  due_cents?: number
+  gift_wrap_cents?: number
+  gift_wrap_fee_cents?: number
+  wrap_text?: string
+  blockers?: string[]
+  coupon_cents?: number
+  currency?: string
+}
+
+export async function quoteCheckout(body: Record<string, unknown>): Promise<CheckoutQuote> {
+  const res = await harborRequest<CheckoutQuote>('/api/checkout/quote', {
+    method: 'POST',
+    json: true,
+    data: body,
+  })
+  return (res.data && typeof res.data === 'object') ? res.data : {}
 }

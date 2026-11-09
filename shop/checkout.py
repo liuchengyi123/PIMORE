@@ -17,9 +17,10 @@ gift_message
     Never write gift_wrap or gift_sku into this column.
 
 gift_wrap
-    Boolean the shopper toggles for wrapping. No fee in this version
-    (0 cents) and no orders column. The quote echoes it so the client can
-    keep the toggle. It does not change gift_message or gift_sku.
+    Boolean the shopper toggles for wrapping. The fee is settings key
+    ``gift_wrap_cents`` (admin: /admin/promos). Default 0. When the toggle
+    is on, that fee is added to due and is not taxed. It does not change
+    gift_message or gift_sku.
 """
 
 import hashlib
@@ -31,9 +32,9 @@ from datetime import datetime, timedelta, timezone
 
 from shop.address_format import required_keys
 from shop.campaigns import price_for
-from shop.pricing import quote
+from shop.pricing import Quote, quote
 from shop.rewards import rebate
-from shop.tax import estimate_tax_cents
+from shop.tax import estimate_tax_cents, load_tax_rates
 
 _LOCKS = {}
 _LOCKS_GUARD = threading.Lock()
@@ -168,11 +169,15 @@ def settle_checkout(
     balance_cents,
     use_balance,
     lucky_off_cents,
+    tax_rates=None,
+    gift_wrap=False,
+    gift_wrap_fee_cents=0,
 ):
     """One money path for place_order and the quote API.
 
     Taxable base is goods after discounts and coupons, plus shipping.
     Shipping is 0. tax_cents is not folded into due_cents (see shop.tax).
+    A configured gift-wrap fee is added to due only when the toggle is on.
     """
     bill = build_quote(
         promos,
@@ -189,8 +194,39 @@ def settle_checkout(
     )
     goods_after = max(0, int(merchandise_cents) - int(bill.discount_cents) - int(bill.coupon_cents))
     taxable = goods_after + int(bill.shipping_cents)
-    tax = estimate_tax_cents(taxable, ship_country, region)
-    return bill, taxable, tax
+    tax = estimate_tax_cents(taxable, ship_country, region, tax_rates)
+    fee = max(0, int(gift_wrap_fee_cents or 0)) if gift_wrap else 0
+    if fee:
+        factor = 10 ** int(minor_units or 0)
+        extra_local = int((fee * float(units) * factor) / 100 + 0.5) if units else 0
+        bill = Quote(
+            discount_cents=bill.discount_cents,
+            coupon_cents=bill.coupon_cents,
+            shipping_cents=bill.shipping_cents,
+            balance_cents=bill.balance_cents,
+            due_cents=int(bill.due_cents) + fee,
+            due_local=int(bill.due_local) + extra_local,
+        )
+    return bill, taxable, tax, fee
+
+
+def configured_gift_wrap_cents(conn):
+    """Admin gift-wrap fee in USD cents. Missing or blank is 0 (free)."""
+    try:
+        row = conn.execute("select value from settings where key = 'gift_wrap_cents'").fetchone()
+    except Exception:
+        return 0
+    if row is None or row["value"] in (None, ""):
+        return 0
+    raw = row["value"]
+    try:
+        parsed = json.loads(raw)
+    except (json.JSONDecodeError, TypeError):
+        parsed = raw
+    try:
+        return max(0, min(100_000, int(parsed)))
+    except (TypeError, ValueError):
+        return 0
 
 
 def live_offers(row):
@@ -457,6 +493,8 @@ def _quote_payload(
     due_local=0,
     coupon_id=None,
     sku="",
+    gift_wrap_cents=0,
+    gift_wrap_fee_cents=0,
 ):
     body = {
         "ok": bool(ok),
@@ -479,6 +517,8 @@ def _quote_payload(
         "blockers": list(blockers),
         "gift_message": _gift_message(gift_message),
         "gift_wrap": bool(gift_wrap),
+        "gift_wrap_cents": int(gift_wrap_cents or 0),
+        "gift_wrap_fee_cents": int(gift_wrap_fee_cents or 0),
         "gift_sku": gift_sku or "",
         "coupon_id": int(coupon_id) if coupon_id else None,
     }
@@ -520,11 +560,14 @@ def preview_checkout_quote(
     gift_message = _gift_message(gift_message)
     gift_wrap = as_bool(gift_wrap)
     use_balance = as_bool(use_balance)
+    wrap_fee_config = configured_gift_wrap_cents(conn)
+    tax_rates = load_tax_rates(conn)
     common = dict(
         currency=currency,
         gift_message=gift_message,
         gift_wrap=gift_wrap,
         gift_sku=gift_sku,
+        gift_wrap_fee_cents=wrap_fee_config,
     )
     if units is None:
         return _quote_payload(ok=False, lines=[], blockers=["rate"], **common)
@@ -551,7 +594,7 @@ def preview_checkout_quote(
             ok=False, lines=[], blockers=[exc.code or "coupon"], sku=exc.sku or "", **common
         )
     available = _available_balance(conn, email) if use_balance else 0
-    bill, taxable, tax = settle_checkout(
+    bill, taxable, tax, wrap_fee = settle_checkout(
         promos,
         merchandise_cents=merchandise,
         ship_country=ship_country,
@@ -563,6 +606,9 @@ def preview_checkout_quote(
         balance_cents=available,
         use_balance=use_balance,
         lucky_off_cents=lucky_off_cents,
+        tax_rates=tax_rates,
+        gift_wrap=gift_wrap,
+        gift_wrap_fee_cents=wrap_fee_config,
     )
     shown = [
         {
@@ -587,6 +633,7 @@ def preview_checkout_quote(
         due=bill.due_cents,
         due_local=bill.due_local,
         coupon_id=coupon["id"] if coupon else None,
+        gift_wrap_cents=wrap_fee,
         **common,
     )
 
@@ -650,6 +697,7 @@ def place_order(
     hold=None,
     lucky_off_cents=0,
     lucky_token="",
+    gift_wrap=False,
 ):
     email = (email or "").strip().lower()
     ship_country = (ship_country or "").strip().upper()
@@ -710,7 +758,10 @@ def place_order(
                 balance_cents=available,
                 use_balance=use_balance,
                 lucky_off_cents=lucky_off_cents,
-            )
+                tax_rates=load_tax_rates(conn),
+                gift_wrap=as_bool(gift_wrap),
+                gift_wrap_fee_cents=configured_gift_wrap_cents(conn),
+            )[:3]
             bound = _bind_referrer(conn, email, referrer)
             base = max(0, merchandise - bill.discount_cents - bill.coupon_cents)
             own, direct = rebate(

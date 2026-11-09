@@ -17,6 +17,7 @@
         </div>
         <div class="nm">{{ p.name }}</div>
         <div class="price">{{ money(p) }}</div>
+        <button type="button" class="add" @click.stop="add(p)">{{ zh ? '加入' : 'Add' }}</button>
       </article>
     </div>
     <AppTabBar active="browse" />
@@ -26,10 +27,12 @@
 import { ChevronLeft } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import { listCompareProducts, type Product } from '@/api/products'
+import { useCart } from '@/composables/cart'
 import { useI18n } from '@/composables/i18n'
 import AppTabBar from '@/components/AppTabBar.vue'
 const { t, lang } = useI18n()
 const zh = computed(() => String(lang.value).startsWith('zh'))
+const cart = useCart()
 const products = ref<Product[]>([])
 const loading = ref(true)
 const note = ref('')
@@ -45,6 +48,7 @@ function money(p: any) {
   const n = Number(p.price || 0)
   return n ? `$${n.toFixed(2)}` : ''
 }
+function add(p: Product) { cart.addServer(p) }
 function ph(p: any) {
   if (p.image) return {}
   return { backgroundImage: 'linear-gradient(154deg, #bae6fd 6%, #0369a1 94%)' }

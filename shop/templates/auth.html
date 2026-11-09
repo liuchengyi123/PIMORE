@@ -7,7 +7,18 @@
   <form class="fn-auth-form" method="post" action="{{ href('/login', country) }}">
     <input type="hidden" name="next" value="{{ request.query_params.get('next', '') }}">
     <label class="fn-field">{{ t.email }} <input name="email" type="email" autocomplete="email"></label>
-    <label class="fn-field">{{ t.password }} <input name="password" type="password" autocomplete="current-password"></label>
+    <label class="fn-field">{{ t.password }}
+      <span style="display:flex;gap:8px;align-items:center">
+        <input name="password" type="password" autocomplete="current-password" id="login-password" style="flex:1">
+        <button class="btn quiet" type="button" id="login-eye">{{ t.show_password }}</button>
+      </span>
+    </label>
+    <script>
+      document.getElementById("login-eye").addEventListener("click", function () {
+        var input = document.getElementById("login-password");
+        input.type = input.type === "password" ? "text" : "password";
+      });
+    </script>
     <button class="btn" type="submit" style="width:100%">{{ t.login }}</button>
   </form>
   <p class="fn-auth-links"><a href="{{ href('/register?next=' ~ request.query_params.get('next', ''), country) }}">{{ t.create_account }}</a>

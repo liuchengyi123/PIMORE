@@ -141,7 +141,9 @@ from shop.checkout import (
     load_lines,
     merge_line,
     ORDER_SPEED,
+    configured_gift_wrap_cents,
     preview_checkout_quote,
+    resolve_coupon_request,
     _bind_referrer,
     place_order,
     verify_password,
@@ -1588,6 +1590,10 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         @app.get("/chat/{rest:path}", include_in_schema=False)
         async def harbor_h5_chat(rest: str = ""):
             return FileResponse(h5_dist / "index.html")
+    else:
+        @app.get("/chat", response_class=HTMLResponse)
+        def buyer_chat(request: Request):
+            return render(request, "chat.html")
 
     def _storefront(path):
         if path.startswith("/admin") or path.startswith("/lookup") or path.startswith("/stripe"):
@@ -4987,11 +4993,50 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         lines = [line for line in load_lines(request.cookies.get("cart")) if line["sku"] != sku]
         if qty > 0:
             lines.append({"sku": sku, "qty": qty})
-        response = redirect("/cart", country, cart=dump_lines(lines))
+        wants_ajax = (
+            str(form.get("ajax") or "") == "1"
+            or request.headers.get("x-harbor-ajax") == "1"
+            or "application/json" in (request.headers.get("accept") or "")
+        )
+        if wants_ajax:
+            response = JSONResponse(cart_json(request, lines))
+        else:
+            response = redirect("/cart", country, cart=dump_lines(lines))
+        response.set_cookie("cart", dump_lines(lines), max_age=31536000, path="/", samesite="lax")
         if qty > 0:
             stamp_promo_notice(response, request, sku, qty, lines)
         push_open_room_cart(conn, request, lines)
         return response
+
+    def cart_json(request, lines):
+        ctx, shown, merchandise = line_views(request, lines)
+        items = []
+        for line in shown:
+            items.append({
+                "sku": line["sku"],
+                "product_sku": line.get("product_sku") or str(line["sku"]).split("~", 1)[0],
+                "name": line.get("name") or "",
+                "qty": int(line.get("qty") or 0),
+                "price": line.get("line_price") or "",
+                "price_cents": int(line.get("price_cents") or 0),
+                "line_cents": int(line.get("line_cents") or 0),
+                "image": line.get("image") or "",
+            })
+        return {
+            "ok": True,
+            "live": True,
+            "lines": items,
+            "rail": items,
+            "cart_count": sum(int(line["qty"]) for line in lines),
+            "merchandise_cents": int(merchandise),
+            "shipping_cents": 0,
+            "currency": ctx.get("currency") or "USD",
+        }
+
+    @app.get("/api/cart")
+    def api_cart(request: Request):
+        lines = load_lines(request.cookies.get("cart"))
+        return JSONResponse(cart_json(request, lines))
 
     def cart_picks(request, ctx, shown, budget):
         exclude = {line.get("product_sku") or line["sku"] for line in shown}
@@ -5643,6 +5688,15 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             hold=parse_hold(request.cookies.get("harbor_hold")),
             lucky_off_cents=lucky_off,
         )
+        def _show(cents):
+            if ctx.get("units") is None:
+                return ""
+            return format_money(goods_local(int(cents or 0), ctx["units"], ctx["currency"]), ctx["currency"])
+        if isinstance(payload, dict):
+            payload["due_text"] = format_money(int(payload.get("due_local") or 0), ctx["currency"]) if payload.get("ok") else ""
+            payload["tax_text"] = _show(payload.get("tax_cents"))
+            payload["wrap_text"] = _show(payload.get("gift_wrap_fee_cents"))
+            payload["shipping_text"] = _show(0)
         return payload
 
     @app.get("/checkout", response_class=HTMLResponse)
@@ -5711,11 +5765,11 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             return checkout_page(
                 request, raw_lines=raw_lines, buy=buy, code="rate", values=values, submit_id=submit_id
             )
-        coupon_raw = str(form.get("coupon_id") or "")
-        try:
-            coupon_id = int(coupon_raw) if coupon_raw else None
-        except ValueError:
-            coupon_id = -1
+        coupon_id, _coupon_asked = resolve_coupon_request(
+            conn,
+            form.get("coupon_id") or None,
+            form.get("coupon_code") or "",
+        )
         lucky_off = lucky_off_for(request, values["email"], merchandise)
         spun_token = lucky_token(request)
         if lucky_off:
@@ -5756,6 +5810,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 hold=parse_hold(request.cookies.get("harbor_hold")),
                 lucky_off_cents=lucky_off,
                 lucky_token=spun_token,
+                gift_wrap=form.get("gift_wrap"),
             )
         except CheckoutError as exc:
             return checkout_page(
@@ -7194,7 +7249,67 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 "amount_cents": first["amount_cents"] if first else 200,
             },
             guarantees=load_guarantees(conn),
+            gift_wrap_cents=configured_gift_wrap_cents(conn),
         )
+
+    @app.get("/admin/tax", response_class=HTMLResponse)
+    def admin_tax(request: Request):
+        require_admin(request)
+        from shop.tax import builtin_rate_book, load_tax_rates, ppm_to_percent
+
+        builtin = builtin_rate_book()
+        overrides = load_tax_rates(conn) or {"us": {}, "country": {}}
+        us_rows = []
+        for code in sorted(set(builtin["us"]) | set(overrides["us"])):
+            ppm = overrides["us"].get(code, builtin["us"].get(code, 0))
+            us_rows.append({
+                "code": code,
+                "percent": ppm_to_percent(ppm),
+                "builtin": ppm_to_percent(builtin["us"].get(code, 0)),
+                "custom": code in overrides["us"],
+            })
+        country_codes = sorted(set(builtin["country"]) | set(overrides["country"]))
+        country_rows = []
+        for code in country_codes:
+            ppm = overrides["country"].get(code, builtin["country"].get(code, 0))
+            country_rows.append({
+                "code": code,
+                "percent": ppm_to_percent(ppm),
+                "builtin": ppm_to_percent(builtin["country"].get(code, 0)),
+                "custom": code in overrides["country"],
+            })
+        return render(
+            request,
+            "admin_tax.html",
+            us_rows=us_rows,
+            country_rows=country_rows,
+        )
+
+    @app.post("/admin/tax")
+    async def admin_tax_save(request: Request):
+        require_admin_role(request)
+        from shop.tax import builtin_rate_book, percent_to_ppm, save_tax_rates
+
+        form = await request.form()
+        builtin = builtin_rate_book()
+        book = {"us": {}, "country": {}}
+        for code, default in builtin["us"].items():
+            ppm = percent_to_ppm(form.get(f"us_{code}"))
+            if ppm is None or ppm == int(default):
+                continue
+            book["us"][code] = ppm
+        seen = set(builtin["country"])
+        for code, default in builtin["country"].items():
+            ppm = percent_to_ppm(form.get(f"country_{code}"))
+            if ppm is None or ppm == int(default):
+                continue
+            book["country"][code] = ppm
+        extra_code = "".join(ch for ch in str(form.get("extra_country") or "").upper() if ch.isalpha())[:2]
+        extra_ppm = percent_to_ppm(form.get("extra_percent"))
+        if extra_code and extra_ppm is not None and extra_code not in seen:
+            book["country"][extra_code] = extra_ppm
+        save_tax_rates(conn, book)
+        return flash_redirect("/admin/tax", "tax_saved")
 
     @app.get("/admin/campaigns", response_class=HTMLResponse)
     def admin_campaigns(request: Request):
@@ -9864,6 +9979,16 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                     "update promos set value = ? where key = 'shipping'",
                     (json.dumps(shipping),),
                 )
+        if section in {"all", "gift"} and "gift_wrap_dollars" in form:
+            wrap = dollars_to_cents(form.get("gift_wrap_dollars"), allow_zero=True)
+            if wrap is not None:
+                conn.execute(
+                    """
+                    insert into settings (key, value) values ('gift_wrap_cents', ?)
+                    on conflict(key) do update set value = excluded.value
+                    """,
+                    (json.dumps(int(wrap)),),
+                )
         forget_catalog()
         return flash_redirect("/admin/promos", "promos_saved")
 
@@ -10360,10 +10485,40 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             raise HTTPException(status_code=403)
         form = await request.form()
         reason = str(form.get("reason") or "").strip()
+        details = str(form.get("details") or "").strip()
+        refund = str(form.get("refund") or "").strip().lower()
+        if refund not in {"original", "balance"}:
+            refund = ""
+        photo_notes = []
+        try:
+            from shop.support import save_cs_image_bytes
+            for item in form.getlist("photo"):
+                filename = str(getattr(item, "filename", "") or "")
+                if not filename or not hasattr(item, "read"):
+                    continue
+                data = await item.read()
+                if not data:
+                    continue
+                try:
+                    photo_notes.append(save_cs_image_bytes(data, filename))
+                except Exception:
+                    continue
+                if len(photo_notes) >= 3:
+                    break
+        except Exception:
+            photo_notes = []
+        parts = [reason]
+        if details:
+            parts.append(details)
+        if refund:
+            parts.append("refund:" + refund)
+        if photo_notes:
+            parts.append("photos:" + " ".join(photo_notes))
+        reason = " | ".join(part for part in parts if part)[:300]
         if reason:
             conn.execute(
                 "insert into returns (order_id, email, reason, status) values (?, ?, ?, 'requested')",
-                (row["id"], row["email"], reason[:300]),
+                (row["id"], row["email"], reason),
             )
         return RedirectResponse(href(f"/orders/{order_id}", country_for(request)), status_code=303)
 

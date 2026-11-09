@@ -64,8 +64,15 @@
     {% endfor %}
   </fieldset>
   {% endif %}
-  <label>{{ t.gift }} <input name="gift" value=""></label>
-  <label><input type="checkbox" name="use_balance" value="1"> {{ t.balance }}</label>
+  <label>{{ t.coupon_code }}
+    <span style="display:flex;gap:8px;align-items:center">
+      <input name="coupon_code" value="" autocomplete="off" data-quote style="flex:1">
+      <button class="btn quiet" type="button" id="coupon-apply">{{ t.apply }}</button>
+    </span>
+  </label>
+  <label><input type="checkbox" name="gift_wrap" value="1" data-quote> {{ t.gift_wrap }} <span id="quote-wrap-fee"></span></label>
+  <label>{{ t.gift }} <textarea name="gift" rows="2" data-quote style="width:100%"></textarea></label>
+  <label><input type="checkbox" name="use_balance" value="1" data-quote> {{ t.balance }}</label>
   {% if balance_note %}<p class="muted">{{ balance_note }}</p>{% endif %}
   </div>
   <aside class="summary checkout-pay">
@@ -101,7 +108,9 @@
     <p>{{ t.merchandise }} {{ merchandise_text }}</p>
     <p>{{ t.discount }} {{ discount_text }}{% if lucky_percent %} <span class="lucky-applied">{{ t.lucky_applied.format(percent=lucky_percent) }}</span>{% endif %}</p>
     {% if coupon_text %}<p>{{ t.coupon }} {{ coupon_text }}</p>{% endif %}
-    <p class="met">{{ t.free_shipping }}</p>
+    <p class="met" data-shipping-cents="0">{{ t.free_shipping }} · $0</p>
+    <p id="quote-tax">{{ t.tax_estimate }} <span data-tax>—</span></p>
+    <p id="quote-note" class="muted">{{ t.tax_not_in_due }}</p>
     {% if checkout_ok is defined and checkout_ok == false %}
     <div class="checkout-alert"><p>{{ t.checkout_blocked }}。{{ min_gap_text }}</p></div>
     {% endif %}
@@ -214,6 +223,57 @@
     }
     var target = firstProblem();
     if (target) target.scrollIntoView({ block: "center" });
+  });
+</script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    var form = document.querySelector("form.checkout");
+    if (!form) return;
+    var taxNode = document.querySelector("[data-tax]");
+    var note = document.getElementById("quote-note");
+    var wrapFee = document.getElementById("quote-wrap-fee");
+    var dueNodes = document.querySelectorAll(".due-banner .price, .fn-checkout-due .price");
+    function checkedCoupon() {
+      var picked = form.querySelector('input[name="coupon_id"]:checked');
+      return picked ? picked.value : "";
+    }
+    async function refreshQuote() {
+      var body = {
+        email: (form.email && form.email.value) || "",
+        ship_country: (form.ship_country && form.ship_country.value) || "",
+        region: (form.region && form.region.value) || "",
+        coupon_id: checkedCoupon(),
+        coupon_code: (form.coupon_code && form.coupon_code.value) || "",
+        use_balance: !!(form.use_balance && form.use_balance.checked),
+        gift_message: (form.gift && form.gift.value) || "",
+        gift_wrap: !!(form.gift_wrap && form.gift_wrap.checked)
+      };
+      var res = await fetch("/api/checkout/quote", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify(body)
+      });
+      var data = await res.json();
+      if (!data) return;
+      if (taxNode) taxNode.textContent = data.tax_text || "—";
+      if (wrapFee) wrapFee.textContent = data.gift_wrap_fee_cents ? (" · " + (data.wrap_text || "")) : "";
+      if (data.ok && data.due_text && dueNodes.length) {
+        dueNodes.forEach(function (node) { node.textContent = data.due_text; });
+      }
+      if (note) {
+        var bits = [];
+        if (data.tax_estimate) bits.push({{ t.tax_not_in_due | tojson }});
+        if (data.blockers && data.blockers.length) bits.push(data.blockers.join(", "));
+        note.textContent = bits.join(" · ");
+      }
+    }
+    var apply = document.getElementById("coupon-apply");
+    if (apply) apply.addEventListener("click", function () { refreshQuote(); });
+    form.querySelectorAll("[data-quote]").forEach(function (node) {
+      node.addEventListener("change", refreshQuote);
+    });
+    refreshQuote();
   });
 </script>
 </div>

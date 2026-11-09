@@ -83,9 +83,19 @@
       <a class="btn ghost" style="width:100%;margin-top:12px" href="{{ href('/orders/' ~ order['id'] ~ '/invoice', country) }}">{{ t.invoice }}</a>
       {% if order['status'] in ['paid', 'shipped'] %}
       <div class="fn-return-title" style="margin-top:14px;font-weight:700;color:#0F2744">{{ t.request_return }}</div>
-      <form method="post" action="/orders/{{ order['id'] }}/return" style="margin-top:8px">
-        <label class="fn-field">{{ t.reason }} <input name="reason" placeholder="Item damaged / not as described"></label>
+      <form method="post" action="/orders/{{ order['id'] }}/return" enctype="multipart/form-data" style="margin-top:8px">
+        <label class="fn-field">{{ t.reason }}
+          <select name="reason" required>
+            <option value="Damaged">Damaged</option>
+            <option value="Not as described">Not as described</option>
+            <option value="Wrong item">Wrong item</option>
+            <option value="Changed mind">Changed mind</option>
+          </select>
+        </label>
         <label class="fn-field">Details <textarea name="details" rows="3" style="width:100%;border:1px solid var(--fn-line,#E2E6EE);border-radius:10px;padding:10px;font:inherit"></textarea></label>
+        <label><input type="radio" name="refund" value="original" checked> Original payment</label>
+        <label><input type="radio" name="refund" value="balance"> Balance</label>
+        <label class="fn-field">Photos <input type="file" name="photo" accept="image/*" multiple></label>
         <button class="btn" style="width:100%" type="submit">{{ t.request_return }}</button>
       </form>
       {% for row in return_rows %}<p class="tiny">{{ row['status'] }} {{ row['reason'] }}</p>{% endfor %}

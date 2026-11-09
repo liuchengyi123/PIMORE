@@ -1,0 +1,45 @@
+{% extends "admin_base.html" %}
+{% block body %}
+<header class="page-head"><div><h1>预估税率</h1><p class="muted">结算页的税是估算，不计入实付。空白或与默认相同会沿用内置税率。填 0 表示该地区估税为 0。美国按州，其它国家按国家码。CA 州是加州，国家 CA 是加拿大。</p></div></header>
+{% if is_admin_role %}
+<form method="post" action="/admin/tax">
+  <div class="card">
+    <h2>美国各州（%）</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>州</th><th>当前 %</th><th>内置 %</th></tr></thead>
+      <tbody>
+      {% for row in us_rows %}
+      <tr>
+        <td>{{ row.code }}{% if row.custom %} · 已改{% endif %}</td>
+        <td><input name="us_{{ row.code }}" value="{{ row.percent }}" inputmode="decimal" style="width:7rem"></td>
+        <td class="muted">{{ row.builtin }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+  </div>
+  <div class="card">
+    <h2>国家（%）</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>国家</th><th>当前 %</th><th>内置 %</th></tr></thead>
+      <tbody>
+      {% for row in country_rows %}
+      <tr>
+        <td>{{ row.code }}{% if row.custom %} · 已改{% endif %}</td>
+        <td><input name="country_{{ row.code }}" value="{{ row.percent }}" inputmode="decimal" style="width:7rem"></td>
+        <td class="muted">{{ row.builtin }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+    <div class="pad fields">
+      <label>新增国家码 <input name="extra_country" value="" maxlength="2" placeholder="JP"></label>
+      <label>税率 % <input name="extra_percent" value="" inputmode="decimal" placeholder="10"></label>
+    </div>
+  </div>
+  <p class="pad"><button class="btn" type="submit">保存税率</button></p>
+</form>
+{% else %}
+<p class="note">税率仅管理员可修改。</p>
+{% endif %}
+{% endblock %}

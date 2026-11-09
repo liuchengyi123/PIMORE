@@ -8,24 +8,27 @@
           <div class="tagline">{{ zh ? '更好的家，更开心的一天' : 'Better Homes. Happier Days.' }}</div>
         </div>
       </div>
-      <router-link class="locale" :to="{ path: '/home', query: { locale: '1' } }">
+      <router-link class="locale" to="/locale">
         <span>{{ localeFlag }}</span>
         <span>{{ localeCode }}</span>
         <ChevronDown :size="14" :stroke-width="2.2" />
       </router-link>
     </header>
 
+    <button v-if="isHold" type="button" class="cta" style="margin:12px 0" @click="lockHold">{{ holdNote || (zh ? '锁定这件的价格' : 'Lock a price') }}</button>
     <div class="search-wrap">
       <AppSearchBar :placeholder="zh ? '搜索家居好物...' : 'Search home essentials...'" navigate-on-focus />
     </div>
 
     <section class="hero">
       <div class="hero-copy">
-        <div class="kicker">{{ zh ? '限时' : 'LIMITED TIME' }}</div>
-        <h1>{{ zh ? '家居好物最高 5 折' : 'Up to 50% Off Home Essentials' }}</h1>
-        <p>{{ zh ? '把家里刷新一下，少花一点。' : 'Refresh your space, for less.' }}</p>
-        <router-link class="cta" to="/sale">{{ zh ? '去抢购' : 'Shop Sale' }} →</router-link>
-        <div class="dots" aria-hidden="true"><i class="on" /><i /><i /><i /></div>
+        <div class="kicker">{{ slides[slideIndex].kicker }}</div>
+        <h1>{{ slides[slideIndex].title }}</h1>
+        <p>{{ slides[slideIndex].body }}</p>
+        <router-link class="cta" :to="slides[slideIndex].to">{{ slides[slideIndex].cta }} →</router-link>
+        <div class="dots">
+          <button v-for="(slide, i) in slides" :key="slide.kicker" type="button" :class="{ on: i === slideIndex }" @click="slideIndex = i" />
+        </div>
       </div>
       <img class="hero-photo" :src="heroPhoto" alt="" />
     </section>
@@ -45,15 +48,15 @@
           <div class="sec-title"><Zap :size="16" :stroke-width="2.2" class="zap" /> {{ zh ? '限时特惠' : 'Flash Deals' }}</div>
           <div class="sec-sub">{{ zh ? '省一笔，时间有限。' : 'Big savings. Limited time.' }}</div>
         </div>
-        <div class="clock" aria-label="02:18:36">
+        <router-link class="clock" to="/flash" aria-label="flash">
           <Clock :size="14" :stroke-width="2" />
           <span><b>02</b><small>{{ zh ? '时' : 'HRS' }}</small></span>
           <span><b>18</b><small>{{ zh ? '分' : 'MIN' }}</small></span>
           <span><b>36</b><small>{{ zh ? '秒' : 'SEC' }}</small></span>
-        </div>
+        </router-link>
       </div>
       <div class="row">
-        <article v-for="(item, i) in flash" :key="item.name" class="mini" @click="openSlot(i)">
+        <article v-for="item in flash" :key="item.sku" class="mini" @click="openSku(item.sku)">
           <div class="shot">
             <img :src="item.image" alt="" />
             <span class="range">$1-$10</span>
@@ -61,7 +64,7 @@
           <div class="nm">{{ item.name }}</div>
           <div class="pr">
             <b>{{ money(item.price) }}</b>
-            <button type="button" class="bag" aria-label="Add to cart" @click.stop="addSlot(item, i)"><ShoppingCart :size="14" /></button>
+            <button type="button" class="bag" aria-label="Add to cart" @click.stop="addSku(item)"><ShoppingCart :size="14" /></button>
           </div>
         </article>
       </div>
@@ -76,7 +79,7 @@
         <router-link class="see" to="/new">{{ zh ? '查看全部' : 'See All' }} →</router-link>
       </div>
       <div class="row">
-        <article v-for="(item, i) in arrivals" :key="item.name" class="mini" @click="openSlot(i + 4)">
+        <article v-for="item in arrivals" :key="item.sku" class="mini" @click="openSku(item.sku)">
           <div class="shot">
             <img :src="item.image" alt="" />
             <span class="range">$1-$10</span>
@@ -84,7 +87,7 @@
           <div class="nm">{{ item.name }}</div>
           <div class="pr">
             <b>{{ money(item.price) }}</b>
-            <button type="button" class="bag" aria-label="Add to cart" @click.stop="addSlot(item, i + 4)"><ShoppingCart :size="14" /></button>
+            <button type="button" class="bag" aria-label="Add to cart" @click.stop="addSku(item)"><ShoppingCart :size="14" /></button>
           </div>
         </article>
       </div>
@@ -99,17 +102,17 @@
       </div>
       <div v-if="error" class="state err">{{ error }}</div>
       <div class="pair">
-        <article v-for="(item, i) in picks" :key="item.name" class="wide" @click="openSlot(i + 8)">
+        <article v-for="item in picks" :key="item.sku" class="wide" @click="openSku(item.sku)">
           <div class="shot tall">
             <img :src="item.image" alt="" />
             <span class="range">$1-$10</span>
             <span class="sold">{{ zh ? '已售' : 'Sold' }}</span>
           </div>
           <div class="nm">{{ item.name }}</div>
-          <div class="stars">★★★★★ <span>({{ item.reviews }})</span></div>
+          <div class="stars">★★★★★</div>
           <div class="pr">
             <b>{{ money(item.price) }}</b>
-            <button type="button" class="bag" aria-label="Add to cart" @click.stop="addSlot(item, i + 8)"><ShoppingCart :size="14" /></button>
+            <button type="button" class="bag" aria-label="Add to cart" @click.stop="addSku(item)"><ShoppingCart :size="14" /></button>
           </div>
         </article>
       </div>
@@ -121,29 +124,23 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { Home, ChevronDown, Utensils, Archive, SprayCan, Shirt, Zap, Clock, Sparkles, UserRound, ShoppingCart } from 'lucide-vue-next'
 import { listProducts, listByCategory, money, type Product } from '@/api/products'
+import { apiRoot } from '@/api/config'
 import { useI18n } from '@/composables/i18n'
 import { useCart } from '@/composables/cart'
 import AppTabBar from '@/components/AppTabBar.vue'
 import AppSearchBar from '@/components/AppSearchBar.vue'
 import heroPhoto from '@/assets/home/hero-photo.jpg'
-import flash1 from '@/assets/home/flash-1.jpg'
-import flash2 from '@/assets/home/flash-2.jpg'
-import flash3 from '@/assets/home/flash-3.jpg'
-import flash4 from '@/assets/home/flash-4.jpg'
-import neu1 from '@/assets/home/new-1.jpg'
-import neu2 from '@/assets/home/new-2.jpg'
-import neu3 from '@/assets/home/new-3.jpg'
-import neu4 from '@/assets/home/new-4.jpg'
-import just1 from '@/assets/home/just-1.jpg'
-import just2 from '@/assets/home/just-2.jpg'
 
 const { t, lang } = useI18n()
 const zh = computed(() => String(lang.value).startsWith('zh'))
 const cart = useCart()
+const route = useRoute()
 const router = useRouter()
+const isHold = computed(() => route.name === 'hold')
+const holdNote = ref('')
 const products = ref<Product[]>([])
 const error = ref('')
 
@@ -162,36 +159,44 @@ const quickLinks = computed(() => {
   ]
 })
 
-const flash = [
-  { sku: 'glass-food-storage', name: 'Glass Food Storage Set', price: 6.99, image: flash1 },
-  { sku: 'dish-drying-rack', name: 'Foldable Dish Drying Rack', price: 7.99, image: flash2 },
-  { sku: 'spray-bottles', name: 'Multipurpose Spray Bottles (2)', price: 3.99, image: flash3 },
-  { sku: 'microfiber-cloths', name: 'Microfiber Cleaning Cloths (5)', price: 4.99, image: flash4 },
-]
-const arrivals = [
-  { sku: 'rolling-cart', name: '3-Tier Rolling Cart', price: 8.99, image: neu1 },
-  { sku: 'throw-blanket', name: 'Lightweight Throw Blanket', price: 5.99, image: neu2 },
-  { sku: 'storage-bins', name: 'Stackable Storage Bins (3)', price: 7.49, image: neu3 },
-  { sku: 'utensil-set', name: 'Silicone Utensil Set (5 pcs)', price: 4.99, image: neu4 },
-]
-const picks = [
-  { sku: 'desk-organizer', name: 'Desk Organizer', price: 6.49, image: just1, reviews: 428 },
-  { sku: 'bath-towels', name: 'Quick-Dry Bath Towels', price: 8.99, image: just2, reviews: 612 },
-]
+const slideIndex = ref(0)
+const slides = computed(() => zh.value
+  ? [
+      { kicker: '限时', title: '家居好物最高 5 折', body: '把家里刷新一下，少花一点。', cta: '去抢购', to: '/sale' },
+      { kicker: '闪购', title: '今天的限时货架', body: '倒计时结束前去看看。', cta: '看闪购', to: '/flash' },
+      { kicker: '新品', title: '刚到的家居小物', body: '从新品列表开始逛。', cta: '看新品', to: '/new' },
+      { kicker: '搜索', title: '找一件家里用得上的', body: '厨房、收纳、清洁都能搜。', cta: '去搜索', to: '/search' },
+    ]
+  : [
+      { kicker: 'LIMITED TIME', title: 'Up to 50% Off Home Essentials', body: 'Refresh your space, for less.', cta: 'Shop Sale', to: '/sale' },
+      { kicker: 'FLASH', title: 'Today’s limited shelf', body: 'Open the flash aisle before the clock ends.', cta: 'Shop flash', to: '/flash' },
+      { kicker: 'NEW', title: 'Just landed', body: 'Start with the new arrivals.', cta: 'See new', to: '/new' },
+      { kicker: 'SEARCH', title: 'Find something the house uses', body: 'Kitchen, storage, and cleaning.', cta: 'Search', to: '/search' },
+    ])
+const flash = computed(() => products.value.slice(0, 4))
+const arrivals = computed(() => products.value.slice(4, 8))
+const picks = computed(() => products.value.slice(8, 10))
 
-function asProduct(item: { sku: string; name: string; price: number; image: string }, live?: Product): Product {
-  if (live) return live
-  return { id: item.sku, sku: item.sku, name: item.name, price: item.price, category: 'home', image: item.image }
+function openSku(sku: string) {
+  if (sku) router.push({ path: '/pdp', query: { sku } })
 }
 
-function openSlot(index: number) {
-  const live = products.value[index]
-  if (live) router.push({ path: '/pdp', query: { sku: live.sku } })
-  else router.push('/browse')
+async function addSku(item: Product) {
+  await cart.addServer(item, 'default', 1)
 }
 
-function addSlot(item: { sku: string; name: string; price: number; image: string }, index: number) {
-  cart.add(asProduct(item, products.value[index]))
+async function lockHold() {
+  const sku = products.value[0]?.sku || ''
+  const body = new URLSearchParams()
+  if (sku) body.set('sku', sku)
+  const res = await fetch(apiRoot().replace(/\/$/, '') + '/hold', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' },
+    body,
+  })
+  const data = await res.json().catch(() => ({}))
+  holdNote.value = data.ok ? (zh.value ? '价格已锁定' : 'Price locked') : (zh.value ? '现在不能锁定' : 'Could not lock a price')
 }
 
 onMounted(async () => {
@@ -244,8 +249,8 @@ onMounted(async () => {
   height: 32px; border-radius: 999px; padding: 0 12px; font-size: 13px; font-weight: 700;
 }
 .dots { display: flex; gap: 4px; margin-top: 8px; }
-.dots i { width: 6px; height: 6px; border-radius: 99px; background: rgba(255,255,255,0.45); display: block; }
-.dots i.on { width: 14px; background: #fff; }
+.dots button { width: 6px; height: 6px; border: 0; border-radius: 99px; background: rgba(255,255,255,0.45); padding: 0; cursor: pointer; }
+.dots button.on { width: 14px; background: #fff; }
 .hero-photo {
   position: absolute; right: 0; top: 0; height: 100%; width: auto; max-width: 46%;
   object-fit: contain; object-position: right center;
@@ -270,7 +275,7 @@ onMounted(async () => {
 .see { color: #F96141; font-size: 13px; font-weight: 700; line-height: 1; padding-top: 0; }
 .clock {
   display: flex; align-items: center; gap: 3px; color: #F96141;
-  background: transparent; padding: 0;
+  background: transparent; padding: 0; text-decoration: none;
 }
 .clock span {
   display: flex; flex-direction: column; align-items: center; justify-content: center;

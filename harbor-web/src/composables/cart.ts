@@ -94,6 +94,25 @@ export function useCart() {
     persist()
   }
 
+  async function addServer(product: Product, size = 'default', qty = 1) {
+    add(product, size, qty)
+    const offer =
+      product.offers?.find((o) => o.label === size) ||
+      product.offers?.find((o) => o.id === size) ||
+      null
+    try {
+      const snap = await addToCartServer({
+        sku: product.sku,
+        offer: offer?.id || '',
+        qty,
+      })
+      adopt(snap)
+      return { ok: true, live: true }
+    } catch {
+      return { ok: true, live: false }
+    }
+  }
+
   function add(product: Product, size = 'default', qty = 1) {
     const offer =
       product.offers?.find((o) => o.label === size) ||
@@ -181,6 +200,7 @@ export function useCart() {
     handoffPayload,
     setLines,
     add,
+    addServer,
     setQty,
     clear,
     refreshFromServer,

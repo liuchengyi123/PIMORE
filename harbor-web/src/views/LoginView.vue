@@ -12,7 +12,12 @@
     <p class="or">{{ zh ? '或使用邮箱' : 'or use email' }}</p>
     <form class="form" @submit.prevent="submit">
       <label>{{ zh ? '邮箱' : 'Email' }}<input v-model="email" type="email" required autocomplete="email" /></label>
-      <label>{{ zh ? '密码' : 'Password' }}<input v-model="password" type="password" required autocomplete="current-password" /></label>
+      <label>{{ zh ? '密码' : 'Password' }}
+        <span class="pw">
+          <input v-model="password" :type="showPw ? 'text' : 'password'" required autocomplete="current-password" />
+          <button type="button" class="eye" @click="showPw = !showPw">{{ showPw ? (zh ? '隐藏' : 'Hide') : (zh ? '显示' : 'Show') }}</button>
+        </span>
+      </label>
       <p v-if="note" class="note">{{ note }}</p>
       <p v-if="error" class="err">{{ error }}</p>
       <button type="submit" class="btn" :disabled="busy">{{ busy ? '…' : t('me_sign_in') }}</button>
@@ -35,6 +40,7 @@ const route = useRoute()
 const router = useRouter()
 const email = ref('')
 const password = ref('')
+const showPw = ref(false)
 const busy = ref(false)
 const error = ref('')
 const note = ref('')
@@ -76,7 +82,9 @@ h1 { margin: 16px 0 4px; font-size: 22px; text-align: center; letter-spacing: -0
 .or { margin: 10px 0; text-align: center; font-size: 12px; color: #8B919A; }
 .form { display: flex; flex-direction: column; gap: 8px; background: transparent; padding: 0; }
 label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 700; color: #8B919A; }
-input { height: 44px; border: 1px solid #E8E4DC; border-radius: 12px; padding: 0 14px; font-size: 14px; color: #1C2430; background: #fff; box-sizing: border-box; }
+input { height: 44px; border: 1px solid #E8E4DC; border-radius: 12px; padding: 0 14px; font-size: 14px; color: #1C2430; background: #fff; box-sizing: border-box; width: 100%; }
+.pw { display: flex; gap: 8px; align-items: center; }
+.eye { border: 0; background: transparent; color: #F96141; font-weight: 700; cursor: pointer; }
 .btn { border: 0; height: 40px; border-radius: 999px; background: #F96141; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 4px; }
 .err { color: #E11D2E; font-size: 12px; margin: 0; }
 .note { color: #8B919A; font-size: 12px; margin: 0; text-align: center; }

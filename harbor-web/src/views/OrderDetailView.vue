@@ -26,6 +26,9 @@
         <div v-for="(s, i) in detail.summary" :key="i" class="sum">{{ s }}</div>
       </div>
       <router-link v-if="id" class="btn soft" :to="{ path: '/invoice', query: { id } }">{{ zh ? '发票' : 'Invoice' }}</router-link>
+      <button v-if="detail.canPay" type="button" class="btn" @click="pay">{{ zh ? '去支付' : 'Pay' }}</button>
+      <button v-if="detail.canCancel" type="button" class="btn soft" @click="cancel">{{ zh ? '取消' : 'Cancel' }}</button>
+      <router-link class="btn soft" :to="{ path: '/return', query: { order: id } }">{{ zh ? '申请退货' : 'Request return' }}</router-link>
       <button type="button" class="btn" @click="askCs">{{ t('chat_entry') }}</button>
     </template>
   </div>
@@ -35,6 +38,7 @@ import { ChevronLeft } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { fetchOrderDetail, type OrderDetail } from '@/api/accountApi'
+import { apiRoot } from '@/api/config'
 import { buildOrderBody } from '@/api/supportApi'
 import { useI18n } from '@/composables/i18n'
 
@@ -53,6 +57,22 @@ onMounted(async () => {
   loading.value = false
 })
 
+async function pay() {
+  const root = apiRoot().replace(/\/$/, '')
+  const res = await fetch(root + '/orders/' + encodeURIComponent(id) + '/pay', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'pay_method=paypal',
+    redirect: 'follow',
+  })
+  if (res.url) window.location.href = res.url
+}
+async function cancel() {
+  const root = apiRoot().replace(/\/$/, '')
+  await fetch(root + '/orders/' + encodeURIComponent(id) + '/cancel', { method: 'POST', credentials: 'include' })
+  detail.value = await fetchOrderDetail(id)
+}
 function askCs() {
   const body = buildOrderBody({
     id: detail.value.id,

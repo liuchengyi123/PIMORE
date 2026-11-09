@@ -69,7 +69,8 @@
           <span class="link">{{ zh ? '选择' : 'Select' }} ›</span>
         </div>
         <div class="tiny" v-if="form.coupon_code">{{ form.coupon_code }}</div>
-        <input class="coupon-in" v-model="form.coupon_code" :placeholder="zh ? '优惠码' : 'Code'" />
+        <input class="coupon-in" v-model="form.coupon_code" :placeholder="zh ? '优惠码' : 'Code'" @change="refreshQuote" />
+        <button type="button" class="link" @click="refreshQuote">{{ zh ? '使用' : 'Apply' }}</button>
       </div>
 
       <div class="card">
@@ -95,11 +96,23 @@
         </label>
       </div>
 
+      <div class="card">
+        <div class="row between">
+          <div class="sec">{{ zh ? '礼品包装' : 'Gift wrap' }}</div>
+          <button type="button" class="toggle" :class="{ on: form.gift_wrap }" @click="form.gift_wrap = !form.gift_wrap; refreshQuote()" aria-label="gift wrap">
+            <span class="knob" />
+          </button>
+        </div>
+        <div class="tiny">{{ quote.wrap_text || (zh ? '费用在后台设置，默认免费' : 'Fee is set in admin. Default is free.') }}</div>
+        <textarea v-model="form.gift" rows="2" :placeholder="zh ? '礼品留言' : 'Gift message'" @change="refreshQuote" />
+      </div>
+
       <div class="card totals">
         <div class="row between tiny-row"><span class="tiny">{{ zh ? '商品' : 'Items' }}</span><span>{{ money(subtotal) }}</span></div>
-        <div class="row between tiny-row"><span class="tiny">{{ zh ? '运费' : 'Shipping' }}</span><span>{{ zh ? '可追踪' : 'Tracked' }}</span></div>
-        <div class="row between total-row"><span class="sec">{{ zh ? '合计' : 'Total' }}</span><span class="price">{{ money(subtotal) }}</span></div>
-        <div class="tiny" style="margin-top:8px">{{ zh ? '可追踪物流 · 预计 7–12 天' : 'Tracked shipping · Est. 7–12 days' }}</div>
+        <div class="row between tiny-row"><span class="tiny">{{ zh ? '运费' : 'Shipping' }}</span><span>$0</span></div>
+        <div class="row between tiny-row"><span class="tiny">{{ zh ? '预估税' : 'Estimated tax' }}</span><span>{{ quote.tax_text || '—' }}</span></div>
+        <div class="row between total-row"><span class="sec">{{ zh ? '实付' : 'Due' }}</span><span class="price">{{ quote.due_text || money(subtotal) }}</span></div>
+        <div class="tiny" style="margin-top:8px">{{ zh ? '运费为 0，没有时效档。税额为估算，不加进实付。' : 'Shipping is $0 with no speed choice. Tax is an estimate and is not added to the charge.' }}</div>
       </div>
 
       <p v-if="error" class="err">{{ error }}</p>
@@ -120,6 +133,7 @@ import { money } from '@/api/products'
 import { useCart } from '@/composables/cart'
 import { useI18n } from '@/composables/i18n'
 import { checkoutUrl, submitCheckoutForm } from '@/api/accountApi'
+import { quoteCheckout, type CheckoutQuote } from '@/api/cartApi'
 
 const { t, lang } = useI18n()
 const zh = computed(() => String(lang.value).startsWith('zh'))
@@ -147,12 +161,26 @@ const form = reactive({
   use_balance: true,
   coupon_code: '',
   gift: '',
+  gift_wrap: false,
   buy: '',
   submit_id: '',
 })
+const quote = ref<CheckoutQuote>({})
+async function refreshQuote() {
+  quote.value = await quoteCheckout({
+    email: form.email,
+    ship_country: form.ship_country,
+    region: form.region,
+    coupon_code: form.coupon_code,
+    use_balance: form.use_balance,
+    gift_message: form.gift,
+    gift_wrap: form.gift_wrap,
+  })
+}
 
 onMounted(async () => {
   form.submit_id = 'h5-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
+  refreshQuote()
   try {
     await cart.syncLocalToServer()
   } catch {

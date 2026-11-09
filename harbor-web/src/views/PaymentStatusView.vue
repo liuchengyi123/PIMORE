@@ -5,24 +5,31 @@
     <h1>{{ zh ? '支付状态' : 'Payment status' }}</h1>
     <p class="sub">{{ zh ? '刷新后查看最新订单。未付订单可以在订单里继续支付。' : 'Refresh pulls the latest orders. If a payment is still open, pay it from the order.' }}</p>
     <p v-if="orderId" class="amt">{{ zh ? '订单' : 'Order' }} {{ orderId }}</p>
+    <p v-if="status" class="sub">{{ status }}</p>
     <button type="button" class="btn" @click="refresh">{{ zh ? '刷新状态' : 'Refresh status' }}</button>
     <router-link class="ghost" to="/chat">{{ zh ? '联系客服' : 'Contact support' }}</router-link>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed, onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
+import { fetchOrderDetail } from '@/api/accountApi'
 
 const zh = computed(() => String(navigator.language || '').toLowerCase().startsWith('zh'))
 const route = useRoute()
-const router = useRouter()
 const orderId = computed(() => String(route.query.id || route.query.order || ''))
+const status = ref('')
 
-function refresh() {
-  if (orderId.value) router.push('/orders/' + encodeURIComponent(orderId.value))
-  else router.push('/orders')
+async function load() {
+  if (!orderId.value) return
+  const detail = await fetchOrderDetail(orderId.value)
+  status.value = detail.status || detail.rawHint || ''
 }
+function refresh() {
+  load()
+}
+onMounted(load)
 </script>
 
 <style scoped>

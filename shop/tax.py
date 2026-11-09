@@ -9,8 +9,12 @@ Taxable base (merchandise cents, same unit as ``orders.merchandise_cents``):
     goods after tier, lucky, and coupon discounts
     + shipping
 
-Store credit (balance) does not reduce the base. ``gift_wrap`` is not a charge
-and is not taxed on its own.
+Store credit (balance) does not reduce the base. A gift-wrap fee, when an
+admin sets one and the shopper turns wrapping on, is added to the charged
+due and is not part of this taxable base.
+
+Rates start as the tables below. Ops replace individual cells at ``/admin/tax``
+(settings key ``tax_rates``). A missing override keeps the builtin cell.
 
 ``tax_cents`` is an estimate stored on the order. It is **not** added to
 ``due_cents`` / ``due_local``. Those stay the amount charged today, which is
@@ -21,8 +25,10 @@ changing what the payment gateway captures.
 US region ``CA`` is California. Country ``CA`` is Canada (GST only).
 US region ``DE`` is Delaware (no state sales tax). Country ``DE`` is Germany.
 A country or state missing from the tables estimates as 0, including Japan,
-so the existing yen checkout total is unchanged.
+so the existing yen checkout total is unchanged until an admin sets a rate.
 """
+
+import json
 
 # Parts per 100_000. 7.25% = 7250. Half-up in estimate_tax_cents.
 _US_STATE_PPM = {
@@ -135,21 +141,106 @@ def us_state_code(region):
     return ""
 
 
-def tax_rate_ppm(country, region):
-    """Return the provisional rate in parts per 100_000, or 0 when unknown."""
+def builtin_rate_book():
+    """Default tables. Admin overrides in settings replace individual cells."""
+    return {"us": dict(_US_STATE_PPM), "country": dict(_COUNTRY_PPM)}
+
+
+def tax_rate_ppm(country, region, rates=None):
+    """Return the provisional rate in parts per 100_000, or 0 when unknown.
+
+    ``rates`` is an optional admin book ``{"us": {"CA": ppm}, "country": {"JP": ppm}}``.
+    A present key replaces the builtin cell, including an explicit 0.
+    """
     code = country_code(country)
+    book = rates if isinstance(rates, dict) else {}
+    us_over = book.get("us") if isinstance(book.get("us"), dict) else {}
+    country_over = book.get("country") if isinstance(book.get("country"), dict) else {}
     if code == "US":
         state = us_state_code(region)
         if not state:
             return 0
+        if state in us_over:
+            return int(us_over[state])
         return int(_US_STATE_PPM.get(state, 0))
+    if code in country_over:
+        return int(country_over[code])
     return int(_COUNTRY_PPM.get(code, 0))
 
 
-def estimate_tax_cents(taxable_cents, country, region):
+def estimate_tax_cents(taxable_cents, country, region, rates=None):
     """Half-up tax in merchandise cents. 0 when the rate or the base is 0."""
     taxable = max(0, int(taxable_cents or 0))
-    ppm = tax_rate_ppm(country, region)
+    ppm = tax_rate_ppm(country, region, rates)
     if taxable <= 0 or ppm <= 0:
         return 0
     return (taxable * ppm + 50_000) // 100_000
+
+
+def _ppm_map(raw):
+    found = {}
+    if not isinstance(raw, dict):
+        return found
+    for key, value in raw.items():
+        code = "".join(ch for ch in str(key or "").upper() if ch.isalpha())[:8]
+        if not code:
+            continue
+        try:
+            ppm = int(value)
+        except (TypeError, ValueError):
+            continue
+        found[code] = max(0, min(100_000, ppm))
+    return found
+
+
+def load_tax_rates(conn):
+    """Admin overrides only. None means every cell uses the builtin table."""
+    try:
+        row = conn.execute("select value from settings where key = 'tax_rates'").fetchone()
+    except Exception:
+        return None
+    if row is None or not row["value"]:
+        return None
+    try:
+        raw = json.loads(row["value"])
+    except (json.JSONDecodeError, TypeError):
+        return None
+    if not isinstance(raw, dict):
+        return None
+    book = {"us": _ppm_map(raw.get("us")), "country": _ppm_map(raw.get("country"))}
+    if not book["us"] and not book["country"]:
+        return None
+    return book
+
+
+def save_tax_rates(conn, book):
+    payload = {
+        "us": _ppm_map((book or {}).get("us")),
+        "country": _ppm_map((book or {}).get("country")),
+    }
+    encoded = json.dumps(payload, sort_keys=True)
+    conn.execute(
+        """
+        insert into settings (key, value) values ('tax_rates', ?)
+        on conflict(key) do update set value = excluded.value
+        """,
+        (encoded,),
+    )
+
+
+def percent_to_ppm(raw):
+    """Parse an admin percent field. None means the field was left blank."""
+    text = str(raw or "").strip().replace("%", "").replace(",", "")
+    if not text:
+        return None
+    try:
+        value = float(text)
+    except ValueError:
+        return None
+    ppm = int(round(value * 1000))
+    return max(0, min(100_000, ppm))
+
+
+def ppm_to_percent(ppm):
+    text = f"{int(ppm) / 1000:.3f}".rstrip("0").rstrip(".")
+    return text or "0"

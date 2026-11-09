@@ -37,6 +37,7 @@
       <p class="side-label">增长</p>
       <a class="{% if request.url.path.startswith('/admin/coupons') %}on{% endif %}" href="/admin/coupons"><i></i>优惠券</a>
       <a class="{% if request.url.path.startswith('/admin/promos') %}on{% endif %}" href="/admin/promos"><i></i>满减运费</a>
+      <a class="{% if request.url.path.startswith('/admin/tax') %}on{% endif %}" href="/admin/tax"><i></i>税率</a>
       <a class="{% if request.url.path.startswith('/admin/lucky') %}on{% endif %}" href="/admin/lucky"><i></i>幸运抽奖</a>
       <a class="{% if request.url.path.startswith('/admin/campaigns') %}on{% endif %}" href="/admin/campaigns"><i></i>活动</a>
       <a class="{% if request.url.path.startswith('/admin/ads') %}on{% endif %}" href="/admin/ads"><i></i>站点广告</a>
@@ -81,6 +82,7 @@
             {% elif request.url.path.startswith('/admin/coupons') %}优惠券
             {% elif request.url.path.startswith('/admin/campaigns') %}活动
             {% elif request.url.path.startswith('/admin/promos') %}满减运费
+            {% elif request.url.path.startswith('/admin/tax') %}税率
             {% elif request.url.path.startswith('/admin/lucky') %}幸运抽奖
             {% elif request.url.path.startswith('/admin/withdrawals') %}提现
             {% elif request.url.path.startswith('/admin/reco') %}推荐规则
@@ -109,7 +111,7 @@
     <div class="content">
       {% if flash %}
       <div id="admin-flash" class="flash-banner" data-flash="{{ flash }}">
-        {% if flash in ["shipped","refunded","purchased","coupon_saved","coupon_enabled","promos_saved","ads_saved","payout_ok","staff_added","staff_reset","staff_enabled","staff_disabled","lucky_saved","lucky_void"] %}
+        {% if flash in ["shipped","refunded","purchased","coupon_saved","coupon_enabled","promos_saved","ads_saved","payout_ok","staff_added","staff_reset","staff_enabled","staff_disabled","lucky_saved","lucky_void","tax_saved"] %}
           <span class="ok">操作成功。</span>
         {% elif flash == "lucky_void_no" %}<span class="error">这条免单不能作废（已经返现，或本来就没有）。</span>
         {% elif flash == "refund_need_reason" %}<span class="error">退款必须填写原因（至少 3 个字）。</span>

@@ -117,7 +117,7 @@ import { fetchProductInterest, getProduct, money, type Product } from '@/api/pro
 import { useCart } from '@/composables/cart'
 import { useI18n } from '@/composables/i18n'
 import { trackBrowse } from '@/composables/browseHistory'
-import { addToCartServer } from '@/api/cartApi'
+import { addToCartServer, toggleWishlist } from '@/api/cartApi'
 
 const { t, lang } = useI18n()
 const zh = computed(() => String(lang.value).startsWith('zh'))
@@ -221,14 +221,18 @@ async function addLocalAndMaybeServer() {
   }
 }
 
-async function doWish() { /* wishlist cookie handled server-side via /wishlist when available */ }
-function doAdd() {
+const wished = ref(false)
+async function doWish() {
+  const sku = product.value?.sku
+  if (!sku) return
+  wished.value = await toggleWishlist(sku)
+}
+async function doAdd() {
   if (optionLabels.value.length && !size.value) {
     sheetOpen.value = true
     return
   }
   await addLocalAndMaybeServer()
-  alert(t('common_saved_locally'))
 }
 
 async function doBuy() {
@@ -242,7 +246,6 @@ async function doBuy() {
 
 async function confirmSheet() {
   await addLocalAndMaybeServer()
-  alert(t('common_saved_locally'))
 }
 
 async function load() {
@@ -269,6 +272,7 @@ async function load() {
   else if (p.offers?.[0]) size.value = p.offers[0].label
   else if (p.sizes?.[0]) size.value = p.sizes[0]
   trackBrowse({ sku: p.sku, name: p.name, image: p.image || '', price: p.price })
+  if (route.name === 'peek' || route.query.sheet) sheetOpen.value = true
   interestCount.value = await fetchProductInterest(p.sku)
 }
 

@@ -2850,6 +2850,99 @@ HEAT_UI = {
 for _lang, _extra in HEAT_UI.items():
     UI[_lang].update(_extra)
 
+SHOPPER_UI = {
+    "en": {
+        "tax_estimate": "Estimated tax",
+        "tax_not_in_due": "Tax is an estimate and is not added to the amount charged.",
+        "coupon_code": "Coupon code",
+        "apply": "Apply",
+        "gift_wrap": "Gift wrap",
+        "show_password": "Show password",
+        "chat_title": "Chat",
+        "chat_placeholder": "Write a message",
+        "chat_send": "Send",
+    },
+    "es": {
+        "tax_estimate": "Impuesto estimado",
+        "tax_not_in_due": "El impuesto es una estimación y no se suma al cobro.",
+        "coupon_code": "Código",
+        "apply": "Aplicar",
+        "gift_wrap": "Envolver para regalo",
+        "show_password": "Mostrar contraseña",
+        "chat_title": "Chat",
+        "chat_placeholder": "Escribe un mensaje",
+        "chat_send": "Enviar",
+    },
+    "de": {
+        "tax_estimate": "Geschätzte Steuer",
+        "tax_not_in_due": "Die Steuer ist eine Schätzung und nicht im Zahlbetrag.",
+        "coupon_code": "Gutscheincode",
+        "apply": "Anwenden",
+        "gift_wrap": "Geschenkverpackung",
+        "show_password": "Passwort zeigen",
+        "chat_title": "Chat",
+        "chat_placeholder": "Nachricht schreiben",
+        "chat_send": "Senden",
+    },
+    "fr": {
+        "tax_estimate": "Taxe estimée",
+        "tax_not_in_due": "La taxe est une estimation et n'est pas ajoutée au montant dû.",
+        "coupon_code": "Code promo",
+        "apply": "Appliquer",
+        "gift_wrap": "Emballage cadeau",
+        "show_password": "Afficher le mot de passe",
+        "chat_title": "Chat",
+        "chat_placeholder": "Écrire un message",
+        "chat_send": "Envoyer",
+    },
+    "pt": {
+        "tax_estimate": "Imposto estimado",
+        "tax_not_in_due": "O imposto é uma estimativa e não entra no valor cobrado.",
+        "coupon_code": "Cupom",
+        "apply": "Aplicar",
+        "gift_wrap": "Embrulho",
+        "show_password": "Mostrar senha",
+        "chat_title": "Chat",
+        "chat_placeholder": "Escreva uma mensagem",
+        "chat_send": "Enviar",
+    },
+    "ja": {
+        "tax_estimate": "税の見積",
+        "tax_not_in_due": "税は見積で、請求額には含まれません。",
+        "coupon_code": "クーポンコード",
+        "apply": "適用",
+        "gift_wrap": "ギフト包装",
+        "show_password": "パスワードを表示",
+        "chat_title": "チャット",
+        "chat_placeholder": "メッセージ",
+        "chat_send": "送信",
+    },
+    "zh": {
+        "tax_estimate": "预估税",
+        "tax_not_in_due": "税额为估算，不加进实付。",
+        "coupon_code": "优惠码",
+        "apply": "使用",
+        "gift_wrap": "礼品包装",
+        "show_password": "显示密码",
+        "chat_title": "客服",
+        "chat_placeholder": "输入消息",
+        "chat_send": "发送",
+    },
+    "zh-Hant": {
+        "tax_estimate": "預估稅",
+        "tax_not_in_due": "稅額為估算，不加進實付。",
+        "coupon_code": "優惠碼",
+        "apply": "使用",
+        "gift_wrap": "禮品包裝",
+        "show_password": "顯示密碼",
+        "chat_title": "客服",
+        "chat_placeholder": "輸入訊息",
+        "chat_send": "送出",
+    },
+}
+for _lang, _extra in SHOPPER_UI.items():
+    UI[_lang].update(_extra)
+
 
 def heat_line(texts, heat) -> str:
     """Short card/API heat label for one storefront language."""

@@ -1450,7 +1450,7 @@
 <div class="card">
   <h2>当前规则摘要</h2>
   <div class="pad">
-    <p>全场包邮 · 最低下单 ${{ '%.2f'|format((guarantees.checkout_min_cents if guarantees else 0) / 100) }} · 满减 {% for tier in promos.tiers %}${{ '%.2f'|format(tier[0] / 100) }}/${{ '%.2f'|format(tier[1] / 100) }}{% if not loop.last %} · {% endif %}{% endfor %} · 新人 ${{ '%.2f'|format(first_coupon.threshold_cents / 100) }}/${{ '%.2f'|format(first_coupon.amount_cents / 100) }} · 运费美加 ${{ '%.2f'|format(promos.shipping.USCA / 100) }} / 欧 ${{ '%.2f'|format(promos.shipping.EU / 100) }} / 日 ${{ '%.2f'|format(promos.shipping.JP / 100) }} / 墨巴 ${{ '%.2f'|format(promos.shipping.MXBR / 100) }}</p>
+    <p>买家运费始终 $0，没有加急/标准/经济档。最低下单 ${{ '%.2f'|format((guarantees.checkout_min_cents if guarantees else 0) / 100) }} · 礼品包装 ${{ '%.2f'|format((gift_wrap_cents|default(0)) / 100) }} · 满减 {% for tier in promos.tiers %}${{ '%.2f'|format(tier[0] / 100) }}/${{ '%.2f'|format(tier[1] / 100) }}{% if not loop.last %} · {% endif %}{% endfor %} · 新人券在本页 · <a href="/admin/tax">税率</a> · <a href="/admin/coupons">优惠券</a> · <a href="/admin/ads">广告条</a> · <a href="/admin/lucky">抽奖</a> · <a href="/admin/cs">客服</a></p>
   </div>
 </div>
 {% if is_admin_role %}
@@ -1489,10 +1489,17 @@
   </div>
   <div class="stack-col">
     <div class="card">
-      <h2>分区运费与保障</h2>
+      <h2>运费政策、包装费与保障</h2>
+      <form class="pad fields" method="post" action="/admin/promos">
+        <input type="hidden" name="section" value="gift">
+        <p class="muted small">买家结算运费固定为 $0，不提供时效档。礼品包装费在买家打开包装开关时加入实付，不计入税额。0 = 免费包装。</p>
+        <label>礼品包装费（美元） <input name="gift_wrap_dollars" value="{{ '%.2f'|format((gift_wrap_cents|default(0)) / 100) }}" inputmode="decimal"></label>
+        <div class="wide"><button class="btn" type="submit">保存包装费</button></div>
+      </form>
       <form class="pad fields" method="post" action="/admin/promos">
         <input type="hidden" name="section" value="shipping">
-        <label>美加 <input name="ship_USCA_dollars" value="{{ '%.2f'|format(promos.shipping.USCA / 100) }}" inputmode="decimal"></label>
+        <p class="muted small">下面的分区金额不计入买家实付（店面运费恒为 0）。保留字段只为兼容旧数据。</p>
+        <label>美加（不计入实付） <input name="ship_USCA_dollars" value="{{ '%.2f'|format(promos.shipping.USCA / 100) }}" inputmode="decimal"></label>
         <label>欧洲 <input name="ship_EU_dollars" value="{{ '%.2f'|format(promos.shipping.EU / 100) }}" inputmode="decimal"></label>
         <label>日本 <input name="ship_JP_dollars" value="{{ '%.2f'|format(promos.shipping.JP / 100) }}" inputmode="decimal"></label>
         <label>墨巴 <input name="ship_MXBR_dollars" value="{{ '%.2f'|format(promos.shipping.MXBR / 100) }}" inputmode="decimal"></label>

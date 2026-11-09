@@ -17,9 +17,12 @@
     <h1 v-if="!searched" class="search-title">{{ zh ? '搜索' : 'Search' }}</h1>
     <p v-if="!searched" class="search-sub">{{ zh ? '找家居好物和日常小物。' : 'Find cute home goods, everyday essentials and more.' }}</p>
     <div v-if="!q && !loading && !searched" class="hints">
-      <div class="hint-title">{{ zh ? '最近搜索' : 'Recent searches' }}</div>
+      <div class="hint-title" style="display:flex;justify-content:space-between">
+        <span>{{ zh ? '最近搜索' : 'Recent searches' }}</span>
+        <button v-if="recent.length" type="button" class="hint" @click="clearRecent">{{ zh ? '清空' : 'Clear all' }}</button>
+      </div>
       <div class="hint-row">
-        <button v-for="h in hints" :key="h" type="button" class="hint" @click="quick(h)">{{ h }}</button>
+        <button v-for="h in (recent.length ? recent : hints)" :key="h" type="button" class="hint" @click="quick(h)">{{ h }}</button>
       </div>
     </div>
     <div v-if="loading" class="state">{{ t('search_searching') }}</div>
@@ -33,13 +36,13 @@
     </div>
     <div v-else>
       <div class="sort-chips" v-if="products.length">
-        <button type="button" class="hint on">{{ zh ? '综合' : 'Best' }}</button>
-        <button type="button" class="hint">{{ zh ? '价格↑' : 'Price ↑' }}</button>
-        <button type="button" class="hint">{{ zh ? '价格↓' : 'Price ↓' }}</button>
-        <button type="button" class="hint">{{ zh ? '最新' : 'Newest' }}</button>
+        <button type="button" class="hint" :class="{ on: sort === 'best' }" @click="sort = 'best'">{{ zh ? '综合' : 'Best' }}</button>
+        <button type="button" class="hint" :class="{ on: sort === 'low' }" @click="sort = 'low'">{{ zh ? '价格↑' : 'Price ↑' }}</button>
+        <button type="button" class="hint" :class="{ on: sort === 'high' }" @click="sort = 'high'">{{ zh ? '价格↓' : 'Price ↓' }}</button>
+        <button type="button" class="hint" :class="{ on: sort === 'new' }" @click="sort = 'new'">{{ zh ? '最新' : 'Newest' }}</button>
       </div>
       <div class="grid">
-        <ProductCard v-for="p in products" :key="p.sku" :product="p" />
+        <ProductCard v-for="p in shown" :key="p.sku" :product="p" />
       </div>
     </div>
     <button v-if="products.length && hasMore" type="button" class="more" @click="loadMore">{{ t('search_load_more') }}</button>
@@ -66,6 +69,15 @@ const loading = ref(false)
 const searched = ref(false)
 const page = ref(1)
 const hasMore = ref(false)
+const sort = ref<'best' | 'low' | 'high' | 'new'>('best')
+const recent = ref<string[]>([])
+const shown = computed(() => {
+  const rows = [...products.value]
+  if (sort.value === 'low') rows.sort((a, b) => a.price - b.price)
+  else if (sort.value === 'high') rows.sort((a, b) => b.price - a.price)
+  else if (sort.value === 'new') rows.reverse()
+  return rows
+})
 const hints = computed(() => zh.value
   ? ['收纳盒', '花盆', '浴巾', '厨房收纳', '台灯']
   : ['storage bins', 'plant pots', 'bath towels', 'kitchen organizers', 'desk lamp'])
@@ -92,6 +104,7 @@ async function runSearch(query = q.value) {
     if (route.query.q !== text) {
       router.replace({ path: '/search', query: { q: text } })
     }
+    remember(text)
   } catch {
     products.value = []
     hasMore.value = false
@@ -108,6 +121,16 @@ async function loadMore() {
   products.value = products.value.concat(res.items || [])
   hasMore.value = !!res.hasMore
 }
+const RECENT_KEY = 'harbor_recent_search'
+function remember(text: string) {
+  const next = [text, ...recent.value.filter((item) => item !== text)].slice(0, 8)
+  recent.value = next
+  try { localStorage.setItem(RECENT_KEY, JSON.stringify(next)) } catch { /* ignore */ }
+}
+function clearRecent() {
+  recent.value = []
+  try { localStorage.removeItem(RECENT_KEY) } catch { /* ignore */ }
+}
 function quick(h: string) {
   runSearch(h)
 }
@@ -116,6 +139,10 @@ watch(() => route.query.q, (v) => {
   if (next && next !== q.value) runSearch(next)
 })
 onMounted(() => {
+  try {
+    const saved = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]')
+    if (Array.isArray(saved)) recent.value = saved.map((item) => String(item)).filter(Boolean)
+  } catch { /* ignore */ }
   const initial = route.query.q ? String(route.query.q) : ''
   if (initial) runSearch(initial)
 })

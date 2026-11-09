@@ -31,9 +31,11 @@ import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { fetchWishlistHtml } from '@/api/accountApi'
 import { parseFeedCards, type Product } from '@/api/products'
+import { useCart } from '@/composables/cart'
 import { useI18n } from '@/composables/i18n'
 import AppTabBar from '@/components/AppTabBar.vue'
 const { t } = useI18n()
+const cart = useCart()
 const router = useRouter()
 const products = ref<Product[]>([])
 const loading = ref(true)
@@ -60,7 +62,7 @@ function go(p: Product) {
   router.push(`/p/${encodeURIComponent(p.sku || p.id)}`)
 }
 function add(p: Product) {
-  router.push(`/p/${encodeURIComponent(p.sku || p.id)}?sheet=add`)
+  cart.addServer(p)
 }
 </script>
 <style scoped>

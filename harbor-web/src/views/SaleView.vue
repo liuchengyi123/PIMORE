@@ -59,7 +59,7 @@ function ph(p: Product) {
   return { backgroundImage: 'linear-gradient(154deg, #fda4af 6%, #be123c 94%)' }
 }
 function go(p: Product) { router.push(`/p/${encodeURIComponent(p.sku || p.id)}`) }
-function add(p: Product) { cart.add(p) }
+function add(p: Product) { cart.addServer(p) }
 </script>
 <style scoped>
 .page { min-height: 100vh; background: #FCFAF8; color: #1C2430; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }

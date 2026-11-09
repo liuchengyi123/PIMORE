@@ -32,6 +32,7 @@
           <span class="price">{{ o.due }}</span>
         </div>
         <div class="actions">
+          <button v-if="/pend|unpaid|await/i.test(o.status)" type="button" class="btn" @click.stop="pay(o)">{{ zh ? '去支付' : 'Pay' }}</button>
           <button v-if="/ship/i.test(o.status)" type="button" class="btn soft" @click.stop="track(o)">{{ zh ? '物流' : 'Track' }}</button>
           <button v-else type="button" class="btn soft" @click.stop="again(o)">{{ zh ? '再买' : 'Buy again' }}</button>
           <button type="button" class="btn" @click="$router.push('/orders/' + encodeURIComponent(o.id))">{{ zh ? '详情' : 'Details' }}</button>
@@ -45,11 +46,15 @@
 <script setup lang="ts">
 import { ChevronLeft } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { fetchOrders, type OrderRow } from '@/api/accountApi'
+import { useCart } from '@/composables/cart'
 import { useI18n } from '@/composables/i18n'
 import AppTabBar from '@/components/AppTabBar.vue'
 
 const { t, lang } = useI18n()
+const router = useRouter()
+const cart = useCart()
 const zh = computed(() => String(lang.value).startsWith('zh'))
 const orders = ref<OrderRow[]>([])
 const filter = ref('')
@@ -75,12 +80,17 @@ function pillClass(status: string) {
   if (s.includes('pend') || s.includes('await')) return 'pend'
   return ''
 }
-function track(o: OrderRow) {
-  // details page shows tracking
-  location.assign('/orders/' + encodeURIComponent(o.id))
+function pay(o: OrderRow) {
+  router.push('/orders/' + encodeURIComponent(o.id))
 }
-function again(_o: OrderRow) {
-  location.assign('/home')
+function track(o: OrderRow) {
+  router.push('/orders/' + encodeURIComponent(o.id))
+}
+async function again(o: OrderRow) {
+  const root = (await import('@/api/config')).apiRoot().replace(/\/$/, '')
+  await fetch(root + '/orders/' + encodeURIComponent(o.id) + '/again', { method: 'POST', credentials: 'include' })
+  await cart.refreshFromServer()
+  router.push('/cart')
 }
 </script>
 

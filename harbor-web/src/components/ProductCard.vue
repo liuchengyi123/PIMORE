@@ -4,11 +4,13 @@
       <img v-if="product.image" class="thumb-img" :src="product.image" alt="" loading="lazy" />
       <span v-if="imageBadge" class="img-badge" :class="imageBadge.tone">{{ imageBadge.label }}</span>
       <span v-if="product.onlyLeft" class="only-left">{{ t('only_left') }} {{ product.onlyLeft }}</span>
+      <button type="button" class="heart" aria-label="wishlist" @click.stop="wish">♡</button>
     </div>
     <div class="body">
       <div class="name">{{ product.name }}</div>
       <div class="price-row">
         <span class="price">{{ money(product.price) }}</span>
+        <button type="button" class="add" aria-label="Add" @click.stop="add">+</button>
         <span v-if="product.compareAt" class="was">{{ money(product.compareAt) }}</span>
         <span v-if="offPct" class="off-badge">-{{ offPct }}%</span>
       </div>
@@ -25,11 +27,14 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import type { Product } from '@/api/products'
 import { money } from '@/api/products'
+import { toggleWishlist } from '@/api/cartApi'
+import { useCart } from '@/composables/cart'
 import { useI18n } from '@/composables/i18n'
 
 const props = defineProps<{ product: Product }>()
 const router = useRouter()
 const { t } = useI18n()
+const cart = useCart()
 
 const palette = [
   'linear-gradient(160deg, #E8F1EC 0%, #D5E4DB 100%)',
@@ -64,6 +69,12 @@ const imageBadge = computed(() => {
 
 function go() {
   router.push({ path: '/pdp', query: { sku: props.product.sku } })
+}
+function add() {
+  cart.addServer(props.product)
+}
+function wish() {
+  toggleWishlist(props.product.sku)
 }
 </script>
 
@@ -105,4 +116,7 @@ function go() {
 .price { font-size: 16px; font-weight: 780; color: $hb-price; letter-spacing: -0.02em; }
 .was { font-size: 12px; color: $hb-muted; text-decoration: line-through; }
 .off-badge { font-size: 11px; color: $hb-forest; font-weight: 720; background: $hb-soft; padding: 2px 7px; border-radius: 999px; }
+.heart, .add { border: 0; cursor: pointer; }
+.heart { position: absolute; top: 8px; right: 8px; width: 32px; height: 32px; border-radius: 99px; background: #fff; }
+.add { margin-left: auto; width: 28px; height: 28px; border-radius: 99px; background: #F96141; color: #fff; font-weight: 700; }
 </style>
