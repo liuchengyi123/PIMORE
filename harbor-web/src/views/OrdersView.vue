@@ -38,10 +38,12 @@
       <article v-for="o in visible" :key="o.id" class="card" @click="open(o)">
         <div class="top">
           <div class="oid">{{ displayId(o.id) }}</div>
-          <div class="status" :class="tone(o)">
-            <component :is="toneIcon(o)" :size="13" :stroke-width="2.2" />
-            <span>{{ statusText(o) }}</span>
-            <ChevronRight :size="16" :stroke-width="2" class="chev" />
+          <div class="status-wrap">
+            <div class="status" :class="tone(o)">
+              <component :is="toneIcon(o)" :size="14" :stroke-width="2.2" />
+              <span>{{ statusText(o) }}</span>
+            </div>
+            <ChevronRight :size="18" :stroke-width="2" class="chev" />
           </div>
         </div>
         <div class="sub">{{ metaLine(o) }}</div>
@@ -234,34 +236,37 @@ h1 { margin: 18px 0 0; font-size: 28px; font-weight: 800; letter-spacing: -0.03e
   white-space: nowrap;
   &.on { background: #F96141; color: #fff; }
 }
-.list { display: flex; flex-direction: column; gap: 12px; padding: 0 16px; }
+.list { display: flex; flex-direction: column; gap: 14px; padding: 4px 16px 0; }
 .card {
-  background: #fff; border-radius: 20px; padding: 14px 14px 12px;
-  box-shadow: 0 8px 24px rgba(28, 36, 48, 0.05); cursor: pointer;
+  background: #fff; border-radius: 22px; padding: 16px 16px 14px;
+  box-shadow: 0 10px 28px rgba(28, 36, 48, 0.06); cursor: pointer;
 }
-.top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.oid { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.oid { font-size: 17px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.2; }
+.status-wrap { display: inline-flex; align-items: center; gap: 2px; flex: 0 0 auto; }
 .status {
-  display: inline-flex; align-items: center; gap: 4px; height: 26px; padding: 0 8px 0 10px;
-  border-radius: 999px; font-size: 12px; font-weight: 700; background: #FFF1EC; color: #F96141;
+  display: inline-flex; align-items: center; gap: 5px; height: 28px; padding: 0 12px;
+  border-radius: 999px; font-size: 13px; font-weight: 700; letter-spacing: -0.01em;
+  background: #FFF1EC; color: #F96141;
 }
-.status.paid { background: #E8F8EF; color: #1F9D55; }
-.status.return { background: #F3F4F6; color: #6B7280; }
-.status .chev { color: #C5C8CE; margin-left: 2px; }
-.sub { margin-top: 4px; font-size: 12px; color: #8B919A; }
-.body { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; }
-.thumbs { display: flex; gap: 8px; min-width: 0; }
+.status.paid { background: #E7F8EE; color: #1B9A52; }
+.status.return { background: #F3F4F6; color: #8B919A; }
+.chev { color: #C5CAD1; flex: 0 0 auto; }
+.sub { margin-top: 6px; font-size: 13px; line-height: 1.3; color: #9AA1A9; }
+.body { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 14px; }
+.thumbs { display: flex; gap: 10px; min-width: 0; }
 .thumbs img, .ph {
-  width: 64px; height: 64px; border-radius: 12px; object-fit: cover; background: #F6F1EC; flex: 0 0 auto;
+  width: 68px; height: 68px; border-radius: 14px; object-fit: cover; background: #F6F1EC; flex: 0 0 auto;
 }
-.ph { display: flex; align-items: flex-end; padding: 8px; color: #8B919A; font-size: 11px; font-weight: 700; }
+.ph { display: flex; align-items: flex-end; padding: 8px; color: #8B919A; font-size: 12px; font-weight: 700; }
 .sum { text-align: right; flex: 0 0 auto; }
-.sum-lab { font-size: 12px; color: #8B919A; }
-.price { margin-top: 2px; font-size: 20px; font-weight: 800; letter-spacing: -0.03em; color: #1C2430; }
-.actions { display: flex; justify-content: flex-end; margin-top: 8px; }
+.sum-lab { font-size: 12px; line-height: 1.2; color: #9AA1A9; }
+.price { margin-top: 4px; font-size: 22px; font-weight: 800; letter-spacing: -0.04em; line-height: 1; color: #1C2430; }
+.actions { display: flex; justify-content: flex-end; margin-top: 12px; }
 .btn {
-  height: 36px; padding: 0 18px; border: 0; border-radius: 999px; background: #F96141; color: #fff;
-  font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center;
+  height: 40px; padding: 0 22px; border: 0; border-radius: 999px; background: #F96141; color: #fff;
+  font-size: 15px; font-weight: 700; letter-spacing: -0.01em; cursor: pointer; text-decoration: none;
+  display: inline-flex; align-items: center;
 }
 .state { text-align: center; color: #8B919A; padding: 48px 16px; }
 .state .btn { margin-top: 12px; }

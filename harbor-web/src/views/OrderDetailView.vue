@@ -11,7 +11,7 @@
       <section class="card steps">
         <div class="rail" aria-hidden="true"><i :style="{ width: rail }" /></div>
         <div v-for="(step, i) in steps" :key="step.key" class="step" :class="{ on: i <= activeStep, now: i === activeStep }">
-          <span class="dot"><component :is="step.icon" :size="16" :stroke-width="2.2" /></span>
+          <span class="dot"><component :is="step.icon" :size="18" :stroke-width="2.25" /></span>
           <b>{{ step.label }}</b>
           <small>{{ step.when }}</small>
         </div>
@@ -270,23 +270,29 @@ function askCs() {
 }
 h1 { margin: 0; font-size: 18px; font-weight: 800; }
 .card {
-  margin: 12px 16px 0; background: #fff; border-radius: 18px; padding: 14px;
-  box-shadow: 0 8px 24px rgba(28, 36, 48, 0.04);
+  margin: 16px 16px 0; background: #fff; border-radius: 20px; padding: 16px;
+  box-shadow: 0 10px 28px rgba(28, 36, 48, 0.05);
 }
-.steps { position: relative; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; text-align: center; }
+.steps {
+  position: relative; display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;
+  text-align: center; padding: 6px 2px 2px;
+}
 .rail {
-  position: absolute; left: 12%; right: 12%; top: 18px; height: 3px; background: #F3D2C8; border-radius: 3px;
+  position: absolute; left: 12.5%; right: 12.5%; top: 24px; height: 3px; background: #F6D5CB; border-radius: 3px;
 }
 .rail i { display: block; height: 100%; background: #F96141; border-radius: 3px; }
-.step { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; color: #B0B6BE; }
-.step b { font-size: 12px; font-weight: 700; }
-.step small { min-height: 14px; font-size: 10px; color: #8B919A; }
+.step { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; color: #C5CAD1; }
+.step b { font-size: 13px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; }
+.step small {
+  min-height: 28px; margin-top: -2px; font-size: 11px; font-weight: 600; line-height: 1.25;
+  color: #9AA1A9; letter-spacing: -0.01em;
+}
 .dot {
-  width: 36px; height: 36px; border-radius: 50%; background: #fff; border: 2px solid #E7DFD8;
-  display: inline-flex; align-items: center; justify-content: center; color: #C5C8CE;
+  width: 40px; height: 40px; border-radius: 50%; background: #fff; border: 2px solid #E7DFD8;
+  display: inline-flex; align-items: center; justify-content: center; color: #C5CAD1;
 }
 .step.on { color: #1C2430; }
-.step.on .dot, .step.now .dot { background: #F96141; border-color: #F96141; color: #fff; }
+.step.on .dot, .step.now .dot { background: #F96141; border-color: #F96141; color: #fff; box-shadow: 0 6px 14px rgba(249, 97, 65, 0.28); }
 .track { margin: 10px 20px 0; font-size: 12px; color: #8B919A; }
 .block { padding-bottom: 8px; }
 .sec { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 800; color: #1C2430; }

@@ -122,9 +122,9 @@
           </div>
 
           <div class="quick">
-            <button type="button" @click="onTrack"><Truck :size="16" /> {{ zh ? '物流进度' : 'Tracking' }}</button>
-            <button type="button" @click="onRefund"><BadgeJapaneseYen :size="16" /> {{ zh ? '退款' : 'Refund' }}</button>
-            <button type="button" @click="onCoupon"><Ticket :size="16" /> {{ zh ? '优惠券' : 'Coupons' }}</button>
+            <button type="button" @click="onTrack"><Truck :size="18" :stroke-width="2" /> {{ zh ? '物流进度' : 'Tracking' }}</button>
+            <button type="button" @click="onRefund"><BadgeJapaneseYen :size="18" :stroke-width="2" /> {{ zh ? '退款' : 'Refund' }}</button>
+            <button type="button" @click="onCoupon"><Ticket :size="18" :stroke-width="2" /> {{ zh ? '优惠券' : 'Coupons' }}</button>
           </div>
 
           <div v-if="plusOpen" class="plus-menu">
@@ -976,11 +976,12 @@ onUnmounted(() => {
 .emoji-btn.on { outline: 2px solid rgba(15, 90, 60, 0.25); }
 .emoji { border: 0; background: transparent; display: inline-block; font-size: 22px; padding: 4px 8px; cursor: pointer; }
 .composer-row { display: flex; gap: 10px; align-items: center; width: 100%; }
-.quick { display: flex; gap: 8px; padding: 0 2px 10px; overflow: auto; }
+.quick { display: flex; gap: 10px; padding: 2px 2px 14px; overflow: auto; }
 .quick button {
-  display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px;
-  border-radius: 999px; border: 1px solid #F3D7CF; background: #fff; color: #F96141;
-  font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px;
+  border-radius: 999px; border: 1px solid #F8E0D8; background: #fff; color: #F96141;
+  font-size: 14px; font-weight: 700; letter-spacing: -0.02em; line-height: 1;
+  box-shadow: 0 4px 14px rgba(249, 97, 65, 0.08); cursor: pointer; white-space: nowrap;
 }
 .plus-menu {
   display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;
