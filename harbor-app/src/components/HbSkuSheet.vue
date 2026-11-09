@@ -1,12 +1,9 @@
 <template>
-  <view v-if="visible" class="sku-sheet" :class="{ open: panelUp }">
+  <view v-if="visible" class="sku-sheet" :class="{ open: panelUp }" data-figma="1:3">
     <view class="sku-backdrop" @click="close" @touchmove.stop.prevent="noop" />
-    <view
-      class="sku-panel"
-      :class="{ up: panelUp }"
-      @touchmove.stop
-      @click.stop
-    >
+    <view class="sku-panel" :class="{ up: panelUp }" @touchmove.stop @click.stop>
+      <view class="grab" />
+
       <view class="sheet-close" @click="close">
         <text class="sheet-close-x">×</text>
       </view>
@@ -20,72 +17,80 @@
         />
         <view v-else class="sku-head-img placeholder" />
         <view class="sku-head-meta">
-          <text class="sku-head-price">{{ money(headPrice) }}</text>
-          <text v-if="headCompare" class="sku-head-was">{{ money(headCompare) }}</text>
-          <text class="sku-picked">{{ selectedLabel || t('common_select_option') }}</text>
+          <text class="sku-brand">{{ brand }}</text>
+          <text class="sku-title">{{ title }}</text>
+          <text class="sku-price">{{ money(headPrice) }}</text>
+          <text class="sku-tag">{{ tagline }}</text>
         </view>
       </view>
 
-      <scroll-view
-        v-if="options.length"
-        class="sku-scroll"
-        scroll-y
-        :show-scrollbar="false"
-      >
-        <text class="sku-label">{{ t('common_option') }}</text>
-        <view class="sku-chips">
-          <view
-            v-for="opt in options"
-            :key="opt.key"
-            class="sku-chip"
-            :class="{ on: selected === opt.label }"
-            @click="selectOption(opt.label)"
-          >
-            <image
-              v-if="opt.image"
-              class="sku-chip-shot"
-              :src="opt.image"
-              mode="aspectFill"
-            />
-            <text class="sku-chip-name">{{ opt.label }}</text>
+      <scroll-view class="sku-scroll" scroll-y :show-scrollbar="false">
+        <!-- Color -->
+        <view class="section">
+          <text class="sec-lab">Color</text>
+          <view class="swatches">
+            <view
+              v-for="c in colorOptions"
+              :key="c.id"
+              class="swatch-wrap"
+              @click="selectColor(c)"
+            >
+              <view
+                class="swatch"
+                :class="{ on: colorId === c.id }"
+                :style="{ background: c.hex }"
+              />
+              <text class="swatch-lab" :class="{ on: colorId === c.id }">{{ c.label }}</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- Size -->
+        <view class="section">
+          <text class="sec-lab">Size</text>
+          <view class="size-row">
+            <view
+              v-for="s in sizeOptions"
+              :key="s"
+              class="size-pill"
+              :class="{ on: selected === s }"
+              @click="selectOption(s)"
+            >
+              <text>{{ s }}</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- Live offer fallback chips when product options are not size-like -->
+        <view v-if="offerMode" class="section">
+          <text class="sec-lab">{{ t('common_option') }}</text>
+          <view class="offer-chips">
+            <view
+              v-for="opt in offerOptions"
+              :key="opt.key"
+              class="offer-chip"
+              :class="{ on: selected === opt.label }"
+              @click="selectOption(opt.label)"
+            >
+              <text>{{ opt.label }}</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- Quantity -->
+        <view class="section qty-sec">
+          <text class="sec-lab">Quantity</text>
+          <view class="qty-pill">
+            <view class="qty-btn" @click="bumpQty(-1)"><text>−</text></view>
+            <text class="qty-val">{{ qty }}</text>
+            <view class="qty-btn" @click="bumpQty(1)"><text>+</text></view>
           </view>
         </view>
       </scroll-view>
 
-      <view class="sku-qty">
-        <text class="sku-qty-label">{{ t('common_qty') }}</text>
-        <view class="stepper">
-          <view class="stepper-btn" @click="bumpQty(-1)">
-            <text>−</text>
-          </view>
-          <input
-            class="stepper-input"
-            type="number"
-            :value="String(qty)"
-            @input="onQtyInput"
-          />
-          <view class="stepper-btn" @click="bumpQty(1)">
-            <text>+</text>
-          </view>
-        </view>
-      </view>
-
       <view class="sku-foot">
-        <view class="cart-dock" @click="goCart">
-          <view class="cart-ico">
-            <view class="bag-body" />
-            <view class="bag-handle" />
-          </view>
-          <view v-if="cartCount > 0" class="cart-badge">
-            <text>{{ cartCountLabel }}</text>
-          </view>
-        </view>
-        <view
-          class="sku-go"
-          :class="{ busy }"
-          @click="confirm"
-        >
-          <text>{{ mode === 'buy' ? t('sheet_buy_now') : t('sheet_add') }}</text>
+        <view class="sku-go" :class="{ busy }" @click="confirm">
+          <text>{{ ctaLabel }}</text>
         </view>
       </view>
     </view>
@@ -95,8 +100,19 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
 import { money, type Product, type ProductOffer } from '@/api/products'
-import { useCart } from '@/composables/cart'
 import { useI18n } from '@/composables/i18n'
+
+const FIGMA_THUMB = '/static/figma/sku-sheet/thumb.png'
+
+const FIGMA_COLORS = [
+  { id: 'coral', label: 'Coral', hex: '#FF6B4A' },
+  { id: 'black', label: 'Black', hex: '#1A1A1A' },
+  { id: 'heather', label: 'Heather Gray', hex: '#C8CCD1' },
+  { id: 'navy', label: 'Navy', hex: '#1B2B4A' },
+  { id: 'olive', label: 'Olive', hex: '#6B7A3A' },
+]
+
+const DEFAULT_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
 
 const props = withDefaults(
   defineProps<{
@@ -118,19 +134,17 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
-const cart = useCart()
-const cartCount = computed(() => cart.count.value)
-const cartCountLabel = computed(() => (cartCount.value > 99 ? '99+' : String(cartCount.value)))
 
 const qty = ref(1)
 const busy = ref(false)
 const visible = ref(false)
 const panelUp = ref(false)
 const selected = ref('')
+const colorId = ref('coral')
 
 type OptionItem = { key: string; label: string; image?: string; price?: number; compareAt?: number }
 
-const options = computed<OptionItem[]>(() => {
+const offerOptions = computed<OptionItem[]>(() => {
   const p = props.product
   if (!p) return []
   const offers = p.offers || []
@@ -143,38 +157,69 @@ const options = computed<OptionItem[]>(() => {
       compareAt: o.compareAt,
     }))
   }
-  return (p.sizes || []).map((s, i) => ({
-    key: `size-${i}-${s}`,
-    label: s,
-  }))
+  return []
 })
 
-const selectedOffer = computed(() => {
-  const label = selected.value
-  return options.value.find((o) => o.label === label)
+function looksLikeSize(label: string) {
+  return /^(XXS|XS|S|M|L|XL|XXL|XXXL|\d{1,2})$/i.test(String(label).trim())
+}
+
+const productSizes = computed(() => {
+  const p = props.product
+  if (!p) return [] as string[]
+  if (p.sizes?.length && p.sizes.every(looksLikeSize)) return [...p.sizes]
+  const fromOffers = (p.offers || []).map((o) => o.label).filter(looksLikeSize)
+  if (fromOffers.length) return fromOffers
+  return [] as string[]
 })
 
-const selectedLabel = computed(() => selected.value)
+const offerMode = computed(() => {
+  // Show offer chips only when we have non-size offers and no size list
+  if (productSizes.value.length) return false
+  return offerOptions.value.length > 0 && !offerOptions.value.every((o) => looksLikeSize(o.label))
+})
+
+const sizeOptions = computed(() => {
+  if (offerMode.value) return [] as string[]
+  if (productSizes.value.length) return productSizes.value
+  return DEFAULT_SIZES
+})
+
+const colorOptions = computed(() => FIGMA_COLORS)
+
+const selectedOffer = computed(() => offerOptions.value.find((o) => o.label === selected.value))
+
+const brand = computed(() => {
+  const p = props.product
+  if (!p) return 'Everlane'
+  if (/everlane/i.test(p.name || '')) return 'Everlane'
+  if (p.hub) return p.hub
+  if (p.category && p.category !== 'Bags') return p.category
+  return 'Everlane'
+})
+
+const title = computed(() => props.product?.name || 'Everyday Hoodie')
+
+const tagline = computed(
+  () => props.product?.blurb || 'Soft. Durable. Made for real life.',
+)
 
 const headImage = computed(() => {
   return (
     selectedOffer.value?.image ||
     props.product?.image ||
     props.product?.images?.[0] ||
-    ''
+    FIGMA_THUMB
   )
 })
 
 const headPrice = computed(() => {
-  return selectedOffer.value?.price ?? props.product?.price ?? 0
+  return selectedOffer.value?.price ?? props.product?.price ?? 68
 })
 
-const headCompare = computed(() => {
-  const c = selectedOffer.value?.compareAt ?? props.product?.compareAt
-  const price = headPrice.value
-  if (!c || c <= price) return 0
-  return c
-})
+const ctaLabel = computed(() =>
+  props.mode === 'buy' ? 'Confirm Buy Now' : 'Confirm Add to Cart',
+)
 
 watch(
   () => props.open,
@@ -184,10 +229,16 @@ watch(
       qty.value = 1
       busy.value = false
       panelUp.value = false
-      const next =
-        props.modelValue ||
-        options.value[0]?.label ||
-        (options.value.length ? '' : 'default')
+      colorId.value = 'coral'
+      let next = props.modelValue || ''
+      if (offerMode.value) {
+        next = next || offerOptions.value[0]?.label || ''
+      } else {
+        const sizes = sizeOptions.value
+        if (!next || !sizes.includes(next)) {
+          next = sizes.includes('M') ? 'M' : sizes[0] || 'M'
+        }
+      }
       selected.value = next
       if (next && next !== props.modelValue) emit('update:modelValue', next)
       await nextTick()
@@ -218,25 +269,23 @@ function close() {
   emit('update:open', false)
 }
 
+function selectColor(c: { id: string }) {
+  colorId.value = c.id
+}
+
 function selectOption(label: string) {
   selected.value = label
   emit('update:modelValue', label)
 }
 
 function bumpQty(delta: number) {
-  qty.value = Math.max(1, (qty.value || 1) + delta)
-}
-
-function onQtyInput(e: { detail?: { value?: string } }) {
-  const raw = e?.detail?.value ?? ''
-  const n = parseInt(String(raw), 10)
-  qty.value = Number.isFinite(n) && n > 0 ? n : 1
+  qty.value = Math.max(1, Math.min(99, (qty.value || 1) + delta))
 }
 
 function confirm() {
   if (busy.value || !props.product) return
-  const size = selected.value || options.value[0]?.label || 'default'
-  if (options.value.length && !selected.value) {
+  const size = selected.value || sizeOptions.value[0] || offerOptions.value[0]?.label || 'default'
+  if ((sizeOptions.value.length || offerOptions.value.length) && !selected.value) {
     uni.showToast({ title: t('common_choose_option'), icon: 'none' })
     return
   }
@@ -246,15 +295,9 @@ function confirm() {
     qty: Math.max(1, qty.value || 1),
     mode: props.mode === 'buy' ? 'buy' : 'add',
   })
-  // parent closes sheet; release busy shortly if still open
   setTimeout(() => {
     busy.value = false
   }, 600)
-}
-
-function goCart() {
-  emit('update:open', false)
-  uni.navigateTo({ url: '/pages/cart/index' })
 }
 </script>
 
@@ -274,7 +317,7 @@ function goCart() {
 .sku-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(20, 26, 23, 0.45);
+  background: rgba(20, 24, 30, 0.48);
   opacity: 0;
   transition: opacity 0.24s ease;
 }
@@ -287,13 +330,13 @@ function goCart() {
   left: 0;
   right: 0;
   bottom: 0;
-  max-height: min(78vh, 720px);
+  max-height: min(82vh, 760px);
   display: flex;
   flex-direction: column;
-  background: $hb-white;
-  border-radius: 22px 22px 0 0;
+  background: #fff;
+  border-radius: 24px 24px 0 0;
   padding-bottom: calc(12px + env(safe-area-inset-bottom));
-  box-shadow: 0 -12px 40px rgba(20, 26, 23, 0.12);
+  box-shadow: 0 -12px 40px rgba(20, 26, 23, 0.14);
   transform: translateY(110%);
   transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
   &.up {
@@ -301,24 +344,34 @@ function goCart() {
   }
 }
 
+.grab {
+  width: 40px;
+  height: 4px;
+  margin: 10px auto 0;
+  border-radius: 99px;
+  background: #d5d8de;
+  flex-shrink: 0;
+}
+
 .sheet-close {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 14px;
+  right: 14px;
   z-index: 3;
-  width: 40px;
-  height: 40px;
-  border-radius: $hb-radius-pill;
-  background: $hb-paper;
+  width: 32px;
+  height: 32px;
+  border-radius: 99px;
+  background: #eef0f3;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .sheet-close-x {
-  font-size: 22px;
+  font-size: 20px;
   line-height: 1;
-  color: $hb-ink;
+  color: #5b6573;
   font-weight: 500;
+  margin-top: -1px;
 }
 
 .sku-head {
@@ -326,14 +379,13 @@ function goCart() {
   display: flex;
   gap: 12px;
   align-items: flex-start;
-  padding: 18px 52px 14px 16px;
-  border-bottom: 1px solid $hb-line;
+  padding: 14px 52px 16px 20px;
 }
 .sku-head-img {
-  width: 88px;
-  height: 88px;
+  width: 72px;
+  height: 72px;
   border-radius: 12px;
-  background: $hb-paper;
+  background: #f0f1f3;
   flex-shrink: 0;
   &.placeholder {
     display: block;
@@ -342,207 +394,184 @@ function goCart() {
 .sku-head-meta {
   min-width: 0;
   flex: 1;
-  padding-top: 4px;
+  padding-top: 2px;
 }
-.sku-head-price {
+.sku-brand {
   display: block;
-  font-size: 26px;
-  font-weight: 740;
-  color: $hb-coral;
-  letter-spacing: -0.6px;
-  line-height: 1.1;
+  font-size: 12px;
+  color: #8b93a1;
+  font-weight: 500;
 }
-.sku-head-was {
+.sku-title {
+  display: block;
+  margin-top: 2px;
+  font-size: 16px;
+  font-weight: 800;
+  color: #1f2430;
+  letter-spacing: -0.2px;
+  line-height: 1.25;
+}
+.sku-price {
   display: block;
   margin-top: 4px;
-  font-size: 13px;
-  color: $hb-strike;
-  text-decoration: line-through;
+  font-size: 16px;
+  font-weight: 800;
+  color: #1f2430;
 }
-.sku-picked {
-  margin-top: 8px;
-  font-size: 14px;
-  line-height: 1.4;
-  color: $hb-muted;
-  white-space: normal;
-  word-break: break-word;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
+.sku-tag {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #8b93a1;
+  line-height: 1.35;
 }
 
 .sku-scroll {
   flex: 1 1 auto;
   min-height: 0;
-  max-height: 42vh;
-  padding: 14px 16px 4px;
+  max-height: 48vh;
+  padding: 4px 20px 8px;
   box-sizing: border-box;
-}
-.sku-label {
-  display: block;
-  margin-bottom: 10px;
-  font-size: 12px;
-  font-weight: 680;
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
-  color: $hb-muted;
-}
-.sku-chips {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  width: 100%;
-}
-.sku-chip {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  width: 100%;
-  box-sizing: border-box;
-  padding: 12px 14px;
-  border-radius: 16px;
-  background: $hb-paper;
-  &.on {
-    background: $hb-forest;
-    .sku-chip-name {
-      color: $hb-white;
-      font-weight: 680;
-    }
-  }
-}
-.sku-chip-shot {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: $hb-white;
-  flex-shrink: 0;
-  margin-top: 1px;
-}
-.sku-chip-name {
-  flex: 1 1 auto;
-  min-width: 0;
-  font-size: 13px;
-  font-weight: 560;
-  line-height: 1.4;
-  color: $hb-ink;
-  white-space: normal;
-  word-break: break-word;
-  overflow: visible;
 }
 
-.sku-qty {
-  flex: 0 0 auto;
+.section {
+  margin-bottom: 18px;
+}
+.sec-lab {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #1f2430;
+}
+
+.swatches {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 10px 16px 8px;
+  gap: 6px;
 }
-.sku-qty-label {
-  font-size: 14px;
-  font-weight: 680;
-  color: $hb-ink;
-}
-.stepper {
+.swatch-wrap {
+  flex: 1;
+  min-width: 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 6px;
 }
-.stepper-btn {
+.swatch {
   width: 36px;
   height: 36px;
-  border-radius: 12px;
-  background: $hb-paper;
+  border-radius: 99px;
+  box-sizing: border-box;
+  border: 3px solid transparent;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+.swatch.on {
+  border-color: $hb-coral;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px $hb-coral;
+}
+.swatch-lab {
+  font-size: 10px;
+  color: #8b93a1;
+  text-align: center;
+  line-height: 1.2;
+  font-weight: 500;
+}
+.swatch-lab.on {
+  color: #1f2430;
+  font-weight: 700;
+}
+
+.size-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.size-pill {
+  min-width: 48px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 99px;
+  border: 1.2px solid #e2e5ea;
+  background: #fff;
+  color: #1f2430;
+  font-size: 13px;
+  font-weight: 650;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
-  font-weight: 600;
-  color: $hb-ink;
+  box-sizing: border-box;
 }
-.stepper-input {
-  width: 52px;
-  height: 36px;
+.size-pill.on {
+  background: $hb-coral;
+  border-color: $hb-coral;
+  color: #fff;
+}
+
+.offer-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.offer-chip {
+  padding: 8px 14px;
+  border-radius: 99px;
+  border: 1.2px solid #e2e5ea;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f2430;
+}
+.offer-chip.on {
+  background: $hb-coral;
+  border-color: $hb-coral;
+  color: #fff;
+}
+
+.qty-sec {
+  margin-bottom: 8px;
+}
+.qty-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  padding: 0 8px;
+  border-radius: 14px;
+  background: #f3f4f6;
+}
+.qty-btn {
+  width: 44px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 500;
+  color: #1f2430;
+}
+.qty-val {
+  flex: 1;
   text-align: center;
-  font-size: 15px;
-  font-weight: 650;
-  color: $hb-ink;
-  background: $hb-white;
-  border: 1px solid $hb-line;
-  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 750;
+  color: #1f2430;
 }
 
 .sku-foot {
   flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 4px 16px 0;
-}
-.cart-dock {
-  position: relative;
-  flex: 0 0 44px;
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: $hb-ink;
-}
-.cart-ico {
-  position: relative;
-  width: 22px;
-  height: 22px;
-}
-.bag-body {
-  position: absolute;
-  left: 2px;
-  right: 2px;
-  top: 7px;
-  bottom: 1px;
-  border: 1.8px solid currentColor;
-  border-radius: 4px 4px 6px 6px;
-}
-.bag-handle {
-  position: absolute;
-  left: 6px;
-  right: 6px;
-  top: 2px;
-  height: 8px;
-  border: 1.8px solid currentColor;
-  border-bottom: 0;
-  border-radius: 8px 8px 0 0;
-}
-.cart-badge {
-  position: absolute;
-  top: 0;
-  right: 0;
-  min-width: 16px;
-  height: 16px;
-  padding: 0 4px;
-  border-radius: $hb-radius-pill;
-  background: $hb-coral;
-  color: $hb-white;
-  font-size: 10px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  box-sizing: border-box;
+  padding: 8px 20px 4px;
 }
 .sku-go {
-  flex: 1 1 auto;
   height: 52px;
-  border-radius: $hb-radius-btn-lg;
-  background: $hb-forest;
-  color: $hb-white;
+  border-radius: 16px;
+  background: $hb-coral;
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 15px;
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: -0.2px;
   &.busy {
     opacity: 0.7;
   }
