@@ -55,14 +55,14 @@ function go(p: Product) { router.push(`/p/${encodeURIComponent(p.sku || p.id)}`)
 function add(p: Product) { cart.add(p) }
 </script>
 <style scoped>
-.page { min-height: 100vh; background: #FCFAF8; color: #1C2430; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
+.page { min-height: 100vh; background: #F7F8FA; color: #1C2430; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
 .title { color: #1C2430; font-size: 24px; font-weight: 800; letter-spacing: -0.03em; margin: 0; }
 .hero { background: #FFF6F1; color: #1C2430; border-radius: 18px; padding: 16px; margin-bottom: 14px; }
 .eyebrow { font-weight: 800; font-size: 16px; }
 .hl { margin-top: 4px; color: #8B919A; font-size: 13px; font-weight: 500; }
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .card { background: #fff; border-radius: 18px; overflow: hidden; box-shadow: 0 6px 18px rgba(28,36,48,0.05); cursor: pointer; }
-.thumb { position: relative; aspect-ratio: 1; background: #F3F0EC; }
+.thumb { position: relative; aspect-ratio: 1; background: #F7F8FA; }
 .thumb img { width: 100%; height: 100%; object-fit: cover; }
 .tag { position: absolute; left: 8px; top: 8px; background: #F96141; color: #fff; font-size: 10px; font-weight: 800; border-radius: 999px; padding: 3px 7px; }
 .body { padding: 8px 10px 12px; }

@@ -46,14 +46,14 @@ function amountOf(c: CouponRow) {
 }
 </script>
 <style scoped>
-.page { min-height: 100vh; background: #FCFAF8; color: #1C2430; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
+.page { min-height: 100vh; background: #F7F8FA; color: #1C2430; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
 .head { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; }
 .back { border: 0; background: transparent; font-size: 22px; font-weight: 700; color: #1C2430; cursor: pointer; }
 .title { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; margin: 0; }
 .state, .gate { text-align: center; color: #6B7280; padding: 36px 8px; }
 .gate-btn { display: inline-flex; margin-top: 12px; background: #F96141; color: #fff; padding: 12px 18px; border-radius: 999px; font-weight: 600; text-decoration: none; }
 .list { display: flex; flex-direction: column; gap: 10px; }
-.coupon { display: flex; height: 68px; background: #fff; border: 1px solid #E8E4DC; border-radius: 16px; overflow: hidden; }
+.coupon { display: flex; height: 68px; background: #fff; border: 1px solid #E8EAF0; border-radius: 16px; overflow: hidden; }
 .coupon.used { opacity: 0.55; }
 .badge { width: 88px; background: #F96141; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .coupon.used .badge { background: #6B7280; }

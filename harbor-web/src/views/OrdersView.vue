@@ -86,7 +86,7 @@ function again(_o: OrderRow) {
 
 <style lang="scss" scoped>
 @import '@/styles/theme.scss';
-.page { min-height: 100vh; background: #FCFAF8; padding: 0 0 24px; }
+.page { min-height: 100vh; background: #F7F8FA; padding: 0 0 24px; }
 .head {
   display: flex; align-items: flex-end; gap: 10px; margin-bottom: 12px;
   background: #F96141; color: #fff; padding: 16px 16px 18px; padding-top: calc(16px + env(safe-area-inset-top));
@@ -101,7 +101,7 @@ h1 { margin: 0; font-size: 28px; font-weight: 800; color: #fff; }
 }
 .list { padding: 0 16px; }
 .list { display: flex; flex-direction: column; gap: 10px; }
-.card { background: #fff; border: 1px solid #E8E4DC; border-radius: 16px; padding: 12px; }
+.card { background: #fff; border: 1px solid #E8EAF0; border-radius: 16px; padding: 12px; }
 .row { display: flex; align-items: center; gap: 8px; }
 .between { justify-content: space-between; }
 .oid { font-size: 11px; color: #6B7280; }
@@ -120,6 +120,6 @@ h1 { margin: 0; font-size: 28px; font-weight: 800; color: #fff; }
   height: 36px; padding: 0 14px; border-radius: 999px; border: 0; background: #F96141; color: #fff;
   font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center;
 }
-.btn.soft { background: #fff; color: $hb-ink; border: 1px solid #E8E4DC; }
+.btn.soft { background: #fff; color: $hb-ink; border: 1px solid #E8EAF0; }
 .state { text-align: center; color: $hb-muted; padding: 40px 8px; }
 </style>

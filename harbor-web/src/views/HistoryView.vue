@@ -68,15 +68,15 @@ function clearLocal() {
 }
 </script>
 <style scoped>
-.page { min-height: 100vh; background: #FCFAF8; color: #1C2430; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
+.page { min-height: 100vh; background: #F7F8FA; color: #1C2430; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
 .head { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
 .back { border: 0; background: transparent; font-size: 22px; font-weight: 700; color: #1C2430; cursor: pointer; }
 .title { flex: 1; font-size: 22px; font-weight: 800; letter-spacing: -0.03em; margin: 0; }
 .clear { border: 0; background: transparent; font-size: 13px; font-weight: 700; color: #F96141; cursor: pointer; }
 .state { text-align: center; color: #6B7280; padding: 36px 8px; }
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.card { background: #fff; border: 1px solid #E2E6EE; border-radius: 16px; overflow: hidden; }
-.thumb { height: 120px; background: #e8e4dc; position: relative; }
+.card { background: #fff; border: 1px solid #E8EAF0; border-radius: 16px; overflow: hidden; }
+.thumb { height: 120px; background: #E8EAF0; position: relative; }
 .thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .body { padding: 10px; }
 .nm { font-size: 13px; font-weight: 600; color: #1C2430; min-height: 34px; line-height: 1.3; }

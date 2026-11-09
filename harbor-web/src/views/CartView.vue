@@ -142,13 +142,13 @@ h1 small { font-size: 12px; color: $hb-muted; font-weight: 600; }
 .confirm-card p { margin: 0; color: #5C6570; }
 .confirm-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
 .confirm-actions button { height: 40px; padding: 0 16px; border-radius: 999px; font-weight: 700; cursor: pointer; }
-.confirm-actions .ghost { background: #fff; border: 1px solid #E6E8EE; color: #1C2430; }
+.confirm-actions .ghost { background: #fff; border: 1px solid #E8EAF0; color: #1C2430; }
 .confirm-actions .ok, .confirm-actions .link { background: #F96141; border: 0; color: #fff; text-decoration: none; }
 @media (min-width: 960px) {
   .page {
     position: fixed; top: 0; right: 0; width: min(420px, 100vw); height: 100vh;
     overflow: auto; z-index: 40; background: #fff;
-    border-left: 1px solid #EFEAE4; box-shadow: -12px 0 40px rgba(28,36,48,0.12);
+    border-left: 1px solid #E8EAF0; box-shadow: -12px 0 40px rgba(28,36,48,0.12);
   }
   .sticky { background: #fff; }
 }
@@ -179,7 +179,7 @@ h1 small { font-size: 12px; color: $hb-muted; font-weight: 600; }
   position: fixed; left: 50%; transform: translateX(-50%);
   width: min(100vw, 768px);
   bottom: calc(58px + env(safe-area-inset-bottom));
-  background: #fff; border-top: 1px solid #F1EEEA; padding: 10px 16px;
+  background: #fff; border-top: 1px solid #E8EAF0; padding: 10px 16px;
   display: flex; align-items: center; gap: 10px; z-index: 90; color: #1C2430;
 }
 .sum { flex: 1; font-size: 13px; color: #8B919A; }
@@ -192,12 +192,11 @@ h1 small { font-size: 12px; color: $hb-muted; font-weight: 600; }
   margin: 12px 0; background: #fff; border: 1px solid $hb-line; border-radius: 16px; padding: 14px;
 }
 .ship-row { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; color: $hb-ink; }
-.ship-bar { margin-top: 8px; height: 8px; background: #E8E4DC; border-radius: 4px; overflow: hidden; }
+.ship-bar { margin-top: 8px; height: 8px; background: #E8EAF0; border-radius: 4px; overflow: hidden; }
 .ship-bar > i { display: block; height: 100%; background: #F96141; }
 .tiny { font-size: 11px; color: $hb-muted; margin-top: 6px; }
 .price { color: #F96141 !important; }
 .empty { padding: 80px 24px; text-align: center; }
 .empty .btn { background: #F96141; color: #fff; border-radius: 999px; padding: 10px 18px; text-decoration: none; font-weight: 700; display: inline-block; margin-top: 16px; }
 
-.fn-page { --ink:#1C2430; --teal:#0E7490; --amber:#F96141; --sand:#FCFAF8; }
 </style>

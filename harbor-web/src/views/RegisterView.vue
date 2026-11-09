@@ -38,7 +38,7 @@ async function submit() {
 <style lang="scss" scoped>
 @import '@/styles/theme.scss';
 .page { min-height: 100vh; background: $hb-paper; padding: 16px; padding-top: calc(16px + env(safe-area-inset-top)); max-width: 480px; margin: 0 auto; }
-.back { width: 40px; height: 40px; border: 0; border-radius: 14px; background: #fff; color: #121816; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(18,24,22,0.06); cursor: pointer; }
+.back { width: 40px; height: 40px; border: 0; border-radius: 14px; background: #fff; color: #1C2430; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(18,24,22,0.06); cursor: pointer; }
 h1 { margin: 18px 0 16px; }
 .form { display: flex; flex-direction: column; gap: 12px; background: $hb-white; padding: 16px; border-radius: 18px; box-shadow: $hb-shadow-soft; }
 label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700; color: $hb-muted; }
@@ -47,5 +47,4 @@ input { border: 1px solid $hb-line; border-radius: 12px; padding: 12px; font-siz
 .err { color: $hb-coral; font-size: 13px; margin: 0; }
 .link { display: inline-block; margin-top: 16px; color: $hb-forest; font-weight: 680; }
 
-.fn-page { --ink:#1C2430; --teal:#0E7490; --amber:#F96141; --sand:#FCFAF8; }
 </style>

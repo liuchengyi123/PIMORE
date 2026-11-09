@@ -77,7 +77,7 @@ async function claim() {
 onMounted(refresh)
 </script>
 <style scoped>
-.page { min-height: 100vh; background: #FCFAF8; color: #1C2430; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
+.page { min-height: 100vh; background: #F7F8FA; color: #1C2430; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
 .head { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
 .back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #1C2430; }
 .title { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; margin: 0; }
@@ -96,7 +96,7 @@ onMounted(refresh)
 .login { display: inline-block; margin-top: 10px; color: #fff; font-size: 13px; }
 .days { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 14px; }
 .day {
-  background: #fff; border: 1px solid #E8E4DC; border-radius: 12px; padding: 10px 4px;
+  background: #fff; border: 1px solid #E8EAF0; border-radius: 12px; padding: 10px 4px;
   text-align: center; min-height: 65px;
 }
 .day.today { background: #F96141; border-color: #1C2430; color: #fff; }
@@ -105,7 +105,7 @@ onMounted(refresh)
 .lab { margin-top: 4px; font-size: 11px; color: #6B7280; }
 .day.today .lab { color: #fff; }
 .balance-card {
-  margin-top: 14px; background: #fff; border: 1px solid #E8E4DC; border-radius: 16px; padding: 14px;
+  margin-top: 14px; background: #fff; border: 1px solid #E8EAF0; border-radius: 16px; padding: 14px;
 }
 .row { display: flex; justify-content: space-between; align-items: center; }
 .b-title { font-size: 16px; font-weight: 700; }
@@ -116,6 +116,6 @@ onMounted(refresh)
   display: flex; align-items: center; justify-content: center; height: 41px; border-radius: 12px;
   font-size: 14px; font-weight: 600; text-decoration: none;
 }
-.btn.outline { background: #fff; border: 1px solid #E8E4DC; color: #1C2430; }
+.btn.outline { background: #fff; border: 1px solid #E8EAF0; color: #1C2430; }
 .btn.solid { background: #F96141; color: #fff; border: 0; }
 </style>

@@ -65,15 +65,15 @@ const totalLabel = computed(() => {
 
 </script>
 <style scoped>
-.page { min-height: 100vh; background: #FCFAF8; color: #1C2430; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
+.page { min-height: 100vh; background: #F7F8FA; color: #1C2430; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
 .head { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
 .back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #1C2430; }
 .title { font-size: 17px; font-weight: 700; margin: 0; }
-.sheet { background: #fff; border: 1px solid #E8E4DC; border-radius: 16px; padding: 16px; }
+.sheet { background: #fff; border: 1px solid #E8EAF0; border-radius: 16px; padding: 16px; }
 .brand { font-size: 13px; font-weight: 800; color: #F96141; letter-spacing: -0.02em; }
 .hl { margin-top: 4px; font-size: 20px; font-weight: 800; }
 .meta { margin-top: 8px; font-size: 11px; color: #6B7280; }
-.rule { height: 1px; background: #E8E4DC; margin: 14px 0; }
+.rule { height: 1px; background: #E8EAF0; margin: 14px 0; }
 .line { font-size: 13px; padding: 4px 0; line-height: 1.4; }
 .total { display: flex; justify-content: space-between; align-items: baseline; font-size: 16px; font-weight: 700; }
 .amt { color: #F96141; font-size: 18px; }

@@ -222,12 +222,12 @@ onMounted(async () => {
 .locale {
   display: inline-flex; align-items: center; gap: 4px;
   height: 32px; padding: 0 10px; border-radius: 999px;
-  background: #fff; border: 1px solid #EEEAE6; color: #1C2430;
+  background: #fff; border: 1px solid #E8EAF0; color: #1C2430;
   font-size: 13px; font-weight: 700;
 }
 .search-wrap { margin-top: 16px; }
 .search-wrap :deep(.search-bar) {
-  min-height: 44px; border-radius: 999px; background: #fff; border: 1px solid #EFEAE4; box-shadow: none;
+  min-height: 44px; border-radius: 999px; background: #fff; border: 1px solid #E8EAF0; box-shadow: none;
 }
 .hero {
   margin-top: 16px; position: relative; min-height: 220px;
@@ -253,7 +253,7 @@ onMounted(async () => {
 .cat {
   background: #fff; border-radius: 16px; padding: 12px 6px 10px;
   display: flex; flex-direction: column; align-items: center; gap: 8px;
-  border: 1px solid #F1EEEA; box-shadow: none; color: #1C2430;
+  border: 1px solid #E8EAF0; box-shadow: none; color: #1C2430;
   font-size: 12px; font-weight: 650;
 }
 .bubble {
@@ -276,7 +276,7 @@ onMounted(async () => {
 .row { display: flex; gap: 10px; overflow-x: auto; margin-top: 12px; padding-bottom: 4px; scrollbar-width: none; }
 .row::-webkit-scrollbar { display: none; }
 .mini, .wide { flex: 0 0 164px; cursor: pointer; }
-.shot { position: relative; border-radius: 16px; overflow: hidden; background: #F4F1EE; aspect-ratio: 1; box-shadow: none; border: 1px solid #F1EEEA; }
+.shot { position: relative; border-radius: 16px; overflow: hidden; background: #F7F8FA; aspect-ratio: 1; box-shadow: none; border: 1px solid #E8EAF0; }
 .shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .range {
   position: absolute; left: 8px; top: 8px; background: #fff; color: #F96141;

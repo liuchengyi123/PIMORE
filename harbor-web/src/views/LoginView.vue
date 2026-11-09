@@ -52,17 +52,16 @@ async function submit() {
 </script>
 <style lang="scss" scoped>
 @import '@/styles/theme.scss';
-.page { min-height: 100vh; background: #FDF9F6; padding: 16px 20px 32px; padding-top: calc(16px + env(safe-area-inset-top)); }
+.page { min-height: 100vh; background: #F7F8FA; padding: 16px 20px 32px; padding-top: calc(16px + env(safe-area-inset-top)); }
 .back { width: 40px; height: 40px; border: 0; border-radius: 14px; background: transparent; color: #1C2430; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
 .brand { margin-top: 36px; text-align: center; font-size: 34px; font-weight: 800; color: #F96141; letter-spacing: -0.04em; }
 h1 { margin: 32px 0 6px; font-size: 26px; text-align: center; letter-spacing: -0.03em; }
 .sub { color: $hb-muted; font-size: 14px; margin: 0 0 22px; text-align: center; line-height: 1.45; }
 .form { display: flex; flex-direction: column; gap: 12px; background: transparent; padding: 0; }
 label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700; color: $hb-muted; }
-input { border: 1.5px solid #E7DFD8; border-radius: 16px; padding: 14px 16px; font-size: 15px; color: $hb-ink; background: #fff; }
+input { border: 1.5px solid #E8EAF0; border-radius: 16px; padding: 14px 16px; font-size: 15px; color: $hb-ink; background: #fff; }
 .btn { border: 0; height: 52px; border-radius: 999px; background: #F96141; color: #fff; font-weight: 740; cursor: pointer; margin-top: 4px; }
 .err { color: #E11D2E; font-size: 13px; margin: 0; }
 .auth-links { display: flex; justify-content: space-between; margin-top: 16px; color: #F96141; font-weight: 700; font-size: 14px; }
 
-.fn-page { --ink:#1C2430; --teal:#0E7490; --amber:#F96141; --sand:#FCFAF8; }
 </style>

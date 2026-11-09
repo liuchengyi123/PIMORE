@@ -28,7 +28,7 @@ async function install() {
 </script>
 <style scoped>
 .page {
-  min-height: 100vh; background: #FCFAF8; color: #1C2430;
+  min-height: 100vh; background: #F7F8FA; color: #1C2430;
   padding: 12px 28px 40px; padding-top: calc(12px + env(safe-area-inset-top));
 }
 .center { margin-top: 48px; text-align: center; }
@@ -44,6 +44,6 @@ p { margin: 10px auto 0; max-width: 334px; font-size: 14px; line-height: 1.5; co
 }
 .later {
   display: block; width: 100%; max-width: 334px; margin: 10px auto 0; height: 46px; border-radius: 999px;
-  border: 1px solid #E8E4DC; background: #fff; color: #1C2430; font-size: 14px; font-weight: 600; cursor: pointer;
+  border: 1px solid #E8EAF0; background: #fff; color: #1C2430; font-size: 14px; font-weight: 600; cursor: pointer;
 }
 </style>

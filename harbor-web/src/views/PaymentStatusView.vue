@@ -26,7 +26,7 @@ function refresh() {
 </script>
 
 <style scoped>
-.page { min-height: 100vh; background: #FDF9F6; color: #1C2430; padding: 16px 24px 40px; text-align: center; }
+.page { min-height: 100vh; background: #F7F8FA; color: #1C2430; padding: 16px 24px 40px; text-align: center; }
 .back { border: 0; background: transparent; font-size: 20px; cursor: pointer; float: left; }
 .brand { clear: both; margin: 36px 0 0; color: #F96141; font-weight: 800; letter-spacing: -0.03em; font-size: 28px; }
 h1 { margin: 28px 0 8px; font-size: 26px; }

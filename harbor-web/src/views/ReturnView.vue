@@ -35,14 +35,14 @@ function submit() {
 </script>
 
 <style scoped>
-.page { min-height: 100vh; background: #FCFAF8; color: #1C2430; padding: 16px 20px 32px; }
+.page { min-height: 100vh; background: #F7F8FA; color: #1C2430; padding: 16px 20px 32px; }
 .back { border: 0; background: transparent; font-size: 20px; cursor: pointer; color: #1C2430; }
 h1 { margin: 12px 0 6px; font-size: 24px; letter-spacing: -0.03em; }
 .sub { margin: 0 0 16px; color: #8B919A; font-size: 14px; }
 form { display: flex; flex-direction: column; gap: 12px; }
 label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700; color: #8B919A; }
 input, textarea {
-  border: 1.5px solid #E7DFD8; border-radius: 16px; padding: 12px 14px;
+  border: 1.5px solid #E8EAF0; border-radius: 16px; padding: 12px 14px;
   font-size: 15px; color: #1C2430; background: #fff;
 }
 .btn { height: 52px; border: 0; border-radius: 999px; background: #F96141; color: #fff; font-weight: 700; cursor: pointer; }

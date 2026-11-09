@@ -53,7 +53,7 @@ const rows = computed(() => {
 })
 </script>
 <style scoped>
-.page { min-height: 100vh; background: #FCFAF8; color: #1C2430; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
+.page { min-height: 100vh; background: #F7F8FA; color: #1C2430; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
 .head { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
 .back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #1C2430; }
 .title { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; margin: 0; }
@@ -78,7 +78,7 @@ const rows = computed(() => {
 .empty { color: #6B7280; font-size: 13px; padding: 8px 0; }
 .row-card {
   display: flex; justify-content: space-between; align-items: center;
-  background: #fff; border: 1px solid #E8E4DC; border-radius: 16px; padding: 14px; margin-bottom: 8px;
+  background: #fff; border: 1px solid #E8EAF0; border-radius: 16px; padding: 14px; margin-bottom: 8px;
 }
 .nm { font-size: 13px; font-weight: 600; }
 .when { margin-top: 2px; font-size: 11px; color: #6B7280; }

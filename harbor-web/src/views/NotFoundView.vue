@@ -13,7 +13,7 @@ const zh = computed(() => String(navigator.language || '').toLowerCase().startsW
 </script>
 <style scoped>
 .page {
-  min-height: 100vh; background: #FCFAF8; color: #1C2430;
+  min-height: 100vh; background: #F7F8FA; color: #1C2430;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   padding: 32px 24px; text-align: center;
 }

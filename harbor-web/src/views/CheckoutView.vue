@@ -213,7 +213,7 @@ h1 { margin: 0; font-size: 22px; font-weight: 800; color: $hb-ink; letter-spacin
 .split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .tiny { font-size: 12px; color: $hb-muted; margin-top: 6px; }
 .toggle {
-  width: 40px; height: 24px; border-radius: 12px; border: 0; background: #E2E6EE; position: relative; cursor: pointer;
+  width: 40px; height: 24px; border-radius: 12px; border: 0; background: #E8EAF0; position: relative; cursor: pointer;
 }
 .toggle.on { background: $hb-coral; }
 .knob {
@@ -221,10 +221,10 @@ h1 { margin: 0; font-size: 22px; font-weight: 800; color: $hb-ink; letter-spacin
 }
 .toggle.on .knob { left: 19px; }
 .pay {
-  display: flex; align-items: center; min-height: 48px; padding: 0 14px; border: 1px solid #E8E4DC; border-radius: 14px; margin-bottom: 8px;
+  display: flex; align-items: center; min-height: 48px; padding: 0 14px; border: 1px solid #E8EAF0; border-radius: 14px; margin-bottom: 8px;
   font-size: 14px; font-weight: 650; color: $hb-ink; cursor: pointer;
 }
-.pay.on { border-width: 2px; border-color: $hb-coral; background: #FFF6F3; }
+.pay.on { border-width: 2px; border-color: $hb-coral; background: #FFF1EC; }
 .pay input { margin-right: 8px; }
 .tiny-row { margin-bottom: 6px; font-size: 13px; color: $hb-ink; }
 .total-row { margin-top: 8px; padding-top: 8px; border-top: 1px solid $hb-line; }
@@ -232,7 +232,7 @@ h1 { margin: 0; font-size: 22px; font-weight: 800; color: $hb-ink; letter-spacin
 .err { color: #B91C1C; font-size: 13px; margin: 8px 0; }
 .dock {
   position: fixed; left: 50%; transform: translateX(-50%); width: min(100vw, 768px); bottom: 0; z-index: 20;
-  background: #fff; border-top: 1px solid #F1EEEA; padding: 12px 16px;
+  background: #fff; border-top: 1px solid #E8EAF0; padding: 12px 16px;
   display: flex; gap: 12px; align-items: center;
   padding-bottom: calc(12px + env(safe-area-inset-bottom));
   box-shadow: 0 -8px 24px rgba(28,36,48,0.06);

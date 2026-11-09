@@ -70,13 +70,13 @@ function askCs() {
 .head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
 .back { width: 36px; height: 36px; border: 0; border-radius: 12px; background: #fff; display: inline-flex; align-items: center; justify-content: center; box-shadow: $hb-shadow-soft; color: $hb-ink; }
 h1 { margin: 0; font-size: 18px; font-weight: 800; color: $hb-ink; }
-.card { background: #fff; border-radius: 16px; padding: 14px; margin-bottom: 10px; border: 1px solid #EFEAE4; }
+.card { background: #fff; border-radius: 16px; padding: 14px; margin-bottom: 10px; border: 1px solid #E8EAF0; }
 .row { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; font-size: 13px; color: $hb-muted; }
 .row b { color: $hb-ink; font-weight: 700; }
 .due { color: $hb-price !important; }
 .steps { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; color: $hb-muted; }
 .steps .on { color: #F96141; }
-.bar { height: 4px; background: #F3E4DE; border-radius: 4px; margin: 10px 0; overflow: hidden; }
+.bar { height: 4px; background: #E8EAF0; border-radius: 4px; margin: 10px 0; overflow: hidden; }
 .bar i { display: block; height: 100%; background: #F96141; }
 .meta { font-size: 12px; color: $hb-muted; margin-top: 4px; }
 .sum { font-size: 13px; color: $hb-ink; padding: 6px 0; border-bottom: 1px solid $hb-line; }

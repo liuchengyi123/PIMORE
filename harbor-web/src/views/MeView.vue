@@ -120,10 +120,10 @@ onMounted(async () => {
 })
 </script>
 <style scoped>
-.page { min-height: 100vh; background: #FCFAF8; color: #1C2430; padding-bottom: 90px; }
+.page { min-height: 100vh; background: #F7F8FA; color: #1C2430; padding-bottom: 90px; }
 .hero {
   padding: 16px 16px 8px; padding-top: calc(16px + env(safe-area-inset-top));
-  background: #FCFAF8; color: #1C2430;
+  background: #F7F8FA; color: #1C2430;
 }
 .top { display: flex; align-items: center; gap: 12px; }
 .avatar {
@@ -149,7 +149,7 @@ onMounted(async () => {
   border: 0; background: #F96141; color: #fff; font-weight: 700; font-size: 14px;
   height: 40px; padding: 0 18px; border-radius: 999px; cursor: pointer;
 }
-.card { margin: 14px 16px 0; background: #fff; border: 1px solid #E8E4DC; border-radius: 16px; overflow: hidden; }
+.card { margin: 14px 16px 0; background: #fff; border: 1px solid #E8EAF0; border-radius: 16px; overflow: hidden; }
 .ord-head { display: flex; justify-content: space-between; align-items: center; padding: 14px 14px 0; }
 .h { font-size: 14px; font-weight: 700; }
 .all { border: 0; background: transparent; color: #6B7280; font-size: 11px; cursor: pointer; }
@@ -163,7 +163,7 @@ onMounted(async () => {
 .ost b { font-size: 11px; color: #1C2430; }
 .menu .row {
   width: 100%; display: flex; justify-content: space-between; align-items: center;
-  padding: 14px; border: 0; border-bottom: 1px solid #E8E4DC; background: #fff; cursor: pointer;
+  padding: 14px; border: 0; border-bottom: 1px solid #E8EAF0; background: #fff; cursor: pointer;
   font-size: 14px; color: #1C2430; text-align: left;
 }
 .menu .row:last-child { border-bottom: 0; }

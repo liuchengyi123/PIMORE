@@ -162,19 +162,19 @@ onMounted(() => {
   display: flex; align-items: center; justify-content: center;
 }
 .search-wrap { margin-top: 12px; }
-.search-wrap :deep(.search-bar) { border-radius: 999px; background: #F6F4F2; border: 0; box-shadow: none; min-height: 44px; }
+.search-wrap :deep(.search-bar) { border-radius: 999px; background: #F7F8FA; border: 0; box-shadow: none; min-height: 44px; }
 .chips { display: flex; gap: 8px; overflow-x: auto; margin-top: 14px; scrollbar-width: none; }
 .chips::-webkit-scrollbar { display: none; }
 .chip {
   flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px;
-  height: 36px; padding: 0 14px; border-radius: 999px; border: 0; background: #F4F1EE;
+  height: 36px; padding: 0 14px; border-radius: 999px; border: 0; background: #F7F8FA;
   color: #1C2430; font-weight: 650; font-size: 13px; cursor: pointer;
   &.on { background: #F96141; color: #fff; }
 }
 h1 { margin: 16px 0 0; font-size: 22px; letter-spacing: -0.03em; font-weight: 800; }
 .sub { margin: 4px 0 12px; color: #8E949C; font-size: 13px; }
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 12px; }
-.shot { position: relative; border-radius: 16px; overflow: hidden; background: #F6F3F0; aspect-ratio: 1.05; cursor: pointer; box-shadow: none; border: 1px solid #F1EEEA; }
+.shot { position: relative; border-radius: 16px; overflow: hidden; background: #F7F8FA; aspect-ratio: 1.05; cursor: pointer; box-shadow: none; border: 1px solid #E8EAF0; }
 .shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .heart {
   position: absolute; top: 8px; right: 8px; width: 32px; height: 32px; border: 0; border-radius: 99px;
