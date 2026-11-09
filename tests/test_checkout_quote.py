@@ -110,7 +110,15 @@ def test_quote_us_ca_economy_matches_place_order_and_zero_tax():
     assert order["speed"] == "standard"
 
 
-def test_express_quote_matches_charged_shipping_and_tax_base():
+def test_every_speed_ships_free():
+    from shop.checkout import SPEED_SHIP_CENTS, ship_cents_for_speed
+
+    assert SPEED_SHIP_CENTS == {"express": 0, "standard": 0, "economy": 0}
+    for speed in ("express", "standard", "economy", "overnight", ""):
+        assert ship_cents_for_speed(speed) == 0
+
+
+def test_express_quote_keeps_speed_and_charges_no_shipping():
     client = _client()
     client.post("/cart/add", data={"sku": "note-holder", "qty": "1", "country": "US"})
     quoted = client.post(
@@ -119,10 +127,11 @@ def test_express_quote_matches_charged_shipping_and_tax_base():
     )
     body = quoted.json()
     assert body["ok"] is True
-    assert body["shipping_cents"] == 600
-    assert body["taxable_cents"] == 1000
-    assert body["tax_cents"] == 73
-    assert body["due_cents"] == body["total"] == 1000
+    assert body["speed"] == "express"
+    assert body["shipping_cents"] == 0
+    assert body["taxable_cents"] == 400
+    assert body["tax_cents"] == 29
+    assert body["due_cents"] == body["total"] == 400
     placed = client.post(
         "/checkout?country=US",
         data=_address(
@@ -135,9 +144,9 @@ def test_express_quote_matches_charged_shipping_and_tax_base():
     )
     assert placed.status_code == 200
     order = client.app.state.db.execute("select * from orders").fetchone()
-    assert order["shipping_cents"] == 600
-    assert order["tax_cents"] == 73
-    assert order["due_cents"] == 1000
+    assert order["shipping_cents"] == 0
+    assert order["tax_cents"] == 29
+    assert order["due_cents"] == 400
     assert order["speed"] == "express"
 
 

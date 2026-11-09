@@ -117,12 +117,10 @@ def merge_line(lines, sku, qty):
     return updated
 
 
-# Merchandise cents by delivery speed. standard and economy stay 0 so an
-# order that omits speed (stored as standard) keeps the always-free policy
-# build_quote already charges. express is a flat upgrade equal to the seeded
-# USCA promo shipping figure. Country promo shipping is not added on top.
+# Delivery speed is stored for ETA and UI only. Owner rule: no shipping
+# charges. express, standard, and economy are all 0 cents.
 SPEED_SHIP_CENTS = {
-    "express": 600,
+    "express": 0,
     "standard": 0,
     "economy": 0,
 }
@@ -137,6 +135,12 @@ def normalize_speed(speed):
     return "standard"
 
 
+def ship_cents_for_speed(speed):
+    """Price impact of a delivery speed. Always 0 for every speed."""
+    _ = normalize_speed(speed)
+    return 0
+
+
 def as_bool(value):
     if isinstance(value, bool):
         return value
@@ -146,24 +150,17 @@ def as_bool(value):
 
 
 def build_quote(promos, *, merchandise_cents, ship_country, units, currency, minor_units, coupon_cents=0, coupon_threshold_cents=0, balance_cents=0, use_balance=False, lucky_off_cents=0, speed="standard"):
-    # Standard and economy follow the always-free policy (threshold 0).
-    # A positive express fee must sit above quote()'s free-shipping waiver,
-    # which zeroes shipping whenever merchandise >= free_shipping_cents.
-    _ = (ship_country, promos.get("free_shipping_cents"), promos.get("shipping"))
-    ship = int(SPEED_SHIP_CENTS.get(normalize_speed(speed)) or 0)
-    if ship:
-        free_threshold = 10**12
-        shipping_cents = ship
-    else:
-        free_threshold = 0
-        shipping_cents = 0
+    # Always-free shipping. Speed is accepted so quote and place_order share
+    # one signature; ship_cents_for_speed is 0 for express, standard, and economy.
+    # free_shipping_cents=0 also waives any promo shipping table.
+    _ = (ship_country, promos.get("free_shipping_cents"), promos.get("shipping"), speed)
     return quote(
         merchandise_cents=merchandise_cents,
         tiers=promos["tiers"],
         coupon_cents=coupon_cents,
         coupon_threshold_cents=coupon_threshold_cents,
-        free_shipping_cents=free_threshold,
-        shipping_cents=shipping_cents,
+        free_shipping_cents=0,
+        shipping_cents=ship_cents_for_speed(speed),
         balance_cents=balance_cents,
         use_balance=use_balance,
         units_per_usd=units,
