@@ -27,7 +27,7 @@ const error = ref('')
 
 function submit() {
   if (reason.value.trim().length < 3) {
-    error.value = 'Please add a short reason.'
+    error.value = zh.value ? '请写一句原因' : 'Please add a short reason.'
     return
   }
   router.push({ path: '/chat', query: { order: orderId.value, note: reason.value.trim() } })
@@ -37,7 +37,7 @@ function submit() {
 <style scoped>
 .page { min-height: 100vh; background: #FCFAF8; color: #1C2430; padding: 16px 20px 32px; }
 .back { border: 0; background: transparent; font-size: 20px; cursor: pointer; color: #1C2430; }
-h1 { margin: 12px 0 6px; font-size: 26px; }
+h1 { margin: 12px 0 6px; font-size: 24px; letter-spacing: -0.03em; }
 .sub { margin: 0 0 16px; color: #8B919A; font-size: 14px; }
 form { display: flex; flex-direction: column; gap: 12px; }
 label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700; color: #8B919A; }

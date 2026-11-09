@@ -4,19 +4,19 @@
       <button type="button" class="back" @click="$router.back()" aria-label="back">‹</button>
       <h1 class="title">发票</h1>
     </header>
-    <div v-if="loading" class="state">Loading…</div>
+    <div v-if="loading" class="state">加载中…</div>
     <section v-else class="sheet">
-      <div class="brand">HARBOR</div>
+      <div class="brand">Pimo</div>
       <div class="hl">发票</div>
-      <div class="meta">Order {{ orderId || '—' }} · {{ dateLabel }}</div>
+      <div class="meta">订单 {{ orderId || '—' }} · {{ dateLabel }}</div>
       <div class="rule" />
-      <div v-if="!lines.length" class="state">No invoice lines.</div>
+      <div v-if="!lines.length" class="state">暂无明细</div>
       <div v-for="(l, i) in lines" :key="i" class="line">
         <span class="left">{{ l }}</span>
       </div>
       <div class="rule" />
       <div class="total">
-        <span>Total</span>
+        <span>合计</span>
         <span class="amt">{{ totalLabel }}</span>
       </div>
       <a
@@ -25,7 +25,7 @@
         :href="shopPath('/orders/' + encodeURIComponent(orderId) + '/invoice')"
         target="_blank"
         rel="noopener"
-      >Download / Share</a>
+      >下载 / 分享</a>
     </section>
   </div>
 </template>
@@ -56,7 +56,7 @@ onMounted(async () => {
   } finally { loading.value = false }
 })
 
-const dateLabel = computed(() => new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }))
+const dateLabel = computed(() => new Date().toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', year: 'numeric' }))
 const totalLabel = computed(() => {
   const hit = (lines.value || []).find((l: string) => /\$[0-9]/.test(String(l)))
   const m = hit && String(hit).match(/\$[0-9.,]+/)
@@ -70,7 +70,7 @@ const totalLabel = computed(() => {
 .back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #1C2430; }
 .title { font-size: 17px; font-weight: 700; margin: 0; }
 .sheet { background: #fff; border: 1px solid #E8E4DC; border-radius: 16px; padding: 16px; }
-.brand { font-size: 13px; font-weight: 700; color: #0E7490; }
+.brand { font-size: 13px; font-weight: 800; color: #F96141; letter-spacing: -0.02em; }
 .hl { margin-top: 4px; font-size: 20px; font-weight: 800; }
 .meta { margin-top: 8px; font-size: 11px; color: #6B7280; }
 .rule { height: 1px; background: #E8E4DC; margin: 14px 0; }

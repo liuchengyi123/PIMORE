@@ -101,7 +101,7 @@ h1 { margin: 0; font-size: 28px; font-weight: 800; color: #fff; }
 }
 .list { padding: 0 16px; }
 .list { display: flex; flex-direction: column; gap: 10px; }
-.card { background: #fff; border: 1px solid #E8E4DC; border-radius: 16px; padding: 14px; }
+.card { background: #fff; border: 1px solid #E8E4DC; border-radius: 16px; padding: 12px; }
 .row { display: flex; align-items: center; gap: 8px; }
 .between { justify-content: space-between; }
 .oid { font-size: 11px; color: #6B7280; }

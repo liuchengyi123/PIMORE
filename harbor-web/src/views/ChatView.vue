@@ -1109,12 +1109,12 @@ onUnmounted(() => {
   .offer-bar { margin: 0 16px 10px; }
   .sheet-list { max-height: none; }
 }
-.fn-chat-empty { text-align: center; padding: 60px 32px; }
+.fn-chat-empty { text-align: center; padding: 48px 24px; }
 .fn-chat-ico {
   width: 64px; height: 64px; margin: 0 auto 14px; border-radius: 20px; background: #FFF1EC;
   display: flex; align-items: center; justify-content: center; font-size: 24px;
 }
-.fn-chat-title { font-weight: 700; color: #1C2430; font-size: 17px; }
+.fn-chat-title { font-weight: 800; color: #1C2430; font-size: 18px; letter-spacing: -0.02em; }
 .fn-chat-sub { margin-top: 8px; font-size: 12px; color: #6B7280; line-height: 1.5; }
 .head { background: #fff !important; border-bottom: 1px solid #E8E4DC; }
 .title { color: #1C2430 !important; }
