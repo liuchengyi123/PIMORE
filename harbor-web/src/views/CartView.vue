@@ -154,8 +154,8 @@ h1 small { font-size: 12px; color: $hb-muted; font-weight: 600; }
 }
 .list { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
 .row {
-  display: flex; gap: 10px; align-items: center; background: $hb-white; border-radius: 18px;
-  padding: 12px; box-shadow: $hb-shadow-soft;
+  display: flex; gap: 12px; align-items: center; background: #fff; border-radius: 16px;
+  padding: 12px; box-shadow: 0 8px 18px rgba(28,36,48,0.05);
 }
 .img { width: 74px; height: 74px; border-radius: 14px; object-fit: cover; background: $hb-soft; }
 .body { flex: 1; min-width: 0; }

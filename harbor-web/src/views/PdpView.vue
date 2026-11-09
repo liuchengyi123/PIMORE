@@ -260,7 +260,7 @@ async function notifyMe() {
 .pill.coral { background: $hb-price; color: #fff; }
 .body { padding: 16px; }
 .ships { font-size: 12px; color: $hb-forest; font-weight: 650; }
-.title { margin: 8px 0; font-size: 22px; line-height: 1.25; color: $hb-ink; }
+.title { margin: 4px 0 6px; font-size: 22px; line-height: 1.25; letter-spacing: -0.03em; color: $hb-ink; font-weight: 800; }
 .interest { color: $hb-deep; font-weight: 600; margin: 0 0 8px; font-size: 13px; color: $hb-muted; font-weight: 560; }
 .price-row { display: flex; gap: 8px; align-items: baseline; }
 .price { font-size: 24px; font-weight: 780; color: $hb-ink; }

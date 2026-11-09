@@ -184,8 +184,8 @@ async function place() {
 .page { min-height: 100vh; background: $hb-paper; padding: 8px 16px 120px; padding-top: calc(8px + env(safe-area-inset-top)); }
 .head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
 .back { width: 36px; height: 36px; border: 0; border-radius: 12px; background: #fff; display: inline-flex; align-items: center; justify-content: center; color: $hb-ink; box-shadow: $hb-shadow-soft; }
-h1 { margin: 0; font-size: 18px; font-weight: 800; color: $hb-ink; }
-.card { background: #fff; border-radius: 14px; padding: 14px; margin-bottom: 10px; border: 1px solid $hb-line; }
+h1 { margin: 0; font-size: 22px; font-weight: 800; color: $hb-ink; letter-spacing: -0.03em; }
+.card { background: #fff; border-radius: 16px; padding: 14px; margin-bottom: 12px; border: 0; box-shadow: 0 8px 20px rgba(28,36,48,0.05); }
 .sec { font-weight: 700; font-size: 14px; color: $hb-ink; }
 .row { display: flex; align-items: center; gap: 8px; }
 .between { justify-content: space-between; }

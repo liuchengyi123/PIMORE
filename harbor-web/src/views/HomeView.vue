@@ -205,7 +205,7 @@ onMounted(async () => {
   min-height: 100vh;
   background: #FDFBF9;
   color: #1C2430;
-  padding: 12px 16px 0;
+  padding: 14px 16px 8px;
   font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 .top { display: flex; align-items: center; justify-content: space-between; }
@@ -272,8 +272,8 @@ onMounted(async () => {
 .clock small { font-size: 8px; letter-spacing: 0.04em; color: #C47A68; }
 .row { display: flex; gap: 10px; overflow-x: auto; margin-top: 12px; padding-bottom: 4px; scrollbar-width: none; }
 .row::-webkit-scrollbar { display: none; }
-.mini, .wide { flex: 0 0 158px; cursor: pointer; }
-.shot { position: relative; border-radius: 14px; overflow: hidden; background: #F4F1EE; aspect-ratio: 1; }
+.mini, .wide { flex: 0 0 164px; cursor: pointer; }
+.shot { position: relative; border-radius: 16px; overflow: hidden; background: #F4F1EE; aspect-ratio: 1; box-shadow: 0 6px 16px rgba(28,36,48,0.04); }
 .shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .range {
   position: absolute; left: 8px; top: 8px; background: #fff; color: #F96141;
