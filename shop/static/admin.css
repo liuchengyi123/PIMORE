@@ -1825,6 +1825,10 @@ tbody td { border-top: 1px solid #F0F1F5; }
 .tag.paid, .tag.pending { background: #FFF1EC; color: #E24E32; }
 .tag.shipped { background: #E7F8EF; color: #128A5E; }
 .tag.refunded, .tag.cancelled { background: #F3F4F6; color: #6B7280; }
+.stack, form.stack { display: grid; gap: 10px; }
+.stack input, .stack select, .stack textarea, form.stack input, form.stack select, form.stack textarea {
+  width: 100%; box-sizing: border-box; border: 1px solid #E8EAF0; border-radius: 10px; background: #fff; color: #1C2430;
+}
 #launch-postback .funnel-totals span { font-size: 12px; color: #5C6570; }
 
 
