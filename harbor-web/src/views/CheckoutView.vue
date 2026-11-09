@@ -15,7 +15,18 @@
         {{ form.address }}{{ form.city ? ', ' + form.city : '' }}{{ form.region ? ', ' + form.region : '' }} {{ form.postal }}<br />
         {{ form.ship_country }}
       </div>
-      <div class="addr muted" v-else>Add shipping address below</div>
+      <div class="addr muted" v-else>{{ zh ? '还没有地址' : 'No address yet' }}</div>
+      <button type="button" class="link" @click="addrSheet = true">{{ zh ? '填写地址' : 'Address form' }}</button>
+    </div>
+    <div v-if="addrSheet" class="addr-mask" @click.self="addrSheet = false">
+      <div class="addr-sheet" role="dialog">
+        <h2>{{ zh ? '收货地址' : 'Shipping address' }}</h2>
+        <label class="field"><span>{{ zh ? '邮箱' : 'Email' }}</span><input v-model="form.email" type="email" /></label>
+        <label class="field"><span>{{ zh ? '姓名' : 'Name' }}</span><input v-model="form.name" /></label>
+        <label class="field"><span>{{ zh ? '地址' : 'Address' }}</span><input v-model="form.address" /></label>
+        <label class="field"><span>{{ zh ? '城市' : 'City' }}</span><input v-model="form.city" /></label>
+        <button type="button" class="place" @click="addrSheet = false">{{ zh ? '完成' : 'Done' }}</button>
+      </div>
     </div>
 
     <form class="form" @submit.prevent="place">
@@ -100,6 +111,7 @@ import { checkoutUrl, submitCheckoutForm } from '@/api/accountApi'
 
 const { t, lang } = useI18n()
 const zh = computed(() => String(lang.value).startsWith('zh'))
+const addrSheet = ref(false)
 const cart = useCart()
 const router = useRouter()
 const lines = computed(() => cart.lines.value)
@@ -216,4 +228,14 @@ h1 { margin: 0; font-size: 18px; font-weight: 800; color: $hb-ink; }
   font-weight: 700; font-size: 15px; cursor: pointer;
 }
 .place:disabled { opacity: .5; }
+.addr-mask {
+  position: fixed; inset: 0; z-index: 70; background: rgba(28,36,48,0.45);
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.addr-sheet {
+  width: min(100%, 768px); background: #fff; border-radius: 20px 20px 0 0;
+  padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+}
+.addr-sheet h2 { margin: 0 0 10px; font-size: 18px; }
+.addr-sheet .place { width: 100%; margin-top: 8px; }
 </style>

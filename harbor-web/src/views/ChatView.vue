@@ -969,7 +969,7 @@ onUnmounted(() => {
 }
 .sheet {
   width: 100%; max-width: 560px; max-height: 58vh;
-  background: $hb-white; border-radius: 18px 18px 0 0;
+  background: $hb-white; border-radius: 22px 22px 0 0;
   padding: 12px 14px calc(14px + env(safe-area-inset-bottom));
   box-shadow: 0 -8px 30px rgba(0,0,0,0.12);
 }

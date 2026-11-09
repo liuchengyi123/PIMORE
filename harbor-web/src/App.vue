@@ -1,10 +1,12 @@
 <template>
   <router-view />
   <CsFab />
+  <ShopNudges />
 </template>
 
 <script setup lang="ts">
 import CsFab from '@/components/CsFab.vue'
+import ShopNudges from '@/components/ShopNudges.vue'
 </script>
 
 <style>

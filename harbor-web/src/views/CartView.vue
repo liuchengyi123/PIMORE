@@ -47,6 +47,16 @@
       <button type="button" class="checkout" @click="$router.push('/checkout')">去结算</button>
     </div>
     <AppTabBar active="cart" />
+    <div v-if="showGap" class="confirm-mask" @click.self="gapOff = true">
+      <div class="confirm-card" role="dialog">
+        <h2>{{ zhCart ? '再买一点就包邮' : 'A bit more for free shipping' }}</h2>
+        <p>{{ zhCart ? '还差 ' + money(Math.max(0, minOrder - subtotal)) + '。加一件凑单商品即可。' : 'Add ' + money(Math.max(0, minOrder - subtotal)) + ' more.' }}</p>
+        <div class="confirm-actions">
+          <button type="button" class="ghost" @click="gapOff = true">{{ zhCart ? '留下' : 'Stay' }}</button>
+          <router-link class="ok link" to="/sale" @click="gapOff = true">{{ zhCart ? '去凑单' : 'Add items' }}</router-link>
+        </div>
+      </div>
+    </div>
     <div v-if="pendingRemove" class="confirm-mask" @click.self="pendingRemove = null">
       <div class="confirm-card" role="dialog">
         <h2>{{ zhCart ? '移除商品' : 'Remove item' }}</h2>
@@ -73,6 +83,8 @@ import AppSearchBar from '@/components/AppSearchBar.vue'
 const { t, lang } = useI18n()
 const zhCart = computed(() => String(lang.value).startsWith('zh'))
 const pendingRemove = ref<LocalCartLine | null>(null)
+const gapOff = ref(false)
+const showGap = computed(() => !gapOff.value && lines.value.length > 0 && minOrder.value > 0 && subtotal.value < minOrder.value)
 const cart = useCart()
 const router = useRouter()
 const lines = computed(() => cart.lines.value)
@@ -125,7 +137,13 @@ h1 small { font-size: 12px; color: $hb-muted; font-weight: 600; }
 .confirm-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
 .confirm-actions button { height: 40px; padding: 0 16px; border-radius: 999px; font-weight: 700; cursor: pointer; }
 .confirm-actions .ghost { background: #fff; border: 1px solid #E6E8EE; color: #1C2430; }
-.confirm-actions .ok { background: #F96141; border: 0; color: #fff; }
+.confirm-actions .ok, .confirm-actions .link { background: #F96141; border: 0; color: #fff; text-decoration: none; }
+@media (min-width: 960px) {
+  .page {
+    position: fixed; top: 0; right: 0; width: min(420px, 100vw); height: 100vh;
+    overflow: auto; z-index: 40; box-shadow: -12px 0 40px rgba(28,36,48,0.12);
+  }
+}
 .clear { border: 0; background: transparent; color: $hb-muted; cursor: pointer; font-weight: 650; }
 .empty { text-align: center; padding: 64px 12px; color: $hb-muted; }
 .empty-ico { color: $hb-muted; opacity: 0.55; margin-bottom: 10px; }

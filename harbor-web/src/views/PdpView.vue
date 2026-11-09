@@ -327,7 +327,7 @@ async function notifyMe() {
 .sticky-cta .btn.solid { background: $hb-price !important; }
 .sticky-cta .btn.disabled { background: #E8E4DC !important; color: #9CA3AF !important; }
 .dock.wish { flex-direction: column; font-size: 11px; color: $hb-muted; width: auto; padding: 0 6px; background: transparent; box-shadow: none; }
-.sheet { border-radius: 20px 20px 0 0 !important; }
+.sheet { border-radius: 22px 22px 0 0 !important; padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
 .sheet-ok { background: $hb-price !important; }
 .page { background: $hb-paper; }
 

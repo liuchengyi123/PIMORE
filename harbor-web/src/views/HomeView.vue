@@ -8,7 +8,7 @@
           <div class="tagline">{{ zh ? '更好的家，更开心的一天' : 'Better Homes. Happier Days.' }}</div>
         </div>
       </div>
-      <router-link class="locale" to="/locale">
+      <router-link class="locale" :to="{ path: '/home', query: { locale: '1' } }">
         <span>{{ localeFlag }}</span>
         <span>{{ localeCode }}</span>
         <ChevronDown :size="14" :stroke-width="2.2" />
