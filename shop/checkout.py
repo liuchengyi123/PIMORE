@@ -117,27 +117,15 @@ def merge_line(lines, sku, qty):
     return updated
 
 
-# Delivery speed is stored for ETA and UI only. Owner rule: no shipping
-# charges. express, standard, and economy are all 0 cents.
-SPEED_SHIP_CENTS = {
-    "express": 0,
-    "standard": 0,
-    "economy": 0,
-}
+# Legacy orders.speed column. New orders store this one value. It is not a
+# shopper choice and it does not change price or the delivery window.
+ORDER_SPEED = "standard"
 
 _TRUE_VALUES = {"1", "true", "yes", "on"}
 
 
-def normalize_speed(speed):
-    text = str(speed or "").strip().lower()
-    if text in SPEED_SHIP_CENTS:
-        return text
-    return "standard"
-
-
-def ship_cents_for_speed(speed):
-    """Price impact of a delivery speed. Always 0 for every speed."""
-    _ = normalize_speed(speed)
+def shipping_cents():
+    """Single shipping price. Always 0."""
     return 0
 
 
@@ -149,18 +137,16 @@ def as_bool(value):
     return str(value or "").strip().lower() in _TRUE_VALUES
 
 
-def build_quote(promos, *, merchandise_cents, ship_country, units, currency, minor_units, coupon_cents=0, coupon_threshold_cents=0, balance_cents=0, use_balance=False, lucky_off_cents=0, speed="standard"):
-    # Always-free shipping. Speed is accepted so quote and place_order share
-    # one signature; ship_cents_for_speed is 0 for express, standard, and economy.
-    # free_shipping_cents=0 also waives any promo shipping table.
-    _ = (ship_country, promos.get("free_shipping_cents"), promos.get("shipping"), speed)
+def build_quote(promos, *, merchandise_cents, ship_country, units, currency, minor_units, coupon_cents=0, coupon_threshold_cents=0, balance_cents=0, use_balance=False, lucky_off_cents=0):
+    # One shipping price: 0. free_shipping_cents=0 also waives any promo table.
+    _ = (ship_country, promos.get("free_shipping_cents"), promos.get("shipping"))
     return quote(
         merchandise_cents=merchandise_cents,
         tiers=promos["tiers"],
         coupon_cents=coupon_cents,
         coupon_threshold_cents=coupon_threshold_cents,
         free_shipping_cents=0,
-        shipping_cents=ship_cents_for_speed(speed),
+        shipping_cents=shipping_cents(),
         balance_cents=balance_cents,
         use_balance=use_balance,
         units_per_usd=units,
@@ -182,14 +168,12 @@ def settle_checkout(
     balance_cents,
     use_balance,
     lucky_off_cents,
-    speed,
 ):
     """One money path for place_order and the quote API.
 
     Taxable base is goods after discounts and coupons, plus shipping.
-    tax_cents is not folded into due_cents (see shop.tax).
+    Shipping is 0. tax_cents is not folded into due_cents (see shop.tax).
     """
-    speed = normalize_speed(speed)
     bill = build_quote(
         promos,
         merchandise_cents=merchandise_cents,
@@ -202,12 +186,11 @@ def settle_checkout(
         balance_cents=balance_cents,
         use_balance=use_balance,
         lucky_off_cents=lucky_off_cents,
-        speed=speed,
     )
     goods_after = max(0, int(merchandise_cents) - int(bill.discount_cents) - int(bill.coupon_cents))
     taxable = goods_after + int(bill.shipping_cents)
     tax = estimate_tax_cents(taxable, ship_country, region)
-    return bill, taxable, tax, speed
+    return bill, taxable, tax
 
 
 def live_offers(row):
@@ -458,7 +441,6 @@ def _quote_payload(
     *,
     ok,
     currency,
-    speed,
     lines,
     blockers,
     gift_message,
@@ -493,7 +475,6 @@ def _quote_payload(
         "due_cents": int(due),
         "due_local": int(due_local),
         "currency": currency or "USD",
-        "speed": normalize_speed(speed),
         "lines": lines,
         "blockers": list(blockers),
         "gift_message": _gift_message(gift_message),
@@ -517,7 +498,6 @@ def preview_checkout_quote(
     currency="USD",
     units=1,
     minor_units=2,
-    speed="standard",
     coupon_id=None,
     coupon_code="",
     use_balance=False,
@@ -540,10 +520,8 @@ def preview_checkout_quote(
     gift_message = _gift_message(gift_message)
     gift_wrap = as_bool(gift_wrap)
     use_balance = as_bool(use_balance)
-    speed = normalize_speed(speed)
     common = dict(
         currency=currency,
-        speed=speed,
         gift_message=gift_message,
         gift_wrap=gift_wrap,
         gift_sku=gift_sku,
@@ -573,7 +551,7 @@ def preview_checkout_quote(
             ok=False, lines=[], blockers=[exc.code or "coupon"], sku=exc.sku or "", **common
         )
     available = _available_balance(conn, email) if use_balance else 0
-    bill, taxable, tax, speed = settle_checkout(
+    bill, taxable, tax = settle_checkout(
         promos,
         merchandise_cents=merchandise,
         ship_country=ship_country,
@@ -585,7 +563,6 @@ def preview_checkout_quote(
         balance_cents=available,
         use_balance=use_balance,
         lucky_off_cents=lucky_off_cents,
-        speed=speed,
     )
     shown = [
         {
@@ -673,7 +650,6 @@ def place_order(
     hold=None,
     lucky_off_cents=0,
     lucky_token="",
-    speed="standard",
 ):
     email = (email or "").strip().lower()
     ship_country = (ship_country or "").strip().upper()
@@ -722,7 +698,7 @@ def place_order(
                 bool(coupon_id),
             )
             available = _lock_balance(conn, email) if use_balance else 0
-            bill, _taxable, tax, _speed = settle_checkout(
+            bill, _taxable, tax = settle_checkout(
                 promos,
                 merchandise_cents=merchandise,
                 ship_country=ship_country,
@@ -734,7 +710,6 @@ def place_order(
                 balance_cents=available,
                 use_balance=use_balance,
                 lucky_off_cents=lucky_off_cents,
-                speed=speed,
             )
             bound = _bind_referrer(conn, email, referrer)
             base = max(0, merchandise - bill.discount_cents - bill.coupon_cents)

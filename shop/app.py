@@ -140,7 +140,7 @@ from shop.checkout import (
     list_coupons,
     load_lines,
     merge_line,
-    normalize_speed,
+    ORDER_SPEED,
     preview_checkout_quote,
     _bind_referrer,
     place_order,
@@ -5633,7 +5633,6 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             currency=ctx["currency"],
             units=ctx["units"],
             minor_units=MINOR.get(ctx["currency"], 2),
-            speed=body.get("speed") or "standard",
             coupon_id=body.get("coupon_id"),
             coupon_code=str(body.get("coupon_code") or ""),
             use_balance=body.get("use_balance"),
@@ -5757,7 +5756,6 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 hold=parse_hold(request.cookies.get("harbor_hold")),
                 lucky_off_cents=lucky_off,
                 lucky_token=spun_token,
-                speed=normalize_speed(form.get("speed")),
             )
         except CheckoutError as exc:
             return checkout_page(
@@ -5771,7 +5769,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 submit_id=submit_id,
             )
         gift = str(form.get("gift") or "")[:200]
-        speed = normalize_speed(form.get("speed"))
+        speed = ORDER_SPEED
         offered = list(app.state.pay_status.get("shown") or [])
         picked_pay = str(form.get("pay_method") or "")
         if picked_pay == "card":
@@ -6080,7 +6078,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
 
         def order_money(cents):
             return format_money(goods_local(cents, row["units_per_usd"], row["currency"]), row["currency"])
-        start, end = delivery_span(row["ship_country"] or "US", row["speed"] if "speed" in row.keys() else "standard")
+        start, end = delivery_span(row["ship_country"] or "US")
         return_rows = conn.execute(
             "select reason, status from returns where order_id = ? order by id desc",
             (row["id"],),

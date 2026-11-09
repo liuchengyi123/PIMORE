@@ -100,5 +100,7 @@ def bump_interest(raw, sku, weight=1, limit=48):
 
 
 def delivery_span(country, speed="standard"):
-    slow, fast = WINDOWS.get(shipping_tier(country), WINDOWS["USCA"])
-    return fast if speed == "express" else slow
+    """One delivery window for every order. ``speed`` is ignored."""
+    slow, _fast = WINDOWS.get(shipping_tier(country), WINDOWS["USCA"])
+    _ = speed
+    return slow

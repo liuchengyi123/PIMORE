@@ -13,7 +13,7 @@
     <div class="fn-sum-row"><span>{{ line['sku'] }} × {{ line['qty'] }}</span><span></span></div>
     {% endfor %}
     <div class="fn-sum-row total"><span>{{ t.due }}</span><span class="price">{{ due_text }}</span></div>
-    <p class="tiny" style="margin-top:12px">{{ order['pay_method'] }} · {{ order['speed'] }}</p>
+    <p class="tiny" style="margin-top:12px">{{ order['pay_method'] }}</p>
     {% if order['gift_message'] %}<p class="tiny">{{ t.gift }} {{ order['gift_message'] }}</p>{% endif %}
   </div>
   <button class="btn" type="button" onclick="window.print()">Download / Print</button>

@@ -47,7 +47,6 @@ def test_quote_us_ca_economy_matches_place_order_and_zero_tax():
     quoted = client.post(
         "/api/checkout/quote?country=US",
         json={
-            "speed": "economy",
             "ship_country": "US",
             "region": "CA",
             "use_balance": False,
@@ -58,7 +57,9 @@ def test_quote_us_ca_economy_matches_place_order_and_zero_tax():
     assert quoted.status_code == 200
     body = quoted.json()
     assert body["ok"] is True
-    assert body["speed"] == "economy"
+    assert "speed" not in body
+    assert "express" not in body
+    assert "economy" not in body
     assert body["shipping_cents"] == 0
     assert body["merchandise_cents"] == body["subtotal"] == 400
     assert body["discount_cents"] == 0
@@ -80,7 +81,7 @@ def test_quote_us_ca_economy_matches_place_order_and_zero_tax():
 
     zero = client.post(
         "/api/checkout/quote?country=US",
-        json={"speed": "economy", "ship_country": "US", "state": "OR"},
+        json={"ship_country": "US", "state": "OR"},
     )
     assert zero.status_code == 200
     z = zero.json()
@@ -91,7 +92,7 @@ def test_quote_us_ca_economy_matches_place_order_and_zero_tax():
 
     japan = client.post(
         "/api/checkout/quote?country=US",
-        json={"speed": "economy", "ship_country": "JP", "region": "Tokyo"},
+        json={"ship_country": "JP", "region": "Tokyo"},
     )
     assert japan.json()["tax_cents"] == 0
     assert japan.json()["due_cents"] == 400
@@ -110,15 +111,17 @@ def test_quote_us_ca_economy_matches_place_order_and_zero_tax():
     assert order["speed"] == "standard"
 
 
-def test_every_speed_ships_free():
-    from shop.checkout import SPEED_SHIP_CENTS, ship_cents_for_speed
+def test_shipping_is_free_and_speed_is_not_a_choice():
+    from shop.checkout import ORDER_SPEED, shipping_cents
+    from shop.extras import delivery_span
 
-    assert SPEED_SHIP_CENTS == {"express": 0, "standard": 0, "economy": 0}
-    for speed in ("express", "standard", "economy", "overnight", ""):
-        assert ship_cents_for_speed(speed) == 0
+    assert ORDER_SPEED == "standard"
+    assert shipping_cents() == 0
+    assert delivery_span("US") == delivery_span("US", "express")
+    assert delivery_span("US") == delivery_span("US", "economy")
 
 
-def test_express_quote_keeps_speed_and_charges_no_shipping():
+def test_posted_speed_is_ignored():
     client = _client()
     client.post("/cart/add", data={"sku": "note-holder", "qty": "1", "country": "US"})
     quoted = client.post(
@@ -127,7 +130,7 @@ def test_express_quote_keeps_speed_and_charges_no_shipping():
     )
     body = quoted.json()
     assert body["ok"] is True
-    assert body["speed"] == "express"
+    assert "speed" not in body
     assert body["shipping_cents"] == 0
     assert body["taxable_cents"] == 400
     assert body["tax_cents"] == 29
@@ -147,7 +150,7 @@ def test_express_quote_keeps_speed_and_charges_no_shipping():
     assert order["shipping_cents"] == 0
     assert order["tax_cents"] == 29
     assert order["due_cents"] == 400
-    assert order["speed"] == "express"
+    assert order["speed"] == "standard"
 
 
 def test_lucky_blocks_coupon_on_the_quote():
@@ -158,7 +161,6 @@ def test_lucky_blocks_coupon_on_the_quote():
     blocked = client.post(
         "/api/checkout/quote?country=US",
         json={
-            "speed": "economy",
             "ship_country": "US",
             "region": "CA",
             "coupon_code": "public",
