@@ -7,9 +7,9 @@
     <section class="hero">
       <div class="eyebrow">{{ zh ? '限时' : 'Limited time' }}</div>
       <div class="hl">{{ zh ? '闪购' : 'Flash deals' }}</div>
-      <div v-if="saleEnds" class="ends">Ends {{ saleEnds }}</div>
+      <div v-if="saleEnds" class="ends">{{ zh ? '截止 ' : 'Ends ' }}{{ saleEnds }}</div>
     </section>
-    <div v-if="loading" class="state">Loading…</div>
+    <div v-if="loading" class="state">{{ zh ? '加载中…' : 'Loading…' }}</div>
     <div v-else-if="!products.length" class="state">{{ zh ? '暂无特卖' : 'No sale items right now.' }}</div>
     <div v-else class="grid">
       <article v-for="p in products" :key="p.sku" class="card" @click="go(p)">
@@ -78,7 +78,7 @@ function add(p: Product) { cart.add(p) }
 .card { background: #fff; border-radius: 18px; padding: 8px 8px 12px; box-shadow: 0 6px 18px rgba(28,36,48,0.05); cursor: pointer; }
 .thumb { position: relative; aspect-ratio: 1; border-radius: 14px; overflow: hidden; background: #F3F0EC; }
 .thumb img { width: 100%; height: 100%; object-fit: cover; }
-.badge { position: absolute; left: 8px; top: 8px; background: #1C2430; color: #fff; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 3px 8px; }
+.badge { position: absolute; left: 8px; top: 8px; background: #F96141; color: #fff; font-size: 11px; font-weight: 800; border-radius: 999px; padding: 3px 8px; }
 .nm { margin-top: 8px; font-size: 13px; font-weight: 650; line-height: 1.3; min-height: 2.6em; }
 .prices { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
 .now { color: #F96141; font-weight: 800; font-size: 15px; }

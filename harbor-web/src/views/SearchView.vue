@@ -66,7 +66,9 @@ const loading = ref(false)
 const searched = ref(false)
 const page = ref(1)
 const hasMore = ref(false)
-const hints = ['storage bins', 'plant pots', 'bath towels', 'kitchen organizers', 'desk lamp']
+const hints = computed(() => zh.value
+  ? ['收纳盒', '花盆', '浴巾', '厨房收纳', '台灯']
+  : ['storage bins', 'plant pots', 'bath towels', 'kitchen organizers', 'desk lamp'])
 const ph = computed(() =>
   lang.value === 'en' ? 'Search household goods' : t('search_placeholder')
 )
@@ -121,7 +123,7 @@ onMounted(() => {
 <style lang="scss" scoped>
 @import '@/styles/theme.scss';
 .page { min-height: 100vh; background: $hb-paper; padding: 0 16px 40px; }
-.search-title { margin: 8px 0 0; font-size: 32px; font-weight: 800; color: #F96141; }
+.search-title { margin: 12px 0 0; font-size: 28px; font-weight: 800; letter-spacing: -0.03em; color: #F96141; }
 .search-sub { margin: 4px 0 12px; color: #8B919A; font-size: 14px; }
 .sticky {
   position: sticky; top: 0; z-index: 20;
@@ -137,7 +139,7 @@ onMounted(() => {
 .hints { padding: 8px 0 16px; }
 .hint-title { font-size: 12px; color: $hb-muted; font-weight: 650; margin-bottom: 10px; }
 .hint-row { display: flex; flex-wrap: wrap; gap: 8px; }
-.hint { border: 0; background: $hb-white; padding: 10px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; box-shadow: $hb-shadow-soft; cursor: pointer; }
+.hint { border: 0; background: $hb-white; height: 34px; padding: 0 14px; border-radius: 999px; font-size: 13px; font-weight: 650; box-shadow: $hb-shadow-soft; cursor: pointer; }
 .state { text-align: center; color: $hb-muted; padding: 48px 12px; }
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .empty-block { text-align: center; padding: 48px 12px; }
@@ -145,7 +147,7 @@ onMounted(() => {
 .hint-sub { margin-top: 8px; color: $hb-muted; font-size: 13px; }
 .go-home {
   display: inline-flex; margin-top: 20px; padding: 10px 16px; border-radius: 999px;
-  background: $hb-ink; color: #fff; font-weight: 700; text-decoration: none;
+  background: #F96141; color: #fff; font-weight: 700; text-decoration: none;
 }
 .sort-chips { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 12px; }
 .hint.on { background: #F96141; color: #fff; }

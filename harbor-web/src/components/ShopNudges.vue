@@ -2,6 +2,7 @@
   <div v-if="kind" class="mask" @click.self="close">
     <div class="card" role="dialog" aria-modal="true">
       <button type="button" class="x" @click="close">×</button>
+      <div v-if="kind !== 'locale'" class="mark" aria-hidden="true">{{ mark }}</div>
 
       <template v-if="kind === 'gift'">
         <h2>{{ zh ? '满额包邮' : 'Free shipping gift' }}</h2>
@@ -49,6 +50,7 @@ const { lang, setCountry } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const zh = computed(() => String(lang.value).startsWith('zh'))
+const mark = computed(() => ({ gift: '🎁', pwa: '＋', checkin: '✓', invite: '↗' }[kind.value] || '•'))
 const kind = ref('')
 const busy = ref(false)
 const ios = /iphone|ipad|ipod/i.test(navigator.userAgent || '')
@@ -139,7 +141,11 @@ watch(() => [route.name, route.query.locale], openNext)
   box-shadow: 0 -12px 32px rgba(28,36,48,0.08);
 }
 .x { position: absolute; right: 12px; top: 8px; border: 0; background: transparent; font-size: 22px; cursor: pointer; color: #8B919A; }
-h2 { margin: 8px 0; font-size: 20px; color: #1C2430; }
+.mark {
+  width: 56px; height: 56px; border-radius: 18px; background: #FFF1EC; color: #F96141;
+  display: grid; place-items: center; font-size: 24px; font-weight: 800; margin-bottom: 8px;
+}
+h2 { margin: 0 0 6px; font-size: 18px; letter-spacing: -0.02em; color: #1C2430; }
 p { margin: 0 0 14px; color: #5C6570; line-height: 1.45; }
 .ok, .later, .row {
   display: flex; align-items: center; justify-content: center; width: 100%;

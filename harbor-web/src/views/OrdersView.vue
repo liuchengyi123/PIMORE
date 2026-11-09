@@ -2,14 +2,14 @@
   <div class="page" data-figma="M14">
     <header class="head">
       <button type="button" class="back" @click="$router.back()" aria-label="back"><ChevronLeft :size="22" :stroke-width="1.75" /></button>
-      <h1>My orders</h1>
+      <h1>{{ zh ? '我的订单' : 'My orders' }}</h1>
     </header>
     <div class="tabs">
-      <button type="button" class="tab" :class="{ on: filter === '' }" @click="filter=''">All</button>
-      <button type="button" class="tab" :class="{ on: filter === 'pending' }" @click="filter='pending'">Unpaid</button>
-      <button type="button" class="tab" :class="{ on: filter === 'shipped' }" @click="filter='shipped'">Shipping</button>
-      <button type="button" class="tab" :class="{ on: filter === 'paid' }" @click="filter='paid'">Completed</button>
-      <button type="button" class="tab" :class="{ on: filter === 'return' }" @click="filter='return'">Returns</button>
+      <button type="button" class="tab" :class="{ on: filter === '' }" @click="filter=''">{{ zh ? '全部' : 'All' }}</button>
+      <button type="button" class="tab" :class="{ on: filter === 'pending' }" @click="filter='pending'">{{ zh ? '待支付' : 'Unpaid' }}</button>
+      <button type="button" class="tab" :class="{ on: filter === 'shipped' }" @click="filter='shipped'">{{ zh ? '运输中' : 'Shipping' }}</button>
+      <button type="button" class="tab" :class="{ on: filter === 'paid' }" @click="filter='paid'">{{ zh ? '已完成' : 'Completed' }}</button>
+      <button type="button" class="tab" :class="{ on: filter === 'return' }" @click="filter='return'">{{ zh ? '退货' : 'Returns' }}</button>
     </div>
     <div v-if="loading" class="state">{{ t('pdp_loading') }}</div>
     <div v-else-if="loginRequired" class="state">
@@ -25,16 +25,16 @@
         </div>
         <div class="thumbs">
           <img v-if="o.image" :src="o.image" alt="" />
-          <div v-else class="ph">Item</div>
+          <div v-else class="ph">{{ zh ? '商品' : 'Item' }}</div>
         </div>
         <div class="row between meta">
-          <span class="tiny">{{ o.itemCount ? o.itemCount + ' items' : 'Order' }}{{ o.tracking ? ' · ' + o.tracking : '' }}</span>
+          <span class="tiny">{{ o.itemCount ? o.itemCount + (zh ? ' 件' : ' items') : (zh ? '订单' : 'Order') }}{{ o.tracking ? ' · ' + o.tracking : '' }}</span>
           <span class="price">{{ o.due }}</span>
         </div>
         <div class="actions">
-          <button v-if="/ship/i.test(o.status)" type="button" class="btn soft" @click.stop="track(o)">Track</button>
-          <button v-else type="button" class="btn soft" @click.stop="again(o)">Buy again</button>
-          <button type="button" class="btn" @click="$router.push('/orders/' + encodeURIComponent(o.id))">Details</button>
+          <button v-if="/ship/i.test(o.status)" type="button" class="btn soft" @click.stop="track(o)">{{ zh ? '物流' : 'Track' }}</button>
+          <button v-else type="button" class="btn soft" @click.stop="again(o)">{{ zh ? '再买' : 'Buy again' }}</button>
+          <button type="button" class="btn" @click="$router.push('/orders/' + encodeURIComponent(o.id))">{{ zh ? '详情' : 'Details' }}</button>
         </div>
       </article>
     </div>
@@ -49,7 +49,8 @@ import { fetchOrders, type OrderRow } from '@/api/accountApi'
 import { useI18n } from '@/composables/i18n'
 import AppTabBar from '@/components/AppTabBar.vue'
 
-const { t } = useI18n()
+const { t, lang } = useI18n()
+const zh = computed(() => String(lang.value).startsWith('zh'))
 const orders = ref<OrderRow[]>([])
 const filter = ref('')
 const visible = computed(() => {

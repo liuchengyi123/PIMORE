@@ -8,12 +8,12 @@
       <div class="eyebrow">{{ zh ? '本周刚到' : 'Just landed this week' }}</div>
       <div class="hl">{{ zh ? '新鲜家居小物。' : 'Fresh finds. Everyday essentials.' }}</div>
     </section>
-    <div v-if="loading" class="state">Loading…</div>
-    <div v-else-if="!products.length" class="state">No new arrivals yet.</div>
+    <div v-if="loading" class="state">{{ zh ? '加载中…' : 'Loading…' }}</div>
+    <div v-else-if="!products.length" class="state">{{ zh ? '暂无新品' : 'No new arrivals yet.' }}</div>
     <div v-else class="grid">
       <article v-for="p in products" :key="p.sku" class="card" @click="go(p)">
         <div class="thumb" :style="ph(p)">
-          <span class="tag">NEW</span>
+          <span class="tag">{{ zh ? '新品' : 'NEW' }}</span>
           <img v-if="p.image" :src="p.image" :alt="p.name" />
         </div>
         <div class="body">
@@ -56,7 +56,7 @@ function add(p: Product) { cart.add(p) }
 </script>
 <style scoped>
 .page { min-height: 100vh; background: #FCFAF8; color: #1C2430; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
-.title { color: #F96141; font-size: 28px; font-weight: 800; }
+.title { color: #1C2430; font-size: 24px; font-weight: 800; letter-spacing: -0.03em; margin: 0; }
 .hero { background: #FFF6F1; color: #1C2430; border-radius: 18px; padding: 16px; margin-bottom: 14px; }
 .eyebrow { font-weight: 800; font-size: 16px; }
 .hl { margin-top: 4px; color: #8B919A; font-size: 13px; font-weight: 500; }

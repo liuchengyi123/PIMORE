@@ -14,8 +14,8 @@
           <span :class="{ on: /deliver/i.test(detail.status) }">{{ zh ? '已送达' : 'Delivered' }}</span>
         </div>
         <div class="bar"><i :style="{ width: /deliver/i.test(detail.status) ? '100%' : (/ship/i.test(detail.status) ? '66%' : '33%') }" /></div>
-        <div class="meta" v-if="detail.tracking">Carrier {{ detail.carrier || '—' }} · {{ detail.tracking }}</div>
-        <div class="meta" v-else>Status · {{ detail.status }}</div>
+        <div class="meta" v-if="detail.tracking">{{ zh ? '承运商' : 'Carrier' }} {{ detail.carrier || '—' }} · {{ detail.tracking }}</div>
+        <div class="meta" v-else>{{ zh ? '状态' : 'Status' }} · {{ detail.status }}</div>
       </div>
       <div class="card">
         <div class="row"><span>{{ zh ? '状态' : 'Status' }}</span><b>{{ detail.status }}</b></div>
@@ -75,16 +75,16 @@ h1 { margin: 0; font-size: 18px; font-weight: 800; color: $hb-ink; }
 .row b { color: $hb-ink; font-weight: 700; }
 .due { color: $hb-price !important; }
 .steps { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; color: $hb-muted; }
-.steps .on { color: $hb-ink; }
-.bar { height: 4px; background: #E2E6EE; border-radius: 4px; margin: 10px 0; overflow: hidden; }
-.bar i { display: block; height: 100%; background: $hb-ink; }
+.steps .on { color: #F96141; }
+.bar { height: 4px; background: #F3E4DE; border-radius: 4px; margin: 10px 0; overflow: hidden; }
+.bar i { display: block; height: 100%; background: #F96141; }
 .meta { font-size: 12px; color: $hb-muted; margin-top: 4px; }
 .sum { font-size: 13px; color: $hb-ink; padding: 6px 0; border-bottom: 1px solid $hb-line; }
 .sum:last-child { border: 0; }
 .state { text-align: center; color: $hb-muted; padding: 40px 8px; }
 .btn {
   display: flex; align-items: center; justify-content: center; width: 100%; height: 48px; margin-top: 10px;
-  border: 0; border-radius: 14px; background: $hb-ink; color: #fff; font-weight: 700; text-decoration: none; cursor: pointer;
+  border: 0; border-radius: 999px; background: #F96141; color: #fff; font-weight: 700; text-decoration: none; cursor: pointer;
 }
 .btn.soft { background: #fff; color: $hb-ink; border: 1px solid $hb-line; }
 </style>

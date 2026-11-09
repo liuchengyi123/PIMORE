@@ -21,7 +21,7 @@
       <div class="ship-bar">{{ t('pdp_ship_tracked') }} · {{ product.shipsIn || t('pdp_ships_default') }}</div>
       <button type="button" class="sku-row" @click="sheetOpen = true">
         <span class="sku-k">{{ t('common_option') }}</span>
-        <span class="sku-v">{{ sizeSummary }} · Qty {{ qty }}</span>
+        <span class="sku-v">{{ sizeSummary }} · {{ zh ? '数量' : 'Qty' }} {{ qty }}</span>
         <ChevronRight :size="18" :stroke-width="1.7" class="chev" />
       </button>
       <div class="reviews-box">
@@ -34,8 +34,8 @@
     <div class="sticky-cta">
       <button type="button" class="dock wish" @click="doWish" aria-label="wishlist">♡<span class="lab">收藏</span></button>
       <template v-if="isOos">
-        <button type="button" class="btn disabled" disabled>{{ t('out_of_stock') || 'Sold out' }}</button>
-        <button type="button" class="btn outline" @click="notifyMe" :disabled="notifyBusy">{{ notifyBusy ? "…" : "Notify me" }}</button>
+        <button type="button" class="btn disabled" disabled>{{ t('out_of_stock') || (zh ? '缺货' : 'Sold out') }}</button>
+        <button type="button" class="btn outline" @click="notifyMe" :disabled="notifyBusy">{{ notifyBusy ? "…" : (zh ? '到货通知' : 'Notify me') }}</button>
       <p v-if="notifyMsg" class="tiny" style="margin-top:8px">{{ notifyMsg }}</p>
       </template>
       <template v-else>
@@ -46,6 +46,7 @@
 
     <div v-if="sheetOpen" class="sheet-mask" @click="sheetOpen = false">
       <div class="sheet" @click.stop>
+        <div class="grab" aria-hidden="true"></div>
         <div class="sheet-title">{{ t('common_option') }}</div>
         <div class="opts">
           <button
@@ -59,9 +60,12 @@
           <div v-if="!optionLabels.length" class="muted">{{ t('common_default') }}</div>
         </div>
         <div class="qty-row">
-          <button type="button" @click="qty = Math.max(1, qty - 1)">−</button>
-          <span>{{ qty }}</span>
-          <button type="button" @click="qty = qty + 1">+</button>
+          <span class="qty-lab">{{ zh ? '数量' : 'Qty' }}</span>
+          <div class="qty-ctrl">
+            <button type="button" @click="qty = Math.max(1, qty - 1)">−</button>
+            <span>{{ qty }}</span>
+            <button type="button" @click="qty = qty + 1">+</button>
+          </div>
         </div>
         <button type="button" class="sheet-ok" @click="confirmSheet">{{ t('common_add') }}</button>
       </div>
@@ -83,7 +87,8 @@ import { useI18n } from '@/composables/i18n'
 import { trackBrowse } from '@/composables/browseHistory'
 import { addToCartServer } from '@/api/cartApi'
 
-const { t } = useI18n()
+const { t, lang } = useI18n()
+const zh = computed(() => String(lang.value).startsWith('zh'))
 const route = useRoute()
 const router = useRouter()
 const cart = useCart()
@@ -283,9 +288,9 @@ async function notifyMe() {
 .sticky-cta {
   position: fixed; left: 50%; transform: translateX(-50%); width: min(100vw, 768px); bottom: 0; z-index: 40;
   box-shadow: 0 -8px 24px rgba(28,36,48,0.06);
-  display: flex; gap: 8px; align-items: center;
-  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
-  background: rgba(255,255,255,0.96); border-top: 1px solid $hb-line;
+  display: flex; gap: 10px; align-items: center;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  background: #fff; border-top: 1px solid #F1EEEA;
 }
 .dock { position: relative; width: 46px; height: 46px; border: 0; border-radius: 14px; background: #fff; color: #121816; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(18,24,22,0.06); cursor: pointer; }
 .dock.chat { width: auto; padding: 0 10px; display: flex; align-items: center; gap: 4px; }
@@ -295,23 +300,26 @@ async function notifyMe() {
   background: $hb-price; color: #fff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center;
 }
 .btn {
-  height: 48px; border-radius: 999px; font-weight: 740; cursor: pointer; flex: 1;
+  height: 52px; border-radius: 999px; font-weight: 740; cursor: pointer; flex: 1; font-size: 15px;
   &.outline { background: #fff; color: #F96141; border: 1.5px solid #F96141; }
   &.solid { background: #F96141; color: #fff; border: 0; }
 }
 .empty { padding: 80px 20px; text-align: center; color: $hb-muted; }
 .empty .btn { display: inline-flex; margin-top: 12px; padding: 0 16px; align-items: center; text-decoration: none; }
-.sheet-mask { position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 60; display: flex; align-items: flex-end; }
-.sheet { width: 100%; background: #fff; border-radius: 18px 18px 0 0; padding: 16px 16px calc(16px + env(safe-area-inset-bottom)); }
-.sheet-title { font-weight: 740; font-size: 16px; margin-bottom: 10px; }
+.sheet-mask { position: fixed; inset: 0; background: rgba(28,36,48,0.45); z-index: 60; display: flex; align-items: flex-end; justify-content: center; }
+.sheet { width: min(100%, 768px); background: #fff; border-radius: 22px 22px 0 0; padding: 10px 16px calc(16px + env(safe-area-inset-bottom)); }
+.grab { width: 36px; height: 4px; border-radius: 99px; background: #E6E2DC; margin: 0 auto 12px; }
+.sheet-title { font-weight: 800; font-size: 16px; margin-bottom: 12px; letter-spacing: -0.02em; }
 .opts { display: flex; flex-wrap: wrap; gap: 8px; }
 .opt {
-  border: 1px solid $hb-line; background: $hb-paper; border-radius: 999px; padding: 8px 12px; cursor: pointer;
+  height: 36px; border: 1px solid #E8E4DC; background: #FCFAF8; border-radius: 999px; padding: 0 14px; cursor: pointer; font-weight: 650;
   &.on { background: #F96141; color: #fff; border-color: #F96141; }
 }
 .muted { color: $hb-muted; font-size: 13px; }
-.qty-row { display: flex; align-items: center; gap: 16px; margin: 16px 0; font-size: 18px; font-weight: 700; }
-.qty-row button { width: 36px; height: 36px; border: 0; border-radius: 10px; background: $hb-paper; cursor: pointer; }
+.qty-row { display: flex; align-items: center; justify-content: space-between; margin: 18px 0 16px; }
+.qty-lab { font-size: 14px; font-weight: 650; color: #5C6570; }
+.qty-ctrl { display: flex; align-items: center; gap: 14px; font-size: 16px; font-weight: 700; }
+.qty-ctrl button { width: 36px; height: 36px; border: 0; border-radius: 12px; background: #F6F4F2; cursor: pointer; }
 .sheet-ok { width: 100%; height: 52px; border: 0; border-radius: 999px; background: #F96141; color: #fff; font-weight: 740; cursor: pointer; }
 .body { background: #fff; border-radius: 20px 20px 0 0; margin-top: -16px; position: relative; padding-top: 14px; }
 .price { font-size: 26px; font-weight: 800; color: $hb-price; }
@@ -332,7 +340,7 @@ async function notifyMe() {
 .sticky-cta .btn.solid { background: $hb-price !important; }
 .sticky-cta .btn.disabled { background: #E8E4DC !important; color: #9CA3AF !important; }
 .dock.wish { flex-direction: column; font-size: 11px; color: $hb-muted; width: auto; padding: 0 6px; background: transparent; box-shadow: none; }
-.sheet { border-radius: 22px 22px 0 0 !important; padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
+.sheet { width: min(100%, 768px); }
 .sheet-ok { background: $hb-price !important; }
 .page { background: $hb-paper; }
 

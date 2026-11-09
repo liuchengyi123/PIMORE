@@ -44,7 +44,7 @@
         <div ref="msgsEl" class="msgs" @scroll.passive="onScroll">
           <div v-if="!messages.length && !booting" class="fn-chat-empty">
             <div class="fn-chat-ico">💬</div>
-            <div class="fn-chat-title">How can we help?</div>
+            <div class="fn-chat-title">{{ lab.help }}</div>
             <div class="fn-chat-sub">{{ t('chat_empty') }}</div>
           </div>
           <div
@@ -381,6 +381,7 @@ const lab = computed(() =>
         close: 'Close',
         goBuy: 'Buy now',
         viewOrder: 'View order',
+        help: 'How can we help?',
       }
     : {
         visits: '访问纪录',
@@ -399,6 +400,7 @@ const lab = computed(() =>
         close: '关闭',
         goBuy: '去下单',
         viewOrder: '查看订单',
+        help: '需要什么帮助？',
       },
 )
 
@@ -1109,7 +1111,7 @@ onUnmounted(() => {
 }
 .fn-chat-empty { text-align: center; padding: 60px 32px; }
 .fn-chat-ico {
-  width: 64px; height: 64px; margin: 0 auto 14px; border-radius: 32px; background: #E0F2FE;
+  width: 64px; height: 64px; margin: 0 auto 14px; border-radius: 20px; background: #FFF1EC;
   display: flex; align-items: center; justify-content: center; font-size: 24px;
 }
 .fn-chat-title { font-weight: 700; color: #1C2430; font-size: 17px; }
