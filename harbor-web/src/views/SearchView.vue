@@ -1,77 +1,176 @@
 <template>
-  <div class="fn-page page" data-figma="M25">
-    <div class="top sticky">
-      <button type="button" class="back" @click="$router.back()" aria-label="back">
-        <ChevronLeft :size="22" :stroke-width="1.75" />
-      </button>
-      <AppSearchBar
-        v-model="q"
-        show-button
-        inplace
-        autofocus
-        class="grow"
-        :placeholder="ph"
-        @search="onSearch"
-      />
-    </div>
-    <h1 v-if="!searched" class="search-title">{{ zh ? '搜索' : 'Search' }}</h1>
-    <p v-if="!searched" class="search-sub">{{ zh ? '找家居好物和日常小物。' : 'Find cute home goods, everyday essentials and more.' }}</p>
-    <div v-if="!q && !loading && !searched" class="hints">
-      <div class="hint-title">{{ zh ? '最近搜索' : 'Recent searches' }}</div>
-      <div class="hint-row">
-        <button v-for="h in hints" :key="h" type="button" class="hint" @click="quick(h)">{{ h }}</button>
+  <div class="page" data-figma="1:14">
+    <h1>{{ zh ? '搜索' : 'Search' }}</h1>
+    <p class="sub">{{ zh ? '找可爱的家居好物和日常必需，还有更多，低至 $1–$10。' : 'Find cute home goods, everyday essentials and more — all $1 to $10.' }}</p>
+    <form class="search-row" @submit.prevent="onSearch">
+      <label class="field">
+        <Search :size="18" :stroke-width="1.8" />
+        <input v-model="q" type="search" enterkeyhint="search" :placeholder="zh ? '搜索家居好物' : 'Search home finds'" />
+      </label>
+      <button type="button" class="cancel" @click="cancel">{{ zh ? '取消' : 'Cancel' }}</button>
+    </form>
+
+    <template v-if="!searched">
+      <section v-if="shownRecent.length" class="block">
+        <div class="sec">
+          <h2>{{ zh ? '最近搜索' : 'Recent searches' }}</h2>
+          <button type="button" class="link" @click="clearRecent">{{ zh ? '清空' : 'Clear all' }}</button>
+        </div>
+        <div class="chips">
+          <button v-for="h in shownRecent" :key="h" type="button" class="chip" @click="quick(h)">
+            <Clock :size="14" /> {{ h }}
+          </button>
+        </div>
+      </section>
+
+      <section class="block">
+        <h2 class="trend-title"><Flame :size="16" /> {{ zh ? '正在热搜' : 'Trending now' }}</h2>
+        <div class="trends">
+          <button v-for="h in trending" :key="h" type="button" class="trend" @click="quick(h)">
+            <Flame :size="14" /> {{ h }}
+          </button>
+        </div>
+      </section>
+
+      <section class="block">
+        <div class="sec">
+          <h2>{{ zh ? '为你推荐' : 'Suggested for you' }}</h2>
+          <router-link class="link" to="/browse">{{ zh ? '查看全部' : 'See all' }}</router-link>
+        </div>
+        <div class="grid">
+          <article v-for="p in picks" :key="p.sku" class="card" @click="go(p)">
+            <div class="shot"><img v-if="p.image" :src="p.image" :alt="p.name" /></div>
+            <div class="meta">
+              <div class="nm">{{ p.name }}</div>
+              <div class="pr">
+                <b>{{ money(p.price) }}</b>
+                <button type="button" class="bag" :aria-label="zh ? '加入购物车' : 'Add'" @click.stop="add(p)">
+                  <ShoppingCart :size="14" />
+                </button>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <div class="foot">
+        <span class="mark" aria-hidden="true"><Home :size="18" /></span>
+        <b>{{ zh ? '好物，从一次搜索开始' : 'Good things are just a search away' }}</b>
+        <p>{{ zh ? '试试关键词、分类，或上面的热搜。' : 'Try a keyword, a category, or one of the trending finds above.' }}</p>
       </div>
-    </div>
-    <div v-if="loading" class="state">{{ t('search_searching') }}</div>
-    <div v-else-if="searched && !products.length" class="empty-block">
+    </template>
+
+    <div v-else-if="loading" class="state">{{ t('search_searching') }}</div>
+    <div v-else-if="!products.length" class="empty-block">
       <h2>{{ t('search_no_results') }} “{{ q }}”</h2>
-      <p class="hint-sub">{{ zh ? '试试厨房、收纳或清洁' : 'Try kitchen, storage, or cleaning' }}</p>
-      <div class="hint-row" style="justify-content:center;margin-top:16px">
-        <button v-for="h in hints" :key="'e'+h" type="button" class="hint" @click="quick(h)">{{ h }}</button>
+      <p>{{ zh ? '试试厨房、收纳或清洁' : 'Try kitchen, storage, or cleaning' }}</p>
+      <div class="chips center">
+        <button v-for="h in trending.slice(0, 4)" :key="'e'+h" type="button" class="chip" @click="quick(h)">{{ h }}</button>
       </div>
-      <router-link class="go-home" to="/home">{{ t('tab_home') || 'Back to Home' }}</router-link>
     </div>
-    <div v-else>
-      <div class="sort-chips" v-if="products.length">
-        <button type="button" class="hint on">{{ zh ? '综合' : 'Best' }}</button>
-        <button type="button" class="hint">{{ zh ? '价格↑' : 'Price ↑' }}</button>
-        <button type="button" class="hint">{{ zh ? '价格↓' : 'Price ↓' }}</button>
-        <button type="button" class="hint">{{ zh ? '最新' : 'Newest' }}</button>
+    <template v-else>
+      <div class="sorts">
+        <button v-for="s in sorts" :key="s.id" type="button" :class="{ on: sort === s.id }" @click="sort = s.id">{{ s.label }}</button>
       </div>
       <div class="grid">
-        <ProductCard v-for="p in products" :key="p.sku" :product="p" />
+        <article v-for="p in shown" :key="p.sku" class="card" @click="go(p)">
+          <div class="shot"><img v-if="p.image" :src="p.image" :alt="p.name" /></div>
+          <div class="meta">
+            <div class="nm">{{ p.name }}</div>
+            <div class="pr">
+              <b>{{ money(p.price) }}</b>
+              <button type="button" class="bag" :aria-label="zh ? '加入购物车' : 'Add'" @click.stop="add(p)">
+                <ShoppingCart :size="14" />
+              </button>
+            </div>
+          </div>
+        </article>
       </div>
-    </div>
-    <button v-if="products.length && hasMore" type="button" class="more" @click="loadMore">{{ t('search_load_more') }}</button>
+      <button v-if="hasMore" type="button" class="more" @click="loadMore">{{ t('search_load_more') }}</button>
+    </template>
     <AppTabBar active="home" />
   </div>
 </template>
+
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ChevronLeft } from 'lucide-vue-next'
-import { searchProducts, type Product } from '@/api/products'
+import { Clock, Flame, Home, Search, ShoppingCart } from 'lucide-vue-next'
+import { listProducts, money, searchProducts, type Product } from '@/api/products'
+import { useCart } from '@/composables/cart'
 import { useI18n } from '@/composables/i18n'
-import ProductCard from '@/components/ProductCard.vue'
-import AppSearchBar from '@/components/AppSearchBar.vue'
+import { shelfFallback } from '@/catalog/shelf'
 import AppTabBar from '@/components/AppTabBar.vue'
 
+const RECENT_KEY = 'harbor_web_recent_search'
 const { t, lang } = useI18n()
 const zh = computed(() => String(lang.value).startsWith('zh'))
 const route = useRoute()
 const router = useRouter()
+const cart = useCart()
+
 const q = ref('')
 const products = ref<Product[]>([])
+const picks = ref<Product[]>([])
 const loading = ref(false)
 const searched = ref(false)
 const page = ref(1)
 const hasMore = ref(false)
-const hints = computed(() => zh.value
+const sort = ref<'best' | 'up' | 'down' | 'new'>('best')
+const recent = ref<string[]>(loadRecent())
+const cleared = ref(false)
+
+const defaults = computed(() => zh.value
   ? ['收纳盒', '花盆', '浴巾', '厨房收纳', '台灯']
   : ['storage bins', 'plant pots', 'bath towels', 'kitchen organizers', 'desk lamp'])
-const ph = computed(() =>
-  lang.value === 'en' ? 'Search household goods' : t('search_placeholder')
-)
+const trending = computed(() => zh.value
+  ? ['墙面置物', '收纳篮', '柔软毯子', '厨房小物', '花盆', '浴室收纳', '小夜灯', '抱枕']
+  : ['wall shelves', 'storage baskets', 'cozy blankets', 'kitchen gadgets', 'plant pots', 'bathroom organizers', 'LED lights', 'throw pillows'])
+const sorts = computed(() => zh.value
+  ? [
+      { id: 'best' as const, label: '综合' },
+      { id: 'up' as const, label: '价格↑' },
+      { id: 'down' as const, label: '价格↓' },
+      { id: 'new' as const, label: '最新' },
+    ]
+  : [
+      { id: 'best' as const, label: 'Best' },
+      { id: 'up' as const, label: 'Price ↑' },
+      { id: 'down' as const, label: 'Price ↓' },
+      { id: 'new' as const, label: 'Newest' },
+    ])
+const shownRecent = computed(() => {
+  if (recent.value.length) return recent.value.slice(0, 6)
+  if (cleared.value) return []
+  return defaults.value
+})
+const shown = computed(() => {
+  const list = [...products.value]
+  if (sort.value === 'up') list.sort((a, b) => a.price - b.price)
+  else if (sort.value === 'down') list.sort((a, b) => b.price - a.price)
+  else if (sort.value === 'new') list.sort((a, b) => (a.tag === 'New' ? -1 : 1) - (b.tag === 'New' ? -1 : 1))
+  return list
+})
+
+function loadRecent() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]')
+    return Array.isArray(raw) ? raw.map(String).filter(Boolean) : []
+  } catch {
+    return []
+  }
+}
+function remember(text: string) {
+  const list = [text, ...recent.value.filter((x) => x !== text)].slice(0, 8)
+  recent.value = list
+  cleared.value = false
+  try { localStorage.setItem(RECENT_KEY, JSON.stringify(list)) } catch { /* */ }
+}
+function clearRecent() {
+  recent.value = []
+  cleared.value = true
+  try { localStorage.removeItem(RECENT_KEY) } catch { /* */ }
+}
 
 async function runSearch(query = q.value) {
   const text = String(query || '').trim()
@@ -85,13 +184,16 @@ async function runSearch(query = q.value) {
   loading.value = true
   searched.value = true
   page.value = 1
+  remember(text)
   try {
     const res = await searchProducts(text, 1)
     products.value = res.items || []
     hasMore.value = !!res.hasMore
-    if (route.query.q !== text) {
-      router.replace({ path: '/search', query: { q: text } })
+    if (!products.value.length) {
+      const local = shelfFallback([], 8).filter((p) => p.name.includes(text) || p.category.includes(text) || p.sku.includes(text))
+      if (local.length) products.value = local
     }
+    if (route.query.q !== text) router.replace({ path: '/search', query: { q: text } })
   } catch {
     products.value = []
     hasMore.value = false
@@ -99,8 +201,17 @@ async function runSearch(query = q.value) {
     loading.value = false
   }
 }
-function onSearch(query: string) {
-  runSearch(query)
+function onSearch() { runSearch(q.value) }
+function quick(h: string) { runSearch(h) }
+function cancel() {
+  if (q.value || searched.value) {
+    q.value = ''
+    searched.value = false
+    products.value = []
+    if (route.query.q) router.replace({ path: '/search' })
+    return
+  }
+  router.back()
 }
 async function loadMore() {
   page.value += 1
@@ -108,50 +219,91 @@ async function loadMore() {
   products.value = products.value.concat(res.items || [])
   hasMore.value = !!res.hasMore
 }
-function quick(h: string) {
-  runSearch(h)
+function go(p: Product) {
+  router.push({ path: '/pdp', query: { sku: p.sku } })
 }
+function add(p: Product) { cart.add(p) }
+
 watch(() => route.query.q, (v) => {
   const next = v ? String(v) : ''
   if (next && next !== q.value) runSearch(next)
 })
-onMounted(() => {
+onMounted(async () => {
+  try {
+    picks.value = shelfFallback(await listProducts(), 4).slice(0, 4)
+  } catch {
+    picks.value = shelfFallback([], 4)
+  }
   const initial = route.query.q ? String(route.query.q) : ''
   if (initial) runSearch(initial)
 })
 </script>
-<style lang="scss" scoped>
-@import '@/styles/theme.scss';
-.page { min-height: 100vh; background: $hb-paper; padding: 0 16px 40px; }
-.search-title { margin: 12px 0 0; font-size: 28px; font-weight: 800; letter-spacing: -0.03em; color: #F96141; }
-.search-sub { margin: 4px 0 12px; color: #8B919A; font-size: 14px; }
-.sticky {
-  position: sticky; top: 0; z-index: 20;
-  background: rgba(247,244,239,0.94); backdrop-filter: blur(14px);
-  padding: calc(10px + env(safe-area-inset-top)) 0 12px;
-  display: flex; align-items: center; gap: 8px;
-}
-.back {
-  width: 40px; height: 40px; border: 0; border-radius: 14px; background: $hb-white; color: $hb-ink;
-  display: inline-flex; align-items: center; justify-content: center; box-shadow: $hb-shadow-soft; cursor: pointer;
-}
-.grow { flex: 1; min-width: 0; }
-.hints { padding: 8px 0 16px; }
-.hint-title { font-size: 12px; color: $hb-muted; font-weight: 650; margin-bottom: 10px; }
-.hint-row { display: flex; flex-wrap: wrap; gap: 8px; }
-.hint { border: 0; background: $hb-white; height: 34px; padding: 0 14px; border-radius: 999px; font-size: 13px; font-weight: 650; box-shadow: $hb-shadow-soft; cursor: pointer; }
-.state { text-align: center; color: $hb-muted; padding: 48px 12px; }
-.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.empty-block { text-align: center; padding: 48px 12px; }
-.empty-block h2 { margin: 0; font-size: 18px; font-weight: 800; color: $hb-ink; }
-.hint-sub { margin-top: 8px; color: $hb-muted; font-size: 13px; }
-.go-home {
-  display: inline-flex; margin-top: 20px; padding: 10px 16px; border-radius: 999px;
-  background: #F96141; color: #fff; font-weight: 700; text-decoration: none;
-}
-.sort-chips { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 12px; }
-.hint.on { background: #F96141; color: #fff; }
-.more { display: block; margin: 18px auto 0; width: 140px; border: 0; padding: 12px; border-radius: 999px; background: $hb-white; color: $hb-forest; font-weight: 700; box-shadow: $hb-shadow-soft; cursor: pointer; }
 
-.fn-page { --ink:#1C2430; --teal:#0E7490; --amber:#F96141; --sand:#FCFAF8; }
+<style lang="scss" scoped>
+.page {
+  min-height: 100vh; background: #FCFAF8; color: #1C2430;
+  padding: calc(18px + env(safe-area-inset-top)) 16px 12px;
+  font-family: "Plus Jakarta Sans", "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+h1 { margin: 0; font-size: 32px; font-weight: 800; letter-spacing: -0.04em; color: #F96141; line-height: 1.05; }
+.sub { margin: 8px 0 0; max-width: 280px; color: #8B919A; font-size: 14px; line-height: 1.45; }
+.search-row { display: flex; align-items: center; gap: 10px; margin-top: 16px; }
+.field {
+  flex: 1; display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 14px;
+  background: #fff; border: 1px solid #EFEAE4; border-radius: 999px; color: #8B919A;
+}
+.field input { flex: 1; border: 0; outline: none; background: transparent; color: #1C2430; font-size: 14px; min-width: 0; }
+.cancel { border: 0; background: transparent; color: #F96141; font-weight: 700; font-size: 15px; cursor: pointer; padding: 0; }
+.block { margin-top: 22px; }
+.sec { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+h2 { margin: 0; font-size: 16px; font-weight: 800; letter-spacing: -0.02em; }
+.trend-title { display: flex; align-items: center; gap: 6px; color: #1C2430; }
+.trend-title :deep(svg), .trend :deep(svg) { color: #F96141; }
+.link { border: 0; background: transparent; color: #F96141; font-weight: 700; font-size: 13px; cursor: pointer; padding: 0; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.chips.center { justify-content: center; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px;
+  border: 0; border-radius: 999px; background: #F3F1EF; color: #1C2430; font-size: 13px; font-weight: 650; cursor: pointer;
+}
+.chip :deep(svg) { color: #8B919A; }
+.trends { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; margin-top: 12px; }
+.trend {
+  display: flex; align-items: center; gap: 6px; border: 0; background: transparent;
+  text-align: left; font-size: 14px; font-weight: 650; color: #1C2430; cursor: pointer; padding: 2px 0;
+}
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+.card { background: #fff; border-radius: 16px; overflow: hidden; border: 1px solid #F3F0EC; cursor: pointer; }
+.shot { aspect-ratio: 1.05; background: #F6F4F2; }
+.shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.meta { padding: 8px 10px 10px; }
+.nm {
+  font-size: 13px; font-weight: 700; line-height: 1.35; min-height: 2.6em;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.pr { display: flex; align-items: center; margin-top: 6px; }
+.pr b { color: #F96141; font-size: 16px; letter-spacing: -0.02em; }
+.bag {
+  margin-left: auto; width: 30px; height: 30px; border: 0; border-radius: 999px;
+  background: #F96141; color: #fff; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.foot { margin: 28px 0 8px; text-align: center; color: #8B919A; }
+.mark {
+  width: 36px; height: 36px; margin: 0 auto 8px; border-radius: 12px; background: #FFF1EC; color: #F96141;
+  display: grid; place-items: center;
+}
+.foot b { display: block; color: #1C2430; font-size: 14px; }
+.foot p { margin: 6px auto 0; max-width: 240px; font-size: 12px; line-height: 1.45; }
+.state, .empty-block { text-align: center; color: #8B919A; padding: 36px 8px; }
+.empty-block h2 { font-size: 18px; }
+.sorts { display: flex; gap: 8px; margin-top: 16px; overflow-x: auto; }
+.sorts button {
+  border: 0; background: #F3F1EF; color: #1C2430; height: 32px; padding: 0 12px; border-radius: 999px;
+  font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap;
+}
+.sorts button.on { background: #F96141; color: #fff; }
+.more {
+  display: block; margin: 16px auto 0; border: 0; background: #fff; color: #F96141;
+  height: 40px; padding: 0 18px; border-radius: 999px; font-weight: 700; cursor: pointer;
+}
 </style>

@@ -1,84 +1,193 @@
 <template>
-  <div class="page">
-    <header class="head">
-      <button type="button" class="back" @click="$router.back()" aria-label="back">‹</button>
-      <h1 class="title">浏览记录</h1>
-      <button v-if="products.length" type="button" class="clear" @click="clearLocal">{{ zh ? '清空' : 'Clear' }}</button>
+  <div class="page" data-figma="1:42">
+    <header class="top">
+      <router-link to="/home" class="brand">
+        <span class="mark" aria-hidden="true"><Home :size="16" :stroke-width="2.2" /></span>
+        <span>
+          <span class="logo">Harbor</span>
+          <span class="tag">{{ zh ? '小物见喜，家里更暖' : 'Small finds. Big home.' }}</span>
+        </span>
+      </router-link>
     </header>
-    <div v-if="loading" class="state">{{ zh ? '加载中…' : 'Loading…' }}</div>
-    <div v-else-if="!products.length" class="state">{{ note || (zh ? '还没有浏览记录' : 'No browsing history yet.') }}</div>
-    <div v-else class="grid">
-      <article v-for="p in products" :key="p.sku" class="card" @click="go(p)">
-        <div class="thumb" :style="ph(p)">
-          <img v-if="p.image" :src="p.image" :alt="p.name" />
-        </div>
-        <div class="body">
-          <div class="nm">{{ p.name }}</div>
-          <div class="price">{{ money(p) }}</div>
-        </div>
-      </article>
+    <div class="head">
+      <div>
+        <h1>{{ zh ? '浏览记录' : 'Browsing history' }}</h1>
+        <p>{{ zh ? '你最近看过的商品' : "Items you've recently viewed" }}</p>
+      </div>
+      <button v-if="items.length" type="button" class="clear" @click="clearLocal">{{ zh ? '清空' : 'Clear all' }}</button>
     </div>
+
+    <div v-if="loading" class="state">{{ zh ? '加载中…' : 'Loading…' }}</div>
+    <div v-else-if="!groups.length" class="state">{{ zh ? '还没有浏览记录' : 'No browsing history yet.' }}</div>
+    <template v-else>
+      <section v-for="(group, gi) in groups" :key="group.key" class="group">
+        <div class="sec">
+          <h2>{{ group.label }}</h2>
+          <span>{{ group.stamp }}</span>
+        </div>
+        <div v-if="gi === 0 && group.horizontal" class="hrow">
+          <article v-for="p in group.items" :key="p.sku" class="mini" @click="go(p)">
+            <div class="shot">
+              <img v-if="p.image" :src="p.image" :alt="p.name" />
+              <span v-if="pack(p)" class="pack">{{ pack(p) }}</span>
+            </div>
+            <div class="nm">{{ p.name }}</div>
+            <div class="price">{{ money(p.price) }}</div>
+          </article>
+        </div>
+        <div v-else class="list">
+          <button v-for="p in group.items" :key="p.sku" type="button" class="line" @click="go(p)">
+            <img v-if="p.image" :src="p.image" alt="" />
+            <span class="meta">
+              <span class="nm">{{ p.name }}</span>
+              <span class="price">{{ money(p.price) }}</span>
+            </span>
+            <ChevronRight :size="18" />
+          </button>
+        </div>
+      </section>
+    </template>
     <AppTabBar active="me" />
   </div>
 </template>
+
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { ChevronRight, Home } from 'lucide-vue-next'
 import { fetchHistoryHtml } from '@/api/accountApi'
-import { parseFeedCards, type Product } from '@/api/products'
-import { loadBrowseHistory, clearBrowseHistory } from '@/composables/browseHistory'
+import { money, parseFeedCards } from '@/api/products'
+import { clearBrowseHistory, loadBrowseHistory } from '@/composables/browseHistory'
 import { useI18n } from '@/composables/i18n'
 import AppTabBar from '@/components/AppTabBar.vue'
-const { t, lang } = useI18n()
+
+interface HistItem {
+  sku: string
+  name: string
+  image?: string
+  price: number
+  ts: number
+}
+
+const { lang } = useI18n()
 const zh = computed(() => String(lang.value).startsWith('zh'))
 const router = useRouter()
-const products = ref<Product[]>([])
+const items = ref<HistItem[]>([])
 const loading = ref(true)
-const note = ref(t('history_recent'))
-function mapLocal() {
-  return loadBrowseHistory().map((b) => ({
-    id: b.sku, sku: b.sku, name: b.name, price: Number(b.price) || 0,
-    category: 'Harbor', image: b.image || '', images: b.image ? [b.image] : [], live: false,
-  }))
-}
-onMounted(async () => {
-  try {
-    const html = await fetchHistoryHtml()
-    products.value = parseFeedCards(html)
-    if (!products.value.length) products.value = mapLocal()
-    note.value = products.value.length ? t('history_n', { n: products.value.length }) : t('history_empty_note')
-  } catch {
-    products.value = mapLocal()
-    note.value = products.value.length ? t('history_local') : t('history_offline')
-  } finally { loading.value = false }
+
+const groups = computed(() => {
+  const buckets = new Map<string, HistItem[]>()
+  for (const item of items.value) {
+    const key = dayKey(item.ts)
+    const list = buckets.get(key) || []
+    list.push(item)
+    buckets.set(key, list)
+  }
+  return [...buckets.entries()]
+    .sort((a, b) => b[1][0].ts - a[1][0].ts)
+    .map(([key, list], index) => ({
+      key,
+      label: dayLabel(list[0].ts),
+      stamp: dayStamp(list[0].ts),
+      horizontal: index === 0 && isToday(list[0].ts),
+      items: list,
+    }))
 })
-function money(p: Product) {
-  const n = Number(p.price || 0)
-  return n ? `$${n.toFixed(2)}` : ''
+
+function dayKey(ts: number) {
+  const d = new Date(ts)
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
 }
-function ph(p: Product) {
-  if (p.image) return {}
-  return { backgroundImage: 'linear-gradient(154deg, #bae6fd 6%, #0369a1 94%)' }
+function startOfDay(offset = 0) {
+  const d = new Date()
+  d.setHours(0, 0, 0, 0)
+  return d.getTime() - offset * 86400000
 }
-function go(p: Product) { router.push(`/p/${encodeURIComponent(p.sku || p.id)}`) }
+function isToday(ts: number) { return ts >= startOfDay(0) }
+function dayLabel(ts: number) {
+  if (ts >= startOfDay(0)) return zh.value ? '今天' : 'Today'
+  if (ts >= startOfDay(1)) return zh.value ? '昨天' : 'Yesterday'
+  return new Date(ts).toLocaleDateString(zh.value ? 'zh-CN' : 'en-US', { month: 'long', day: 'numeric' })
+}
+function dayStamp(ts: number) {
+  return new Date(ts).toLocaleDateString(zh.value ? 'zh-CN' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+}
+function pack(p: HistItem) {
+  const m = p.name.match(/(\d+)\s*(件|条|套|pack|pcs)/i)
+  return m ? `${m[1]} ${zh.value ? '件' : 'pack'}` : ''
+}
+function go(p: HistItem) { router.push({ path: '/pdp', query: { sku: p.sku } }) }
 function clearLocal() {
   try { clearBrowseHistory() } catch { /* */ }
-  products.value = []
-  note.value = t('history_empty_note') || 'No browsing history yet.'
+  items.value = []
 }
+
+onMounted(async () => {
+  const local = loadBrowseHistory().map((b) => ({
+    sku: b.sku,
+    name: b.name,
+    image: b.image || '',
+    price: Number(b.price) || 0,
+    ts: b.ts || Date.now(),
+  }))
+  const bySku = new Map(local.map((b) => [b.sku, b]))
+  try {
+    const remote = parseFeedCards(await fetchHistoryHtml())
+    remote.forEach((p, i) => {
+      if (bySku.has(p.sku)) return
+      bySku.set(p.sku, {
+        sku: p.sku,
+        name: p.name,
+        image: p.image || '',
+        price: Number(p.price) || 0,
+        ts: Date.now() - i * 1000,
+      })
+    })
+  } catch { /* local history still shown */ }
+  items.value = [...bySku.values()].sort((a, b) => b.ts - a.ts)
+  loading.value = false
+})
 </script>
-<style scoped>
-.page { min-height: 100vh; background: #FCFAF8; color: #1C2430; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
-.head { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
-.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; color: #1C2430; cursor: pointer; }
-.title { flex: 1; font-size: 22px; font-weight: 800; letter-spacing: -0.03em; margin: 0; }
-.clear { border: 0; background: transparent; font-size: 13px; font-weight: 700; color: #F96141; cursor: pointer; }
-.state { text-align: center; color: #6B7280; padding: 36px 8px; }
-.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.card { background: #fff; border: 1px solid #E2E6EE; border-radius: 16px; overflow: hidden; }
-.thumb { height: 120px; background: #e8e4dc; position: relative; }
-.thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.body { padding: 10px; }
-.nm { font-size: 13px; font-weight: 600; color: #1C2430; min-height: 34px; line-height: 1.3; }
-.price { margin-top: 6px; font-size: 16px; font-weight: 700; color: #F96141; }
+
+<style lang="scss" scoped>
+.page {
+  min-height: 100vh; background: #FCFAF8; color: #1C2430;
+  padding: calc(14px + env(safe-area-inset-top)) 16px 8px;
+  font-family: "Plus Jakarta Sans", "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.brand { display: flex; align-items: center; gap: 8px; color: inherit; }
+.mark {
+  width: 32px; height: 32px; border-radius: 10px; background: #F96141; color: #fff;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.logo { display: block; font-size: 20px; font-weight: 800; letter-spacing: -0.04em; line-height: 1; color: #F96141; }
+.tag { display: block; margin-top: 2px; font-size: 11px; color: #8B919A; }
+.head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-top: 16px; }
+h1 { margin: 0; font-size: 26px; letter-spacing: -0.04em; font-weight: 800; }
+.head p { margin: 4px 0 0; color: #8B919A; font-size: 13px; }
+.clear { border: 0; background: transparent; color: #F96141; font-weight: 750; font-size: 14px; cursor: pointer; padding: 4px 0; }
+.state { text-align: center; color: #8B919A; padding: 36px 8px; }
+.group { margin-top: 18px; }
+.sec { display: flex; align-items: baseline; justify-content: space-between; }
+.sec h2 { margin: 0; font-size: 16px; }
+.sec span { color: #8B919A; font-size: 12px; }
+.hrow { display: flex; gap: 10px; overflow-x: auto; margin-top: 10px; padding-bottom: 4px; }
+.mini { flex: 0 0 112px; cursor: pointer; }
+.shot { position: relative; aspect-ratio: 1; border-radius: 14px; overflow: hidden; background: #F6F4F2; }
+.shot img, .line img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pack {
+  position: absolute; left: 6px; top: 6px; background: #F96141; color: #fff;
+  font-size: 10px; font-weight: 800; border-radius: 999px; padding: 2px 6px;
+}
+.mini .nm { margin-top: 6px; font-size: 12px; font-weight: 650; line-height: 1.3; min-height: 2.6em; }
+.price { color: #F96141; font-weight: 800; font-size: 13px; }
+.list { margin-top: 8px; }
+.line {
+  width: 100%; display: flex; align-items: center; gap: 12px; padding: 10px 0;
+  border: 0; border-bottom: 1px solid #F1EEEA; background: transparent; text-align: left; cursor: pointer; color: inherit;
+}
+.line img { width: 64px; height: 64px; border-radius: 12px; object-fit: cover; background: #F6F4F2; flex: none; }
+.meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.line .nm { font-size: 14px; font-weight: 700; }
+.line :deep(svg) { color: #C4C8CE; flex: none; }
 </style>

@@ -1,17 +1,34 @@
 ﻿<template>
-  <div class="fn-page page" v-if="product" data-figma="M05">
-    <div class="gallery" :style="galleryBg">
+  <div class="pdp" v-if="product" data-figma="1:4">
+    <div class="gallery">
       <img v-if="gallerySrc" class="gallery-img" :src="gallerySrc" alt="" />
-      <div class="pills">
-        <span class="pill">{{ product.category }}</span>
-        <span v-if="discount" class="pill coral">-{{ discount }}%</span>
-      </div>
-      <button type="button" class="back" @click="goBack" aria-label="back"><ChevronLeft :size="22" :stroke-width="1.75" /></button>
+      <button type="button" class="icon back" @click="goBack" aria-label="返回">
+        <ChevronLeft :size="22" :stroke-width="1.75" />
+      </button>
       <div class="gtools">
-        <button type="button" @click="doWish" aria-label="save"><Heart :size="18" /></button>
-        <button type="button" @click="share" aria-label="share"><Share2 :size="18" /></button>
+        <button type="button" class="icon" :class="{ on: wished }" @click="doWish" aria-label="收藏">
+          <Heart :size="18" :fill="wished ? 'currentColor' : 'none'" />
+        </button>
+        <button type="button" class="icon" @click="share" aria-label="分享">
+          <Share2 :size="18" />
+        </button>
+        <button type="button" class="icon bell" @click="goReviews" aria-label="评价">
+          <Bell :size="18" />
+          <i v-if="interestCount > 0" />
+        </button>
       </div>
+      <div v-if="interestCount > 0" class="live bought">
+        <Flame :size="14" /> {{ zh ? ('今日 ' + people(interestCount) + ' 人关注') : (people(interestCount) + ' interested') }}
+      </div>
+      <div v-if="interestCount > 0" class="live watch">
+        <Eye :size="14" /> {{ zh ? (people(interestCount) + ' 人在看') : (people(interestCount) + ' watching') }}
+      </div>
+      <div v-if="thumbs.length" class="counter">{{ activeShot + 1 }}/{{ thumbs.length }}</div>
+      <button v-if="thumbs.length > 1" type="button" class="next" @click="nextShot" aria-label="下一张">
+        <ChevronRight :size="18" />
+      </button>
     </div>
+
     <div v-if="thumbs.length > 1" class="thumbs">
       <button v-for="(src, i) in thumbs" :key="src + i" type="button" :class="{ on: activeShot === i }" @click="activeShot = i">
         <img :src="src" alt="" />
@@ -20,55 +37,100 @@
 
     <div class="body">
       <h1 class="title">{{ product.name }}</h1>
-      <p class="blurb top">{{ product.blurb || t('pdp_blurb_default') }}</p>
+      <p class="blurb">{{ product.blurb || t('pdp_blurb_default') }}</p>
       <div class="price-row">
         <span class="price" :class="{ oos: isOos }">{{ money(displayPrice) }}</span>
         <span v-if="displayCompare" class="was">{{ money(displayCompare) }}</span>
-        <span v-if="discount" class="off">{{ zh ? ('省' + discount + '%') : (discount + '% OFF') }}</span>
+        <span v-if="discount" class="off">{{ zh ? ('立减 ' + discount + '%') : (discount + '% OFF') }}</span>
       </div>
-      <p v-if="interestCount > 0" class="interest">{{ t('pdp_interest', { n: interestCount }) }}</p>
-      <div class="ship-bar">{{ t('pdp_ship_tracked') }} · {{ product.shipsIn || t('pdp_ships_default') }}</div>
-      <button type="button" class="sku-row" @click="sheetOpen = true">
-        <span class="sku-k">{{ t('common_option') }}</span>
-        <span class="sku-v">{{ sizeSummary }} · {{ zh ? '数量' : 'Qty' }} {{ qty }}</span>
-        <ChevronRight :size="18" :stroke-width="1.7" class="chev" />
+
+      <button type="button" class="ship" @click="goShip">
+        <Truck :size="18" />
+        <span>
+          <b>{{ shipTitle }}</b>
+          <small>{{ shipSub }}</small>
+        </span>
+        <ChevronRight :size="18" class="chev" />
       </button>
-      <div v-if="optionLabels.length" class="opt-block">
-        <div class="opt-lab">{{ t('common_option') }}</div>
-        <div class="opts">
-          <button v-for="opt in optionLabels" :key="'p'+opt" type="button" class="opt" :class="{ on: size === opt }" @click="size = opt">{{ opt }}</button>
+
+      <div class="split">
+        <button type="button" class="cell" @click="goChat">
+          <MessageCircle :size="18" />
+          <span>
+            <b>{{ zh ? '问答' : 'Q&A' }}</b>
+            <small>{{ zh ? '问问客服' : 'Ask support' }}</small>
+          </span>
+          <ChevronRight :size="16" />
+        </button>
+        <button type="button" class="cell" @click="goReviews">
+          <FileText :size="18" />
+          <span>
+            <b>{{ zh ? '评价' : 'Reviews' }}</b>
+            <small>{{ interestCount > 0 ? (zh ? (people(interestCount) + ' 人关注') : (people(interestCount) + ' interested')) : (zh ? '暂无评价' : 'No reviews yet') }}</small>
+          </span>
+          <ChevronRight :size="16" />
+        </button>
+      </div>
+
+      <div class="perks">
+        <div v-for="perk in perks" :key="perk.title" class="perk">
+          <span class="bubble"><component :is="perk.icon" :size="16" /></span>
+          <b>{{ perk.title }}</b>
+          <small>{{ perk.sub }}</small>
         </div>
       </div>
-      <div class="qty-row page-qty">
+
+      <div v-if="optionLabels.length" class="opt-row">
+        <span class="opt-k">{{ isColorOptions ? (zh ? '颜色' : 'Color') : t('common_option') }}</span>
+        <div v-if="isColorOptions" class="swatches">
+          <button
+            v-for="opt in optionLabels"
+            :key="opt"
+            type="button"
+            class="swatch"
+            :class="{ on: size === opt }"
+            :style="{ background: swatch(opt) }"
+            :aria-label="opt"
+            @click="size = opt"
+          />
+        </div>
+        <div v-else class="pills">
+          <button v-for="opt in optionLabels" :key="opt" type="button" class="pill" :class="{ on: size === opt }" @click="size = opt">{{ opt }}</button>
+        </div>
+        <button type="button" class="opt-more" @click="sheetOpen = true">
+          {{ size || (zh ? '请选择' : 'Choose') }} <ChevronRight :size="14" />
+        </button>
+      </div>
+
+      <div class="qty-row">
         <span class="qty-lab">{{ zh ? '数量' : 'Qty' }}</span>
         <div class="qty-ctrl">
-          <button type="button" @click="qty = Math.max(1, qty - 1)">−</button>
+          <button type="button" @click="qty = Math.max(1, qty - 1)" aria-label="减少">−</button>
           <span>{{ qty }}</span>
-          <button type="button" @click="qty = qty + 1">+</button>
+          <button type="button" @click="qty = qty + 1" aria-label="增加">+</button>
         </div>
       </div>
-      <div class="reviews-box">
-        <div class="rev-head"><strong>{{ t('reviews') || '评价' }}</strong></div>
-        <div class="rev-empty">{{ t('reviews_empty') || '暂无评价' }}</div>
+
+      <div class="reviews-box" ref="reviewsEl">
+        <div class="rev-head"><strong>{{ zh ? '评价' : 'Reviews' }}</strong></div>
+        <div class="rev-empty">{{ zh ? '暂无评价' : 'No reviews yet' }}</div>
       </div>
-      <div class="cta-spacer" />
     </div>
 
     <div class="sticky-cta">
-      <button type="button" class="dock wish" @click="doWish" aria-label="wishlist">♡<span class="lab">收藏</span></button>
       <template v-if="isOos">
         <button type="button" class="btn disabled" disabled>{{ t('out_of_stock') || (zh ? '缺货' : 'Sold out') }}</button>
-        <button type="button" class="btn outline" @click="notifyMe" :disabled="notifyBusy">{{ notifyBusy ? "…" : (zh ? '到货通知' : 'Notify me') }}</button>
-      <p v-if="notifyMsg" class="tiny" style="margin-top:8px">{{ notifyMsg }}</p>
+        <button type="button" class="btn outline" @click="notifyMe" :disabled="notifyBusy">{{ notifyBusy ? '…' : (zh ? '到货通知' : 'Notify me') }}</button>
       </template>
       <template v-else>
-        <button type="button" class="btn outline" @click="doAdd"><ShoppingCart :size="16" /> {{ t('common_add') }}</button>
-        <button type="button" class="btn solid" @click="doBuy"><Zap :size="16" /> {{ t('common_buy_now') }}</button>
+        <button type="button" class="btn outline" @click="doAdd"><ShoppingCart :size="16" /> {{ zh ? '加入购物车' : 'Add to Cart' }}</button>
+        <button type="button" class="btn solid" @click="doBuy"><Zap :size="16" /> {{ zh ? '立即购买' : 'Buy Now' }}</button>
       </template>
     </div>
+    <p v-if="notifyMsg" class="notify">{{ notifyMsg }}</p>
 
     <div v-if="sheetOpen" class="sheet-mask" @click="sheetOpen = false">
-      <div class="sheet" @click.stop>
+      <div class="sheet" @click.stop data-figma="1:3">
         <div class="grab" aria-hidden="true"></div>
         <div class="sheet-head">
           <img v-if="gallerySrc" :src="gallerySrc" alt="" />
@@ -77,22 +139,22 @@
             <div class="sheet-price">{{ money(displayPrice) }}</div>
             <div class="muted">{{ product.blurb || t('pdp_blurb_default') }}</div>
           </div>
-          <button type="button" class="x" @click="sheetOpen = false" aria-label="close">×</button>
+          <button type="button" class="x" @click="sheetOpen = false" aria-label="关闭">×</button>
         </div>
-        <div class="sheet-title">{{ t('common_option') }}</div>
-        <div class="opts">
-          <button
-            v-for="opt in optionLabels"
-            :key="opt"
-            type="button"
-            class="opt"
-            :class="{ on: size === opt }"
-            @click="size = opt"
-          >{{ opt }}</button>
-          <div v-if="!optionLabels.length" class="muted">{{ t('common_default') }}</div>
-        </div>
-        <div class="qty-row">
-          <span class="qty-lab">{{ zh ? '数量' : 'Qty' }}</span>
+        <template v-if="optionLabels.length">
+          <div class="sheet-title">{{ isColorOptions ? (zh ? '颜色' : 'Color') : t('common_option') }}</div>
+          <div v-if="isColorOptions" class="sheet-colors">
+            <button v-for="opt in optionLabels" :key="'c'+opt" type="button" class="cdot" :class="{ on: size === opt }" @click="size = opt">
+              <i :style="{ background: swatch(opt) }" />
+              <span>{{ opt }}</span>
+            </button>
+          </div>
+          <div v-else class="opts">
+            <button v-for="opt in optionLabels" :key="opt" type="button" class="opt" :class="{ on: size === opt }" @click="size = opt">{{ opt }}</button>
+          </div>
+        </template>
+        <div class="qty-row sheet-qty">
+          <span class="qty-lab">{{ zh ? '数量' : 'Quantity' }}</span>
           <div class="qty-ctrl">
             <button type="button" @click="qty = Math.max(1, qty - 1)">−</button>
             <span>{{ qty }}</span>
@@ -111,34 +173,60 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { ChevronLeft, ChevronRight, Heart, Share2, ShoppingCart, Zap } from 'lucide-vue-next'
+import { Bell, ChevronLeft, ChevronRight, Eye, FileText, Flame, Heart, MessageCircle, Share2, ShieldCheck, ShoppingCart, Sparkles, Truck, Zap } from 'lucide-vue-next'
 import { useRoute, useRouter } from 'vue-router'
 import { fetchProductInterest, getProduct, money, type Product } from '@/api/products'
 import { useCart } from '@/composables/cart'
 import { useI18n } from '@/composables/i18n'
 import { trackBrowse } from '@/composables/browseHistory'
 import { addToCartServer } from '@/api/cartApi'
+import { shelfProduct } from '@/catalog/shelf'
 
 const { t, lang } = useI18n()
 const zh = computed(() => String(lang.value).startsWith('zh'))
 const route = useRoute()
 const router = useRouter()
 const cart = useCart()
-const cartCount = computed(() => cart.count.value)
 
 const product = ref<Product | null>(null)
-const isOos = computed(() => Number((product.value as any)?.stock ?? 1) <= 0)
+const isOos = computed(() => Number((product.value as { stock?: number } | null)?.stock ?? 1) <= 0)
 const interestCount = ref(0)
 const size = ref('')
 const qty = ref(1)
 const sheetOpen = ref(false)
 const busy = ref(false)
 const err = ref('')
+const wished = ref(false)
+const reviewsEl = ref<HTMLElement | null>(null)
+
+const SWATCHES: [RegExp, string][] = [
+  [/珊瑚|coral/i, '#F96141'],
+  [/黑|black/i, '#1A1A1A'],
+  [/海军|navy/i, '#243E73'],
+  [/蓝|blue/i, '#3B6FD8'],
+  [/绿|olive|green/i, '#3E5C45'],
+  [/灰|gray|grey|heather/i, '#C5C8CE'],
+  [/白|white/i, '#F4F4F5'],
+  [/米|beige|奶油|cream/i, '#E6D3BE'],
+  [/粉|pink/i, '#F3B6C4'],
+]
+
+function swatch(label: string) {
+  for (const [re, hex] of SWATCHES) if (re.test(label)) return hex
+  return ''
+}
+
+function people(n: number) {
+  if (n >= 10000) return (n / 10000).toFixed(1).replace(/\.0$/, '') + (zh.value ? '万' : 'w')
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + (zh.value ? '千' : 'k')
+  return String(n)
+}
 
 const discount = computed(() => {
-  const p = product.value
-  if (!p?.compareAt || p.compareAt <= p.price) return 0
-  return Math.round((1 - p.price / p.compareAt) * 100)
+  const price = displayPrice.value
+  const compare = displayCompare.value
+  if (!compare || compare <= price) return 0
+  return Math.round((1 - price / compare) * 100)
 })
 
 const activeShot = ref(0)
@@ -149,15 +237,18 @@ const thumbs = computed(() => {
   return p?.image ? [p.image] : []
 })
 const gallerySrc = computed(() => thumbs.value[activeShot.value] || product.value?.image || '')
+
+function nextShot() {
+  if (thumbs.value.length < 2) return
+  activeShot.value = (activeShot.value + 1) % thumbs.value.length
+}
+
 function share() {
   const url = location.href
-  const title = product.value?.name || 'Pimo'
+  const title = product.value?.name || 'Harbor'
   if (navigator.share) navigator.share({ title, url }).catch(() => {})
   else navigator.clipboard?.writeText(url).catch(() => {})
 }
-const galleryBg = computed(() =>
-  gallerySrc.value ? {} : { background: 'linear-gradient(160deg, #E8F1EC 0%, #D8E4DC 55%, #EDE8E1 100%)' },
-)
 
 const selectedOffer = computed(() => {
   const p = product.value
@@ -177,11 +268,40 @@ const optionLabels = computed(() => {
   if (p.offers?.length) return p.offers.map((o) => o.label)
   return p.sizes || []
 })
-const sizeSummary = computed(() => size.value || (optionLabels.value.length ? t('common_choose_n') : t('common_default')))
+const isColorOptions = computed(() => optionLabels.value.length > 0 && optionLabels.value.every((label) => !!swatch(label)))
+
+const shipTitle = computed(() => {
+  const th = Number(cart.freeShipThreshold.value || 0)
+  if (th > 0) return zh.value ? `满 $${th} 包邮` : `Free shipping over $${th}`
+  return zh.value ? '可追踪物流' : 'Tracked shipping'
+})
+const shipSub = computed(() => {
+  const raw = product.value?.shipsIn || ''
+  if (!raw || /tracked shipping/i.test(raw)) return t('pdp_ships_default')
+  return raw
+})
+
+const perks = computed(() => {
+  const p = product.value
+  return [
+    { icon: ShieldCheck, title: zh.value ? '物流可追踪' : 'Tracked', sub: zh.value ? '下单后可查' : 'Follow the parcel' },
+    { icon: Truck, title: zh.value ? '跨境直邮' : 'Ships direct', sub: p?.shipsIn || (zh.value ? '尽快发出' : 'Ships soon') },
+    { icon: Sparkles, title: p?.material || (zh.value ? '日常好物' : 'Everyday'), sub: p?.care || (zh.value ? '家里用得上' : 'Made for home') },
+    { icon: ShieldCheck, title: zh.value ? '精选上架' : 'Harbor pick', sub: p?.hub || (zh.value ? '小物见喜' : 'Small finds') },
+  ]
+})
 
 function goBack() {
   if (window.history.length > 1) router.back()
   else router.push('/home')
+}
+
+function goShip() {
+  router.push('/policy/shipping')
+}
+
+function goReviews() {
+  reviewsEl.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
 function goChat() {
@@ -221,14 +341,14 @@ async function addLocalAndMaybeServer() {
   }
 }
 
-async function doWish() { /* wishlist cookie handled server-side via /wishlist when available */ }
-function doAdd() {
+function doWish() { wished.value = !wished.value }
+
+async function doAdd() {
   if (optionLabels.value.length && !size.value) {
     sheetOpen.value = true
     return
   }
   await addLocalAndMaybeServer()
-  alert(t('common_saved_locally'))
 }
 
 async function doBuy() {
@@ -242,22 +362,24 @@ async function doBuy() {
 
 async function confirmSheet() {
   await addLocalAndMaybeServer()
-  alert(t('common_saved_locally'))
 }
 
 async function load() {
   const sku = String(route.params.sku || route.query.sku || '').trim()
   if (!sku) {
-    err.value = 'Missing sku'
+    err.value = zh.value ? '缺少商品' : 'Missing sku'
     interestCount.value = 0
+    product.value = null
     return
   }
   err.value = ''
-  const p = await getProduct(decodeURIComponent(sku))
-  product.value = p || null
+  const decoded = decodeURIComponent(sku)
+  const p = (await getProduct(decoded)) || shelfProduct(decoded) || null
+  product.value = p
   activeShot.value = 0
+  wished.value = false
   if (!p) {
-    err.value = 'Not found'
+    err.value = zh.value ? '没有找到这个商品' : 'Not found'
     return
   }
   const prefOffer = route.query.offer ? String(route.query.offer) : ''
@@ -268,6 +390,7 @@ async function load() {
   } else if (prefOption) size.value = prefOption
   else if (p.offers?.[0]) size.value = p.offers[0].label
   else if (p.sizes?.[0]) size.value = p.sizes[0]
+  else size.value = ''
   trackBrowse({ sku: p.sku, name: p.name, image: p.image || '', price: p.price })
   interestCount.value = await fetchProductInterest(p.sku)
 }
@@ -281,9 +404,12 @@ async function notifyMe() {
   notifyBusy.value = true
   notifyMsg.value = ''
   try {
-    const email = window.prompt('Email for back-in-stock notice') || ''
-    if (!email || !email.includes('@')) { notifyMsg.value = 'Email required'; return }
-    const sku = String((product.value && (product.value.sku || product.value.id)) || route.params.id || '')
+    const email = window.prompt(zh.value ? '留下邮箱，到货后通知你' : 'Email for back-in-stock notice') || ''
+    if (!email || !email.includes('@')) {
+      notifyMsg.value = zh.value ? '需要有效邮箱' : 'Email required'
+      return
+    }
+    const sku = String(product.value?.sku || product.value?.id || route.params.sku || '')
     const res = await fetch('/api/notify-me', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -291,9 +417,11 @@ async function notifyMe() {
       body: JSON.stringify({ email, sku, offer: '', country: 'US' }),
     })
     const data = await res.json().catch(() => ({}))
-    notifyMsg.value = data.ok ? "We'll email you when this is back." : (data.error || 'Failed')
+    notifyMsg.value = data.ok
+      ? (zh.value ? '到货后会发邮件给你。' : "We'll email you when this is back.")
+      : (data.error || (zh.value ? '没有提交成功' : 'Failed'))
   } catch {
-    notifyMsg.value = 'Network error'
+    notifyMsg.value = zh.value ? '网络异常' : 'Network error'
   } finally {
     notifyBusy.value = false
   }
@@ -302,109 +430,168 @@ async function notifyMe() {
 
 <style lang="scss" scoped>
 @import '@/styles/theme.scss';
-.page { min-height: 100vh; background: $hb-paper; padding-bottom: 90px; }
-.gallery { position: relative; aspect-ratio: 1/1; background: $hb-soft; }
-.gallery-img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.back { position: absolute; left: 14px; top: calc(12px + env(safe-area-inset-top)); width: 40px; height: 40px; border: 0; border-radius: 14px; background: rgba(255,255,255,0.92); color: #121816; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 4px 20px rgba(18,24,22,0.08); cursor: pointer; z-index: 2; }
-.pills { position: absolute; left: 12px; bottom: 12px; display: flex; gap: 6px; }
-.pill { background: rgba(255,255,255,0.92); border-radius: 999px; padding: 4px 10px; font-size: 12px; font-weight: 700; }
-.pill.coral { background: $hb-price; color: #fff; }
-.body { padding: 16px; }
-.ships { font-size: 12px; color: $hb-forest; font-weight: 650; }
-.title { margin: 2px 0 4px; font-size: 20px; line-height: 1.25; letter-spacing: -0.03em; color: $hb-ink; font-weight: 800; }
-.interest { color: $hb-deep; font-weight: 600; margin: 0 0 8px; font-size: 13px; color: $hb-muted; font-weight: 560; }
-.price-row { display: flex; gap: 8px; align-items: baseline; }
-.price { font-size: 24px; font-weight: 780; color: $hb-ink; }
-.was { color: $hb-muted; text-decoration: line-through; }
-.fx { margin-top: 4px; font-size: 12px; color: $hb-muted; }
-.sku-row {
-  margin-top: 12px; width: 100%; border: 1px solid #F1EEEA; background: #fff; border-radius: 16px;
-  padding: 12px 14px; display: flex; gap: 8px; align-items: center; box-shadow: none; cursor: pointer;
+
+.pdp {
+  min-height: 100vh;
+  background: #fff;
+  color: $hb-ink;
+  padding-bottom: 108px;
+  font-family: "Plus Jakarta Sans", "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
-.sku-k { color: $hb-muted; font-size: 12px; }
-.sku-v { flex: 1; text-align: right; font-weight: 680; }
-.chev { color: $hb-muted; }
-.specs { margin-top: 14px; background: $hb-white; border-radius: 14px; padding: 8px 12px; box-shadow: $hb-shadow-soft; }
-.spec { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid $hb-line; font-size: 13px; }
-.spec:last-child { border-bottom: 0; }
-.k { color: $hb-muted; }
-.v { font-weight: 650; }
-.blurb { margin-top: 14px; color: $hb-ink; line-height: 1.5; font-size: 14px; }
-.cta-spacer { height: 12px; }
+.gallery {
+  position: relative;
+  height: 248px;
+  background: #F4F5F7;
+}
+.gallery-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.icon {
+  width: 36px; height: 36px; border: 0; border-radius: 999px;
+  background: rgba(255,255,255,0.94); color: #1C2430;
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.back { position: absolute; left: 14px; top: calc(12px + env(safe-area-inset-top)); z-index: 2; }
+.gtools {
+  position: absolute; right: 14px; top: calc(12px + env(safe-area-inset-top));
+  display: flex; gap: 8px; z-index: 2;
+}
+.icon.on { color: #F96141; }
+.bell { position: relative; }
+.bell i {
+  position: absolute; top: 6px; right: 7px; width: 7px; height: 7px; border-radius: 99px;
+  background: #F96141; box-shadow: 0 0 0 2px #fff;
+}
+.live {
+  position: absolute; z-index: 2; display: inline-flex; align-items: center; gap: 4px;
+  height: 28px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 700;
+}
+.bought { left: 14px; top: calc(58px + env(safe-area-inset-top)); background: #F96141; color: #fff; }
+.watch { right: 14px; top: calc(58px + env(safe-area-inset-top)); background: rgba(255,255,255,0.94); color: #1C2430; }
+.counter {
+  position: absolute; left: 14px; bottom: 14px; z-index: 2;
+  background: rgba(28,36,48,0.55); color: #fff; border-radius: 999px;
+  font-size: 12px; font-weight: 700; padding: 4px 8px;
+}
+.next {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%); z-index: 2;
+  width: 32px; height: 32px; border: 0; border-radius: 999px; background: #fff; color: #1C2430;
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+  box-shadow: 0 4px 14px rgba(28,36,48,0.12);
+}
+.thumbs { display: flex; gap: 8px; padding: 12px 16px 0; overflow-x: auto; }
+.thumbs button {
+  flex: 0 0 56px; width: 56px; height: 56px; padding: 0; border-radius: 12px;
+  border: 1.5px solid #E8E4DC; overflow: hidden; background: #F6F4F2; cursor: pointer;
+}
+.thumbs button.on { border: 2px solid #F96141; }
+.thumbs img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.body { padding: 16px 16px 8px; }
+.title { margin: 2px 0 0; font-size: 22px; line-height: 1.2; letter-spacing: -0.03em; font-weight: 800; }
+.blurb { margin: 6px 0 0; color: #8B919A; font-size: 14px; line-height: 1.4; }
+.price-row { display: flex; align-items: baseline; gap: 8px; margin-top: 12px; }
+.price { font-size: 28px; font-weight: 800; letter-spacing: -0.04em; color: #F96141; line-height: 1; }
+.price.oos { color: #9CA3AF; }
+.was { font-size: 14px; color: #B0B6BE; text-decoration: line-through; }
+.off { background: #FFF1EC; color: #F96141; border-radius: 8px; padding: 3px 8px; font-size: 12px; font-weight: 800; }
+.ship {
+  margin-top: 14px; width: 100%; border: 0; background: #FFF6F3; color: #1C2430;
+  border-radius: 16px; padding: 12px 14px; display: flex; gap: 10px; align-items: center;
+  text-align: left; cursor: pointer;
+}
+.ship :deep(svg) { color: #F96141; flex: none; }
+.ship span { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.ship b { font-size: 14px; }
+.ship small { color: #8B919A; font-size: 12px; }
+.chev { color: #C4C8CE; }
+.split { display: grid; grid-template-columns: 1fr 1fr; margin-top: 16px; border-top: 1px solid #F1EEEA; border-bottom: 1px solid #F1EEEA; }
+.cell {
+  border: 0; background: transparent; display: flex; align-items: center; gap: 8px;
+  padding: 12px 4px; cursor: pointer; text-align: left; color: #1C2430;
+}
+.cell + .cell { border-left: 1px solid #F1EEEA; padding-left: 12px; }
+.cell span { flex: 1; display: flex; flex-direction: column; }
+.cell b { font-size: 14px; }
+.cell small { color: #8B919A; font-size: 12px; margin-top: 2px; }
+.cell :deep(svg) { color: #F96141; flex: none; }
+.perks { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 16px; text-align: center; }
+.perk { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.bubble {
+  width: 40px; height: 40px; border-radius: 999px; background: #FFF1EC; color: #F96141;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.perk b { font-size: 11px; line-height: 1.25; }
+.perk small { color: #8B919A; font-size: 10px; line-height: 1.3; }
+.opt-row { display: flex; align-items: center; gap: 10px; margin-top: 18px; }
+.opt-k { font-size: 14px; font-weight: 700; }
+.swatches, .pills { display: flex; gap: 8px; flex: 1; flex-wrap: wrap; }
+.swatch {
+  width: 22px; height: 22px; border-radius: 999px; border: 2px solid #fff;
+  box-shadow: 0 0 0 1px #E4E0DA; cursor: pointer; padding: 0;
+}
+.swatch.on { box-shadow: 0 0 0 2px #F96141; }
+.pill {
+  height: 32px; border: 1px solid #E8E4DC; background: #fff; border-radius: 999px;
+  padding: 0 12px; cursor: pointer; font-weight: 650; font-size: 13px;
+}
+.pill.on { background: #F96141; color: #fff; border-color: #F96141; }
+.opt-more {
+  margin-left: auto; border: 0; background: transparent; color: #8B919A;
+  display: inline-flex; align-items: center; gap: 2px; cursor: pointer; font-size: 13px;
+}
+.qty-row { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; }
+.qty-lab { font-size: 14px; font-weight: 700; }
+.qty-ctrl {
+  display: flex; align-items: center; gap: 0; background: #F6F5F4; border-radius: 999px; padding: 4px;
+}
+.body .qty-ctrl { margin-right: 76px; }
+.qty-ctrl button {
+  width: 32px; height: 32px; border: 0; border-radius: 999px; background: transparent; cursor: pointer; font-size: 18px;
+}
+.qty-ctrl span { min-width: 28px; text-align: center; font-weight: 700; }
+.reviews-box { margin-top: 18px; padding-top: 14px; border-top: 1px solid #F1EEEA; }
+.rev-head { font-size: 16px; }
+.rev-empty { margin-top: 10px; color: #8B919A; font-size: 13px; }
 .sticky-cta {
   position: fixed; left: 50%; transform: translateX(-50%); width: min(100vw, 768px); bottom: 0; z-index: 40;
-  box-shadow: 0 -8px 24px rgba(28,36,48,0.06);
   display: flex; gap: 10px; align-items: center;
   padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
   background: #fff; border-top: 1px solid #F1EEEA;
 }
-.dock { position: relative; width: 46px; height: 46px; border: 0; border-radius: 14px; background: #fff; color: #121816; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(18,24,22,0.06); cursor: pointer; }
-.dock.chat { width: auto; padding: 0 10px; display: flex; align-items: center; gap: 4px; }
-.lab { font-size: 12px; font-weight: 700; }
-.badge {
-  position: absolute; top: -4px; right: -4px; min-width: 16px; height: 16px; border-radius: 999px;
-  background: $hb-price; color: #fff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center;
-}
-.gtools { position: absolute; right: 12px; top: calc(12px + env(safe-area-inset-top)); display: flex; gap: 8px; z-index: 2; }
-.gtools button { width: 40px; height: 40px; border: 0; border-radius: 14px; background: rgba(255,255,255,0.92); color: #1C2430; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
-.thumbs { display: flex; gap: 8px; padding: 10px 16px 0; background: #fff; }
-.thumbs button { width: 56px; height: 56px; padding: 0; border-radius: 12px; border: 1px solid #E8E4DC; overflow: hidden; background: #F6F4F2; cursor: pointer; }
-.thumbs button.on { border: 2px solid #F96141; }
-.thumbs img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.opt-block { margin-top: 14px; }
-.opt-lab { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
-.page-qty { margin-top: 14px; }
 .btn {
-  height: 52px; border-radius: 999px; font-weight: 740; cursor: pointer; flex: 1; font-size: 15px;
+  height: 48px; border-radius: 999px; font-weight: 750; cursor: pointer; flex: 1; font-size: 15px;
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  &.outline { background: #fff; color: #F96141; border: 1.5px solid #F96141; }
-  &.solid { background: #F96141; color: #fff; border: 0; }
 }
+.btn.outline { background: #fff; color: #F96141; border: 1.5px solid #F96141; }
+.btn.solid { background: #F96141; color: #fff; border: 0; text-decoration: none; }
+.btn.disabled { background: #E8E4DC; color: #9CA3AF; border: 0; }
+.notify { position: fixed; left: 16px; right: 16px; bottom: 84px; z-index: 41; text-align: center; color: #8B919A; font-size: 12px; }
 .empty { padding: 80px 20px; text-align: center; color: $hb-muted; }
-.empty .btn { display: inline-flex; margin-top: 12px; padding: 0 16px; align-items: center; text-decoration: none; }
-.sheet-mask { position: fixed; inset: 0; background: rgba(28,36,48,0.45); z-index: 60; display: flex; align-items: flex-end; justify-content: center; }
-.sheet { width: min(100%, 768px); background: #fff; border-radius: 22px 22px 0 0; padding: 10px 16px calc(16px + env(safe-area-inset-bottom)); }
+.empty .btn { display: inline-flex; margin-top: 12px; padding: 0 18px; }
+.sheet-mask {
+  position: fixed; inset: 0; background: rgba(28,36,48,0.45); z-index: 60;
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.sheet {
+  width: min(100%, 768px); background: #fff; border-radius: 22px 22px 0 0;
+  padding: 10px 16px calc(16px + env(safe-area-inset-bottom));
+}
 .grab { width: 36px; height: 4px; border-radius: 99px; background: #E6E2DC; margin: 0 auto 12px; }
-.sheet-head { display: grid; grid-template-columns: 64px 1fr auto; gap: 10px; align-items: start; margin-bottom: 14px; }
-.sheet-head img { width: 64px; height: 64px; border-radius: 12px; object-fit: cover; background: #F6F4F2; }
-.sheet-head strong { display: block; font-size: 15px; }
-.sheet-price { color: #F96141; font-weight: 800; margin-top: 2px; }
-.sheet-head .muted { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.sheet-head { display: grid; grid-template-columns: 72px 1fr auto; gap: 12px; align-items: start; }
+.sheet-head img { width: 72px; height: 72px; border-radius: 12px; object-fit: cover; background: #F6F4F2; }
+.sheet-head strong { display: block; font-size: 16px; letter-spacing: -0.02em; }
+.sheet-price { color: #F96141; font-weight: 800; font-size: 18px; margin-top: 2px; }
+.muted { color: #8B919A; font-size: 13px; margin-top: 2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .x { border: 0; background: transparent; font-size: 22px; color: #8B919A; cursor: pointer; line-height: 1; }
-.sheet-title { font-weight: 800; font-size: 14px; margin-bottom: 10px; letter-spacing: -0.02em; color: #5C6570; }
+.sheet-title { margin: 16px 0 10px; font-size: 14px; font-weight: 800; }
+.sheet-colors { display: flex; gap: 12px; overflow-x: auto; }
+.cdot { border: 0; background: transparent; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; color: #5C6570; font-size: 11px; }
+.cdot i { width: 28px; height: 28px; border-radius: 999px; box-shadow: 0 0 0 1px #E4E0DA; }
+.cdot.on i { box-shadow: 0 0 0 2px #F96141; }
+.cdot.on { color: #F96141; font-weight: 700; }
 .opts { display: flex; flex-wrap: wrap; gap: 8px; }
 .opt {
-  height: 36px; border: 1px solid #E8E4DC; background: #FCFAF8; border-radius: 999px; padding: 0 14px; cursor: pointer; font-weight: 650;
-  &.on { background: #F96141; color: #fff; border-color: #F96141; }
+  height: 36px; border: 1px solid #E8E4DC; background: #fff; border-radius: 999px; padding: 0 14px; cursor: pointer; font-weight: 650;
 }
-.muted { color: $hb-muted; font-size: 13px; }
-.qty-row { display: flex; align-items: center; justify-content: space-between; margin: 18px 0 16px; }
-.qty-lab { font-size: 14px; font-weight: 650; color: #5C6570; }
-.qty-ctrl { display: flex; align-items: center; gap: 14px; font-size: 16px; font-weight: 700; }
-.qty-ctrl button { width: 36px; height: 36px; border: 0; border-radius: 12px; background: #F6F4F2; cursor: pointer; }
-.sheet-ok { width: 100%; height: 52px; border: 0; border-radius: 999px; background: #F96141; color: #fff; font-weight: 740; cursor: pointer; }
-.body { background: #fff; border-radius: 20px 20px 0 0; margin-top: -16px; position: relative; padding-top: 14px; }
-.price { font-size: 28px; font-weight: 800; color: $hb-price; letter-spacing: -0.03em; }
-.price.oos { color: #9CA3AF; }
-.was { font-size: 13px; color: #9CA3AF; text-decoration: line-through; margin-left: 6px; }
-.interest { color: $hb-deep !important; font-size: 12px; font-weight: 600; margin-top: 8px; }
-.ship-bar { margin-top: 12px; background: #FFF1EC; color: #C2410C; border-radius: 12px; padding: 10px 12px; font-size: 13px; font-weight: 650; }
-.off { background: #FFF1EC; color: #F96141; border-radius: 999px; padding: 2px 8px; font-size: 12px; font-weight: 800; }
-.blurb.top { margin-top: 4px; color: #8E949C; }
-.pill { display: inline-flex; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; background: #F3F4F6; color: #374151; }
-.pill.ok { background: #ECFDF5; color: #047857; }
-.pill.info { background: #E0F2FE; color: #0E7490; }
-.pill.amber { background: #FEF3C7; color: #F96141; }
-.pill.bad, .pill.coral { background: #FEE2E2; color: #B91C1C; }
-.reviews-box { margin-top: 16px; padding-top: 14px; border-top: 1px solid #E8E4DC; }
-.rev-head { display: flex; justify-content: space-between; align-items: center; font-size: 15px; }
-.rev-empty { margin-top: 10px; padding: 14px; background: #FCFAF8; border-radius: 12px; text-align: center; color: #6B7280; font-size: 13px; }
-.sticky-cta .btn.solid { background: $hb-price !important; }
-.sticky-cta .btn.disabled { background: #E8E4DC !important; color: #9CA3AF !important; }
-.dock.wish { flex-direction: column; font-size: 11px; color: $hb-muted; width: auto; padding: 0 6px; background: transparent; box-shadow: none; }
-.sheet { width: min(100%, 768px); }
-.sheet-ok { background: $hb-price !important; }
-.page { background: $hb-paper; }
-
-.fn-page { --ink:#1C2430; --teal:#0E7490; --amber:#F96141; --sand:#FCFAF8; }
+.opt.on { background: #F96141; color: #fff; border-color: #F96141; }
+.sheet-qty { margin: 18px 0 16px; }
+.sheet-ok { width: 100%; height: 48px; border: 0; border-radius: 999px; background: #F96141; color: #fff; font-weight: 750; cursor: pointer; font-size: 16px; }
 </style>
