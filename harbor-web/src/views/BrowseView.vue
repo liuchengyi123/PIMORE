@@ -24,6 +24,11 @@
         <component :is="c.icon" :size="14" /> {{ zh ? c.zh : c.label }}
       </button>
     </div>
+    <div class="sorts">
+      <button type="button" class="sort" :class="{ on: sort === 'featured' }" @click="sort = 'featured'">{{ zh ? '综合' : 'Featured' }}</button>
+      <button type="button" class="sort" :class="{ on: sort === 'low' }" @click="sort = 'low'">{{ zh ? '低价' : 'Low price' }}</button>
+      <button type="button" class="sort" :class="{ on: sort === 'high' }" @click="sort = 'high'">{{ zh ? '高价' : 'High price' }}</button>
+    </div>
 
     <h1>{{ zh ? '日常好物' : 'Everyday essentials' }}</h1>
     <p class="sub">{{ zh ? '用心的家居小物，生活更好一点。' : 'Thoughtful home goods. Better living.' }}</p>
@@ -72,6 +77,7 @@ const cart = useCart()
 const count = computed(() => cart.count.value)
 const live = ref<Product[]>([])
 const activeCat = ref('')
+const sort = ref<'featured' | 'low' | 'high'>('featured')
 const loading = ref(false)
 
 const chips = [
@@ -96,19 +102,26 @@ const catalog = [
 
 const shown = computed(() => {
   if (activeCat.value && live.value.length) {
-    return live.value.slice(0, 8).map((p) => ({
+    return applySort(live.value.slice(0, 8).map((p) => ({
       sku: p.sku,
       name: p.name,
       cat: p.category || activeCat.value,
       price: Math.round(p.price),
       image: p.image || b1,
       live: p,
-    }))
+    })))
   }
   const id = activeCat.value
   const rows = id ? catalog.filter((c) => c.cat.toLowerCase() === id) : catalog
-  return rows.map((c) => ({ ...c, live: undefined as Product | undefined }))
+  const list = rows.map((c) => ({ ...c, live: undefined as Product | undefined }))
+  return applySort(list)
 })
+
+function applySort<T extends { price: number }>(rows: T[]) {
+  if (sort.value === 'low') return [...rows].sort((a, b) => a.price - b.price)
+  if (sort.value === 'high') return [...rows].sort((a, b) => b.price - a.price)
+  return rows
+}
 
 async function pick(id: string) {
   activeCat.value = id
@@ -165,14 +178,17 @@ onMounted(() => {
 }
 .search-wrap { margin-top: 14px; }
 .search-wrap :deep(.search-bar) { border-radius: 999px; background: #F4F1EE; border: 0; box-shadow: none; min-height: 46px; }
-.chips { display: flex; gap: 8px; overflow-x: auto; margin-top: 12px; padding-bottom: 2px; scrollbar-width: none; }
-.chips::-webkit-scrollbar { display: none; }
-.chip {
-  flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px;
-  height: 34px; padding: 0 12px; border-radius: 999px; border: 0; background: #F3F1EE;
-  color: #1C2430; font-weight: 650; font-size: 13px; cursor: pointer;
-  &.on { background: #F96141; color: #fff; }
+.chips, .sorts { display: flex; gap: 6px; overflow-x: auto; margin-top: 8px; padding-bottom: 2px; scrollbar-width: none; }
+.chips::-webkit-scrollbar, .sorts::-webkit-scrollbar { display: none; }
+.chips { margin-top: 10px; }
+.chip, .sort {
+  flex: 0 0 auto; display: inline-flex; align-items: center; gap: 4px;
+  height: 32px; padding: 0 10px; border-radius: 999px; border: 0; background: #F3F1EE;
+  color: #1C2430; font-weight: 700; font-size: 12px; cursor: pointer;
 }
+.chip.on { background: #F96141; color: #fff; }
+.sort { height: 30px; background: #fff; border: 1px solid #F1EEEA; color: #5C6570; }
+.sort.on { background: #FFF1EC; color: #F96141; border-color: #F96141; }
 h1 { margin: 14px 0 0; font-size: 24px; letter-spacing: -0.03em; font-weight: 800; line-height: 1.15; }
 .sub { margin: 2px 0 14px; color: #8E949C; font-size: 13px; line-height: 1.35; }
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
