@@ -171,17 +171,17 @@ onMounted(() => {
   color: #1C2430; font-weight: 650; font-size: 13px; cursor: pointer;
   &.on { background: #F96141; color: #fff; }
 }
-h1 { margin: 18px 0 0; font-size: 24px; letter-spacing: -0.03em; }
+h1 { margin: 16px 0 0; font-size: 22px; letter-spacing: -0.03em; font-weight: 800; }
 .sub { margin: 4px 0 12px; color: #8E949C; font-size: 13px; }
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 12px; }
-.shot { position: relative; border-radius: 16px; overflow: hidden; background: #F6F3F0; aspect-ratio: 1.05; cursor: pointer; box-shadow: 0 8px 20px rgba(28,36,48,0.05); }
+.shot { position: relative; border-radius: 16px; overflow: hidden; background: #F6F3F0; aspect-ratio: 1.05; cursor: pointer; box-shadow: none; border: 1px solid #F1EEEA; }
 .shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .heart {
   position: absolute; top: 8px; right: 8px; width: 32px; height: 32px; border: 0; border-radius: 99px;
   background: rgba(255,255,255,0.94); color: #1C2430; cursor: pointer;
   display: inline-flex; align-items: center; justify-content: center;
 }
-.nm { margin-top: 8px; font-size: 14px; font-weight: 750; }
+.nm { margin-top: 8px; font-size: 13px; font-weight: 700; line-height: 1.3; }
 .cat { margin-top: 2px; font-size: 12px; color: #9AA0A8; }
 .pr { display: flex; align-items: center; margin-top: 8px; }
 .pr b { font-size: 16px; }

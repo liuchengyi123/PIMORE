@@ -311,15 +311,15 @@ async function notifyMe() {
 .pill.coral { background: $hb-price; color: #fff; }
 .body { padding: 16px; }
 .ships { font-size: 12px; color: $hb-forest; font-weight: 650; }
-.title { margin: 4px 0 6px; font-size: 22px; line-height: 1.25; letter-spacing: -0.03em; color: $hb-ink; font-weight: 800; }
+.title { margin: 2px 0 4px; font-size: 20px; line-height: 1.25; letter-spacing: -0.03em; color: $hb-ink; font-weight: 800; }
 .interest { color: $hb-deep; font-weight: 600; margin: 0 0 8px; font-size: 13px; color: $hb-muted; font-weight: 560; }
 .price-row { display: flex; gap: 8px; align-items: baseline; }
 .price { font-size: 24px; font-weight: 780; color: $hb-ink; }
 .was { color: $hb-muted; text-decoration: line-through; }
 .fx { margin-top: 4px; font-size: 12px; color: $hb-muted; }
 .sku-row {
-  margin-top: 14px; width: 100%; border: 0; background: $hb-white; border-radius: 14px;
-  padding: 12px 14px; display: flex; gap: 8px; align-items: center; box-shadow: $hb-shadow-soft; cursor: pointer;
+  margin-top: 12px; width: 100%; border: 1px solid #F1EEEA; background: #fff; border-radius: 16px;
+  padding: 12px 14px; display: flex; gap: 8px; align-items: center; box-shadow: none; cursor: pointer;
 }
 .sku-k { color: $hb-muted; font-size: 12px; }
 .sku-v { flex: 1; text-align: right; font-weight: 680; }
@@ -384,7 +384,7 @@ async function notifyMe() {
 .qty-ctrl button { width: 36px; height: 36px; border: 0; border-radius: 12px; background: #F6F4F2; cursor: pointer; }
 .sheet-ok { width: 100%; height: 52px; border: 0; border-radius: 999px; background: #F96141; color: #fff; font-weight: 740; cursor: pointer; }
 .body { background: #fff; border-radius: 20px 20px 0 0; margin-top: -16px; position: relative; padding-top: 14px; }
-.price { font-size: 26px; font-weight: 800; color: $hb-price; }
+.price { font-size: 28px; font-weight: 800; color: $hb-price; letter-spacing: -0.03em; }
 .price.oos { color: #9CA3AF; }
 .was { font-size: 13px; color: #9CA3AF; text-decoration: line-through; margin-left: 6px; }
 .interest { color: $hb-deep !important; font-size: 12px; font-weight: 600; margin-top: 8px; }

@@ -253,16 +253,16 @@ onMounted(async () => {
 .cat {
   background: #fff; border-radius: 16px; padding: 12px 6px 10px;
   display: flex; flex-direction: column; align-items: center; gap: 8px;
-  box-shadow: 0 8px 18px rgba(28,36,48,0.05); color: #1C2430;
+  border: 1px solid #F1EEEA; box-shadow: none; color: #1C2430;
   font-size: 12px; font-weight: 650;
 }
 .bubble {
   width: 44px; height: 44px; border-radius: 999px;
   display: inline-flex; align-items: center; justify-content: center;
 }
-.block { margin-top: 18px; }
+.block { margin-top: 22px; }
 .sec { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
-.sec-title { display: flex; align-items: center; gap: 6px; font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
+.sec-title { display: flex; align-items: center; gap: 6px; font-size: 17px; font-weight: 800; letter-spacing: -0.02em; }
 .sec-sub { margin-top: 2px; font-size: 12px; color: #8E949C; }
 .zap, .spark { color: #F96141; }
 .see { color: #F96141; font-size: 13px; font-weight: 700; padding-top: 4px; }
@@ -276,7 +276,7 @@ onMounted(async () => {
 .row { display: flex; gap: 10px; overflow-x: auto; margin-top: 12px; padding-bottom: 4px; scrollbar-width: none; }
 .row::-webkit-scrollbar { display: none; }
 .mini, .wide { flex: 0 0 164px; cursor: pointer; }
-.shot { position: relative; border-radius: 16px; overflow: hidden; background: #F4F1EE; aspect-ratio: 1; box-shadow: 0 6px 16px rgba(28,36,48,0.04); }
+.shot { position: relative; border-radius: 16px; overflow: hidden; background: #F4F1EE; aspect-ratio: 1; box-shadow: none; border: 1px solid #F1EEEA; }
 .shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .range {
   position: absolute; left: 8px; top: 8px; background: #fff; color: #F96141;
