@@ -14,8 +14,10 @@
         @search="onSearch"
       />
     </div>
+    <h1 v-if="!searched" class="search-title">Search</h1>
+    <p v-if="!searched" class="search-sub">Find cute home goods, everyday essentials and more.</p>
     <div v-if="!q && !loading && !searched" class="hints">
-      <div class="hint-title">{{ t('search_try') }}</div>
+      <div class="hint-title">Recent searches</div>
       <div class="hint-row">
         <button v-for="h in hints" :key="h" type="button" class="hint" @click="quick(h)">{{ h }}</button>
       </div>
@@ -41,6 +43,7 @@
       </div>
     </div>
     <button v-if="products.length && hasMore" type="button" class="more" @click="loadMore">{{ t('search_load_more') }}</button>
+    <AppTabBar active="home" />
   </div>
 </template>
 <script setup lang="ts">
@@ -51,6 +54,7 @@ import { searchProducts, type Product } from '@/api/products'
 import { useI18n } from '@/composables/i18n'
 import ProductCard from '@/components/ProductCard.vue'
 import AppSearchBar from '@/components/AppSearchBar.vue'
+import AppTabBar from '@/components/AppTabBar.vue'
 
 const { t, lang } = useI18n()
 const route = useRoute()
@@ -61,7 +65,7 @@ const loading = ref(false)
 const searched = ref(false)
 const page = ref(1)
 const hasMore = ref(false)
-const hints = ['toothbrush', 'kitchen', 'lamp', 'organizer', 'storage']
+const hints = ['storage bins', 'plant pots', 'bath towels', 'kitchen organizers', 'desk lamp']
 const ph = computed(() =>
   lang.value === 'en' ? 'Search household goods' : t('search_placeholder')
 )
@@ -116,6 +120,8 @@ onMounted(() => {
 <style lang="scss" scoped>
 @import '@/styles/theme.scss';
 .page { min-height: 100vh; background: $hb-paper; padding: 0 16px 40px; }
+.search-title { margin: 8px 0 0; font-size: 32px; font-weight: 800; color: #F96141; }
+.search-sub { margin: 4px 0 12px; color: #8B919A; font-size: 14px; }
 .sticky {
   position: sticky; top: 0; z-index: 20;
   background: rgba(247,244,239,0.94); backdrop-filter: blur(14px);
@@ -141,7 +147,7 @@ onMounted(() => {
   background: $hb-ink; color: #fff; font-weight: 700; text-decoration: none;
 }
 .sort-chips { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 12px; }
-.hint.on { background: $hb-ink; color: #fff; }
+.hint.on { background: #F96141; color: #fff; }
 .more { display: block; margin: 18px auto 0; width: 140px; border: 0; padding: 12px; border-radius: 999px; background: $hb-white; color: $hb-forest; font-weight: 700; box-shadow: $hb-shadow-soft; cursor: pointer; }
 
 .fn-page { --ink:#0F2744; --teal:#0E7490; --amber:#B45309; --sand:#F7F4EF; }

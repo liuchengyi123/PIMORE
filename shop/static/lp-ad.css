@@ -11,13 +11,15 @@
   align-items: center;
   gap: 10px;
   padding: 12px 14px;
-  background: #0f2744;
-  color: #fff;
+  background: #fff;
+  color: #1C2430;
+  border-bottom: 1px solid #F1EEEA;
 }
 .lp-brand {
   font-weight: 800;
   text-decoration: none;
   letter-spacing: 0.01em;
+  color: #F96141;
 }
 .lp-brand sup {
   margin-left: 4px;
@@ -29,14 +31,14 @@
 .lp-top-cat {
   font-size: 13px;
   font-weight: 650;
-  color: #fff;
+  color: #1C2430;
 }
 .lp-ship {
   margin-left: auto;
   font-size: 12px;
   font-weight: 700;
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.55);
+  color: #F96141;
+  border: 1px solid #F96141;
   border-radius: 999px;
   padding: 4px 8px;
 }
@@ -58,7 +60,7 @@
   padding: 18px 16px 16px;
   border-radius: 22px;
   color: #fff;
-  background: linear-gradient(160deg, var(--accent, #e85d04) 0%, var(--deep, #c2410c) 100%);
+  background: linear-gradient(160deg, var(--accent, #F96141) 0%, var(--deep, #c2410c) 100%);
   box-shadow: 0 16px 32px rgba(15, 39, 68, 0.18);
 }
 .lp-hero::after, .lp-count-top::after, .lp-rush-head::after {
@@ -121,7 +123,7 @@
 }
 .lp-ad .lp-grab,
 .lp-ad .lp-enter-dock .lp-enter {
-  background: var(--accent, #e85d04);
+  background: var(--accent, #F96141);
   color: #fff;
 }
 .lp-grid {
@@ -151,7 +153,7 @@
   top: 8px;
   padding: 3px 6px;
   border-radius: 6px;
-  background: var(--accent, #e85d04);
+  background: var(--accent, #F96141);
   color: #fff;
   font-size: 10px;
   font-weight: 800;
@@ -181,7 +183,7 @@
 .lp-card-price s { color: #9ca3af; font-size: 12px; }
 .lp-card-stock { margin: 4px 0 8px; font-size: 12px; color: #4b5563; }
 .lp-grab {
-  background: var(--accent, #e85d04);
+  background: var(--accent, #F96141);
   color: #fff;
   padding: 9px 8px;
   font-size: 14px;
@@ -244,7 +246,7 @@
 .lp-enter-dock .lp-enter-sticky {
   max-width: 480px;
   margin: 0 auto;
-  background: var(--accent, #e85d04);
+  background: var(--accent, #F96141);
   color: #fff;
   box-shadow: 0 8px 24px rgba(15, 39, 68, 0.22);
 }

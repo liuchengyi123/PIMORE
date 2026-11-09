@@ -282,7 +282,7 @@ async function notifyMe() {
 .blurb { margin-top: 14px; color: $hb-ink; line-height: 1.5; font-size: 14px; }
 .cta-spacer { height: 12px; }
 .sticky-cta {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+  position: fixed; left: 50%; transform: translateX(-50%); width: min(100vw, 768px); bottom: 0; z-index: 40;
   display: flex; gap: 8px; align-items: center;
   padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
   background: rgba(255,255,255,0.96); border-top: 1px solid $hb-line;
@@ -295,9 +295,9 @@ async function notifyMe() {
   background: $hb-price; color: #fff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center;
 }
 .btn {
-  height: 44px; border-radius: 14px; border: 0; font-weight: 740; cursor: pointer; flex: 1;
-  &.outline { background: $hb-soft; color: $hb-forest; }
-  &.solid { background: $hb-price; color: #fff; }
+  height: 48px; border-radius: 999px; font-weight: 740; cursor: pointer; flex: 1;
+  &.outline { background: #fff; color: #F96141; border: 1.5px solid #F96141; }
+  &.solid { background: #F96141; color: #fff; border: 0; }
 }
 .empty { padding: 80px 20px; text-align: center; color: $hb-muted; }
 .sheet-mask { position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 60; display: flex; align-items: flex-end; }
@@ -306,12 +306,12 @@ async function notifyMe() {
 .opts { display: flex; flex-wrap: wrap; gap: 8px; }
 .opt {
   border: 1px solid $hb-line; background: $hb-paper; border-radius: 999px; padding: 8px 12px; cursor: pointer;
-  &.on { background: $hb-forest; color: #fff; border-color: $hb-forest; }
+  &.on { background: #F96141; color: #fff; border-color: #F96141; }
 }
 .muted { color: $hb-muted; font-size: 13px; }
 .qty-row { display: flex; align-items: center; gap: 16px; margin: 16px 0; font-size: 18px; font-weight: 700; }
 .qty-row button { width: 36px; height: 36px; border: 0; border-radius: 10px; background: $hb-paper; cursor: pointer; }
-.sheet-ok { width: 100%; height: 48px; border: 0; border-radius: 14px; background: $hb-price; color: #fff; font-weight: 740; cursor: pointer; }
+.sheet-ok { width: 100%; height: 52px; border: 0; border-radius: 999px; background: #F96141; color: #fff; font-weight: 740; cursor: pointer; }
 .body { background: #fff; border-radius: 20px 20px 0 0; margin-top: -16px; position: relative; padding-top: 14px; }
 .price { font-size: 26px; font-weight: 800; color: $hb-price; }
 .price.oos { color: #9CA3AF; }

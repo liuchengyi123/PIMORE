@@ -22,15 +22,15 @@ const orderId = computed(() => String(route.query.id || ''))
   padding: 80px 24px 40px; padding-top: calc(80px + env(safe-area-inset-top));
 }
 .ok-ico {
-  width: 72px; height: 72px; margin: 0 auto 16px; border-radius: 36px;
-  background: #D1FAE5; color: #047857; display: flex; align-items: center; justify-content: center;
-  font-size: 28px; font-weight: 800;
+  width: 84px; height: 84px; margin: 0 auto 16px; border-radius: 42px;
+  background: #F96141; color: #fff; display: flex; align-items: center; justify-content: center;
+  font-size: 36px; font-weight: 800; box-shadow: 0 12px 30px rgba(249,97,65,0.35);
 }
-h1 { margin: 0; font-size: 26px; font-weight: 800; color: $hb-ink; }
-.sub { margin: 10px auto 0; max-width: 320px; font-size: 13px; color: $hb-muted; line-height: 1.45; }
+h1 { margin: 0; font-size: 28px; font-weight: 800; color: #1C2430; }
+.sub { margin: 10px auto 0; max-width: 320px; font-size: 14px; color: #8B919A; line-height: 1.45; }
 .btn {
-  display: flex; align-items: center; justify-content: center; margin: 12px auto 0; width: min(320px, 100%);
-  height: 48px; border-radius: 14px; background: $hb-ink; color: #fff; font-weight: 700; text-decoration: none;
+  display: flex; align-items: center; justify-content: center; margin: 16px auto 0; width: min(420px, 100%);
+  height: 52px; border-radius: 999px; background: #F96141; color: #fff; font-weight: 700; text-decoration: none;
 }
-.btn.soft { background: #fff; color: $hb-ink; border: 1px solid $hb-line; }
+.btn.soft { background: #fff; color: #F96141; border: 1.5px solid #F96141; }
 </style>

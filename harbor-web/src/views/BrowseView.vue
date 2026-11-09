@@ -103,7 +103,7 @@ onMounted(() => {
   background: rgba(247,244,239,0.94); backdrop-filter: blur(14px);
   padding: calc(12px + env(safe-area-inset-top)) 0 10px;
 }
-h1 { margin: 0; font-size: 24px; font-weight: 800; color: $hb-ink; letter-spacing: -0.02em; }
+h1 { margin: 0; font-size: 28px; font-weight: 800; color: #1C2430; letter-spacing: -0.03em; }
 .sub { margin: 4px 0 10px; color: $hb-muted; font-size: 13px; }
 .dept-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 14px; }
 .dept-card {
@@ -123,7 +123,7 @@ h1 { margin: 0; font-size: 24px; font-weight: 800; color: $hb-ink; letter-spacin
 .chip {
   flex: 0 0 auto; border: 1px solid $hb-line; background: #fff; border-radius: 999px;
   padding: 8px 13px; font-size: 13px; font-weight: 650; cursor: pointer; color: $hb-ink;
-  &.on { background: $hb-ink; color: #fff; border-color: $hb-ink; }
+  &.on { background: #F96141; color: #fff; border-color: #F96141; }
 }
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding-bottom: 8px; }
 .state { text-align: center; color: $hb-muted; padding: 40px 8px; }
