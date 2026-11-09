@@ -57,10 +57,13 @@
     <div v-if="showGap" class="gap-mask" @click.self="gapOff = true">
       <div class="gap-sheet" role="dialog" data-figma="5:9">
         <div class="grab" aria-hidden="true"></div>
-        <div class="added"><span class="tick" aria-hidden="true">✓</span>{{ zhCart ? '已加入购物袋' : 'Added to bag' }}</div>
+        <div class="added">
+          <svg class="tick" viewBox="0 0 22 22" width="22" height="22" aria-hidden="true"><circle cx="11" cy="11" r="9.2" fill="#fff" stroke="#FF6B4A" stroke-width="1.6"/><path d="M6.6 11.2l2.8 2.9 6-6.2" fill="none" stroke="#FF6B4A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          {{ zhCart ? '已加入购物袋' : 'Added to bag' }}
+        </div>
         <h2>{{ gapTitle }}</h2>
         <label class="gap-search">
-          <span aria-hidden="true">⌕</span>
+          <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.2" fill="none" stroke="#9AA1A9" stroke-width="1.6"/><path d="M12.4 12.4L17 17" stroke="#9AA1A9" stroke-width="1.6" stroke-linecap="round"/></svg>
           <input v-model="gapQ" :placeholder="zhCart ? '搜索商品…' : 'Search products…'" />
         </label>
         <div class="gap-tabs">
@@ -234,32 +237,30 @@ h1 small { font-size: 12px; color: $hb-muted; font-weight: 600; }
 .confirm-actions .ghost { background: #fff; border: 1.5px solid #FF6B4A; color: #FF6B4A; }
 .confirm-actions .ok { background: #FF6B4A; border: 0; color: #fff; }
 .gap-sheet {
-  width: min(100%, 480px); max-height: 88vh; overflow: auto; background: #fff;
-  border-radius: 28px 28px 0 0; padding: 10px 16px calc(16px + env(safe-area-inset-bottom));
+  width: min(100%, 440px); max-height: 88vh; overflow: auto; background: #fff;
+  border-radius: 28px 28px 0 0; padding: 8px 18px calc(18px + env(safe-area-inset-bottom));
 }
-.grab { width: 42px; height: 4px; border-radius: 99px; background: #E6E2DC; margin: 0 auto 12px; }
-.added { display: flex; align-items: center; justify-content: center; gap: 8px; color: #FF6B4A; font-weight: 750; }
-.added .tick {
-  width: 22px; height: 22px; border-radius: 50%; background: #fff; color: #FF6B4A;
-  border: 2px solid #FF6B4A; display: grid; place-items: center; font-size: 13px;
-}
-.gap-sheet h2 { margin: 8px 0 12px; text-align: center; font-size: 22px; letter-spacing: -0.03em; }
+.grab { width: 42px; height: 4px; border-radius: 99px; background: #E6E2DC; margin: 4px auto 14px; }
+.added { display: flex; align-items: center; justify-content: center; gap: 8px; color: #FF6B4A; font-weight: 700; font-size: 14px; }
+.added .tick { display: block; flex: 0 0 auto; }
+.gap-sheet h2 { margin: 10px 0 14px; text-align: center; font-size: 22px; line-height: 1.3; font-weight: 800; letter-spacing: -0.03em; color: #1C2430; }
 .gap-search {
-  display: flex; align-items: center; gap: 8px; height: 42px; border-radius: 12px;
-  border: 1px solid #E6E2DC; padding: 0 12px; color: #8B919A;
+  display: flex; align-items: center; gap: 8px; height: 44px; border-radius: 12px;
+  border: 1px solid #E6E2DC; padding: 0 12px; color: #8B919A; background: #fff;
 }
 .gap-search input { border: 0; flex: 1; outline: none; font-size: 14px; background: transparent; color: #1C2430; }
-.gap-tabs { display: flex; gap: 18px; margin: 14px 0 8px; }
-.gap-tabs button { border: 0; background: transparent; padding: 6px 0; font-weight: 750; color: #8B919A; cursor: pointer; }
-.gap-tabs button.on { color: #1C2430; box-shadow: inset 0 -2px 0 #FF6B4A; }
-.gap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.gap-search input::placeholder { color: #A0A6AE; }
+.gap-tabs { display: flex; gap: 22px; margin: 16px 0 12px; border-bottom: 1px solid #F3F0EC; }
+.gap-tabs button { border: 0; background: transparent; padding: 8px 0 10px; font-size: 15px; font-weight: 650; color: #8B919A; cursor: pointer; }
+.gap-tabs button.on { color: #1C2430; font-weight: 800; box-shadow: inset 0 -2px 0 #FF6B4A; }
+.gap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 12px; }
 .gap-card { border: 0; background: transparent; text-align: left; cursor: pointer; padding: 0; color: inherit; }
 .gap-card img, .gap-ph { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 12px; background: #F6F4F2; display: block; }
-.gap-card b { display: block; margin-top: 8px; font-size: 14px; font-weight: 650; }
-.gap-card em { display: block; margin-top: 2px; font-style: normal; color: #1C2430; font-weight: 750; }
+.gap-card b { display: block; margin-top: 10px; font-size: 14px; font-weight: 650; line-height: 1.35; letter-spacing: -0.01em; color: #1C2430; }
+.gap-card em { display: block; margin-top: 4px; font-style: normal; color: #1C2430; font-weight: 800; font-size: 16px; }
 .gap-go {
-  width: 100%; height: 48px; margin-top: 14px; border: 0; border-radius: 12px;
-  background: #FF6B4A; color: #fff; font-weight: 800; cursor: pointer;
+  width: 100%; height: 50px; margin-top: 18px; border: 0; border-radius: 12px;
+  background: #FF6B4A; color: #fff; font-weight: 750; font-size: 16px; cursor: pointer;
 }
 @media (min-width: 960px) {
   .page.desk {

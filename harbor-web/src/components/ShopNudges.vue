@@ -7,13 +7,22 @@
         <div class="grab" aria-hidden="true"></div>
         <span class="pill">{{ zh ? '免费赠品已解锁' : 'Free gift unlocked' }}</span>
         <div class="gift-stage" aria-hidden="true">
-          <img v-if="giftImage" class="gift-photo" :src="giftImage" alt="" />
-          <svg v-else class="gift-art" viewBox="0 0 180 96" width="180" height="96">
-            <rect x="22" y="28" width="58" height="46" rx="6" fill="#FFF1EC" stroke="#F96141" stroke-width="2" />
-            <path d="M22 46h58M51 28v46" stroke="#F96141" stroke-width="2" />
-            <rect x="96" y="18" width="62" height="62" rx="8" fill="#fff" stroke="#E7E1D8" />
-            <circle cx="127" cy="46" r="16" fill="#FF6B4A" />
-            <path d="M127 36v20M117 46h20" stroke="#fff" stroke-width="2" stroke-linecap="round" />
+          <svg class="gift-art" viewBox="0 0 240 128" width="220" height="118">
+            <ellipse cx="124" cy="118" rx="86" ry="7" fill="#F4E8E3" />
+            <path d="M28 46 L62 30 L108 48 L74 64 Z" fill="#F7F5F2" />
+            <path d="M28 46 L28 96 L74 114 L74 64 Z" fill="#E4EDF7" />
+            <path d="M74 64 L74 114 L108 96 L108 48 Z" fill="#D3E2F3" />
+            <path d="M62 30 L62 18 L90 30 L90 48" fill="none" stroke="#F96141" stroke-width="2" />
+            <rect x="40" y="68" width="30" height="20" rx="2" fill="#1C3148" />
+            <text x="55" y="81" text-anchor="middle" font-size="8" font-weight="700" fill="#fff">Pimo</text>
+            <ellipse cx="168" cy="108" rx="30" ry="6" fill="#E8E0D8" />
+            <path d="M142 52 h52 v46 c0 10-12 16-26 16 s-26-6-26-16 Z" fill="#F7F2EC" />
+            <ellipse cx="168" cy="52" rx="26" ry="7" fill="#EFE6DE" />
+            <rect x="150" y="66" width="36" height="20" rx="2" fill="#1C3148" />
+            <text x="168" y="79" text-anchor="middle" font-size="8" font-weight="700" fill="#fff">Pimo</text>
+            <rect x="165" y="34" width="6" height="16" rx="1" fill="#E7D3C2" />
+            <path d="M168 22c5 5 6 10 0 13c-6-3-5-8 0-13z" fill="#FFB020" />
+            <path d="M168 26c2 2 2 4 0 5c-2-1-2-3 0-5z" fill="#FFF4D2" />
           </svg>
         </div>
         <h2 class="gift-name">{{ giftName }}</h2>
@@ -57,14 +66,23 @@
 
       <template v-else-if="kind === 'pwa'">
         <div class="phone-art" aria-hidden="true">
-          <svg viewBox="0 0 168 132" width="168" height="132">
-            <rect x="52" y="6" width="64" height="108" rx="12" fill="#fff" />
-            <rect x="74" y="12" width="20" height="4" rx="2" fill="#D5D8DE" />
-            <rect x="62" y="24" width="44" height="52" rx="8" fill="#10243A" />
-            <circle cx="84" cy="42" r="7" fill="#fff" />
-            <path d="M84 38v9M80 42h8M81.5 49.5c1.6 2.4 2.5 2.4 2.5 2.4s.9 0 2.5-2.4" fill="none" stroke="#10243A" stroke-width="1.4" stroke-linecap="round" />
-            <circle cx="84" cy="90" r="9" fill="#FF6B4A" />
-            <path d="M118 64c10 1 18 10 16 20-2 8-9 11-16 8l-4 14c-1 4-6 5-8 2l-8-16 7-3-9 7c-3 2-7 0-7-4l2-9 8-2-8 4c-3 1-6-2-5-5l3-9 8-1-6 2c-4 1-7-3-5-6l6-14c2-6 12-8 18-2z" fill="#F6D2B5" stroke="#E2B394" stroke-width="1" />
+          <svg viewBox="0 0 200 148" width="200" height="148">
+            <rect x="46" y="6" width="78" height="128" rx="16" fill="#fff" />
+            <rect x="72" y="12" width="26" height="5" rx="2.5" fill="#D5DAE1" />
+            <rect x="58" y="26" width="54" height="64" rx="8" fill="#16324A" />
+            <g fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="85" cy="48" r="7" />
+              <path d="M85 55v11M77 62h16" />
+              <path d="M80 66c0 6 4 9 5 9s5-3 5-9" />
+            </g>
+            <circle cx="85" cy="108" r="12" fill="#FF6B4A" />
+            <g transform="translate(108,72)">
+              <rect x="6" y="4" width="16" height="42" rx="8" fill="#F6CDB4" transform="rotate(-32 14 24)" />
+              <ellipse cx="34" cy="46" rx="20" ry="15" fill="#F8D4BC" />
+              <rect x="22" y="28" width="12" height="22" rx="6" fill="#F3C6AA" transform="rotate(18 28 40)" />
+              <rect x="34" y="26" width="11" height="20" rx="5.5" fill="#F6CDB4" />
+              <ellipse cx="18" cy="38" rx="7" ry="11" fill="#F0C0A2" transform="rotate(-50 18 38)" />
+            </g>
           </svg>
         </div>
         <p class="kicker light">{{ zh ? '安装 Pimo' : 'Install Harbor' }}</p>
@@ -76,17 +94,20 @@
 
       <template v-else-if="kind === 'checkin'">
         <div class="cal-art" aria-hidden="true">
-          <svg viewBox="0 0 48 48" width="48" height="48">
-            <rect x="7" y="11" width="34" height="30" rx="7" fill="none" stroke="#FF6B4A" stroke-width="2.4" />
-            <path d="M16 7v8M32 7v8" stroke="#FF6B4A" stroke-width="2.4" stroke-linecap="round" />
-            <path d="M16 28l6 6 12-13" fill="none" stroke="#FF6B4A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+          <svg viewBox="0 0 56 56" width="56" height="56">
+            <rect x="8" y="14" width="40" height="34" rx="8" fill="#FFF6F3" stroke="#FF6B4A" stroke-width="2.4" />
+            <path d="M8 24h40" stroke="#FF6B4A" stroke-width="2" />
+            <path d="M20 8v10M36 8v10" stroke="#FF6B4A" stroke-width="2.6" stroke-linecap="round" />
+            <circle cx="20" cy="12" r="2" fill="#FF6B4A" />
+            <circle cx="36" cy="12" r="2" fill="#FF6B4A" />
+            <path d="M18 36l7 7 14-15" fill="none" stroke="#FF6B4A" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
         </div>
         <p class="kicker">{{ zh ? '每日签到' : 'Daily check-in' }}</p>
         <h2 class="center">{{ zh ? '盖章领取今日奖励' : 'Stamp today for rewards' }}</h2>
         <div class="stamps" aria-hidden="true">
           <span class="stamp-badge">
-            <svg viewBox="0 0 32 32" width="28" height="28"><rect x="5" y="8" width="22" height="18" rx="4" fill="none" stroke="#FF6B4A" stroke-width="1.8"/><path d="M11 5v6M21 5v6" stroke="#FF6B4A" stroke-width="1.8" stroke-linecap="round"/><text x="16" y="22" text-anchor="middle" font-size="11" font-weight="700" fill="#FF6B4A">1</text></svg>
+            <svg viewBox="0 0 32 32" width="30" height="30"><rect x="4" y="8" width="24" height="20" rx="5" fill="#FFF6F3" stroke="#FF6B4A" stroke-width="1.7"/><path d="M4 15h24" stroke="#FF6B4A" stroke-width="1.4"/><path d="M11 4v7M21 4v7" stroke="#FF6B4A" stroke-width="1.7" stroke-linecap="round"/><text x="16" y="25" text-anchor="middle" font-size="11" font-weight="700" fill="#FF6B4A">1</text></svg>
           </span>
           <span v-for="n in 8" :key="n" class="stamp"></span>
         </div>
@@ -96,14 +117,33 @@
 
       <template v-else-if="kind === 'invite'">
         <div class="invite-art" aria-hidden="true">
-          <svg viewBox="0 0 168 78" width="168" height="78">
-            <path d="M28 14l2 5 5 .6-4 3.2 1.2 4.8L28 25l-4.2 2.6 1.2-4.8-4-3.2 5-.6z" fill="#FF6B4A"/>
-            <path d="M78 6l2.2 5.2 5.4.6-4.2 3.4 1.3 5.2L78 17.6l-4.7 2.8 1.3-5.2-4.2-3.4 5.4-.6z" fill="#FF8A6A"/>
-            <path d="M132 12l2 4.4 4.6.5-3.6 2.8 1.1 4.4-4.1-2.4-4.1 2.4 1.1-4.4-3.6-2.8 4.6-.5z" fill="#F96141"/>
-            <rect x="16" y="36" width="40" height="32" rx="4" fill="#FF8A6A"/>
-            <rect x="64" y="26" width="44" height="42" rx="4" fill="#FF6B4A"/>
-            <rect x="116" y="38" width="36" height="30" rx="4" fill="#FF8A6A"/>
-            <path d="M16 50h40M36 36v32M64 46h44M86 26v42M116 52h36M134 38v30" stroke="#fff" stroke-width="3"/>
+          <svg viewBox="0 0 210 108" width="196" height="100">
+            <g fill="#FF8A6A">
+              <path d="M46 16l1.4 3.4h3.6l-2.9 2.1 1.1 3.4-3.2-2.2-3.2 2.2 1.1-3.4-2.9-2.1h3.6z"/>
+              <path d="M104 6l1.8 4.2h4.4l-3.6 2.6 1.4 4.2-4-2.8-4 2.8 1.4-4.2L98 10.2h4.4z"/>
+              <path d="M164 14l1.3 3.2h3.4l-2.7 2 1 3.2-3-2-3 2 1-3.2-2.7-2h3.4z"/>
+            </g>
+            <g fill="none" stroke="#FFB199" stroke-width="1.6" stroke-linecap="round">
+              <path d="M28 22c4 3 4 7 0 9"/>
+              <path d="M78 18c5 4 5 8 0 11"/>
+              <path d="M138 12c5 3 5 8 0 10"/>
+              <path d="M186 24c3 2 3 5 0 7"/>
+            </g>
+            <g>
+              <rect x="18" y="52" width="48" height="40" rx="5" fill="#FF9A7A"/>
+              <path d="M18 68h48M42 52v40" stroke="#fff" stroke-width="3.2"/>
+              <path d="M42 52c-8 0-14-9-7-12 4 3 7 7 7 12 0-5 3-9 7-12 7 3 1 12-7 12z" fill="#FF8A6A" stroke="#fff" stroke-width="1.6"/>
+            </g>
+            <g>
+              <rect x="78" y="40" width="56" height="52" rx="5" fill="#FF6B4A"/>
+              <path d="M78 60h56M106 40v52" stroke="#fff" stroke-width="3.4"/>
+              <path d="M106 40c-10 0-16-11-8-14 5 4 8 8 8 14 0-6 3-10 8-14 8 3 2 14-8 14z" fill="#FF6B4A" stroke="#fff" stroke-width="1.8"/>
+            </g>
+            <g>
+              <rect x="146" y="56" width="46" height="36" rx="5" fill="#FF8A6A"/>
+              <path d="M146 70h46M169 56v36" stroke="#fff" stroke-width="3.2"/>
+              <path d="M169 56c-8 0-13-8-6-11 4 3 6 6 6 11 0-5 2-8 6-11 7 3 2 11-6 11z" fill="#FF9A7A" stroke="#fff" stroke-width="1.6"/>
+            </g>
           </svg>
         </div>
         <p class="kicker">{{ zh ? '邀请好友' : 'Invite friends' }}</p>
@@ -239,7 +279,6 @@ const figmaId = computed(() => ({
 const giftName = computed(() => gift.value?.name || (zh.value ? '满额赠品' : 'Free gift'))
 const giftSize = computed(() => gift.value?.offers?.[0]?.label || gift.value?.sizes?.[0] || (zh.value ? '默认规格' : 'Default'))
 const giftWas = computed(() => (gift.value?.price ? money(gift.value.price) : ''))
-const giftImage = computed(() => gift.value?.image || '')
 const giftTo = computed(() => (gift.value?.sku ? { path: '/pdp', query: { sku: gift.value.sku } } : '/ship-lp'))
 
 const queue = ['gift', 'pwa', 'checkin', 'invite']
@@ -333,47 +372,57 @@ watch(kind, (k) => { if (k === 'gift') loadGift() })
 }
 .mask.dock { align-items: flex-end; padding: 0; }
 .card {
-  width: min(100%, 380px); background: #fff; border-radius: 24px; position: relative;
-  padding: 22px 18px 14px; box-shadow: 0 18px 48px rgba(28, 36, 48, 0.18); text-align: center;
+  width: min(100%, 360px); background: #fff; border-radius: 22px; position: relative;
+  padding: 22px 22px 12px; box-shadow: 0 18px 48px rgba(28, 36, 48, 0.18); text-align: center;
 }
-.card.pwa:not(.ios) { background: #10243A; color: #fff; padding: 28px 22px 16px; }
+.card.gift { width: min(100%, 340px); padding: 12px 20px 8px; text-align: left; }
+.card.checkin { padding: 26px 24px 8px; }
+.card.invite { padding: 20px 24px 8px; }
+.card.pwa:not(.ios) { background: #10243A; color: #fff; padding: 22px 24px 8px; border-radius: 20px; }
 .card.ios { width: min(100%, 768px); border-radius: 28px 28px 0 0; padding: 12px 12px calc(12px + env(safe-area-inset-bottom)); text-align: left; }
-.grab { width: 36px; height: 4px; border-radius: 99px; background: #E6E2DC; margin: 0 auto 12px; }
+.grab { width: 36px; height: 4px; border-radius: 99px; background: #E6E2DC; margin: 2px auto 14px; }
 .x {
   position: absolute; right: 14px; top: 12px; border: 0; background: transparent;
   color: #FF6B4A; font-size: 26px; line-height: 1; cursor: pointer;
 }
 .pill {
-  display: inline-flex; align-items: center; height: 28px; padding: 0 10px; border-radius: 8px;
-  background: #FF6B4A; color: #fff; font-size: 13px; font-weight: 800;
+  display: inline-flex; align-items: center; height: 26px; padding: 0 10px; border-radius: 7px;
+  background: #FF6B4A; color: #fff; font-size: 12px; font-weight: 750; letter-spacing: 0.01em;
 }
-.gift-stage { min-height: 96px; display: grid; place-items: center; margin: 12px 0; }
-.gift-photo { width: 148px; height: 96px; object-fit: contain; }
-.kicker { margin: 8px 0 4px; font-size: 13px; font-weight: 800; letter-spacing: 0.06em; color: #FF6B4A; }
-.kicker.light, .sub.light, .later.light { color: rgba(255,255,255,0.82); }
-h2 { margin: 0 0 8px; font-size: 26px; line-height: 1.2; letter-spacing: -0.03em; color: #1C2430; }
-.card.pwa:not(.ios) h2 { color: #fff; font-size: 28px; }
-.card.gift h2 { font-size: 20px; text-align: left; }
+.gift-stage { display: grid; place-items: center; margin: 16px 0 10px; }
+.kicker { margin: 10px 0 6px; font-size: 13px; font-weight: 750; letter-spacing: 0.04em; color: #FF6B4A; }
+.kicker.light, .sub.light, .later.light { color: rgba(255,255,255,0.78); }
+h2 { margin: 0 0 8px; font-size: 26px; line-height: 1.22; letter-spacing: -0.03em; font-weight: 800; color: #1C2430; }
+.card.pwa:not(.ios) .kicker { margin-top: 12px; font-size: 13px; font-weight: 600; letter-spacing: 0; }
+.card.pwa:not(.ios) h2 { color: #fff; font-size: 30px; line-height: 1.15; margin: 0 0 10px; }
+.card.pwa:not(.ios) .sub { max-width: 280px; margin: 0 auto 18px; font-size: 15px; line-height: 1.45; }
+.card.checkin .kicker { font-size: 12px; letter-spacing: 0.16em; font-weight: 750; margin: 10px 0 8px; }
+.card.checkin h2 { font-size: 26px; line-height: 1.2; max-width: 240px; margin: 0 auto 18px; }
+.card.invite .kicker { font-size: 16px; font-weight: 750; letter-spacing: 0; margin: 8px 0 6px; }
+.card.invite h2 { font-size: 24px; line-height: 1.25; margin: 0 0 10px; }
+.card.invite .sub { max-width: 268px; margin: 0 auto 18px; font-size: 15px; line-height: 1.5; }
+.card.gift h2 { font-size: 20px; line-height: 1.3; font-weight: 780; text-align: left; margin: 0 0 6px; letter-spacing: -0.02em; }
 .sub { margin: 0 0 16px; color: #5C6570; line-height: 1.45; font-size: 15px; }
 .center { text-align: center; }
 .gift-name { text-align: left; }
-.gift-meta { display: flex; align-items: baseline; gap: 8px; margin: 0 0 16px; color: #8B919A; font-size: 14px; }
-.gift-meta b { margin-left: auto; color: #FF6B4A; font-size: 22px; letter-spacing: 0.04em; }
-.gift-meta s { color: #9AA0A8; }
+.gift-meta { display: flex; align-items: baseline; gap: 8px; margin: 0 0 18px; color: #8B919A; font-size: 13px; font-weight: 500; }
+.gift-meta b { margin-left: auto; color: #FF6B4A; font-size: 22px; font-weight: 800; letter-spacing: 0.06em; }
+.gift-meta s { color: #B0B6BE; font-size: 13px; }
 .ok, .later {
   display: flex; align-items: center; justify-content: center; width: 100%;
   height: 48px; border-radius: 999px; font-weight: 800; font-size: 16px; cursor: pointer; text-decoration: none;
 }
 .ok { border: 0; background: #FF6B4A; color: #fff; }
 .ok:disabled { opacity: 0.6; }
-.later { margin-top: 4px; border: 0; background: transparent; color: #1C2430; }
+.later { margin-top: 2px; height: 40px; border: 0; background: transparent; color: #1C2430; font-size: 15px; font-weight: 700; }
 .phone-art, .cal-art, .invite-art { display: grid; place-items: center; }
-.cal-art { margin-bottom: 4px; }
+.phone-art { margin-top: 4px; }
+.cal-art { margin-top: 2px; }
 .stamps {
-  display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px 8px;
-  align-items: center; justify-items: center; margin: 8px 0 18px;
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px 10px;
+  align-items: center; justify-items: center; margin: 0 4px 20px;
 }
-.stamp { width: 28px; height: 28px; border-radius: 50%; border: 2px solid #1C2430; }
+.stamp { width: 26px; height: 26px; border-radius: 50%; border: 2px solid #1C2430; box-sizing: border-box; }
 .stamp:nth-child(7) { grid-column: 2; }
 .locales { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 8px; text-align: left; }
 .ccy {
