@@ -371,7 +371,9 @@ input:focus, textarea:focus { outline: 2px solid rgba(224,82,46,0.35); border-co
   box-shadow: 0 18px 50px rgba(28,36,48,0.18);
   color: #1C2430;
 }
-.sku-modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.sku-modal-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; }
+.transfer-label { display: grid; gap: 6px; margin-top: 10px; font-size: 12px; font-weight: 650; color: #5C6570; }
+.transfer-label select, .transfer-label input { height: 40px; border-radius: 10px; border: 1px solid #E8EAF0; padding: 0 10px; background: #fff; color: #1C2430; }
 .sku-modal-body { display: grid; gap: 8px; max-height: 60vh; overflow: auto; }
 .sku-opt {
   display: flex; gap: 10px; align-items: center; width: 100%; text-align: left;
@@ -469,6 +471,9 @@ input:focus, textarea:focus { outline: 2px solid rgba(224,82,46,0.35); border-co
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 8px; padding: 48px 24px; text-align: center; color: #1C2430; height: 100%;
 }
+.empty-selection p, .empty-inbox p, .empty-closed p { max-width: 280px; margin: 0; line-height: 1.45; }
+#askModal .sku-modal-card { width: min(360px, 92vw); }
+#askModal .sku-modal-head:last-child { justify-content: flex-end; gap: 8px; }
 .empty-ico {
   width: 64px; height: 64px; border-radius: 20px; background: #FFF1EC;
   display: grid; place-items: center; font-size: 28px; line-height: 1;
