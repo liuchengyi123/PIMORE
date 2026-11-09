@@ -302,6 +302,27 @@ export const FRAMES: Record<string, FrameSpec> = {
     hits: [{ x: 24, y: 1560, w: 560, h: 72, label: 'Send', to: '/chat-zh' }],
   }),
   // Account growth — filled as assets land
+  '1-63': spec('1-63', 'Ad LP Dense Flash', {
+    hits: [
+      { x: 40, y: 1500, w: 688, h: 88, label: 'Shop', to: '/home' },
+      { x: 24, y: 700, w: 720, h: 700, label: 'Products', to: '/pdp' },
+    ],
+  }),
+  '1-62': spec('1-62', 'Ad LP Hero Headline', {
+    hits: [{ x: 40, y: 1480, w: 688, h: 88, label: 'Shop', to: '/sale' }],
+  }),
+  '1-64': spec('1-64', 'Ad LP Countdown Grid', {
+    hits: [{ x: 24, y: 600, w: 720, h: 900, label: 'Products', to: '/flash' }],
+  }),
+  '1-65': spec('1-65', 'Ad LP Price Waterfall', {
+    hits: [{ x: 40, y: 1500, w: 688, h: 88, label: 'Shop', to: '/sale' }],
+  }),
+  '1-66': spec('1-66', 'Ad LP Rush Flash', {
+    hits: [{ x: 24, y: 500, w: 720, h: 1000, label: 'Grab', to: '/flash' }],
+  }),
+  '1-67': spec('1-67', 'Ad LP Scene', {
+    hits: [{ x: 40, y: 1500, w: 688, h: 88, label: 'Enter shop', to: '/home' }],
+  }),
   '1-31': spec('1-31', 'Register', {
     hits: [
       { x: 80, y: 1280, w: 280, h: 48, label: 'Terms', to: '/policy/terms' },
@@ -414,4 +435,10 @@ export const ROUTE_FRAME: Record<string, string> = {
   'policy-terms': '1-54',
   policy: '1-52',
   locale: '1-55',
+  'lp-dense': '1-63',
+  'lp-hero': '1-62',
+  'lp-countdown': '1-64',
+  'lp-waterfall': '1-65',
+  'lp-rush': '1-66',
+  'lp-scene': '1-67',
 }

@@ -60,6 +60,12 @@ const router = createRouter({
     { path: '/pay-bridge', name: 'pay-bridge', component: () => import('@/views/FramePage.vue') },
     { path: '/featured', name: 'featured', component: () => import('@/views/FramePage.vue') },
     { path: '/chat-zh', name: 'chat-zh', component: () => import('@/views/FramePage.vue') },
+    { path: '/lp/dense', name: 'lp-dense', component: () => import('@/views/FramePage.vue') },
+    { path: '/lp/hero', name: 'lp-hero', component: () => import('@/views/FramePage.vue') },
+    { path: '/lp/countdown', name: 'lp-countdown', component: () => import('@/views/FramePage.vue') },
+    { path: '/lp/waterfall', name: 'lp-waterfall', component: () => import('@/views/FramePage.vue') },
+    { path: '/lp/rush', name: 'lp-rush', component: () => import('@/views/FramePage.vue') },
+    { path: '/lp/scene', name: 'lp-scene', component: () => import('@/views/FramePage.vue') },
     { path: '/:pathMatch(.*)*', name: 'notfound', component: () => import('@/views/FramePage.vue') },
   ],
   scrollBehavior() {
