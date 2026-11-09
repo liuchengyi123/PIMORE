@@ -13,6 +13,7 @@
   } catch (e) {}
 })();
 </script>
+<link rel="preload" as="image" href="/static/home/hero-flash.jpg" media="(min-width: 981px)" fetchpriority="high">
 {% if products %}<link rel="preload" as="image" href="{{ shot(products[0].image) }}" fetchpriority="high">{% endif %}
 {% endblock %}
 {% block body_class %} fn-home-page{% endblock %}
@@ -27,44 +28,54 @@
 </section>
 
 <div class="fn-home fn-home-desk">
-  <aside class="fn-left">
-    <nav class="fn-depts" aria-label="{{ t.departments }}">
-      <h5>{{ t.departments }}</h5>
-      {% for key in dept_keys %}
-      <a href="{{ href('/c/' ~ key, country) }}">{{ t.categories[key] }}</a>
-      {% endfor %}
-    </nav>
-    {% set side_ad = ads.get('hero') if ads is defined and ads else none %}
-    <div class="fn-ad-slot">
-      {% if side_ad %}
-      {% set creative = side_ad %}{% set slot = 'hero' %}{% set width = 480 %}{% set height = 640 %}
-      {% include "ad.html" %}
-      {% endif %}
-    </div>
-  </aside>
-
   <div class="fn-maincol">
-    <nav class="fn-icons" hidden aria-hidden="true">
-      {% for key in dept_keys[:8] %}
-      <a class="fn-icon" href="{{ href('/c/' ~ key, country) }}">
-        <img src="/static/dept/{{ key }}.svg" width="28" height="28" alt="">
-        {{ t.categories[key] }}
-      </a>
-      {% endfor %}
-    </nav>
-    <div class="fn-hero-row">
-      <a class="fn-hero fn-hero1" href="{{ href('/sale', country) }}">
-        <div class="kicker">{{ t.sale_kicker }}</div>
-        <h2>{{ t.sale_title }}</h2>
-        <span class="cta">{{ t.sale_open }}</span>
-      </a>
-      <a class="fn-hero fn-hero2" href="{{ href('/new', country) }}">
-        <div class="kicker">{{ t.new_strip }}</div>
-        <h2>{{ t.new_title }}</h2>
-        <span class="cta">{{ t.new_open }}</span>
-      </a>
-    </div>
+    <section class="fn-hero-carousel" data-hero-carousel aria-roledescription="carousel" aria-label="{{ t.sale_kicker }}">
+      <div class="fn-hero-slides">
+        <a class="fn-slide is-on" href="{{ href('/sale', country) }}" data-hero-slide>
+          <img src="/static/home/hero-flash.jpg" alt="" width="1800" height="600" fetchpriority="high" decoding="async">
+          <span class="fn-slide-copy">
+            <span class="kicker">{{ t.sale_kicker }}</span>
+            <strong>{{ t.sale_title }}</strong>
+            <span class="cta">{{ t.sale_open }}</span>
+          </span>
+        </a>
+        <a class="fn-slide" href="{{ href('/new', country) }}" data-hero-slide tabindex="-1" aria-hidden="true">
+          <img src="/static/home/hero-first.jpg" alt="" width="1800" height="600" decoding="async">
+          <span class="fn-slide-copy">
+            <span class="kicker">{{ t.new_strip }}</span>
+            <strong>{{ t.new_title }}</strong>
+            <span class="cta">{{ t.new_open }}</span>
+          </span>
+        </a>
+        <a class="fn-slide" href="{{ href('/c/kitchen', country) }}" data-hero-slide tabindex="-1" aria-hidden="true">
+          <img src="/static/home/hero-house.jpg" alt="" width="1800" height="600" decoding="async">
+          <span class="fn-slide-copy">
+            <span class="kicker">{{ t.hero_kicker }}</span>
+            <strong>{{ t.hero_title }}</strong>
+            <span class="cta">{{ t.shop_category.format(name=t.categories.kitchen) }}</span>
+          </span>
+        </a>
+      </div>
+      <button type="button" class="fn-hero-nav prev" data-hero-prev aria-label="{{ t.prev }}">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg>
+      </button>
+      <button type="button" class="fn-hero-nav next" data-hero-next aria-label="{{ t.next }}">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>
+      </button>
+      <div class="fn-hero-dots">
+        <button type="button" class="is-on" data-hero-dot="0" aria-label="{{ t.sale_kicker }}" aria-current="true"></button>
+        <button type="button" data-hero-dot="1" aria-label="{{ t.new_strip }}"></button>
+        <button type="button" data-hero-dot="2" aria-label="{{ t.hero_kicker }}"></button>
+      </div>
+    </section>
   </div>
+
+  <nav class="fn-depts" aria-label="{{ t.departments }}">
+    <h5>{{ t.departments }}</h5>
+    {% for key in dept_keys %}
+    <a href="{{ href('/c/' ~ key, country) }}">{{ t.categories[key] }}</a>
+    {% endfor %}
+  </nav>
 
   {% set pick_strip = shop_picks if shop_picks is defined and shop_picks else products %}
   {% if pick_strip %}
@@ -327,6 +338,62 @@
       io.observe(sentinel);
     });
   }
+})();
+</script>
+<script>
+(function () {
+  var hero = document.querySelector("[data-hero-carousel]");
+  if (!hero) return;
+  var slides = Array.prototype.slice.call(hero.querySelectorAll("[data-hero-slide]"));
+  var dots = Array.prototype.slice.call(hero.querySelectorAll("[data-hero-dot]"));
+  if (!slides.length) return;
+  var heroIndex = 0;
+  var heroTimer = 0;
+  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function showHero(next) {
+    heroIndex = (next + slides.length) % slides.length;
+    slides.forEach(function (slide, i) {
+      var on = i === heroIndex;
+      slide.classList.toggle("is-on", on);
+      slide.setAttribute("aria-hidden", on ? "false" : "true");
+      if (on) slide.removeAttribute("tabindex");
+      else slide.setAttribute("tabindex", "-1");
+    });
+    dots.forEach(function (dot, i) {
+      var on = i === heroIndex;
+      dot.classList.toggle("is-on", on);
+      if (on) dot.setAttribute("aria-current", "true");
+      else dot.removeAttribute("aria-current");
+    });
+  }
+  function stopHero() {
+    if (heroTimer) window.clearInterval(heroTimer);
+    heroTimer = 0;
+  }
+  function startHero() {
+    if (reduceMotion || slides.length < 2) return;
+    stopHero();
+    heroTimer = window.setInterval(function () { showHero(heroIndex + 1); }, 5600);
+  }
+  var prevBtn = hero.querySelector("[data-hero-prev]");
+  var nextBtn = hero.querySelector("[data-hero-next]");
+  if (prevBtn) prevBtn.addEventListener("click", function (ev) { ev.preventDefault(); showHero(heroIndex - 1); startHero(); });
+  if (nextBtn) nextBtn.addEventListener("click", function (ev) { ev.preventDefault(); showHero(heroIndex + 1); startHero(); });
+  dots.forEach(function (dot) {
+    dot.addEventListener("click", function (ev) {
+      ev.preventDefault();
+      showHero(parseInt(dot.getAttribute("data-hero-dot"), 10) || 0);
+      startHero();
+    });
+  });
+  hero.addEventListener("mouseenter", stopHero);
+  hero.addEventListener("mouseleave", startHero);
+  hero.addEventListener("focusin", stopHero);
+  hero.addEventListener("focusout", function (ev) {
+    if (!hero.contains(ev.relatedTarget)) startHero();
+  });
+  showHero(0);
+  startHero();
 })();
 </script>
 
