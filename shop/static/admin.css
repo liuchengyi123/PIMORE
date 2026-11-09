@@ -2054,12 +2054,35 @@ tbody td { border-top: 1px solid #F0F1F5; }
   color: #8B919A;
   border-bottom: 1px solid #E8EAF0;
 }
-.orders-table tbody td, .catalog-table tbody td {
+.orders-table tbody td {
+  height: 44px;
+  font-size: 12px;
+  color: #1C2430;
+  border-top: 1px solid #F0F1F5;
+  box-sizing: border-box;
+}
+.catalog-table tbody td {
   height: 36px;
   font-size: 12px;
   color: #1C2430;
   border-top: 1px solid #F0F1F5;
 }
+.orders-table th, .orders-table td { padding: 0 8px !important; }
+.orders-table .tag,
+.orders-table .tag.paid,
+.orders-table .tag.pending,
+.orders-table .tag.shipped,
+.orders-table .tag.refunded,
+.orders-table .tag.cancelled {
+  height: 22px;
+  padding: 0 8px;
+  background: #FFF1EC;
+  color: #F96141;
+}
+.orders-filters { gap: 6px; margin: 0 0 8px; }
+.orders-filters input[type="search"] { height: 34px; border-radius: 10px; }
+.orders-filters.section-tabs a,
+.orders-filters.ranges a { height: 28px; padding: 0 8px; font-size: 12px; }
 .orders-table td.due, .catalog-table .amber-price { color: #F96141; font-weight: 750; }
 .catalog-table .product-cell { display: flex; align-items: center; gap: 8px; }
 .catalog-table .thumb { width: 36px; height: 36px; border-radius: 8px; object-fit: cover; background: #F4F6FB; }

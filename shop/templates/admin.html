@@ -4,13 +4,13 @@
 {% set kind_name = {'public':'公开','first':'首单','share':'分享','desktop':'桌面','checkin':'签到'} %}
 {% if panel == 'orders' %}
 <header class="page-head" data-figma="AD16 AD18"><div><h1>订单</h1><p class="muted">筛选状态、搜索邮箱/单号/运单，处理发货与退款。</p></div></header>
-<form class="ops-search" method="get" action="/admin/orders">
+<form class="ops-search orders-filters" method="get" action="/admin/orders">
   <input type="hidden" name="status" value="{{ order_status or 'all' }}">
   <input type="search" name="q" value="{{ order_q or '' }}" placeholder="搜索邮箱 / 订单号 / 运单号">
   <button class="btn" type="submit">搜索</button>
   {% if order_q %}<a class="btn ghost" href="/admin/orders?status={{ order_status or 'all' }}">清除</a>{% endif %}
 </form>
-<nav class="ranges section-tabs">
+<nav class="ranges section-tabs orders-filters">
   <a class="{% if (order_status or 'all') == 'all' %}on{% endif %}" href="/admin/orders?status=all{% if order_q %}&amp;q={{ order_q|urlencode }}{% endif %}">全部 {{ counts.all }}</a>
   <a class="{% if order_status == 'pending' %}on{% endif %}" href="/admin/orders?status=pending{% if order_q %}&amp;q={{ order_q|urlencode }}{% endif %}">待支付 {{ counts.pending }}</a>
   <a class="{% if order_status == 'paid' %}on{% endif %}" href="/admin/orders?status=paid{% if order_q %}&amp;q={{ order_q|urlencode }}{% endif %}">待发货 {{ counts.paid }}</a>
