@@ -1,7 +1,7 @@
 <template>
   <div class="page">
     <button type="button" class="back" @click="$router.push('/orders')">←</button>
-    <p class="brand">Harbor</p>
+    <p class="brand">Pimo</p>
     <h1>{{ zh ? '支付状态' : 'Payment status' }}</h1>
     <p class="sub">{{ zh ? '刷新后查看最新订单。未付订单可以在订单里继续支付。' : 'Refresh pulls the latest orders. If a payment is still open, pay it from the order.' }}</p>
     <p v-if="orderId" class="amt">{{ zh ? '订单' : 'Order' }} {{ orderId }}</p>
@@ -28,7 +28,7 @@ function refresh() {
 <style scoped>
 .page { min-height: 100vh; background: #FDF9F6; color: #1C2430; padding: 16px 24px 40px; text-align: center; }
 .back { border: 0; background: transparent; font-size: 20px; cursor: pointer; float: left; }
-.brand { clear: both; margin: 36px 0 0; color: #F96141; font-weight: 800; letter-spacing: 0.08em; }
+.brand { clear: both; margin: 36px 0 0; color: #F96141; font-weight: 800; letter-spacing: -0.03em; font-size: 28px; }
 h1 { margin: 28px 0 8px; font-size: 26px; }
 .sub { margin: 0 auto 16px; max-width: 36ch; color: #8B919A; }
 .amt { font-size: 20px; font-weight: 800; color: #F96141; }

@@ -4,10 +4,11 @@
       <button type="button" class="back" @click="$router.back()" aria-label="back">‹</button>
       <h1 class="title">对比</h1>
     </header>
-    <div v-if="loading" class="state">Loading…</div>
+    <div v-if="loading" class="state">{{ zh ? '加载中…' : 'Loading…' }}</div>
     <div v-else-if="!products.length" class="state">
-      <div>Nothing to compare yet.</div>
-      <router-link class="link" to="/home">Browse products</router-link>
+      <div class="mark" aria-hidden="true">↔</div>
+      <div>{{ zh ? '还没有可对比的商品' : 'Nothing to compare yet.' }}</div>
+      <router-link class="link" to="/home">{{ zh ? '去逛逛' : 'Browse products' }}</router-link>
     </div>
     <div v-else class="grid">
       <article v-for="p in products.slice(0,4)" :key="p.sku || p.id" class="card" @click="$router.push('/p/' + encodeURIComponent(p.sku || p.id))">
@@ -23,11 +24,12 @@
 </template>
 <script setup lang="ts">
 import { ChevronLeft } from 'lucide-vue-next'
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { listCompareProducts, type Product } from '@/api/products'
 import { useI18n } from '@/composables/i18n'
 import AppTabBar from '@/components/AppTabBar.vue'
-const { t } = useI18n()
+const { t, lang } = useI18n()
+const zh = computed(() => String(lang.value).startsWith('zh'))
 const products = ref<Product[]>([])
 const loading = ref(true)
 const note = ref('')
@@ -52,7 +54,9 @@ function ph(p: any) {
 .page { min-height: 100vh; background: #FCFAF8; color: #1C2430; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
 .head { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
 .back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #1C2430; }
-.title { font-size: 17px; font-weight: 700; margin: 0; }
+.title { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; margin: 0; }
+.mark { width: 56px; height: 56px; margin: 0 auto 10px; border-radius: 18px; background: #FFF1EC; color: #F96141; display: grid; place-items: center; font-size: 22px; font-weight: 800; }
+.link { color: #F96141; font-weight: 700; }
 .grid { display: flex; gap: 8px; flex-wrap: wrap; }
 .card { width: calc(50% - 4px); background: #fff; border: 1px solid #E2E6EE; border-radius: 16px; padding: 10px; box-sizing: border-box; }
 .thumb { height: 90px; border-radius: 10px; overflow: hidden; background: #e8e4dc; position: relative; }
@@ -60,5 +64,5 @@ function ph(p: any) {
 .nm { margin-top: 8px; font-size: 12px; font-weight: 600; }
 .price { margin-top: 2px; font-size: 13px; font-weight: 700; color: #F96141; }
 .state { text-align: center; color: #6B7280; padding: 36px 8px; }
-.link { display: inline-block; margin-top: 10px; color: #0E7490; font-weight: 600; text-decoration: none; }
+.link { display: inline-block; margin-top: 10px; color: #F96141; font-weight: 700; text-decoration: none; }
 </style>
