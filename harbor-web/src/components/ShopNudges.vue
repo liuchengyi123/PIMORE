@@ -1,6 +1,6 @@
 <template>
-  <div v-if="kind" class="mask" @click.self="close">
-    <div class="card" role="dialog" aria-modal="true">
+  <div v-if="kind" class="mask hb-sheet-mask" @click.self="close">
+    <div class="card hb-sheet" role="dialog" aria-modal="true">
       <div class="grab" aria-hidden="true"></div>
       <button type="button" class="x" @click="close">×</button>
       <div v-if="kind !== 'locale'" class="mark" aria-hidden="true">{{ glyph }}</div>
@@ -133,23 +133,25 @@ watch(() => [route.name, route.query.locale], openNext)
 
 <style scoped>
 .mask {
-  position: fixed; inset: 0; z-index: 120; background: rgba(28, 36, 48, 0.45);
+  position: fixed; inset: 0; z-index: 120; background: var(--fn-sand, #F7F8FA);
   display: flex; align-items: flex-end; justify-content: center;
 }
 .card {
   width: min(100%, 768px); background: var(--fn-surface, #fff); color: var(--fn-ink, #1C2430);
-  border-radius: 20px 20px 0 0; border-top: 1px solid var(--fn-line, #E8EAF0);
-  padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); position: relative;
+  border-radius: var(--fn-radius-12, 12px) var(--fn-radius-12, 12px) 0 0;
+  border-top: 1px solid var(--fn-line, #E8EAF0);
+  padding: 12px 16px calc(16px + env(safe-area-inset-bottom)); position: relative;
   box-shadow: 0 -8px 24px rgba(28, 36, 48, 0.08);
+  font-size: var(--fn-type-14, 14px);
 }
-.grab { width: 36px; height: 4px; border-radius: 99px; background: var(--fn-line, #E8EAF0); margin: 0 auto 8px; }
-.x { position: absolute; right: 12px; top: 8px; border: 0; background: transparent; font-size: 22px; cursor: pointer; color: var(--fn-muted, #8B919A); }
+.grab { width: 36px; height: 4px; border-radius: 99px; background: var(--fn-line, #E8EAF0); margin: 0 auto 12px; }
+.x { position: absolute; right: 12px; top: 8px; border: 0; background: transparent; font-size: var(--fn-type-20, 20px); cursor: pointer; color: var(--fn-muted, #8B919A); }
 .mark {
-  width: 56px; height: 56px; border-radius: 18px; background: var(--fn-coral-soft, #FFF1EC); color: var(--fn-coral, #F96141);
-  display: grid; place-items: center; font-size: 24px; font-weight: 800; margin-bottom: 8px;
+  width: 56px; height: 56px; border-radius: var(--fn-radius-16, 16px); background: var(--fn-coral-soft, #FFF1EC); color: var(--fn-coral, #F96141);
+  display: grid; place-items: center; font-size: var(--fn-type-24, 24px); font-weight: 800; margin-bottom: 8px;
 }
-h2 { margin: 0 0 6px; font-size: 18px; letter-spacing: -0.02em; color: var(--fn-ink, #1C2430); }
-p { margin: 0 0 14px; color: var(--fn-muted, #8B919A); line-height: 1.45; }
+h2 { margin: 0 0 6px; font-size: var(--fn-type-20, 20px); letter-spacing: -0.02em; color: var(--fn-ink, #1C2430); }
+p { margin: 0 0 14px; color: var(--fn-muted, #8B919A); line-height: 1.45; font-size: var(--fn-type-14, 14px); }
 .ok, .later, .row {
   display: flex; align-items: center; justify-content: center; width: 100%;
   height: 46px; border-radius: 999px; font-weight: 700; cursor: pointer; text-decoration: none;

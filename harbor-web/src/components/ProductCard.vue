@@ -70,7 +70,7 @@ function go() {
 <style lang="scss" scoped>
 @import '@/styles/theme.scss';
 .card {
-  border-radius: 16px;
+  border-radius: $hb-radius-16;
   overflow: hidden;
   background: $hb-white;
   border: 1px solid $hb-line;
@@ -87,23 +87,23 @@ function go() {
 .thumb-img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .img-badge {
   position: absolute; left: 8px; top: 8px;
-  padding: 4px 8px; border-radius: 999px; font-size: 11px; font-weight: 720; color: #fff;
+  padding: 4px 8px; border-radius: 999px; font-size: $hb-type-12; font-weight: 720; color: #fff;
   &.flash, &.deal { background: $hb-coral; }
   &.new { background: $hb-forest; }
   &.ship { background: #2a6f9e; }
 }
 .only-left {
   position: absolute; right: 8px; bottom: 8px;
-  background: rgba(0,0,0,0.55); color: #fff; font-size: 11px; padding: 3px 7px; border-radius: 8px;
+  background: rgba(0,0,0,0.55); color: #fff; font-size: $hb-type-12; padding: 3px 7px; border-radius: $hb-radius-8;
 }
 .body { padding: 11px 11px 13px; }
 .name {
-  font-size: 13px; font-weight: 650; color: $hb-ink; line-height: 1.35;
+  font-size: $hb-type-13; font-weight: 650; color: $hb-ink; line-height: 1.35;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.7em;
 }
 .price-row { display: flex; align-items: baseline; gap: 6px; margin-top: 7px; flex-wrap: wrap; }
-.ship-line { margin-top: 4px; font-size: 11px; color: $hb-muted; }
-.price { font-size: 16px; font-weight: 780; color: $hb-price; letter-spacing: -0.02em; }
-.was { font-size: 12px; color: $hb-muted; text-decoration: line-through; }
-.off-badge { font-size: 11px; color: $hb-forest; font-weight: 720; background: $hb-soft; padding: 2px 7px; border-radius: 999px; }
+.ship-line { margin-top: 4px; font-size: $hb-type-12; color: $hb-muted; }
+.price { font-size: $hb-type-16; font-weight: 780; color: $hb-price; letter-spacing: -0.02em; }
+.was { font-size: $hb-type-12; color: $hb-muted; text-decoration: line-through; }
+.off-badge { font-size: $hb-type-12; color: $hb-forest; font-weight: 720; background: $hb-soft; padding: 2px 7px; border-radius: 999px; }
 </style>

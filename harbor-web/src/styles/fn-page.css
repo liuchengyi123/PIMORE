@@ -18,6 +18,18 @@
   --coral-hot: var(--fn-coral-hot);
   --sand: var(--fn-sand);
   --line: var(--fn-line);
+  --fn-radius-8: 8px;
+  --fn-radius-12: 12px;
+  --fn-radius-14: 14px;
+  --fn-radius-16: 16px;
+  --fn-radius-20: 20px;
+  --fn-type-12: 12px;
+  --fn-type-13: 13px;
+  --fn-type-14: 14px;
+  --fn-type-16: 16px;
+  --fn-type-20: 20px;
+  --fn-type-24: 24px;
+  --fn-sheet-radius: 12px;
 }
 
 .fn-page {
@@ -57,6 +69,7 @@
   border-radius: 999px;
   background: var(--fn-coral);
   color: #fff;
+  font-size: var(--fn-type-16);
   font-weight: 700;
   cursor: pointer;
   text-decoration: none;
@@ -104,10 +117,11 @@
   height: 44px;
   padding: 0 14px;
   border: 1px solid var(--fn-line);
-  border-radius: 12px;
+  border-radius: var(--fn-radius-12);
   background: var(--fn-surface);
   color: var(--fn-ink);
   font: inherit;
+  font-size: var(--fn-type-16);
 }
 
 .hb-input::placeholder {
@@ -126,22 +140,49 @@
   box-shadow: 0 0 0 3px rgba(249, 97, 65, 0.16);
 }
 
-/* —— Sheets —— */
-.hb-sheet,
-.fn-page .sheet,
-.page .addr-sheet {
-  background: var(--fn-surface);
-  color: var(--fn-ink);
-}
-
+/* —— Sheets and drawers ——
+   Handle, 12px top radius, sand backdrop. These selectors sit above
+   scoped page rules so the chrome stays locked. */
 .fn-page .sheet-mask,
 .page .addr-mask,
+.page .confirm-mask,
 .hb-sheet-mask {
-  background: rgba(28, 36, 48, 0.45);
+  background: var(--fn-sand);
+}
+
+.fn-page.page .sheet,
+.page .addr-mask .addr-sheet,
+.page .confirm-mask .confirm-card,
+.hb-sheet {
+  background: var(--fn-surface);
+  color: var(--fn-ink);
+  border-top-left-radius: var(--fn-sheet-radius);
+  border-top-right-radius: var(--fn-sheet-radius);
+  font-size: var(--fn-type-14);
+}
+
+.page .addr-mask .addr-sheet h2,
+.page .confirm-mask .confirm-card h2,
+.hb-sheet h2 {
+  font-size: var(--fn-type-20);
+  color: var(--fn-ink);
 }
 
 .fn-page .grab,
 .page .grab,
 .hb-sheet .grab {
+  display: block;
+  width: 36px;
+  height: 4px;
+  border-radius: 999px;
   background: var(--fn-line);
+  margin: 0 auto 12px;
+}
+
+@media (max-width: 959px) {
+  .fn-page .side-pane.fn-half-sheet,
+  .fn-page .side-pane.open-sheet {
+    border-top-left-radius: var(--fn-sheet-radius);
+    border-top-right-radius: var(--fn-sheet-radius);
+  }
 }

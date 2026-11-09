@@ -147,6 +147,7 @@
 
     <div v-if="!isDesktop && sheet === 'browse'" class="sheet-mask" @click="sheet = ''">
       <div class="sheet" @click.stop>
+        <div class="grab" aria-hidden="true"></div>
         <div class="sheet-head">
           <div class="sheet-title">{{ lab.visits }}</div>
           <button type="button" class="sheet-close" @click="sheet = ''">×</button>
@@ -167,6 +168,7 @@
 
     <div v-if="!isDesktop && sheet === 'orders'" class="sheet-mask" @click="sheet = ''">
       <div class="sheet" @click.stop>
+        <div class="grab" aria-hidden="true"></div>
         <div class="sheet-head">
           <div class="sheet-title">{{ lab.orders }}</div>
           <button type="button" class="sheet-close" @click="sheet = ''">×</button>
@@ -965,17 +967,19 @@ onUnmounted(() => {
 .order-track { font-size: 11px; color: $hb-muted; }
 
 .sheet-mask {
-  position: fixed; inset: 0; background: rgba(28, 36, 48, 0.45); z-index: 50;
+  position: fixed; inset: 0; background: $hb-sand; z-index: 50;
   display: flex; align-items: flex-end; justify-content: center;
 }
 .sheet {
   width: 100%; max-width: 560px; max-height: 58vh;
-  background: $hb-white; border-radius: 22px 22px 0 0;
+  background: $hb-white; border-radius: $hb-radius-12 $hb-radius-12 0 0;
   padding: 12px 14px calc(14px + env(safe-area-inset-bottom));
   box-shadow: 0 -8px 30px rgba(0,0,0,0.12);
+  font-size: $hb-type-14;
 }
+.grab { width: 36px; height: 4px; border-radius: 999px; background: $hb-line; margin: 0 auto 12px; }
 .sheet-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-.sheet-title { font-size: 16px; font-weight: 720; color: $hb-ink; }
+.sheet-title { font-size: $hb-type-16; font-weight: 720; color: $hb-ink; }
 .sheet-close { border: 0; background: transparent; font-size: 22px; color: $hb-muted; padding: 4px 8px; cursor: pointer; }
 .sheet-list { max-height: 46vh; overflow-y: auto; }
 .sheet-empty { text-align: center; color: $hb-muted; padding: 28px 8px; font-size: 13px; }
@@ -1132,7 +1136,7 @@ onUnmounted(() => {
 @media (max-width: 959px) {
   .side-pane.fn-half-sheet, .side-pane.open-sheet {
     position: fixed; left: 0; right: 0; bottom: 0; top: auto;
-    max-height: 62%; z-index: 50; border-radius: 20px 20px 0 0;
+    max-height: 62%; z-index: 50; border-radius: $hb-radius-12 $hb-radius-12 0 0;
     box-shadow: 0 -8px 30px rgba(15,39,68,.15); background: #fff;
   }
   .detail-btn.primary, .detail-btn:not(.ghost) {

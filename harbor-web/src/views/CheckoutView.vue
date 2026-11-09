@@ -20,6 +20,7 @@
     </div>
     <div v-if="addrSheet" class="addr-mask" @click.self="addrSheet = false">
       <div class="addr-sheet" role="dialog">
+        <div class="grab" aria-hidden="true"></div>
         <h2>{{ zh ? '收货地址' : 'Shipping address' }}</h2>
         <label class="field"><span>{{ zh ? '邮箱' : 'Email' }}</span><input v-model="form.email" type="email" /></label>
         <label class="field"><span>{{ zh ? '姓名' : 'Name' }}</span><input v-model="form.name" /></label>
@@ -244,13 +245,15 @@ h1 { margin: 0; font-size: 22px; font-weight: 800; color: $hb-ink; letter-spacin
 }
 .place:disabled { opacity: .5; }
 .addr-mask {
-  position: fixed; inset: 0; z-index: 70; background: rgba(28,36,48,0.45);
+  position: fixed; inset: 0; z-index: 70; background: $hb-sand;
   display: flex; align-items: flex-end; justify-content: center;
 }
 .addr-sheet {
-  width: min(100%, 768px); background: #fff; border-radius: 20px 20px 0 0;
-  padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+  width: min(100%, 768px); background: #fff; border-radius: $hb-radius-12 $hb-radius-12 0 0;
+  padding: 12px 16px calc(16px + env(safe-area-inset-bottom));
+  font-size: $hb-type-14;
 }
-.addr-sheet h2 { margin: 0 0 10px; font-size: 18px; }
+.grab { width: 36px; height: 4px; border-radius: 999px; background: $hb-line; margin: 0 auto 12px; }
+.addr-sheet h2 { margin: 0 0 10px; font-size: $hb-type-20; }
 .addr-sheet .place { width: 100%; margin-top: 8px; }
 </style>

@@ -49,6 +49,7 @@
     <AppTabBar active="cart" />
     <div v-if="showGap" class="confirm-mask" @click.self="gapOff = true">
       <div class="confirm-card" role="dialog">
+        <div class="grab" aria-hidden="true"></div>
         <div class="mark" aria-hidden="true">🎁</div>
         <h2>{{ zhCart ? '再买一点就包邮' : 'A bit more for free shipping' }}</h2>
         <p>{{ zhCart ? '还差 ' + money(Math.max(0, minOrder - subtotal)) + '。加一件凑单商品即可。' : 'Add ' + money(Math.max(0, minOrder - subtotal)) + ' more.' }}</p>
@@ -60,6 +61,7 @@
     </div>
     <div v-if="pendingRemove" class="confirm-mask" @click.self="pendingRemove = null">
       <div class="confirm-card" role="dialog">
+        <div class="grab" aria-hidden="true"></div>
         <div class="mark" aria-hidden="true">×</div>
         <h2>{{ zhCart ? '移除商品' : 'Remove item' }}</h2>
         <p>{{ zhCart ? '确定从购物车移除这件商品？' : 'Remove this item from the cart?' }}</p>
@@ -128,17 +130,19 @@ h1 small { font-size: 12px; color: $hb-muted; font-weight: 600; }
 .count { margin: 2px 0 0; font-size: 13px; color: $hb-muted; }
 .trash { border: 0; background: transparent; color: #9AA0A8; font-size: 18px; cursor: pointer; }
 .confirm-mask {
-  position: fixed; inset: 0; z-index: 80; background: rgba(28,36,48,0.45);
+  position: fixed; inset: 0; z-index: 80; background: $hb-sand;
   display: flex; align-items: flex-end; justify-content: center;
 }
 .confirm-card {
-  width: min(100%, 768px); background: #fff; border-radius: 18px 18px 0 0; padding: 20px 16px 24px;
+  width: min(100%, 768px); background: #fff; border-radius: $hb-radius-12 $hb-radius-12 0 0; padding: 12px 16px 24px;
+  font-size: $hb-type-14;
 }
+.grab { width: 36px; height: 4px; border-radius: 999px; background: $hb-line; margin: 0 auto 12px; }
 .confirm-card .mark {
-  width: 48px; height: 48px; border-radius: 16px; background: #FFF1EC; color: #F96141;
-  display: grid; place-items: center; font-size: 22px; font-weight: 800; margin-bottom: 10px;
+  width: 48px; height: 48px; border-radius: $hb-radius-16; background: #FFF1EC; color: #F96141;
+  display: grid; place-items: center; font-size: $hb-type-24; font-weight: 800; margin-bottom: 10px;
 }
-.confirm-card h2 { margin: 0 0 8px; font-size: 18px; }
+.confirm-card h2 { margin: 0 0 8px; font-size: $hb-type-20; }
 .confirm-card p { margin: 0; color: #5C6570; }
 .confirm-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
 .confirm-actions button { height: 40px; padding: 0 16px; border-radius: 999px; font-weight: 700; cursor: pointer; }

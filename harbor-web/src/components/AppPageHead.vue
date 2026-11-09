@@ -58,7 +58,7 @@ function onBack() {
   width: 40px;
   height: 40px;
   border: 1px solid $hb-line;
-  border-radius: 14px;
+  border-radius: $hb-radius-14;
   background: $hb-white;
   color: $hb-ink;
   display: inline-flex;
@@ -75,8 +75,8 @@ function onBack() {
   box-shadow: none;
 }
 .main { flex: 1; min-width: 0; }
-.title { font-size: 20px; font-weight: 740; line-height: 1.2; color: inherit; }
-.sub { margin-top: 2px; font-size: 12px; color: $hb-muted; }
+.title { font-size: $hb-type-20; font-weight: 740; line-height: 1.2; color: inherit; }
+.sub { margin-top: 2px; font-size: $hb-type-12; color: $hb-muted; }
 .page-head.light .sub { color: rgba(255,255,255,0.8); }
 .right { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; }
 </style>

@@ -81,11 +81,11 @@ function go(path: string) {
   background: $hb-coral; border-radius: 2px;
 }
 .ico { display: block; }
-.label { display: block; font-size: 11px; font-weight: 650; letter-spacing: 0; }
+.label { display: block; font-size: $hb-type-12; font-weight: 650; letter-spacing: 0; }
 .badge {
   position: absolute; top: 2px; right: 22%;
   min-width: 16px; height: 16px; border-radius: 999px; padding: 0 4px;
-  background: $hb-coral; color: #fff; font-size: 10px; font-weight: 700;
+  background: $hb-coral; color: #fff; font-size: $hb-type-12; font-weight: 700;
   display: flex; align-items: center; justify-content: center;
 }
 </style>

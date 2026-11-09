@@ -97,7 +97,7 @@ onMounted(() => {
   border: 0;
   outline: none;
   background: transparent;
-  font-size: 15px;
+  font-size: $hb-type-16;
   color: $hb-ink;
   height: 44px;
   box-shadow: none;
@@ -109,7 +109,7 @@ onMounted(() => {
   border: 0;
   background: $hb-coral;
   color: #fff;
-  font-size: 13px;
+  font-size: $hb-type-13;
   font-weight: 700;
   height: 32px;
   padding: 0 12px;

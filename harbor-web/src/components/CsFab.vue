@@ -55,7 +55,7 @@ const to = computed(() => {
   background: $hb-coral;
   color: #fff;
   font-weight: 720;
-  font-size: 13px;
+  font-size: $hb-type-13;
   border: 0;
   box-shadow: 0 8px 20px rgba(249, 97, 65, 0.28);
 }
@@ -67,7 +67,7 @@ const to = computed(() => {
     right: 28px;
     bottom: 28px;
     padding: 12px 18px;
-    font-size: 14px;
+    font-size: $hb-type-14;
   }
 }
 </style>
