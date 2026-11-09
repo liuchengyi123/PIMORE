@@ -13,6 +13,17 @@
       <h1>{{ zh ? '申请退货' : 'Request a return' }}</h1>
       <p class="lead">{{ zh ? '选择要退的商品并告诉我们原因，其余的交给我们。' : "Select the item(s) you'd like to return and tell us the reason. We'll take care of the rest." }}</p>
 
+      <section class="prog" :aria-label="zh ? '售后进度' : 'Return progress'">
+        <div class="rail" aria-hidden="true"><i :style="{ width: progRail }" /></div>
+        <div v-for="(label, i) in progSteps" :key="label" class="pstep" :class="{ on: i <= progAt, now: i === progAt }">
+          <span class="pdot">
+            <Check v-if="i < progAt" :size="13" :stroke-width="2.8" />
+            <template v-else>{{ i + 1 }}</template>
+          </span>
+          <b>{{ label }}</b>
+        </div>
+      </section>
+
       <label v-if="!orderLocked" class="order-field">
         <span>{{ zh ? '订单号' : 'Order' }}</span>
         <input v-model="orderId" :placeholder="zh ? '订单号' : 'Order number'" @change="loadItems" />
@@ -147,6 +158,9 @@ const reasons = computed(() => zh.value
     ])
 const reasonLabel = computed(() => reasons.value.find((r) => r.id === reason.value)?.label || (zh.value ? '请选择原因' : 'Select a reason'))
 const selectedCount = computed(() => items.value.filter((i) => i.on).length)
+const progSteps = computed(() => (zh.value ? ['申请', '审核', '退款'] : ['Request', 'Review', 'Refund']))
+const progAt = computed(() => (done.value ? 1 : 0))
+const progRail = computed(() => ['0%', '50%', '100%'][progAt.value])
 
 onMounted(loadItems)
 onBeforeUnmount(() => {
@@ -264,32 +278,48 @@ function goOrder() {
 .page { min-height: 100vh; background: #FCFAF8; color: #1C2430; }
 .hero {
   position: relative; background: #fff; text-align: center;
-  padding: 18px 48px 8px; padding-top: calc(14px + env(safe-area-inset-top));
+  padding: 10px 44px 2px; padding-top: calc(8px + env(safe-area-inset-top));
 }
 .back {
   position: absolute; left: 8px; top: calc(10px + env(safe-area-inset-top));
   width: 36px; height: 36px; border: 0; background: transparent; color: #1C2430;
   display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
 }
-.logo { display: inline-flex; align-items: center; gap: 4px; color: #F96141; font-size: 20px; font-weight: 800; letter-spacing: -0.03em; }
-.tag { margin-top: 2px; font-size: 10px; letter-spacing: 0.12em; color: #8B919A; font-weight: 700; }
-.range { margin-top: 4px; font-size: 12px; font-weight: 800; }
-.body { padding: 12px 18px 32px; }
-h1 { margin: 14px 0 0; font-size: 30px; font-weight: 800; letter-spacing: -0.045em; line-height: 1.15; }
-.lead { margin: 10px 0 22px; color: #8B919A; font-size: 15px; line-height: 1.5; }
+.logo { display: inline-flex; align-items: center; gap: 4px; color: #F96141; font-size: 18px; font-weight: 800; letter-spacing: -0.03em; }
+.tag { margin-top: 1px; font-size: 9px; letter-spacing: 0.1em; color: #8B919A; font-weight: 700; }
+.range { margin-top: 1px; font-size: 11px; font-weight: 800; }
+.body { padding: 6px 16px 24px; }
+h1 { margin: 8px 0 0; font-size: 26px; font-weight: 800; letter-spacing: -0.04em; line-height: 1.15; }
+.lead { margin: 4px 0 8px; color: #8B919A; font-size: 13px; line-height: 1.4; }
+.prog {
+  position: relative; display: grid; grid-template-columns: repeat(3, 1fr);
+  margin: 0 0 4px; padding: 8px 4px 2px; background: #fff; border-radius: 14px;
+  box-shadow: 0 6px 16px rgba(28, 36, 48, 0.04);
+}
+.rail { position: absolute; left: 16.6%; right: 16.6%; top: 20px; height: 2px; background: #F6D5CB; }
+.rail i { display: block; height: 100%; background: #F96141; }
+.pstep { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #C5CAD1; }
+.pstep b { font-size: 12px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; }
+.pdot {
+  width: 26px; height: 26px; border-radius: 50%; background: #fff; border: 2px solid #E7DFD8; color: #C5CAD1;
+  display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800;
+}
+.pstep.on { color: #1C2430; }
+.pstep.on .pdot, .pstep.now .pdot { background: #F96141; border-color: #F96141; color: #fff; }
+.pstep.now b { color: #F96141; }
 .order-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; font-size: 12px; font-weight: 700; color: #8B919A; }
 .order-field input, .select {
-  width: 100%; height: 52px; border-radius: 16px; border: 1.5px solid #E7DFD8; background: #fff;
-  padding: 0 16px; font-size: 16px; font-weight: 650; color: #1C2430;
+  width: 100%; height: 44px; border-radius: 12px; border: 1.5px solid #E7DFD8; background: #fff;
+  padding: 0 12px; font-size: 14px; font-weight: 650; color: #1C2430;
 }
-.sec-row, .sec { display: flex; justify-content: space-between; align-items: baseline; margin: 22px 0 10px; font-size: 17px; font-weight: 800; letter-spacing: -0.03em; }
-.sec.flat { justify-content: flex-start; gap: 6px; }
-.sec-row span, .sec span, .hint { font-size: 13px; font-weight: 650; letter-spacing: 0; color: #9AA1A9; }
-.hint { margin: 0 0 10px; line-height: 1.4; }
+.sec-row, .sec { display: flex; justify-content: space-between; align-items: baseline; margin: 12px 0 6px; font-size: 15px; font-weight: 800; letter-spacing: -0.02em; }
+.sec.flat { justify-content: flex-start; gap: 4px; }
+.sec-row span, .sec span, .hint { font-size: 12px; font-weight: 650; letter-spacing: 0; color: #9AA1A9; }
+.hint { margin: 0 0 6px; line-height: 1.35; }
 .item, .method {
-  display: flex; align-items: center; gap: 12px; background: #fff; border-radius: 18px;
-  padding: 12px 14px; margin-bottom: 10px; border: 1.5px solid transparent;
-  box-shadow: 0 8px 20px rgba(28, 36, 48, 0.05);
+  display: flex; align-items: center; gap: 8px; background: #fff; border-radius: 14px;
+  padding: 8px 10px; margin-bottom: 6px; border: 1.5px solid transparent;
+  box-shadow: 0 4px 12px rgba(28, 36, 48, 0.04);
 }
 .item.on, .method.on { border-color: #F96141; }
 .item input, .method input, .file { position: absolute; opacity: 0; pointer-events: none; }
@@ -298,31 +328,31 @@ h1 { margin: 14px 0 0; font-size: 30px; font-weight: 800; letter-spacing: -0.045
   display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
 }
 .item.on .box { background: #F96141; border-color: #F96141; }
-.item img, .ph { width: 56px; height: 56px; border-radius: 12px; object-fit: cover; background: #F6F1EC; flex: 0 0 auto; }
-.ph { display: inline-flex; align-items: center; justify-content: center; color: #F96141; font-weight: 800; font-size: 16px; }
-.meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.meta b { font-size: 15px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.25; }
-.meta small, .qty { color: #9AA1A9; font-size: 13px; line-height: 1.3; }
-.meta strong { color: #1C2430; font-size: 14px; font-weight: 800; }
+.item img, .ph { width: 48px; height: 48px; border-radius: 10px; object-fit: cover; background: #F6F1EC; flex: 0 0 auto; }
+.ph { display: inline-flex; align-items: center; justify-content: center; color: #F96141; font-weight: 800; font-size: 14px; }
+.meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.meta b { font-size: 14px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.2; }
+.meta small, .qty { color: #9AA1A9; font-size: 12px; line-height: 1.25; }
+.meta strong { color: #1C2430; font-size: 13px; font-weight: 800; }
 .qty { flex: 0 0 auto; }
 .select { display: flex; align-items: center; justify-content: space-between; cursor: pointer; text-align: left; }
-.menu { margin-top: 8px; background: #fff; border: 1.5px solid #F6C7BA; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 24px rgba(249, 97, 65, 0.08); }
+.menu { margin-top: 4px; background: #fff; border: 1.5px solid #F6C7BA; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 18px rgba(249, 97, 65, 0.08); }
 .menu button {
   width: 100%; display: flex; justify-content: space-between; align-items: center;
-  border: 0; background: #fff; padding: 14px 16px; font-size: 16px; cursor: pointer; color: #1C2430;
+  border: 0; background: #fff; padding: 10px 12px; font-size: 14px; cursor: pointer; color: #1C2430;
 }
 .menu button.on { background: #FFF1EC; color: #F96141; font-weight: 700; }
-.photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .photo {
-  aspect-ratio: 1; border: 1.5px dashed #E7C8BE; border-radius: 16px; background: #fff; color: #C4B8B2;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
-  font-size: 12px; font-weight: 650; line-height: 1.25; cursor: pointer; overflow: hidden; padding: 8px;
+  aspect-ratio: 1; border: 1.5px dashed #E7C8BE; border-radius: 12px; background: #fff; color: #C4B8B2;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  font-size: 11px; font-weight: 650; line-height: 1.2; cursor: pointer; overflow: hidden; padding: 6px;
 }
 .photo img { width: 100%; height: 100%; object-fit: cover; }
 .method svg { color: #F96141; flex: 0 0 auto; }
 .method span { display: flex; flex-direction: column; }
-.method b { font-size: 15px; font-weight: 800; letter-spacing: -0.02em; }
-.method small { color: #9AA1A9; font-size: 13px; margin-top: 2px; }
+.method b { font-size: 14px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.2; }
+.method small { color: #9AA1A9; font-size: 12px; margin-top: 1px; }
 .radio {
   width: 18px; height: 18px; border-radius: 50%; border: 2px solid #E7DFD8; flex: 0 0 auto; position: relative;
 }
@@ -332,8 +362,8 @@ h1 { margin: 14px 0 0; font-size: 30px; font-weight: 800; letter-spacing: -0.045
 }
 .err { color: #E11D2E; font-size: 13px; }
 .submit {
-  width: 100%; height: 54px; margin-top: 22px; border: 0; border-radius: 18px; background: #F96141; color: #fff;
-  font-size: 17px; font-weight: 800; letter-spacing: -0.02em; cursor: pointer;
+  width: 100%; height: 48px; margin-top: 12px; border: 0; border-radius: 14px; background: #F96141; color: #fff;
+  font-size: 16px; font-weight: 800; letter-spacing: -0.02em; cursor: pointer;
 }
 .submit:disabled { opacity: 0.6; }
 .done { background: #fff; border-radius: 16px; padding: 18px; }
