@@ -37,6 +37,7 @@
     <h2>属性</h2>
     <div class="pad">
       <div class="fields">
+        <p class="lp-sec">模块与商品</p>
         <div class="wide" id="lp-hero-field" {% if form_state.template not in hero_template_ids and form_state.template not in scene_template_ids %}hidden{% endif %}>
           主商品
           <input id="lp-hero-q" type="search" placeholder="输入标题或 SKU，再点下面的一条" autocomplete="off">
@@ -59,6 +60,7 @@
             {% endfor %}
           </select>
         </label>
+        <p class="lp-sec">投放</p>
         <label>平台
           <select name="platform" id="lp-platform">
             {% for code, label in (("meta", "Meta"), ("tiktok", "TikTok"), ("google", "Google")) %}
@@ -66,8 +68,10 @@
             {% endfor %}
           </select>
         </label>
-        <label>country <input name="country" value="{{ form_state.country }}" maxlength="2"></label>
-        <label>内部备注 <input name="label" value="{{ form_state.label }}" maxlength="80" placeholder="例如 厨房-密铺-0312"></label>
+        <label>国家 <input name="country" value="{{ form_state.country }}" maxlength="2" placeholder="US"></label>
+        <label class="wide">内部备注 <span class="lp-count" id="lp-label-count">{{ (form_state.label or '')|length }}/80</span>
+          <input id="lp-label" name="label" value="{{ form_state.label }}" maxlength="80" placeholder="例如 厨房-密铺-0312">
+        </label>
         <label>投放账户
           <select name="acct" id="lp-acct">
             <option value="">（该平台默认账户）</option>
@@ -76,6 +80,7 @@
             {% endfor %}
           </select>
         </label>
+        <p class="lp-sec">UTM</p>
         <label>utm_source <input name="utm_source" value="{{ form_state.utm_source }}"></label>
         <label>utm_medium <input name="utm_medium" value="{{ form_state.utm_medium }}"></label>
         <label>utm_campaign <input name="utm_campaign" value="{{ form_state.utm_campaign }}"></label>
@@ -116,11 +121,15 @@
   <aside class="lp-preview-frame">
     <div class="lp-preview-label">实时预览</div>
     <div class="lp-phone">
-      <span class="lp-side" aria-hidden="true"></span>
-      <span class="lp-island" aria-hidden="true"></span>
-      <div class="lp-status"><span>9:41</span><span>预览</span></div>
-      <iframe id="lp-preview" title="落地页实时预览" src="{{ preview_src }}"></iframe>
-      <span class="lp-home" aria-hidden="true"></span>
+      <span class="lp-side vol" aria-hidden="true"></span>
+      <span class="lp-side vol2" aria-hidden="true"></span>
+      <span class="lp-side power" aria-hidden="true"></span>
+      <div class="lp-glass">
+        <div class="lp-status"><span>9:41</span><span class="lp-sig" aria-hidden="true"></span></div>
+        <span class="lp-island" aria-hidden="true"></span>
+        <iframe id="lp-preview" title="落地页实时预览" src="{{ preview_src }}"></iframe>
+        <span class="lp-home" aria-hidden="true"></span>
+      </div>
     </div>
   </aside>
 </div>
@@ -219,6 +228,13 @@
   var accountsByPlat = {{ accounts_by_plat | tojson }};
   var heroTemplates = {{ hero_template_ids | tojson }};
   var sceneTemplates = {{ scene_template_ids | tojson }};
+  var labelInput = document.getElementById("lp-label");
+  var labelCount = document.getElementById("lp-label-count");
+  if (labelInput && labelCount) {
+    labelInput.addEventListener("input", function () {
+      labelCount.textContent = labelInput.value.length + "/80";
+    });
+  }
   if (!form || !frame) return;
   function rebuildAcct() {
     if (!acctEl || !platformEl) return;

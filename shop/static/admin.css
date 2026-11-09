@@ -2188,40 +2188,86 @@ body.admin-launch #lp-launch-form { display: contents; }
 body.admin-launch .lp-lib { grid-column: 1; grid-row: 1; }
 body.admin-launch .lp-preview-frame {
   grid-column: 2; grid-row: 1 / span 3;
-  justify-self: center; width: min(340px, 100%);
+  justify-self: center; width: min(318px, 100%);
   background: transparent; border-radius: 0; padding: 0;
   box-shadow: none;
 }
-body.admin-launch .lp-preview-label { color: #8B919A; letter-spacing: 0; font-weight: 700; margin-bottom: 10px; }
+body.admin-launch .lp-preview-label { color: #8B919A; letter-spacing: 0; font-weight: 700; margin-bottom: 8px; }
 body.admin-launch .lp-phone {
   position: relative;
-  background: #111318;
-  border-radius: 40px;
-  padding: 12px 12px 16px;
-  box-shadow: 0 22px 48px rgba(17, 19, 24, 0.22), inset 0 0 0 2px #2A2E35;
+  background: linear-gradient(180deg, #3a3f48 0%, #16181d 22%, #111318 100%);
+  border-radius: 46px;
+  padding: 8px;
+  box-shadow: 0 22px 46px rgba(17, 19, 24, 0.28), inset 0 0 0 1px rgba(255,255,255,0.16);
+}
+body.admin-launch .lp-glass {
+  position: relative;
+  background: #0b0c0e;
+  border-radius: 38px;
+  overflow: hidden;
 }
 body.admin-launch .lp-side {
-  position: absolute; left: -3px; top: 108px; width: 3px; height: 54px;
-  background: #3A3F48; border-radius: 2px 0 0 2px;
+  position: absolute; width: 3px; background: #4a5160; border-radius: 2px;
 }
+body.admin-launch .lp-side.vol { left: -3px; top: 92px; height: 28px; }
+body.admin-launch .lp-side.vol2 { left: -3px; top: 128px; height: 46px; }
+body.admin-launch .lp-side.power { right: -3px; left: auto; top: 118px; height: 64px; }
 body.admin-launch .lp-island {
-  display: block; width: 86px; height: 18px; margin: 2px auto 8px;
-  background: #0B0C0E; border-radius: 999px;
+  position: absolute; z-index: 2; top: 10px; left: 50%;
+  width: 96px; height: 22px; margin: 0; transform: translateX(-50%);
+  background: #0b0c0e; border-radius: 999px;
+  box-shadow: 0 0 0 1px #1c1e24;
 }
 body.admin-launch .lp-status {
+  position: absolute; z-index: 2; top: 12px; left: 16px; right: 16px;
   display: flex; justify-content: space-between; align-items: center;
-  color: #fff; font-size: 11px; font-weight: 700; padding: 0 10px 6px;
+  color: #fff; font-size: 12px; font-weight: 750; pointer-events: none;
+}
+body.admin-launch .lp-sig {
+  width: 42px; height: 8px; border-radius: 99px;
+  background: linear-gradient(90deg, #fff 0 18px, transparent 18px 22px, #fff 22px 34px, transparent 34px);
+  opacity: 0.9;
 }
 body.admin-launch .lp-home {
-  display: block; width: 108px; height: 4px; margin: 10px auto 0;
-  background: #E8EAF0; border-radius: 99px; opacity: 0.85;
+  position: absolute; z-index: 2; left: 50%; bottom: 7px; transform: translateX(-50%);
+  width: 112px; height: 4px; margin: 0;
+  background: rgba(255,255,255,0.92); border-radius: 99px;
 }
 body.admin-launch .lp-props { grid-column: 3; grid-row: 1; }
 body.admin-launch #launch-pixel { grid-column: 3; grid-row: 2; }
 body.admin-launch .lp-preview-frame iframe {
-  width: 100%; min-height: 620px; height: 68vh; max-height: 720px;
-  border-radius: 18px; background: #fff;
+  width: 100%; min-height: 560px; height: 64vh; max-height: 680px;
+  border-radius: 0; background: #fff; display: block;
 }
+body.admin-launch .lp-mod-picks { gap: 6px; }
+body.admin-launch .lp-mod-picks label {
+  padding: 6px 8px; border-radius: 10px; border-color: #E8EAF0; gap: 6px;
+}
+body.admin-launch .lp-mod-picks label:has(input:checked) {
+  border-color: #F96141; background: #FFF6F3; box-shadow: inset 3px 0 0 #F96141;
+}
+body.admin-launch .lp-mod-picks b { font-size: 13px; color: #1C2430; }
+body.admin-launch .lp-mod-picks code { color: #8B919A; font-size: 10px; }
+body.admin-launch .lp-lib h2,
+body.admin-launch .lp-props h2 { font-size: 14px; padding: 10px 12px; }
+body.admin-launch .lp-props .pad { padding: 8px 12px 12px; }
+body.admin-launch .lp-props .fields { gap: 8px; }
+body.admin-launch .lp-sec {
+  grid-column: 1 / -1; margin: 2px 0 0;
+  font-size: 11px; font-weight: 800; color: #F96141;
+}
+body.admin-launch .lp-props label,
+body.admin-launch .lp-props .fields > div {
+  font-size: 11px; font-weight: 700; color: #8B919A; gap: 3px;
+}
+body.admin-launch .lp-props input,
+body.admin-launch .lp-props select {
+  height: 32px; margin-top: 2px; border-radius: 8px;
+  border: 1px solid #E8EAF0; font-size: 12px; font-weight: 650; color: #1C2430;
+}
+body.admin-launch .lp-count { float: right; font-weight: 650; color: #8B919A; }
+body.admin-launch .lp-props .actions { margin-top: 4px; }
+body.admin-launch .lp-props .actions .btn { height: 34px; border-radius: 8px; background: #F96141; }
 @media (max-width: 1100px) {
   .zh-board .kpi-grid, .zh-charts, .order-top, .order-actions-grid, .buy-layout,
   .pixel-grid, .reco-board, .pay-grid, .cs-grid, .cs-settings-form, .zh-gen-board, .zh-studio {
