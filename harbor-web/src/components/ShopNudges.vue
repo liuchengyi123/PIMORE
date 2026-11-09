@@ -146,6 +146,7 @@ watch(() => [route.name, route.query.locale], openNext)
 .mark {
   width: 56px; height: 56px; border-radius: 18px; background: #FFF1EC; color: #F96141;
   display: grid; place-items: center; font-size: 24px; font-weight: 800; margin-bottom: 8px;
+  box-shadow: inset 0 -8px 0 rgba(249,97,65,0.12);
 }
 h2 { margin: 0 0 6px; font-size: 18px; letter-spacing: -0.02em; color: #1C2430; }
 p { margin: 0 0 14px; color: #5C6570; line-height: 1.45; }

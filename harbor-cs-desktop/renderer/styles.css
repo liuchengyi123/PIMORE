@@ -482,13 +482,13 @@ input:focus, textarea:focus { outline: 2px solid rgba(224,82,46,0.35); border-co
 /* Function S03-S14 richer states */
 .empty-selection, .empty-inbox, .empty-closed {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 8px; padding: 48px 24px; text-align: center; color: #1C2430; height: 100%;
+  gap: 6px; padding: 32px 16px; text-align: center; color: #1C2430; height: 100%;
 }
 .empty-selection p, .empty-inbox p, .empty-closed p { max-width: 280px; margin: 0; line-height: 1.45; }
 #askModal .sku-modal-card { width: min(360px, 92vw); }
 #askModal .sku-modal-head:last-child { justify-content: flex-end; gap: 8px; }
 .empty-ico {
-  width: 64px; height: 64px; border-radius: 20px; background: #FFF1EC;
+  width: 52px; height: 52px; border-radius: 16px; background: #FFF1EC;
   display: grid; place-items: center; font-size: 28px; line-height: 1;
 }
 .room-item.active { background: #FFF6F3; box-shadow: inset 3px 0 0 #F96141; }
@@ -510,13 +510,13 @@ input:focus, textarea:focus { outline: 2px solid rgba(224,82,46,0.35); border-co
 }
 .settings-overlay[hidden], .transfer-modal-wrap[hidden] { display: none !important; }
 .settings-panel {
-  width: min(480px, 100%); max-height: 85vh; overflow: auto;
-  padding: 18px; background: #fff; border-radius: 16px;
+  width: min(440px, 100%); max-height: 80vh; overflow: auto;
+  padding: 14px; background: #fff; border-radius: 16px;
   box-shadow: 0 18px 50px rgba(15,39,68,.18);
 }
-.settings-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0; }
+.settings-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0 12px; }
 .settings-tabs button {
-  height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line);
+  height: 28px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--line); font-size: 12px;
   background: #F7F4EF; color: var(--ink); font-weight: 600; cursor: pointer;
 }
 .settings-tabs button.on { background: #F96141; color: #fff; border-color: #F96141; }
