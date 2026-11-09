@@ -22,7 +22,7 @@
         <img v-if="line.image" class="img" :src="line.image" alt="" @click="open(line.sku)" />
         <div class="body" @click="open(line.sku)">
           <div class="name">{{ line.name }}</div>
-          <div class="meta">{{ line.size || line.offer || 'default' }}</div>
+          <div class="meta">{{ line.size || line.offer || (zhCart ? '默认' : 'default') }}</div>
           <div class="price">{{ money(line.price) }}</div>
         </div>
         <div class="qty">
@@ -171,26 +171,25 @@ h1 small { font-size: 12px; color: $hb-muted; font-weight: 600; }
   position: fixed; left: 50%; transform: translateX(-50%);
   width: min(100vw, 768px);
   bottom: calc(58px + env(safe-area-inset-bottom));
-  background: #F96141; padding: 12px 16px;
-  display: flex; align-items: center; gap: 10px; z-index: 90; color: #fff;
+  background: #fff; border-top: 1px solid #F1EEEA; padding: 10px 16px;
+  display: flex; align-items: center; gap: 10px; z-index: 90; color: #1C2430;
 }
-.sum { flex: 1; font-size: 14px; }
-.sum b { color: #fff; font-size: 20px; }
+.sum { flex: 1; font-size: 13px; color: #8B919A; }
+.sum b { color: #F96141; font-size: 20px; }
 .checkout {
-  border: 0; height: 44px; padding: 0 18px; border-radius: 999px; background: #fff; color: #F96141;
+  border: 0; height: 44px; padding: 0 18px; border-radius: 999px; background: #F96141; color: #fff;
   font-weight: 740; cursor: pointer;
 }
 .ship-card {
-  margin: 12px 16px; background: #fff; border: 1px solid $hb-line; border-radius: 16px; padding: 14px;
+  margin: 12px 0; background: #fff; border: 1px solid $hb-line; border-radius: 16px; padding: 14px;
 }
 .ship-row { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; color: $hb-ink; }
 .ship-bar { margin-top: 8px; height: 8px; background: #E8E4DC; border-radius: 4px; overflow: hidden; }
-.ship-bar > i { display: block; height: 100%; background: $hb-deep; }
+.ship-bar > i { display: block; height: 100%; background: #F96141; }
 .tiny { font-size: 11px; color: $hb-muted; margin-top: 6px; }
-.footer .checkout { background: $hb-ink !important; }
-.price { color: $hb-price !important; }
+.price { color: #F96141 !important; }
 .empty { padding: 80px 24px; text-align: center; }
-.empty .btn { background: $hb-ink; color: #fff; border-radius: 999px; padding: 10px 18px; text-decoration: none; font-weight: 700; display: inline-block; margin-top: 16px; }
+.empty .btn { background: #F96141; color: #fff; border-radius: 999px; padding: 10px 18px; text-decoration: none; font-weight: 700; display: inline-block; margin-top: 16px; }
 
 .fn-page { --ink:#1C2430; --teal:#0E7490; --amber:#F96141; --sand:#FCFAF8; }
 </style>
