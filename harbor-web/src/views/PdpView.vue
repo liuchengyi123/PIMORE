@@ -472,11 +472,17 @@ async function notifyMe() {
 }
 .opt-sec { margin-top: 8px; }
 .sheet-title { font-weight: 800; font-size: 15px; margin-bottom: 10px; color: #1C2430; }
-.swatches { display: flex; gap: 14px; overflow-x: auto; padding: 4px 2px 8px; }
-.swatch { border: 0; background: transparent; display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 56px; cursor: pointer; color: #5C6570; font-size: 12px; }
-.dot { width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(28,36,48,0.08); overflow: hidden; display: block; }
+.swatches { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 4px; }
+.swatch {
+  border: 0; background: transparent; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  width: 44px; min-width: 44px; padding: 0; cursor: pointer; color: #5C6570; font-size: 11px; line-height: 1.15;
+}
+.dot {
+  width: 40px; height: 40px; border-radius: 50%; border: 0; overflow: hidden; display: block;
+  box-shadow: inset 0 0 0 1px rgba(28,36,48,0.16);
+}
 .dot img { width: 100%; height: 100%; object-fit: cover; }
-.swatch.on .dot { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #F96141; }
+.swatch.on .dot { box-shadow: inset 0 0 0 1px rgba(28,36,48,0.08), 0 0 0 2px #fff, 0 0 0 4px #FF6B4A; }
 .swatch.on { color: #1C2430; font-weight: 700; }
 .opts { display: flex; flex-wrap: wrap; gap: 8px; }
 .opt {

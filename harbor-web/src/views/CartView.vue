@@ -46,7 +46,10 @@
     </div>
     <div v-if="lines.length && desk" class="drawer-progress">
       <p>{{ shipNote }}</p>
-      <div class="ship-bar"><i :style="{ width: shipPct + '%' }"></i><span>{{ shipPct }}%</span></div>
+      <div class="ship-meter" aria-hidden="false">
+        <span class="track"><i :style="{ width: shipPct + '%' }"></i></span>
+        <b>{{ shipPct }}%</b>
+      </div>
     </div>
     <div v-if="lines.length" class="footer">
       <div class="sum">{{ zhCart ? '小计' : 'Subtotal' }} <b>{{ money(subtotal) }}</b></div>
@@ -279,10 +282,12 @@ h1 small { font-size: 12px; color: $hb-muted; font-weight: 600; }
   .page.desk .sum { display: flex; justify-content: space-between; align-items: baseline; font-size: 16px; color: #1C2430; }
   .page.desk .checkout, .page.desk .continue { width: 100%; height: 48px; border-radius: 10px; }
   .page.desk .continue { background: #fff; color: #1C2430; border: 1px solid #1C2430; font-weight: 750; cursor: pointer; }
-  .drawer-progress p { margin: 8px 0; font-size: 14px; color: #1C2430; }
-  .page.desk .ship-bar { display: flex; align-items: center; gap: 8px; height: auto; background: transparent; overflow: visible; }
-  .page.desk .ship-bar > i { flex: 1; height: 8px; border-radius: 99px; }
-  .page.desk .ship-bar span { font-size: 12px; color: #8B919A; font-weight: 700; }
+  .drawer-progress { margin: 4px 0 2px; }
+  .drawer-progress p { margin: 0 0 6px; font-size: 13px; line-height: 1.35; font-weight: 650; color: #1C2430; }
+  .ship-meter { display: flex; align-items: center; gap: 8px; }
+  .ship-meter .track { flex: 1; height: 12px; background: #E6E2DC; border-radius: 99px; overflow: hidden; }
+  .ship-meter .track > i { display: block; height: 100%; background: #FF6B4A; border-radius: 99px; }
+  .ship-meter b { min-width: 36px; text-align: right; font-size: 12px; line-height: 1; color: #5C6570; font-weight: 750; }
 }
 .clear { border: 0; background: transparent; color: $hb-muted; cursor: pointer; font-weight: 650; }
 .empty { text-align: center; padding: 72px 16px; color: $hb-muted; }
