@@ -586,7 +586,7 @@ body { background: var(--sand) !important; color: var(--text) !important; }
   border: 1px solid var(--line) !important; background: #fff !important; color: var(--ink) !important;
   border-radius: 999px !important; padding: 4px 10px !important; font-size: 12px !important;
 }
-.inbox-chips button.on { background: #E0F2FE !important; border-color: #7DD3FC !important; color: #0E7490 !important; }
+.inbox-chips button.on { background: #FFF1EC !important; border-color: #F8D5CC !important; color: #F96141 !important; font-weight: 700; }
 .room-item { background: #fff !important; color: var(--text) !important; border-bottom: 1px solid var(--line) !important; }
 .room-item:hover, .room-item.active { background: #F7F4EF !important; }
 .room-item.active { box-shadow: inset 3px 0 0 var(--teal); }
@@ -624,13 +624,14 @@ body { background: var(--sand) !important; color: var(--text) !important; }
   border-radius: 12px !important; padding: 10px !important; color: var(--text) !important;
 }
 .ai-banner {
-  background: #E0F2FE !important; border-bottom: 1px solid #BAE6FD !important;
-  color: var(--ink) !important; padding: 8px 12px !important;
+  background: #FFF6F3 !important; border-bottom: 1px solid #F8D5CC !important;
+  color: #1C2430 !important; padding: 8px 12px !important;
 }
 .ai-pill {
-  background: var(--teal) !important; color: #fff !important;
+  background: #F96141 !important; color: #fff !important;
   border-radius: 999px !important; padding: 2px 8px !important; font-size: 11px !important; font-weight: 700 !important;
 }
+.peer-typing { color: #F96141 !important; font-style: normal !important; font-weight: 650; }
 .agent-box select {
   background: #fff !important; border: 1px solid var(--line) !important; color: var(--ink) !important;
   border-radius: 8px !important; height: 32px !important;
