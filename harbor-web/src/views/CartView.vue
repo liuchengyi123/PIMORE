@@ -145,7 +145,8 @@ h1 small { font-size: 12px; color: $hb-muted; font-weight: 600; }
   }
 }
 .clear { border: 0; background: transparent; color: $hb-muted; cursor: pointer; font-weight: 650; }
-.empty { text-align: center; padding: 64px 12px; color: $hb-muted; }
+.empty { text-align: center; padding: 72px 16px; color: $hb-muted; }
+.empty .btn { border-radius: 999px; background: #F96141; }
 .empty-ico { color: $hb-muted; opacity: 0.55; margin-bottom: 10px; }
 .btn {
   display: inline-block; margin-top: 14px; padding: 11px 18px; border-radius: 14px;

@@ -1798,6 +1798,21 @@ body { background: #F4F6FB; color: #1C2430; }
 .hb-confirm-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
 .hb-confirm-actions .btn { background: #F96141; color: #fff; border: 0; }
 .hb-confirm-actions .btn.ghost { background: #fff; color: #1C2430; border: 1px solid #E6E8EE; }
+
+/* Dashboard / orders / catalog frames */
+.ranges { display: flex; gap: 8px; margin: 0 0 14px; }
+.ranges a {
+  display: inline-flex; align-items: center; height: 32px; padding: 0 12px;
+  background: #fff; color: #1C2430; border: 1px solid #E8EAF0; text-decoration: none;
+}
+.kpi-grid { margin-bottom: 16px; }
+.empty-orders-card, td.empty {
+  background: #fff; border-radius: 16px; color: #8B919A; text-align: center; padding: 28px 12px;
+}
+table { border-collapse: separate; border-spacing: 0; border-radius: 16px; overflow: hidden; }
+thead th { background: #F7F8FA; color: #8B919A; font-size: 12px; font-weight: 700; }
+tbody td { border-top: 1px solid #F0F1F5; }
+.page-head h1 { letter-spacing: -0.03em; }
 #launch-postback .funnel-totals span { font-size: 12px; color: #5C6570; }
 
 

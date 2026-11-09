@@ -32,7 +32,7 @@
     </div>
 
     <div class="sticky-cta">
-      <button type="button" class="dock wish" @click="doWish" aria-label="wishlist">♡<span class="lab">Save</span></button>
+      <button type="button" class="dock wish" @click="doWish" aria-label="wishlist">♡<span class="lab">收藏</span></button>
       <template v-if="isOos">
         <button type="button" class="btn disabled" disabled>{{ t('out_of_stock') || 'Sold out' }}</button>
         <button type="button" class="btn outline" @click="notifyMe" :disabled="notifyBusy">{{ notifyBusy ? "…" : "Notify me" }}</button>
@@ -67,7 +67,10 @@
       </div>
     </div>
   </div>
-  <div v-else class="empty">{{ err || t('pdp_loading') }}</div>
+  <div v-else class="empty">
+    <p>{{ err || t('pdp_loading') }}</p>
+    <router-link v-if="err" class="btn solid" to="/browse">{{ t('tab_browse') }}</router-link>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -296,6 +299,7 @@ async function notifyMe() {
   &.solid { background: #F96141; color: #fff; border: 0; }
 }
 .empty { padding: 80px 20px; text-align: center; color: $hb-muted; }
+.empty .btn { display: inline-flex; margin-top: 12px; padding: 0 16px; align-items: center; text-decoration: none; }
 .sheet-mask { position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 60; display: flex; align-items: flex-end; }
 .sheet { width: 100%; background: #fff; border-radius: 18px 18px 0 0; padding: 16px 16px calc(16px + env(safe-area-inset-bottom)); }
 .sheet-title { font-weight: 740; font-size: 16px; margin-bottom: 10px; }

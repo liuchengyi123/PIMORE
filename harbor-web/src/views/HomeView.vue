@@ -250,7 +250,7 @@ onMounted(async () => {
 .cat {
   background: #fff; border-radius: 16px; padding: 12px 6px 10px;
   display: flex; flex-direction: column; align-items: center; gap: 8px;
-  box-shadow: 0 6px 16px rgba(28,36,48,0.04); color: #1C2430;
+  box-shadow: 0 8px 18px rgba(28,36,48,0.05); color: #1C2430;
   font-size: 12px; font-weight: 650;
 }
 .bubble {

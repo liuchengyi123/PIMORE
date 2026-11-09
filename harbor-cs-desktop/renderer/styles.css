@@ -461,9 +461,14 @@ input:focus, textarea:focus { outline: 2px solid rgba(224,82,46,0.35); border-co
 /* Function S03-S14 richer states */
 .empty-selection, .empty-inbox, .empty-closed {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 8px; padding: 48px 24px; text-align: center; color: var(--ink, #0F2744);
+  gap: 8px; padding: 48px 24px; text-align: center; color: #1C2430; height: 100%;
 }
-.empty-ico { font-size: 28px; line-height: 1; opacity: .85; }
+.empty-ico {
+  width: 64px; height: 64px; border-radius: 20px; background: #FFF1EC;
+  display: grid; place-items: center; font-size: 28px; line-height: 1;
+}
+.room-item.active { background: #FFF6F3; box-shadow: inset 3px 0 0 #F96141; }
+.chat-head { background: #fff; }
 .ai-banner {
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
   padding: 8px 14px; background: #E0F2FE; border-bottom: 1px solid var(--line);
