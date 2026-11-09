@@ -56,6 +56,7 @@
         <article v-for="(item, i) in flash" :key="item.name" class="mini" @click="openSlot(i)">
           <div class="shot">
             <img :src="item.image" alt="" />
+            <span class="range">$1–$10</span>
           </div>
           <div class="nm">{{ item.name }}</div>
           <div class="pr">
@@ -78,6 +79,7 @@
         <article v-for="(item, i) in arrivals" :key="item.name" class="mini" @click="openSlot(i + 4)">
           <div class="shot">
             <img :src="item.image" alt="" />
+            <span class="range">$1–$10</span>
           </div>
           <div class="nm">{{ item.name }}</div>
           <div class="pr">
@@ -100,6 +102,7 @@
         <article v-for="(item, i) in picks" :key="item.name" class="wide" @click="openSlot(i + 8)">
           <div class="shot tall">
             <img :src="item.image" alt="" />
+            <span class="range">$1–$10</span>
           </div>
           <div class="nm">{{ item.name }}</div>
           <div class="stars">★★★★★ <span>({{ item.reviews }})</span></div>
@@ -211,7 +214,7 @@ onMounted(async () => {
 .top { display: flex; align-items: center; justify-content: space-between; }
 .brand { display: flex; align-items: center; gap: 8px; }
 .mark {
-  width: 28px; height: 28px; border-radius: 8px; background: #FFF1EC; color: #F96141;
+  width: 32px; height: 32px; border-radius: 10px; background: #F96141; color: #fff;
   display: inline-flex; align-items: center; justify-content: center;
 }
 .logo { font-size: 24px; font-weight: 800; letter-spacing: -0.04em; line-height: 1; }
@@ -224,7 +227,7 @@ onMounted(async () => {
 }
 .search-wrap { margin-top: 16px; }
 .search-wrap :deep(.search-bar) {
-  min-height: 46px; border-radius: 14px; background: #F6F4F2; border: 0; box-shadow: none;
+  min-height: 44px; border-radius: 999px; background: #fff; border: 1px solid #EFEAE4; box-shadow: none;
 }
 .hero {
   margin-top: 16px; position: relative; min-height: 220px;
@@ -232,12 +235,12 @@ onMounted(async () => {
   background: linear-gradient(100deg, #F97855 0%, #F26A48 46%, #F7B39A 100%);
 }
 .hero-copy { position: relative; z-index: 1; padding: 18px 18px 16px; max-width: 62%; }
-.kicker { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; }
+.kicker { font-size: 11px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; }
 .hero h1 { margin: 8px 0 0; font-size: 26px; line-height: 1.12; letter-spacing: -0.03em; font-weight: 800; }
 .hero p { margin: 8px 0 0; font-size: 13px; line-height: 1.35; opacity: 0.95; }
 .cta {
-  display: inline-flex; margin-top: 14px; background: #fff; color: #1C2430;
-  border-radius: 999px; padding: 8px 14px; font-size: 13px; font-weight: 700;
+  display: inline-flex; align-items: center; margin-top: 14px; background: #fff; color: #1C2430;
+  height: 36px; border-radius: 999px; padding: 0 16px; font-size: 13px; font-weight: 700;
 }
 .dots { display: flex; gap: 5px; margin-top: 14px; }
 .dots i { width: 6px; height: 6px; border-radius: 99px; background: rgba(255,255,255,0.45); display: block; }
@@ -264,10 +267,10 @@ onMounted(async () => {
 .zap, .spark { color: #F96141; }
 .see { color: #F96141; font-size: 13px; font-weight: 700; padding-top: 4px; }
 .clock {
-  display: flex; align-items: center; gap: 6px; color: #F96141;
-  background: #FFF1EC; border-radius: 12px; padding: 6px 8px;
+  display: flex; align-items: center; gap: 4px; color: #F96141;
+  background: transparent; padding: 0;
 }
-.clock span { display: flex; flex-direction: column; align-items: center; line-height: 1; }
+.clock span { display: flex; flex-direction: column; align-items: center; line-height: 1; background: #FFF1EC; border-radius: 8px; min-width: 32px; padding: 4px 5px; }
 .clock b { font-size: 13px; }
 .clock small { font-size: 8px; letter-spacing: 0.04em; color: #C47A68; }
 .row { display: flex; gap: 10px; overflow-x: auto; margin-top: 12px; padding-bottom: 4px; scrollbar-width: none; }
