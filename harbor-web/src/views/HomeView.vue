@@ -93,7 +93,7 @@
     <section class="block">
       <div class="sec">
         <div>
-          <div class="sec-title"><UserRound :size="16" /> {{ zh ? '为你推荐' : 'Just for You' }}</div>
+          <div class="sec-title"><UserRound :size="16" class="who" /> {{ zh ? '为你推荐' : 'Just for You' }}</div>
           <div class="sec-sub">{{ zh ? '按你的喜好挑选。' : 'Based on your interests.' }}</div>
         </div>
       </div>
@@ -262,29 +262,32 @@ onMounted(async () => {
 }
 .block { margin-top: 20px; }
 .sec { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
-.sec-title { display: flex; align-items: center; gap: 6px; font-size: 17px; font-weight: 800; letter-spacing: -0.02em; }
-.sec-sub { margin-top: 2px; font-size: 12px; color: #8E949C; }
-.zap, .spark { color: #F96141; }
-.see { color: #F96141; font-size: 13px; font-weight: 700; padding-top: 4px; }
+.sec-title { display: flex; align-items: center; gap: 6px; font-size: 18px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; }
+.sec-sub { margin-top: 2px; font-size: 12px; line-height: 1.3; color: #8B919A; }
+.zap, .spark, .who { color: #F96141; }
+.see { color: #F96141; font-size: 13px; font-weight: 700; line-height: 1.1; padding-top: 2px; }
 .clock {
   display: flex; align-items: center; gap: 4px; color: #F96141;
   background: transparent; padding: 0;
 }
 .clock span { display: flex; flex-direction: column; align-items: center; line-height: 1; background: #FFF1EC; border-radius: 8px; min-width: 32px; padding: 4px 5px; }
-.clock b { font-size: 13px; }
-.clock small { font-size: 8px; letter-spacing: 0.04em; color: #C47A68; }
-.row { display: flex; gap: 12px; overflow-x: auto; margin-top: 10px; padding-bottom: 4px; scrollbar-width: none; }
+.clock b { font-size: 12px; font-weight: 800; }
+.clock small { font-size: 8px; letter-spacing: 0.04em; color: #C47A68; margin-top: 1px; }
+.row { display: flex; gap: 12px; overflow-x: auto; margin-top: 12px; padding-bottom: 4px; scrollbar-width: none; }
 .row::-webkit-scrollbar { display: none; }
 .mini, .wide { flex: 0 0 164px; cursor: pointer; }
 .shot { position: relative; border-radius: 16px; overflow: hidden; background: #F4F1EE; aspect-ratio: 1; border: 0; box-shadow: 0 8px 18px rgba(28,36,48,0.06); }
 .shot img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
 .range {
-  position: absolute; left: 8px; top: 8px; background: #fff; color: #F96141;
-  font-size: 11px; font-weight: 800; border-radius: 999px; padding: 3px 7px;
+  position: absolute; left: 8px; top: 8px; height: 20px; display: inline-flex; align-items: center;
+  background: #fff; color: #F96141; font-size: 11px; font-weight: 800; border-radius: 999px; padding: 0 8px;
 }
-.nm { margin-top: 8px; font-size: 13px; font-weight: 650; line-height: 1.3; min-height: 2.6em; color: #1C2430; }
-.pr { display: flex; align-items: center; margin-top: 4px; }
-.pr b { color: #F96141; font-size: 15px; }
+.nm {
+  margin-top: 8px; font-size: 13px; font-weight: 600; line-height: 1.25; min-height: 2.5em; color: #1C2430;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.pr { display: flex; align-items: center; margin-top: 6px; }
+.pr b { color: #F96141; font-size: 15px; font-weight: 800; letter-spacing: -0.02em; }
 .bag {
   margin-left: auto; width: 28px; height: 28px; border: 0; border-radius: 999px;
   background: #FFF1EC; color: #F96141; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
