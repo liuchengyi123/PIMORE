@@ -13,8 +13,9 @@
     </header>
 
     <div v-if="!lines.length && !saved.length" class="empty">
-      <ShoppingBag :size="40" :stroke-width="1.5" class="empty-ico" />
-      <p>{{ zh ? '购物车是空的' : t('cart_empty') }}</p>
+      <span class="empty-mark" aria-hidden="true"><ShoppingBag :size="22" :stroke-width="1.75" /></span>
+      <b>{{ zh ? '购物车是空的' : t('cart_empty') }}</b>
+      <p>{{ zh ? '去逛逛，把喜欢的加进来' : 'Browse and add something you like' }}</p>
       <router-link class="go-shop" to="/home">{{ zh ? '去逛逛' : 'Keep shopping' }}</router-link>
     </div>
 
@@ -126,6 +127,20 @@
       </div>
     </div>
     <AppTabBar active="cart" />
+    <div v-if="pendingRemove" class="confirm-mask" @click.self="pendingRemove = null">
+      <div class="confirm" role="dialog" :aria-label="zh ? '移除商品' : 'Remove item'">
+        <div class="confirm-h">
+          <b>{{ zh ? '移除' : 'Remove' }}</b>
+          <Trash2 :size="18" :stroke-width="1.75" class="confirm-ico" />
+        </div>
+        <p class="confirm-name">{{ pendingRemove.name }}</p>
+        <p class="confirm-body">{{ zh ? '确定从购物车移除这件商品？' : 'Are you sure you want to remove this item from your cart?' }}</p>
+        <div class="confirm-actions">
+          <button type="button" class="cancel" @click="pendingRemove = null">{{ zh ? '取消' : 'Cancel' }}</button>
+          <button type="button" class="ok" @click="confirmRemove">{{ zh ? '移除' : 'Remove' }}</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -166,6 +181,7 @@ const shipSub = computed(() => {
 })
 
 const saved = ref<LocalCartLine[]>([])
+const pendingRemove = ref<LocalCartLine | null>(null)
 const laterOpen = ref(false)
 const picks = ref<Product[]>([])
 const wished = ref<Set<string>>(new Set())
@@ -195,7 +211,12 @@ function bump(line: LocalCartLine, delta: number) {
   cart.setQty(line.sku, line.offer || '', line.qty + delta)
 }
 function askRemove(line: LocalCartLine) {
-  cart.setQty(line.sku, line.offer || '', 0)
+  pendingRemove.value = line
+}
+function confirmRemove() {
+  const line = pendingRemove.value
+  pendingRemove.value = null
+  if (line) cart.setQty(line.sku, line.offer || '', 0)
 }
 function saveForLater(line: LocalCartLine) {
   const hit = saved.value.find((s) => s.sku === line.sku && (s.offer || '') === (line.offer || ''))
@@ -260,12 +281,42 @@ h1 { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.03em; colo
   display: inline-flex; align-items: center; gap: 4px; border: 0; background: transparent;
   color: $hb-muted; font-size: 13px; font-weight: 650; cursor: pointer; padding: 6px 0;
 }
-.empty { text-align: center; padding: 88px 16px; color: $hb-muted; }
-.empty-ico { color: $hb-muted; opacity: 0.5; margin-bottom: 10px; }
-.go-shop {
-  display: inline-flex; margin-top: 16px; height: 44px; padding: 0 18px; align-items: center;
-  border-radius: 999px; background: $hb-coral; color: #fff; font-weight: 750;
+.empty {
+  margin-top: 8px; background: #fff; border-radius: 16px; text-align: center;
+  padding: 22px 16px 16px; box-shadow: $hb-shadow-soft; color: $hb-ink;
 }
+.empty-mark {
+  width: 44px; height: 44px; margin: 0 auto 8px; border-radius: 14px; background: #FFF1EC; color: $hb-coral;
+  display: grid; place-items: center;
+}
+.empty b { display: block; font-size: 16px; line-height: 1.25; }
+.empty p { margin: 4px 0 0; font-size: 13px; line-height: 1.35; color: $hb-muted; }
+.go-shop {
+  display: inline-flex; margin-top: 12px; height: 40px; padding: 0 16px; align-items: center;
+  border-radius: 999px; background: $hb-coral; color: #fff; font-weight: 750; font-size: 14px;
+}
+.confirm-mask {
+  position: fixed; inset: 0; z-index: 120; background: rgba(28, 36, 48, 0.45);
+  display: grid; place-items: center; padding: 16px;
+}
+.confirm {
+  width: min(100%, 320px); background: #fff; border-radius: 16px; padding: 12px 14px;
+  box-shadow: 0 12px 32px rgba(28, 36, 48, 0.16);
+}
+.confirm-h {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-bottom: 8px; border-bottom: 1px solid $hb-line;
+}
+.confirm-h b { font-size: 17px; line-height: 1.2; }
+.confirm-ico { color: $hb-coral; }
+.confirm-name { margin: 10px 0 0; text-align: center; font-size: 15px; font-weight: 700; line-height: 1.3; }
+.confirm-body { margin: 6px 0 0; text-align: center; font-size: 13px; line-height: 1.35; color: #5C6570; }
+.confirm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.cancel, .ok {
+  height: 40px; border-radius: 12px; font-weight: 750; font-size: 15px; cursor: pointer;
+}
+.cancel { background: #fff; border: 1.5px solid $hb-coral; color: $hb-coral; }
+.ok { background: $hb-coral; border: 0; color: #fff; }
 .ship {
   background: #FFF1EC; border-radius: 14px; padding: 9px 12px 7px; margin-bottom: 10px;
 }
