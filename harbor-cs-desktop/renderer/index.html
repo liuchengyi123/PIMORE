@@ -207,14 +207,16 @@
             <div id="cannedBar" class="canned-bar" hidden></div>
             <div id="emojiBar" class="emoji-bar" hidden></div>
             <div class="composer-row">
-              <button id="emojiToggle" class="btn ghost emoji-toggle" type="button" title="表情">
-                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 3a9 9 0 1 0 9 9 9 9 0 0 0-9-9zm-3.2 7.2a1.2 1.2 0 1 1 1.2 1.2 1.2 1.2 0 0 1-1.2-1.2zm6.4 0a1.2 1.2 0 1 1 1.2 1.2 1.2 1.2 0 0 1-1.2-1.2zM12 17.2a4.6 4.6 0 0 1-4-2.2h8a4.6 4.6 0 0 1-4 2.2z"/></svg>
-              </button>
-              <button id="imageToggle" class="btn ghost image-toggle" type="button" title="发送图片">
-                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M5 5.5A2.5 2.5 0 0 1 7.5 3h9A2.5 2.5 0 0 1 19 5.5v9.2l-3.2-3.2a1.5 1.5 0 0 0-2.1 0L9 16.2 7.6 14.8a1.5 1.5 0 0 0-2.1 0L5 15.3V5.5zM8 8.2A1.3 1.3 0 1 0 9.3 9.5 1.3 1.3 0 0 0 8 8.2zM5 18.5V17l1.6-1.6L9 17.8l4.8-4.8L19 17.2v1.3A2.5 2.5 0 0 1 16.5 21h-9A2.5 2.5 0 0 1 5 18.5z"/></svg>
-              </button>
+              <div class="composer-field">
+                <textarea id="replyBody" rows="1" placeholder="请输入消息..."></textarea>
+                <button id="emojiToggle" class="btn ghost emoji-toggle" type="button" title="表情">
+                  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 3a9 9 0 1 0 9 9 9 9 0 0 0-9-9zm-3.2 7.2a1.2 1.2 0 1 1 1.2 1.2 1.2 1.2 0 0 1-1.2-1.2zm6.4 0a1.2 1.2 0 1 1 1.2 1.2 1.2 1.2 0 0 1-1.2-1.2zM12 17.2a4.6 4.6 0 0 1-4-2.2h8a4.6 4.6 0 0 1-4 2.2z"/></svg>
+                </button>
+                <button id="imageToggle" class="btn ghost image-toggle" type="button" title="发送图片">
+                  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M5 5.5A2.5 2.5 0 0 1 7.5 3h9A2.5 2.5 0 0 1 19 5.5v9.2l-3.2-3.2a1.5 1.5 0 0 0-2.1 0L9 16.2 7.6 14.8a1.5 1.5 0 0 0-2.1 0L5 15.3V5.5zM8 8.2A1.3 1.3 0 1 0 9.3 9.5 1.3 1.3 0 0 0 8 8.2zM5 18.5V17l1.6-1.6L9 17.8l4.8-4.8L19 17.2v1.3A2.5 2.5 0 0 1 16.5 21h-9A2.5 2.5 0 0 1 5 18.5z"/></svg>
+                </button>
+              </div>
               <input type="file" id="imagePick" accept="image/*" hidden />
-              <textarea id="replyBody" rows="2" placeholder="请输入消息，Enter 发送，Shift+Enter 换行"></textarea>
               <button class="btn primary" type="submit">发送</button>
             </div>
           </form>
@@ -322,12 +324,29 @@
         </div>
         <div id="stab-desk" class="stab-body" hidden data-figma="12:22">
           <div class="admin-cs-link">
-            <strong>全局客服设置</strong>
-            <p class="muted small">全局客服设置在后台 /admin/cs 维护，此处仅本地工作台偏好。</p>
-            <a id="openAdminCs" class="btn primary sm" href="/admin/cs" target="_blank" rel="noopener">打开后台客服设置</a>
+            <p>全局客服设置在后台 /admin/cs 维护，此处仅本地工作台偏好。</p>
+            <a id="openAdminCs" class="btn primary" href="/admin/cs" target="_blank" rel="noopener">打开后台客服设置</a>
           </div>
           <label class="chk"><input id="setCompact" type="checkbox" /> 紧凑会话列表</label>
           <label class="chk"><input id="setShowOps" type="checkbox" checked /> 显示 [ops] 系统提示</label>
+          <div class="set-row">
+            <label for="setDeskView">默认聊天视图</label>
+            <select id="setDeskView">
+              <option value="list">会话列表</option>
+              <option value="chat">当前会话</option>
+            </select>
+          </div>
+          <p class="field-hint">选择进入工作台时的默认视图。</p>
+          <div class="set-row">
+            <label for="setPageSize">每页会话数</label>
+            <select id="setPageSize">
+              <option value="10">10</option>
+              <option value="20" selected>20</option>
+              <option value="30">30</option>
+              <option value="50">50</option>
+            </select>
+          </div>
+          <p class="field-hint">设置每页显示的会话数量。</p>
         </div>
         <div class="modal-actions">
           <button type="button" id="settingsCancel" class="btn ghost">取消</button>

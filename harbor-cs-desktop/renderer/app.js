@@ -51,7 +51,25 @@ const state = {
   orderFilter: 'all',
   openCount: 0,
   closedCount: 0,
+  deskViewApplied: false,
 };
+
+const DEFAULT_CANNED = ['商品尺码说明', '发货时间说明', '退换货政策', '发票相关问题', '感谢您的咨询', '帮您催一下物流', '其他问题'];
+
+function cannedLines() {
+  let raw = null;
+  try { raw = localStorage.getItem('cs_canned'); } catch (_) {}
+  if (raw == null || raw === '') {
+    if (raw === '') return [];
+    return DEFAULT_CANNED.slice();
+  }
+  return String(raw).split('\n').map((s) => s.trim()).filter(Boolean);
+}
+
+function pageSize() {
+  const n = Number(localStorage.getItem('cs_page_size') || 20);
+  return n > 0 ? n : 20;
+}
 
 function esc(s) {
   return String(s ?? '')
@@ -143,10 +161,7 @@ function showCtx(name) {
 function renderCannedBar() {
   const bar = document.getElementById('cannedBar');
   if (!bar) return;
-  let lines = [];
-  try {
-    lines = String(localStorage.getItem('cs_canned') || '').split('\n').map((s) => s.trim()).filter(Boolean);
-  } catch (_) {}
+  const lines = cannedLines();
   if (!deskPref('cs_canned_on', true) || !lines.length) {
     bar.hidden = true;
     bar.innerHTML = '';
@@ -154,8 +169,7 @@ function renderCannedBar() {
   }
   bar.hidden = false;
   bar.innerHTML = '<span class="canned-label">快捷回复</span>' + lines.slice(0, 8).map((line) => {
-    const label = line.length > 18 ? line.slice(0, 18) + '…' : line;
-    return `<button type="button" data-canned="${esc(line)}">${esc(label)}</button>`;
+    return `<button type="button" data-canned="${esc(line)}">${esc(line)}</button>`;
   }).join('');
 }
 
@@ -165,6 +179,7 @@ function applyDeskPrefs() {
   document.body.classList.toggle('cs-compact', compact);
   renderCannedBar();
   if (state.messages && state.messages.length) renderMessages();
+  if (state.rooms && state.rooms.length && typeof renderRooms === 'function') renderRooms();
 }
 
 function swapProduct(p) {
@@ -289,7 +304,10 @@ function renderRooms() {
   if (inboxEmpty) inboxEmpty.hidden = true;
   if (closedEmpty) closedEmpty.hidden = true;
   if (chatEmpty && !state.activeId) chatEmpty.hidden = false;
-  roomList.innerHTML = rooms
+  const limit = pageSize();
+  const shown = rooms.slice(0, limit);
+  const more = rooms.length - shown.length;
+  roomList.innerHTML = shown
     .map((r) => {
       const active = r.id === state.activeId ? 'active' : '';
       const unread = Number(r.unread_staff || 0);
@@ -302,7 +320,7 @@ function renderRooms() {
       const initial = String(title).trim().slice(0, 1) || '访';
       return `<button type="button" class="room-item ${active}" data-id="${esc(r.id)}"><span class="avatar">${esc(initial)}</span><span class="room-main"><span class="row"><span class="name">${esc(title)}</span><span class="time">${esc(shortTime(r.updated_at))}</span></span><span class="row"><span class="preview">${esc(preview)}</span>${badge}</span><span class="room-status ${statusClass}">${statusLabel}</span></span></button>`;
     })
-    .join('');
+    .join('') + (more > 0 ? `<div class="page-more muted small">还有 ${more} 个会话</div>` : '');
   roomList.querySelectorAll('.room-item .avatar').forEach((el) => {
     const name = el.parentElement && el.parentElement.querySelector('.name');
     paintAvatar(el, name ? name.textContent : el.textContent);
@@ -322,7 +340,7 @@ function deskBase() {
 function mediaUrl(path) {
   const p = String(path || '').trim();
   if (!p) return '';
-  if (/^https?:\/\//i.test(p)) return p;
+  if (/^(https?:|data:)/i.test(p)) return p;
   return deskBase() + (p.startsWith('/') ? p : '/' + p);
 }
 
@@ -349,10 +367,12 @@ function parseOrderBody(body) {
 function renderBodyHtml(body) {
   const b = String(body || '');
   if (b.startsWith('[img]')) {
-    const url = b.slice(5).trim().split(/\s+/)[0] || '';
+    const rest = b.slice(5).trim();
+    const url = rest.split(/\s+/)[0] || '';
+    const caption = rest.slice(url.length).trim();
     const src = mediaUrl(url);
     if (!src) return esc(b);
-    return `<div class="img-bubble"><img class="bubble-img" src="${esc(src)}" alt="图片" data-full="${esc(src)}" /><span class="img-cap">图片</span></div>`;
+    return `<div class="img-bubble"><img class="bubble-img" src="${esc(src)}" alt="${esc(caption || '图片')}" data-full="${esc(src)}" /><div class="img-cap">${esc(caption || '图片')}</div></div>`;
   }
   const prod = parseProductBody(b);
   if (prod) {
@@ -418,14 +438,16 @@ function renderMessages() {
       let rawBody = String(m.body || '');
       const ops = role === 'system' && rawBody.startsWith('[ops]');
       if (ops) rawBody = rawBody.slice(5);
-      const isSpecial = rawBody.startsWith('[img]') || rawBody.startsWith('[product]') || rawBody.startsWith('[order]');
-      if (!isSpecial && role === 'user' && m.body_user_original && m.body_user_original !== m.body) {
-        extra = `<div class="orig">原文：${esc(m.body_user_original)}</div>`;
-      } else if (!isSpecial && role === 'staff' && m.translated && m.body_original && m.lang && m.lang !== 'zh') {
-        extra = `<div class="orig">已译 ${esc(m.lang)}：${esc(m.body_original)}</div>`;
+      const isImg = rawBody.startsWith('[img]');
+      const isCard = rawBody.startsWith('[product]') || rawBody.startsWith('[order]');
+      if (!isImg && !isCard && role === 'user' && m.body_user_original && m.body_user_original !== m.body) {
+        const lang = m.lang || m.user_lang || 'zh';
+        extra = `<div class="tr-cap"><span class="tr-mark">译</span><span class="tr-lines"><span>原文：${esc(m.body_user_original)}</span><span>已译为 ${esc(lang)}</span></span></div>`;
+      } else if (!isImg && !isCard && role === 'staff' && m.translated && m.body_original && m.lang && m.lang !== 'zh') {
+        extra = `<div class="tr-cap"><span class="tr-mark">译</span><span class="tr-lines"><span>已译为 ${esc(m.lang)}</span><span>${esc(m.body_original)}</span></span></div>`;
       }
       const showBody = ops ? rawBody : m.body;
-      const cls = `bubble ${role}${isSpecial ? ' cardish' : ''}${ops ? ' ops' : ''}`;
+      const cls = `bubble ${role}${isCard ? ' cardish' : ''}${isImg ? ' img-card' : ''}${ops ? ' ops' : ''}`;
       return `<div class="${cls}">${renderBodyHtml(showBody)}${extra}<span class="meta">${esc(who)} · ${esc(fmtTime(m.created_at))}</span></div>`;
     })
     .join('');
@@ -829,6 +851,10 @@ async function refreshInbox() {
   }
   state.knownUnread = 1;
   renderRooms();
+  if (!state.deskViewApplied && !state.activeId && localStorage.getItem('cs_desk_view') === 'chat' && state.rooms.length) {
+    state.deskViewApplied = true;
+    openRoom(state.rooms[0].id);
+  }
   return res;
 }
 
@@ -906,7 +932,14 @@ function notifyTyping(on) {
   typingSent = flag;
   window.csDesk.setTyping({ roomId: state.activeId, typing: flag }).catch(() => {});
 }
+function fitComposer() {
+  if (!replyBody) return;
+  replyBody.style.height = '36px';
+  replyBody.style.height = Math.min(72, Math.max(36, replyBody.scrollHeight)) + 'px';
+}
+
 function onComposerInput() {
+  fitComposer();
   if (!state.activeId) return;
   notifyTyping(true);
   clearTimeout(typingTimer);
@@ -1483,8 +1516,10 @@ if (skuSearch && skuSearchResults) {
       const desk = $('setDesktop'); if (desk) desk.checked = localStorage.getItem('cs_desktop') !== '0';
       const compact = $('setCompact'); if (compact) compact.checked = localStorage.getItem('cs_compact') === '1';
       const ops = $('setShowOps'); if (ops) ops.checked = localStorage.getItem('cs_ops') !== '0';
-      const canned = $('setCanned'); if (canned) canned.value = localStorage.getItem('cs_canned') || '';
+      const canned = $('setCanned'); if (canned) canned.value = localStorage.getItem('cs_canned') ?? DEFAULT_CANNED.join('\n');
       const cannedOn = $('setCannedOn'); if (cannedOn) cannedOn.checked = localStorage.getItem('cs_canned_on') !== '0';
+      const view = $('setDeskView'); if (view) view.value = localStorage.getItem('cs_desk_view') || 'list';
+      const size = $('setPageSize'); if (size) size.value = localStorage.getItem('cs_page_size') || '20';
       const admin = $('openAdminCs');
       if (admin) admin.href = (typeof deskBase === 'function' ? deskBase() : '') + '/admin/cs';
     } catch (_) {}
@@ -1517,6 +1552,8 @@ if (skuSearch && skuSearchResults) {
       localStorage.setItem('cs_ops', $('setShowOps')?.checked ? '1' : '0');
       localStorage.setItem('cs_canned', $('setCanned')?.value || '');
       localStorage.setItem('cs_canned_on', $('setCannedOn')?.checked ? '1' : '0');
+      localStorage.setItem('cs_desk_view', $('setDeskView')?.value || 'list');
+      localStorage.setItem('cs_page_size', $('setPageSize')?.value || '20');
       if ($('agentName') && $('setNick')?.value) $('agentName').textContent = $('setNick').value;
       if ($('agentTitle') && $('setTitle')) $('agentTitle').textContent = $('setTitle').value;
       paintAvatar($('agentAvatar'), $('setNick')?.value || $('agentName')?.textContent || '客');
@@ -1567,6 +1604,7 @@ if (skuSearch && skuSearchResults) {
     const glue = v && start && !/\s$/.test(v.slice(0, start)) ? ' ' : '';
     replyBody.value = v.slice(0, start) + glue + line + v.slice(start);
     replyBody.focus();
+    fitComposer();
   });
   $('pwToggle')?.addEventListener('click', () => {
     const input = $('password');
