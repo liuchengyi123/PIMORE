@@ -15,6 +15,7 @@
             <path d="M62 30 L62 18 L90 30 L90 48" fill="none" stroke="#F96141" stroke-width="2" />
             <rect x="40" y="68" width="30" height="20" rx="2" fill="#1C3148" />
             <text x="55" y="81" text-anchor="middle" font-size="8" font-weight="700" fill="#fff">Pimo</text>
+            <g transform="translate(-18,6)">
             <ellipse cx="168" cy="108" rx="30" ry="6" fill="#E8E0D8" />
             <path d="M142 52 h52 v46 c0 10-12 16-26 16 s-26-6-26-16 Z" fill="#F7F2EC" />
             <ellipse cx="168" cy="52" rx="26" ry="7" fill="#EFE6DE" />
@@ -23,6 +24,7 @@
             <rect x="165" y="34" width="6" height="16" rx="1" fill="#E7D3C2" />
             <path d="M168 22c5 5 6 10 0 13c-6-3-5-8 0-13z" fill="#FFB020" />
             <path d="M168 26c2 2 2 4 0 5c-2-1-2-3 0-5z" fill="#FFF4D2" />
+            </g>
           </svg>
         </div>
         <h2 class="gift-name">{{ giftName }}</h2>
@@ -375,8 +377,8 @@ watch(kind, (k) => { if (k === 'gift') loadGift() })
   width: min(100%, 360px); background: #fff; border-radius: 22px; position: relative;
   padding: 22px 22px 12px; box-shadow: 0 18px 48px rgba(28, 36, 48, 0.18); text-align: center;
 }
-.card.gift { width: min(100%, 340px); padding: 12px 20px 8px; text-align: left; }
-.card.checkin { padding: 26px 24px 8px; }
+.card.gift { width: min(100%, 328px); padding: 8px 16px 4px; text-align: left; }
+.card.checkin { padding: 14px 18px 4px; }
 .card.invite { padding: 20px 24px 8px; }
 .card.locale { width: min(100%, 336px); padding: 16px 14px 14px; }
 .card.pwa:not(.ios) { background: #10243A; color: #fff; padding: 22px 24px 8px; border-radius: 20px; }
@@ -397,20 +399,31 @@ h2 { margin: 0 0 8px; font-size: 26px; line-height: 1.22; letter-spacing: -0.03e
 .card.pwa:not(.ios) .kicker { margin-top: 12px; font-size: 13px; font-weight: 600; letter-spacing: 0; }
 .card.pwa:not(.ios) h2 { color: #fff; font-size: 30px; line-height: 1.15; margin: 0 0 10px; }
 .card.pwa:not(.ios) .sub { max-width: 280px; margin: 0 auto 18px; font-size: 15px; line-height: 1.45; }
-.card.checkin .kicker { font-size: 12px; letter-spacing: 0.16em; font-weight: 750; margin: 10px 0 8px; }
-.card.checkin h2 { font-size: 26px; line-height: 1.2; max-width: 240px; margin: 0 auto 18px; }
+.card.checkin .kicker { font-size: 11px; letter-spacing: 0.14em; font-weight: 800; margin: 4px 0 2px; }
+.card.checkin h2 { font-size: 22px; line-height: 1.2; max-width: 220px; margin: 0 auto 8px; }
+.card.checkin .cal-art { margin: 0; }
+.card.checkin .cal-art svg { width: 42px; height: 42px; }
+.card.checkin .stamps { gap: 8px 6px; margin: 0 0 10px; }
+.card.checkin .stamp { width: 22px; height: 22px; border-width: 1.75px; }
+.card.checkin .stamp-badge svg { width: 24px; height: 24px; }
+.card.checkin .later { height: 34px; margin-top: 0; }
 .card.invite .kicker { font-size: 16px; font-weight: 750; letter-spacing: 0; margin: 8px 0 6px; }
 .card.invite h2 { font-size: 24px; line-height: 1.25; margin: 0 0 10px; }
 .card.invite .sub { max-width: 268px; margin: 0 auto 18px; font-size: 15px; line-height: 1.5; }
-.card.gift h2 { font-size: 20px; line-height: 1.3; font-weight: 780; text-align: left; margin: 0 0 6px; letter-spacing: -0.02em; }
+.card.gift h2 { font-size: 18px; line-height: 1.25; font-weight: 800; text-align: left; margin: 0 0 2px; letter-spacing: -0.02em; }
+.card.gift .grab { margin: 0 auto 6px; }
+.card.gift .gift-stage { margin: 6px 0 2px; }
+.card.gift .gift-art { width: 188px; height: 100px; }
+.card.gift .gift-meta { margin: 0 0 10px; }
+.card.gift .later { height: 34px; margin-top: 0; }
 .card.locale h2 { font-size: 22px; line-height: 1.2; margin: 0 28px 4px; }
 .card.locale .sub { font-size: 13px; line-height: 1.35; margin: 0 8px 10px; color: #5C6570; }
 .card.locale .x { top: 8px; right: 8px; width: 28px; height: 28px; font-size: 22px; }
 .sub { margin: 0 0 16px; color: #5C6570; line-height: 1.45; font-size: 15px; }
 .center { text-align: center; }
 .gift-name { text-align: left; }
-.gift-meta { display: flex; align-items: baseline; gap: 8px; margin: 0 0 18px; color: #8B919A; font-size: 13px; font-weight: 500; }
-.gift-meta b { margin-left: auto; color: #FF6B4A; font-size: 22px; font-weight: 800; letter-spacing: 0.06em; }
+.gift-meta { display: flex; align-items: baseline; gap: 6px; margin: 0 0 18px; color: #8B919A; font-size: 12px; font-weight: 500; }
+.gift-meta b { margin-left: auto; color: #FF6B4A; font-size: 20px; font-weight: 800; letter-spacing: 0.04em; }
 .gift-meta s { color: #B0B6BE; font-size: 13px; }
 .ok, .later {
   display: flex; align-items: center; justify-content: center; width: 100%;
