@@ -44,33 +44,42 @@ function go(path: string) {
 
 <style lang="scss" scoped>
 @import '@/styles/theme.scss';
-.tab-spacer { height: 92px; }
+.tab-spacer { height: calc(56px + env(safe-area-inset-bottom)); }
 .tab-bar {
   position: fixed;
-  left: 14px; right: 14px;
-  bottom: calc(10px + env(safe-area-inset-bottom));
-  height: 64px;
-  border-radius: 24px;
-  background: rgba(255,255,255,0.92);
-  border: 1px solid rgba(255,255,255,0.7);
-  display: flex; align-items: center; justify-content: space-around;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(56px + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  background: $hb-white;
+  border-top: 1px solid $hb-line;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-around;
   z-index: 100;
-  backdrop-filter: blur(18px);
-  box-shadow: $hb-shadow-float;
 }
 .tab {
   position: relative;
-  width: 68px; border: 0; background: transparent; padding: 6px 0; cursor: pointer;
+  flex: 1;
+  max-width: 88px;
+  border: 0;
+  background: transparent;
+  padding: 8px 0 6px;
+  cursor: pointer;
   color: $hb-muted;
-  display: flex; flex-direction: column; align-items: center; gap: 2px;
-  &.on { color: $hb-forest; }
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  &.on { color: $hb-coral; }
 }
 .ico { display: block; }
 .label { display: block; font-size: 10px; font-weight: 680; letter-spacing: 0.01em; }
 .badge {
-  position: absolute; top: 2px; right: 12px;
+  position: absolute; top: 4px; right: calc(50% - 22px);
   min-width: 16px; height: 16px; border-radius: 999px; padding: 0 4px;
-  background: $hb-price; color: #fff; font-size: 10px; font-weight: 700;
+  background: $hb-coral; color: #fff; font-size: 10px; font-weight: 700;
   display: flex; align-items: center; justify-content: center;
 }
 </style>

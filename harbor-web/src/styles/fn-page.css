@@ -1,11 +1,11 @@
-/* Harbor Function mobile tokens — visual rebuild */
+/* Harbor Function mobile tokens — Pimo coral */
 :root {
-  --fn-ink: #0F2744;
-  --fn-teal: #0E7490;
-  --fn-amber: #B45309;
-  --fn-sand: #F7F4EF;
-  --fn-line: #E8E4DC;
-  --fn-muted: #6B7280;
+  --fn-ink: #1B2B4A;
+  --fn-teal: #FF6B4A;
+  --fn-amber: #FF6B4A;
+  --fn-sand: #F4F7FB;
+  --fn-line: #E7ECF3;
+  --fn-muted: #8B95A7;
   --fn-surface: #FFFFFF;
 }
 .fn-page {

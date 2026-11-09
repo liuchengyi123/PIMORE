@@ -2,29 +2,29 @@
    Function navy #0F2744 / teal #0E7490 / sand #F7F4EF
 */
 :root {
-  --brand: #0F2744;
-  --brand-2: #0E7490;
-  --brand-soft: #E0F2FE;
-  --brand-ink: #0F2744;
-  --bg: #F7F4EF;
+  --brand: #FF6B4A;
+  --brand-2: #F04E32;
+  --brand-soft: #FFF1EC;
+  --brand-ink: #1B2B4A;
+  --bg: #F4F7FB;
   --surface: #FFFFFF;
-  --line: #E2E6EE;
+  --line: #E7ECF3;
   --line-strong: #D7DBE2;
-  --text: #0F2744;
-  --muted: #5C6570;
-  --muted-2: #8B93A0;
+  --text: #1B2B4A;
+  --muted: #8B95A7;
+  --muted-2: #8B95A7;
   --danger: #B91C1C;
   --danger-soft: #FEE2E2;
   --warn: #B45309;
   --warn-soft: #FFF7ED;
   --ok: #047857;
   --ok-soft: #D1FAE5;
-  --shadow: 0 1px 2px rgba(15, 39, 68, 0.04), 0 8px 24px rgba(15, 39, 68, 0.06);
-  --radius: 12px;
+  --shadow: 0 10px 30px rgba(27, 43, 74, 0.06);
+  --radius: 16px;
   --radius-sm: 8px;
   --side-w: 220px;
   --top-h: 52px;
-  --font: Inter, "Segoe UI", "PingFang SC", "Microsoft YaHei", ui-sans-serif, system-ui, sans-serif;
+  --font: "Plus Jakarta Sans", Inter, "Noto Sans SC", "Segoe UI", "PingFang SC", "Microsoft YaHei", ui-sans-serif, system-ui, sans-serif;
   --mono: ui-monospace, "SF Mono", Consolas, monospace;
 }
 
@@ -1760,3 +1760,312 @@ body.admin-launch .content {
 
 .launch-left { display: grid; gap: 12px; min-width: 0; }
 #launch-pixel h2 { font-size: 15px; }
+
+/* ========== PIMO theme overrides (wins over legacy admin blocks) ========== */
+:root {
+  --brand: #FF6B4A !important;
+  --brand-2: #F04E32 !important;
+  --brand-soft: #FFF1EC !important;
+  --brand-ink: #1B2B4A !important;
+  --bg: #F4F7FB !important;
+  --line: #E7ECF3 !important;
+  --text: #1B2B4A !important;
+  --muted: #8B95A7 !important;
+  --shadow: 0 10px 30px rgba(27, 43, 74, 0.06) !important;
+  --radius: 16px !important;
+  --font: "Plus Jakarta Sans", Inter, "Noto Sans SC", "Segoe UI", "PingFang SC", "Microsoft YaHei", ui-sans-serif, system-ui, sans-serif !important;
+}
+
+body {
+  background: #F4F7FB !important;
+  font-family: var(--font) !important;
+  color: #1B2B4A !important;
+}
+
+.side,
+aside.side,
+aside.side nav,
+.shell > aside.side {
+  background: #fff !important;
+  color: #1B2B4A !important;
+  border-right: 1px solid #E7ECF3 !important;
+  box-shadow: none !important;
+}
+
+.side .brand,
+aside.side .brand {
+  background: #fff !important;
+  border-bottom: 1px solid #E7ECF3 !important;
+}
+
+.brand-mark {
+  background: #FF6B4A !important;
+  color: #fff !important;
+  border-radius: 12px !important;
+  box-shadow: 0 6px 16px rgba(255, 107, 74, 0.35) !important;
+}
+
+.side .brand-text strong,
+.brand-text strong {
+  color: #1B2B4A !important;
+}
+
+.side .brand-text em,
+.brand-text em {
+  color: #8B95A7 !important;
+}
+
+.side-label {
+  color: #8B95A7 !important;
+  text-transform: none !important;
+}
+
+.side a,
+aside.side a,
+.side-nav a {
+  color: #1B2B4A !important;
+  border-radius: 12px !important;
+  background: transparent !important;
+  border-left: none !important;
+}
+
+.side a:hover,
+aside.side a:hover,
+.side-nav a:hover {
+  background: #F4F7FB !important;
+  color: #1B2B4A !important;
+}
+
+.side a.on,
+aside.side a.on,
+.side-nav a.on {
+  background: #FF6B4A !important;
+  color: #fff !important;
+  font-weight: 700 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 20px rgba(255, 107, 74, 0.28) !important;
+}
+
+.nav-badge {
+  background: #FFF1EC !important;
+  color: #F04E32 !important;
+}
+
+.topbar {
+  background: #fff !important;
+  border-bottom: 1px solid #E7ECF3 !important;
+  box-shadow: 0 1px 0 rgba(27, 43, 74, 0.04) !important;
+}
+
+.work,
+.work > .content,
+.content {
+  background: #F4F7FB !important;
+}
+
+button,
+.btn,
+.login-submit {
+  background: #FF6B4A !important;
+  border-color: #FF6B4A !important;
+  color: #fff !important;
+}
+
+button:hover,
+.btn:hover,
+.login-submit:hover {
+  background: #F04E32 !important;
+  border-color: #F04E32 !important;
+}
+
+.btn.ghost,
+button.ghost {
+  background: #fff !important;
+  color: #1B2B4A !important;
+  border: 1px solid #E7ECF3 !important;
+}
+
+.ranges a.on,
+.seg-control a.on,
+.section-tabs a.on,
+.status-tabs a.on {
+  background: #FF6B4A !important;
+  color: #fff !important;
+  border-color: #FF6B4A !important;
+}
+
+.meters i,
+.bar span {
+  background: linear-gradient(90deg, #FF6B4A, #F04E32) !important;
+}
+
+.kpi-card,
+.card,
+.stat,
+.kpi {
+  border-radius: 16px !important;
+  box-shadow: 0 10px 30px rgba(27, 43, 74, 0.06) !important;
+  border-color: #E7ECF3 !important;
+}
+
+.kpi-val,
+.page-head h1,
+.topbar .page-title strong {
+  color: #1B2B4A !important;
+}
+
+/* AD01 split login */
+.login-split {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+}
+
+.login-brand {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 32px;
+  background: linear-gradient(155deg, #FF6B4A 0%, #F04E32 48%, #FF8A70 100%);
+  color: #fff;
+  overflow: hidden;
+}
+
+.login-lighthouse {
+  position: relative;
+  width: 120px;
+  height: 200px;
+  margin-bottom: 36px;
+}
+
+.login-lighthouse::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 56px;
+  height: 120px;
+  margin-left: -28px;
+  background: linear-gradient(180deg, #fff 0%, #FFF1EC 100%);
+  border-radius: 8px 8px 4px 4px;
+  box-shadow: inset 0 -8px 0 rgba(27, 43, 74, 0.08);
+}
+
+.login-lighthouse::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 18px;
+  width: 88px;
+  height: 88px;
+  margin-left: -44px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(255, 241, 236, 0.55) 45%, transparent 70%);
+  border-radius: 50%;
+  animation: pimo-beam 4s ease-in-out infinite;
+}
+
+@keyframes pimo-beam {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.06); }
+}
+
+.login-brand-copy {
+  text-align: center;
+  z-index: 1;
+}
+
+.login-brand-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.22);
+  font-weight: 800;
+  font-size: 20px;
+}
+
+.login-brand h2 {
+  margin: 0 0 8px;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.login-tagline {
+  margin: 0;
+  font-size: 16px;
+  opacity: 0.92;
+}
+
+.login-panel-wrap {
+  display: grid;
+  place-items: center;
+  padding: 32px 24px;
+  background: #F4F7FB;
+}
+
+.login-panel.login-card {
+  width: min(420px, 100%);
+  margin: 0;
+  padding: 32px 28px 28px;
+  border-radius: 16px;
+  border: 1px solid #E7ECF3;
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(27, 43, 74, 0.06);
+}
+
+.login-panel h1 {
+  margin: 0 0 6px;
+  font-size: 24px;
+  font-weight: 800;
+  color: #1B2B4A;
+}
+
+.login-panel .lead {
+  margin: 0 0 20px;
+  color: #8B95A7;
+  font-size: 14px;
+}
+
+.login-remember {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500 !important;
+  color: #1B2B4A !important;
+}
+
+.login-remember input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #FF6B4A;
+}
+
+.login-submit {
+  width: 100%;
+  height: 44px;
+  margin-top: 8px;
+  border-radius: 12px;
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .login-split {
+    grid-template-columns: 1fr;
+  }
+  .login-brand {
+    min-height: 220px;
+    padding: 32px 20px;
+  }
+  .login-lighthouse {
+    width: 80px;
+    height: 140px;
+    margin-bottom: 20px;
+  }
+}
+/* ========== /PIMO ========== */

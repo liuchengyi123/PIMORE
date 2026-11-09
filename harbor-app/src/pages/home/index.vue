@@ -1,79 +1,95 @@
 <template>
-  <view class="page">
+  <view class="page" data-figma="1:5">
     <view class="sticky-top">
       <view class="brand-row">
-        <view>
-          <text class="logo">Harbor <text class="sg">small goods</text></text>
-          <text class="tagline">{{ t('home_tagline') }}</text>
+        <view class="brand">
+          <view class="mark" aria-hidden="true" />
+          <view>
+            <text class="logo">Pimo</text>
+            <text class="tagline">Better Homes. Happier Days.</text>
+          </view>
         </view>
-        <view class="locale" @click="goLocale">{{ localeNative }} · USD</view>
+        <view class="locale" @click="goLocale">
+          <text class="flag">🇺🇸</text>
+          <text>{{ localeNative || 'US' }}</text>
+          <text class="chev">▾</text>
+        </view>
       </view>
       <view class="search" @click="goSearch">
         <view class="search-ico">
           <view class="ring" />
           <view class="handle" />
         </view>
-        <text class="search-ph">{{ t('home_search_ph') }}</text>
+        <text class="search-ph">{{ t('home_search_ph') || 'Search home essentials...' }}</text>
       </view>
     </view>
 
     <view class="hero">
-      <view class="hero-veil" />
-      <view class="hero-inner">
-        <text class="hero-kicker">{{ t('home_hero_kicker') }}</text>
-        <text class="hero-title">{{ t('home_hero_title') }}</text>
-        <text class="hero-sub">{{ t('home_hero_sub') }}</text>
-        <view class="hero-actions">
-          <view class="btn-primary" @click="scrollDeals">{{ t('home_shop_now') }}</view>
-          <view class="btn-ghost" @click="goShip">{{ t('home_how_shipping') }}</view>
+      <view class="hero-copy">
+        <text class="hero-kicker">LIMITED TIME</text>
+        <text class="hero-title">Up to 50% Off</text>
+        <text class="hero-title">Home Essentials</text>
+        <text class="hero-sub">Refresh your space, for less.</text>
+        <view class="hero-cta" @click="scrollDeals">Shop Sale →</view>
+      </view>
+      <view class="hero-art">
+        <image v-if="heroShot" class="hero-photo" :src="heroShot" mode="aspectFill" />
+        <view v-else class="hero-fallback" />
+      </view>
+      <view class="dots">
+        <view class="dot on" />
+        <view class="dot" />
+        <view class="dot" />
+        <view class="dot" />
+      </view>
+    </view>
+
+    <view class="tiles">
+      <view v-for="tile in tiles" :key="tile.id" class="tile" @click="filterCat(tile.id)">
+        <view class="tile-ico" :style="{ background: tile.bg, color: tile.fg }">
+          <view class="glyph" :class="tile.id" />
         </view>
+        <text>{{ tile.label }}</text>
       </view>
     </view>
 
     <view class="body">
-      <scroll-view scroll-x class="cats" :show-scrollbar="false">
-        <view
-          class="cat-pill"
-          :class="{ on: !activeCat }"
-          @click="filterCat('')"
-        >{{ t('cat_all') }}</view>
-        <view
-          v-for="c in categories"
-          :key="c.id"
-          class="cat-pill"
-          :class="{ on: activeCat === c.id }"
-          @click="filterCat(c.id)"
-        >
-          {{ catLabel(c.id) }}
+      <view class="section-head">
+        <view>
+          <text class="section-title"><text class="bolt">⚡</text> Flash Deals</text>
+          <text class="section-sub">Big savings. Limited time.</text>
+        </view>
+        <view class="clock-pill">
+          <HbDealClock :ends-at="dealEnds" compact />
+        </view>
+      </view>
+      <scroll-view scroll-x class="hscroll" :show-scrollbar="false">
+        <view class="hrow">
+          <HbProductCard v-for="p in flashProducts" :key="'f'+p.id" class="hcard" :product="p" plain />
         </view>
       </scroll-view>
 
-      <view class="quick quick-grid-5">
-        <view class="quick-item" @click="goSale"><view class="q-ico" style="background:#FEF3C7" /><text>{{ t('home_sale') }}</text></view>
-        <view class="quick-item" @click="goNew"><view class="q-ico" style="background:#D1FAE5" /><text>{{ t('home_new') }}</text></view>
-        <view class="quick-item" @click="goShip"><view class="q-ico" style="background:#E0F2FE" /><text>{{ t('home_flash') }}</text></view>
-        <view class="quick-item" @click="goCoupons"><view class="q-ico" style="background:#FCE7F3" /><text>{{ t('home_coupons') || 'Coupons' }}</text></view>
-        <view class="quick-item" @click="goCheckin"><view class="q-ico" style="background:#EDE9FE" /><text>{{ t('home_checkin') || 'Check-in' }}</text></view>
+      <view class="section-head">
+        <view>
+          <text class="section-title">✦ New Arrivals</text>
+          <text class="section-sub">Fresh finds for your home.</text>
+        </view>
+        <text class="see-all" @click="goNew">See All →</text>
       </view>
+      <scroll-view scroll-x class="hscroll" :show-scrollbar="false">
+        <view class="hrow">
+          <HbProductCard v-for="p in newProducts" :key="'n'+p.id" class="hcard" :product="p" plain />
+        </view>
+      </scroll-view>
 
       <view class="section-head">
         <view>
-          <text class="section-kicker">{{ t('home_curated') }}</text>
-          <text class="section-title">{{ activeCat ? catLabel(activeCat) : t('home_for_you') }}</text>
+          <text class="section-title">Just for You</text>
+          <text class="section-sub">Based on your interests.</text>
         </view>
-        <HbDealClock :label="t('deal_ends')" :ends-at="dealEnds" compact />
       </view>
-
-      <view class="sponsored" v-if="false">
-        <text class="sponsored-text">
-          <text class="sponsored-mark">Sponsored</text>
-          · Storage edit for small apartments
-        </text>
-        <text class="sponsored-open">Open</text>
-      </view>
-
       <view class="grid">
-        <HbProductCard v-for="p in products" :key="p.id" :product="p" />
+        <HbProductCard v-for="p in forYou" :key="'y'+p.id" :product="p" plain />
       </view>
     </view>
 
@@ -82,7 +98,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useI18n } from '@/composables/i18n'
 import { CATEGORIES, listProducts, listByCategory, fetchDealEnds, type Product } from '@/api/products'
 import HbProductCard from '@/components/HbProductCard.vue'
@@ -96,6 +112,19 @@ const liveSource = ref(false)
 const activeCat = ref('')
 const loadingFeed = ref(false)
 const dealEnds = ref('')
+const tiles = [
+  { id: 'kitchen', label: 'Kitchen', bg: '#FFF1EC', fg: '#FF6B4A' },
+  { id: 'storage', label: 'Storage', bg: '#E7F8EE', fg: '#2FBF71' },
+  { id: 'cleaning', label: 'Cleaning', bg: '#E6F7FA', fg: '#2BB3C7' },
+  { id: 'textile', label: 'Textile', bg: '#F0EEFF', fg: '#7C6BF2' },
+]
+const flashProducts = computed(() => products.value.slice(0, 4))
+const newProducts = computed(() => products.value.slice(4, 8))
+const forYou = computed(() => {
+  const rest = products.value.slice(8, 12)
+  return rest.length ? rest : products.value.slice(0, 2)
+})
+const heroShot = computed(() => products.value[0]?.image || '')
 
 async function loadFeed(cat = '') {
   loadingFeed.value = true
@@ -162,8 +191,9 @@ function scrollDeals() {
 
 .page {
   min-height: 100vh;
-  background: $hb-paper;
+  background: #F7F8FB;
   color: $hb-ink;
+  padding-top: env(safe-area-inset-top);
 }
 .sticky-top {
   position: sticky;
@@ -424,5 +454,108 @@ function scrollDeals() {
   font-size: 10px; font-weight: 600; color: #0F2744;
 }
 .q-ico { width: 40px; height: 40px; border-radius: 12px; }
-.page { background: #F7F4EF; padding-top: env(safe-area-inset-top); }
+.page { background: #F7F8FB; padding-top: env(safe-area-inset-top); }
+
+.sticky-top {
+  background: rgba(247, 248, 251, 0.94);
+  padding: 8px 16px 10px;
+  padding-top: calc(8px + env(safe-area-inset-top));
+}
+.brand { display: flex; align-items: center; gap: 8px; }
+.mark {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: $hb-coral;
+  position: relative;
+}
+.mark::before {
+  content: '';
+  position: absolute; left: 6px; top: 6px;
+  width: 0; height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 7px solid #fff;
+}
+.mark::after {
+  content: '';
+  position: absolute; left: 9px; top: 13px;
+  width: 10px; height: 8px;
+  background: #fff;
+  border-radius: 1px;
+}
+.logo { font-size: 22px; font-weight: 800; letter-spacing: -0.4px; line-height: 1; }
+.tagline { font-size: 11px; color: #98A2B3; margin-top: 2px; }
+.locale {
+  display: flex; align-items: center; gap: 4px;
+  background: #fff !important; color: $hb-ink !important;
+  border: 1px solid #EEF1F6; border-radius: 999px;
+  padding: 6px 10px; font-size: 12px; font-weight: 700;
+  box-shadow: none;
+}
+.chev { color: #98A2B3; font-size: 10px; }
+.search {
+  height: 40px; border-radius: 20px; background: #fff;
+  border: 1px solid #EEF1F6; box-shadow: none;
+}
+.hero {
+  margin: 8px 16px 0;
+  min-height: 156px;
+  border-radius: 18px;
+  background: linear-gradient(105deg, #FF7A5C 0%, #FF6B4A 55%, #FF8F6E 100%);
+  display: flex;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 12px 28px rgba(255, 107, 74, 0.22);
+}
+.hero-copy { position: relative; z-index: 1; padding: 16px 14px 28px; width: 62%; }
+.hero-kicker {
+  font-size: 10px; letter-spacing: 1.2px; font-weight: 700; opacity: 0.9; margin: 0;
+}
+.hero-title {
+  font-size: 22px; line-height: 1.15; font-weight: 800; letter-spacing: -0.4px;
+  margin-top: 4px; max-width: none;
+}
+.hero-sub { font-size: 12px; opacity: 0.95; margin-top: 6px; }
+.hero-cta {
+  display: inline-flex; margin-top: 12px;
+  background: #fff; color: #1B2B4A;
+  font-size: 13px; font-weight: 700;
+  border-radius: 999px; padding: 7px 14px;
+}
+.hero-art {
+  position: absolute; right: 0; top: 0; bottom: 0; width: 46%;
+}
+.hero-photo, .hero-fallback { width: 100%; height: 100%; display: block; }
+.hero-fallback { background: linear-gradient(160deg, rgba(255,255,255,.35), rgba(255,255,255,0)); }
+.dots {
+  position: absolute; left: 16px; bottom: 10px; display: flex; gap: 5px; z-index: 2;
+}
+.dot { width: 5px; height: 5px; border-radius: 99px; background: rgba(255,255,255,.55); }
+.dot.on { width: 14px; background: #fff; }
+.tiles {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+  padding: 14px 16px 4px;
+}
+.tile {
+  background: #fff; border-radius: 16px; padding: 12px 4px 10px;
+  text-align: center; font-size: 12px; font-weight: 600; color: #1B2B4A;
+  box-shadow: 0 6px 16px rgba(27, 43, 74, 0.04);
+}
+.tile-ico {
+  width: 36px; height: 36px; border-radius: 99px; margin: 0 auto 8px;
+  display: flex; align-items: center; justify-content: center;
+}
+.glyph { width: 16px; height: 16px; border: 2px solid currentColor; border-radius: 4px; }
+.section-head { align-items: center; margin: 18px 0 10px; }
+.section-title { font-size: 16px; font-weight: 800; letter-spacing: -0.2px; }
+.section-sub { display: block; margin-top: 2px; font-size: 12px; color: #98A2B3; font-weight: 500; }
+.see-all { color: #98A2B3; font-size: 13px; font-weight: 600; }
+.clock-pill {
+  background: #fff; border-radius: 12px; padding: 6px 8px;
+  box-shadow: 0 4px 12px rgba(27,43,74,.05);
+}
+.hscroll { margin: 0 -16px; }
+.hrow { display: flex; gap: 10px; padding: 0 16px 4px; }
+.hcard { width: 148px; flex: none; }
+.grid { gap: 10px; }
+.body { padding-top: 6px; }
 </style>

@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Harbor 后台</title>
-  <link rel="stylesheet" href="/static/admin.css?v=49">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+  <link rel="stylesheet" href="/static/admin.css?v=50">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=Noto+Sans+SC:wght@400;500;600;700&amp;display=swap">
 </head>
 <body class="{{ body_class|default('') }}">
 {% block screen %}
@@ -16,10 +16,10 @@
 <div class="shell">
   <aside class="side">
     <div class="brand">
-      <span class="brand-mark">H</span>
+      <span class="brand-mark">P</span>
       <div class="brand-text">
-        <strong>Harbor 后台</strong>
-        <em>Ops</em>
+        <strong>Harbor / Pimo</strong>
+        <em>后台</em>
       </div>
     </div>
     <nav class="side-nav">
@@ -68,7 +68,7 @@
       <div class="topbar-left">
         <button type="button" class="nav-toggle" id="nav-toggle" aria-label="菜单">☰</button>
         <div class="page-title">
-          <span class="topbar-meta" style="margin-right:10px">Harbor Admin · 简体中文</span>
+          <span class="topbar-meta" style="margin-right:10px">Harbor · Pimo · 简体中文</span>
           <strong>
             {% if request.url.path.startswith('/admin/stats') %}数据
             {% elif request.url.path.startswith('/admin/orders/') %}订单详情

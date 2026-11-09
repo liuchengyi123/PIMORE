@@ -70,16 +70,16 @@ const menu = [
 ]
 
 const displayName = computed(() => {
-  if (!acct.signedIn) return lang.value === 'en' ? 'Welcome to Harbor' : '欢迎来到 Harbor'
+  if (!acct.signedIn) return lang.value === 'en' ? 'Welcome to Pimo' : '欢迎来到 Pimo'
   const e = acct.email || ''
-  const local = e.split('@')[0] || 'Harbor'
+  const local = e.split('@')[0] || 'Pimo'
   return local.replace(/[._]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 })
 const initials = computed(() => {
   const n = displayName.value.trim()
   const parts = n.split(/\s+/).filter(Boolean)
   if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase()
-  return (parts[0] || 'H').slice(0, 2).toUpperCase()
+  return (parts[0] || 'P').slice(0, 2).toUpperCase()
 })
 const localePill = computed(() => {
   const c = (defaultCountry() || 'US').toUpperCase()
@@ -106,59 +106,61 @@ onMounted(async () => {
   } catch { /* guest */ }
 })
 </script>
-<style scoped>
-.page { min-height: 100vh; background: #F7F4EF; color: #0F2744; padding-bottom: 90px; }
+<style scoped lang="scss">
+@import '@/styles/theme.scss';
+.page { min-height: 100vh; background: $hb-paper; color: $hb-ink; padding-bottom: 90px; }
 .hero {
   padding: 16px 16px 18px; padding-top: calc(16px + env(safe-area-inset-top));
-  background-image: linear-gradient(172deg, #0F2744 8%, #1A3A5C 92%); color: #fff;
+  background-image: linear-gradient(172deg, $hb-coral 8%, $hb-coral-deep 92%);
+  color: #fff;
   border-bottom-left-radius: 24px; border-bottom-right-radius: 24px;
 }
 .top { display: flex; align-items: center; gap: 12px; }
 .avatar {
-  width: 52px; height: 52px; border-radius: 26px; background: #0E7490;
+  width: 52px; height: 52px; border-radius: 26px; background: rgba(255,255,255,0.22);
   display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; flex-shrink: 0;
 }
 .who { flex: 1; min-width: 0; }
 .name { font-size: 18px; font-weight: 700; }
-.email { margin-top: 2px; font-size: 12px; opacity: 0.75; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.email { margin-top: 2px; font-size: 12px; opacity: 0.8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .locale-pill {
-  border: 0; background: rgba(255,255,255,0.15); color: #fff; font-size: 11px; font-weight: 600;
+  border: 0; background: rgba(255,255,255,0.18); color: #fff; font-size: 11px; font-weight: 600;
   padding: 4px 10px; border-radius: 999px; cursor: pointer; white-space: nowrap;
 }
 .stats { display: flex; gap: 8px; margin-top: 18px; }
 .stat {
-  flex: 1; border: 0; background: rgba(255,255,255,0.1); color: #fff; border-radius: 12px; padding: 10px; cursor: pointer;
+  flex: 1; border: 0; background: rgba(255,255,255,0.12); color: #fff; border-radius: 12px; padding: 10px; cursor: pointer;
   display: flex; flex-direction: column; align-items: center; gap: 2px;
 }
 .stat b { font-size: 16px; }
-.stat span { font-size: 10px; opacity: 0.75; }
+.stat span { font-size: 10px; opacity: 0.8; }
 .login-row { margin-top: 12px; }
 .login {
-  border: 0; background: #fff; color: #0F2744; font-weight: 700; font-size: 13px;
+  border: 0; background: #fff; color: $hb-ink; font-weight: 700; font-size: 13px;
   height: 36px; padding: 0 16px; border-radius: 12px; cursor: pointer;
 }
-.card { margin: 14px 16px 0; background: #fff; border: 1px solid #E8E4DC; border-radius: 16px; overflow: hidden; }
+.card { margin: 14px 16px 0; background: #fff; border: 1px solid $hb-line; border-radius: $hb-radius-sm; overflow: hidden; }
 .ord-head { display: flex; justify-content: space-between; align-items: center; padding: 14px 14px 0; }
 .h { font-size: 14px; font-weight: 700; }
-.all { border: 0; background: transparent; color: #6B7280; font-size: 11px; cursor: pointer; }
+.all { border: 0; background: transparent; color: $hb-muted; font-size: 11px; cursor: pointer; }
 .ord-row { display: flex; padding: 12px 4px 14px; }
 .ost {
   flex: 1; border: 0; background: transparent; cursor: pointer; color: inherit;
   display: flex; flex-direction: column; align-items: center; gap: 4px;
 }
 .ic { font-size: 18px; }
-.ol { font-size: 11px; color: #6B7280; }
-.ost b { font-size: 11px; color: #0F2744; }
+.ol { font-size: 11px; color: $hb-muted; }
+.ost b { font-size: 11px; color: $hb-coral; }
 .menu .row {
   width: 100%; display: flex; justify-content: space-between; align-items: center;
-  padding: 14px; border: 0; border-bottom: 1px solid #E8E4DC; background: #fff; cursor: pointer;
-  font-size: 14px; color: #0F2744; text-align: left;
+  padding: 14px; border: 0; border-bottom: 1px solid $hb-line; background: #fff; cursor: pointer;
+  font-size: 14px; color: $hb-ink; text-align: left;
 }
 .menu .row:last-child { border-bottom: 0; }
-.chev { color: #6B7280; }
+.chev { color: $hb-muted; }
 .cs-fab {
-  position: fixed; right: 16px; bottom: 86px; z-index: 40;
-  width: 48px; height: 48px; border-radius: 24px; border: 0; background: #0F2744; color: #fff;
-  font-size: 10px; font-weight: 700; box-shadow: 0 8px 10px rgba(15,39,68,0.25); cursor: pointer;
+  position: fixed; right: 16px; bottom: 72px; z-index: 40;
+  width: 48px; height: 48px; border-radius: 24px; border: 0; background: $hb-coral; color: #fff;
+  font-size: 10px; font-weight: 700; box-shadow: 0 8px 24px rgba(255, 107, 74, 0.35); cursor: pointer;
 }
 </style>

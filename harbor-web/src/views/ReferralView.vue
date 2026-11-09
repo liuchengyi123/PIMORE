@@ -40,5 +40,5 @@ const code = computed(() => String(route.query.code || route.params.code || ''))
 .code { margin-top: 10px; font-size: 28px; font-weight: 780; color: $hb-forest; letter-spacing: 1px; }
 .note { margin-top: 10px; font-size: 13px; color: $hb-muted; line-height: 1.4; }
 
-.fn-page { --ink:#0F2744; --teal:#0E7490; --amber:#B45309; --sand:#F7F4EF; }
+.fn-page { --ink:#1B2B4A; --teal:#FF6B4A; --amber:#FF6B4A; --sand:#F4F7FB; }
 </style>

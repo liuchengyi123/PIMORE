@@ -1,8 +1,23 @@
 <template>
-  <view class="page">
-    <view class="head">
-      <text class="title">{{ t('browse_title') }}</text>
-      <text class="sub">{{ labelFor(activeCat) || t('browse_all_categories') }}{{ liveSource ? t('browse_live_suffix') : '' }}</text>
+  <view class="page" data-figma="1:2" :data-deal="dealEnds">
+    <view class="top">
+      <view>
+        <text class="word"><text class="coral">Harbor</text> / Pimo</text>
+        <text class="kicker">HOME GOODS FOR A BRIGHTER EVERYDAY</text>
+      </view>
+      <view class="tools">
+        <view class="tool" @click="goSearch">
+          <view class="mag" />
+        </view>
+        <view class="tool" @click="goCart">
+          <view class="bag" />
+          <text v-if="cartCount" class="badge">{{ cartCount > 9 ? '9+' : cartCount }}</text>
+        </view>
+      </view>
+    </view>
+    <view class="search" @click="goSearch">
+      <view class="mag sm" />
+      <text>Search home goods, decor, kitchen...</text>
     </view>
     <scroll-view scroll-x class="chips" :show-scrollbar="false">
       <view
@@ -12,35 +27,36 @@
         :class="{ on: activeCat === c || (!activeCat && c === 'All') }"
         @click="pick(c)"
       >
-        {{ labelFor(c) }}
+        {{ c === 'All' ? 'All' : labelFor(c) }}
       </view>
     </scroll-view>
 
-    <view class="deal-bar">
-      <view class="deal-copy">
-        <text class="deal-kicker">{{ t('home_sale') }}</text>
-        <text class="deal-hint">{{ t('deal_clock_hint') }}</text>
-      </view>
-      <HbDealClock :label="t('deal_ends_in')" :ends-at="dealEnds" compact />
+    <view class="sec">
+      <text class="title">Everyday essentials</text>
+      <text class="sub">Thoughtful home goods. Better living.{{ liveSource ? '' : '' }}</text>
     </view>
 
     <view class="grid">
-      <HbProductCard v-for="p in products" :key="p.id" :product="p" />
+      <HbProductCard v-for="p in products" :key="p.id" :product="p" variant="browse" plain />
     </view>
     <HbTabBar active="browse" />
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { onLoad, onShow } from '@dcloudio/uni-app'
 import { ALL_CATEGORIES, listByCategory, fetchDealEnds, type Product } from '@/api/products'
 import HbProductCard from '@/components/HbProductCard.vue'
 import HbTabBar from '@/components/HbTabBar.vue'
-import HbDealClock from '@/components/HbDealClock.vue'
 import { useI18n } from '@/composables/i18n'
+import { useCart } from '@/composables/cart'
 
 const { t, catLabel } = useI18n()
+const { count } = useCart()
+const cartCount = computed(() => count.value)
+function goSearch() { uni.navigateTo({ url: '/pages/search/index' }) }
+function goCart() { uni.reLaunch({ url: '/pages/cart/index' }) }
 
 const chipList = ['All', ...ALL_CATEGORIES.map((c) => c.id)]
 const activeCat = ref('')
@@ -155,11 +171,39 @@ onShow(() => {
   gap: 10px;
   padding-bottom: 88px;
 }
-.page { background: #F7F4EF; padding-top: env(safe-area-inset-top); }
+.page { background: #F7F8FB; padding: 12px 16px 0; padding-top: calc(10px + env(safe-area-inset-top)); }
+.top { display: flex; justify-content: space-between; align-items: flex-start; }
+.word { display: block; font-size: 22px; font-weight: 800; letter-spacing: -0.4px; color: #1B2B4A; }
+.coral { color: #FF6B4A; }
+.kicker { display: block; margin-top: 2px; font-size: 9px; letter-spacing: 0.6px; color: #98A2B3; font-weight: 700; }
+.tools { display: flex; gap: 8px; }
+.tool { width: 36px; height: 36px; border-radius: 99px; background: #fff; display: flex; align-items: center; justify-content: center; position: relative; }
+.mag, .bag { width: 16px; height: 16px; border: 1.8px solid #1B2B4A; border-radius: 99px; }
+.mag.sm { width: 14px; height: 14px; border-color: #98A2B3; flex: none; }
+.bag { border-radius: 3px 3px 5px 5px; height: 12px; margin-top: 4px; }
+.badge {
+  position: absolute; top: -2px; right: -2px; min-width: 16px; height: 16px; padding: 0 4px;
+  border-radius: 99px; background: #FF6B4A; color: #fff; font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.search {
+  margin-top: 12px; height: 40px; border-radius: 20px; background: #fff;
+  border: 1px solid #EEF1F6; display: flex; align-items: center; gap: 8px;
+  padding: 0 14px; color: #98A2B3; font-size: 13px;
+}
+.chips { margin: 12px -16px 8px; padding: 0 16px; }
+.chip {
+  background: #F1F3F7; box-shadow: none; color: #5C677A; font-weight: 600;
+  &.on { background: #FF6B4A; color: #fff; }
+}
+.sec { margin: 8px 0 12px; }
+.title { font-size: 20px; font-weight: 800; letter-spacing: -0.3px; color: #1B2B4A; }
+.sub { font-size: 13px; color: #98A2B3; }
+.grid { gap: 12px; }
 .dept-card {
   display: flex; height: 80px; background: #fff; border: 1px solid #E2E6EE;
   border-radius: 16px; overflow: hidden; margin-bottom: 10px;
 }
 .dept-swatch { width: 90px; height: 80px; }
-h2, .title { color: #0F2744; font-weight: 800; }
+h2, .title { color: #1B2B4A; font-weight: 800; }
 </style>

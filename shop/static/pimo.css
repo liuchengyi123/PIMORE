@@ -1,0 +1,202 @@
+/* PIMO storefront theme — load after shop/harbor/fn bundles */
+:root {
+  --pimo-coral: #FF6B4A;
+  --pimo-deep: #F04E32;
+  --pimo-soft: #FFF1EC;
+  --pimo-ink: #1B2B4A;
+  --pimo-muted: #8B95A7;
+  --pimo-line: #E7ECF3;
+  --pimo-bg: #F4F7FB;
+  --pimo-radius: 16px;
+  --pimo-shadow: 0 10px 30px rgba(27, 43, 74, 0.06);
+  --pimo-font: "Plus Jakarta Sans", Inter, "Noto Sans SC", system-ui, sans-serif;
+}
+
+body {
+  background: var(--pimo-bg) !important;
+  font-family: var(--pimo-font);
+}
+
+.logo,
+a.logo {
+  color: var(--pimo-ink) !important;
+}
+
+.search:focus-within {
+  border-color: var(--pimo-coral) !important;
+}
+
+.search button,
+.top .btn,
+.header .search .btn,
+.btn:not(.ghost):not(.quiet):not(.sm) {
+  background: var(--pimo-coral) !important;
+  color: #fff !important;
+}
+
+.btn:hover,
+button.btn:hover {
+  background: var(--pimo-deep) !important;
+}
+
+.cartbtn .n,
+.n.cart-count,
+.tabbar .on .n {
+  background: var(--pimo-coral) !important;
+}
+
+.navrow a.on,
+.navrow a:hover {
+  color: var(--pimo-ink) !important;
+  background: var(--pimo-soft) !important;
+}
+
+.ht:hover {
+  color: var(--pimo-ink) !important;
+  background: var(--pimo-line) !important;
+}
+
+a.card {
+  border-radius: var(--pimo-radius) !important;
+  background: #fff !important;
+  border-color: var(--pimo-line) !important;
+  box-shadow: var(--pimo-shadow) !important;
+}
+
+a.card .price,
+a.card .pr .price,
+.deal .price,
+#sku-price,
+.sku-summary .price,
+.rank .pr,
+.bcard .pr,
+.lucky-good .now {
+  color: var(--pimo-coral) !important;
+}
+
+.cta:not(.ghost),
+button.sku-go,
+.summary > a.btn,
+.place-order,
+.coupon button,
+.coupon-card .get,
+.couponstrip .go {
+  background: var(--pimo-coral) !important;
+  color: #fff !important;
+}
+
+.cta.ghost {
+  color: var(--pimo-ink) !important;
+  border-color: var(--pimo-line) !important;
+}
+
+.subcats a.on {
+  background: var(--pimo-coral) !important;
+  border-color: var(--pimo-coral) !important;
+}
+
+.header {
+  background: #fff !important;
+  border-bottom-color: var(--pimo-line) !important;
+}
+
+/* Home / event heroes */
+.fn-hero,
+.fn-hero1,
+.fn-hero2,
+.fn-hero-sale,
+.fn-hero-new,
+.fn-hero-flash {
+  background: linear-gradient(135deg, var(--pimo-coral) 0%, var(--pimo-deep) 55%, #FF8A70 100%) !important;
+  color: #fff !important;
+  border-radius: var(--pimo-radius) !important;
+}
+
+.fn-hero h1,
+.fn-hero h2,
+.fn-hero .kicker,
+.fn-hero .title {
+  color: #fff !important;
+}
+
+.fn-hero .cta,
+.fn-hero .btn,
+.fn-hero a.btn,
+.fn-hero button,
+body.fn-home-page .fn-hero .btn,
+body.fn-home-page .fn-hero a.btn {
+  background: #fff !important;
+  color: var(--pimo-coral) !important;
+  border: none !important;
+  border-radius: 999px !important;
+  font-weight: 700 !important;
+  box-shadow: 0 6px 18px rgba(27, 43, 74, 0.12) !important;
+}
+
+.fn-hero2 .cta {
+  background: rgba(255, 255, 255, 0.95) !important;
+  color: var(--pimo-deep) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+}
+
+.bgo,
+.banner .bgo {
+  background: #fff !important;
+  color: var(--pimo-coral) !important;
+}
+
+.tabbar a.on,
+.fn-tabbar-mob a.on {
+  color: var(--pimo-coral) !important;
+}
+
+.freeprog .bar i,
+.ship-card .bar i {
+  background: var(--pimo-coral) !important;
+}
+
+/* Lucky wheel accents (overrides lucky.min.css) */
+.lucky-go,
+.lucky-chip {
+  background: var(--pimo-coral) !important;
+  color: #fff !important;
+}
+
+.lucky-sheet h2,
+.lucky-kicker,
+.lucky-winpct,
+.lucky-prize,
+.lucky-clock {
+  color: var(--pimo-ink) !important;
+}
+
+.lucky-wheel {
+  background: conic-gradient(from -30deg,
+    var(--pimo-coral) 0 60deg,
+    #f7f3ea 60deg 120deg,
+    var(--pimo-coral) 120deg 180deg,
+    #f7f3ea 180deg 240deg,
+    var(--pimo-coral) 240deg 300deg,
+    #f7f3ea 300deg 360deg) !important;
+}
+
+.lucky-wheel.is-won {
+  background: conic-gradient(from -30deg,
+    #f3d48a 0 60deg,
+    #f7f3ea 60deg 120deg,
+    var(--pimo-coral) 120deg 180deg,
+    #f7f3ea 180deg 240deg,
+    var(--pimo-coral) 240deg 300deg,
+    #f7f3ea 300deg 360deg) !important;
+}
+
+.lucky-wheel .on-cream,
+.lucky-eggs button.is-win,
+.lucky-eggs button.is-miss {
+  color: var(--pimo-deep) !important;
+}
+
+.lucky-save {
+  background: var(--pimo-soft) !important;
+  color: var(--pimo-deep) !important;
+}

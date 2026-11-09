@@ -82,11 +82,11 @@ onMounted(() => {
   padding: 0 12px 0 14px;
   border-radius: $hb-radius-pill;
   background: $hb-white;
-  border: 1px solid rgba(18, 24, 22, 0.06);
+  border: 1px solid $hb-line;
   box-shadow: $hb-shadow-soft;
 }
 .search-bar.compact { min-height: 40px; padding: 0 10px 0 12px; }
-.ico { flex: 0 0 auto; color: $hb-muted; }
+.ico { flex: 0 0 auto; color: $hb-coral; }
 .input {
   flex: 1;
   min-width: 0;
@@ -97,11 +97,11 @@ onMounted(() => {
   color: $hb-ink;
   height: 44px;
 }
-.input::placeholder { color: #9AA39C; }
+.input::placeholder { color: $hb-muted; }
 .go {
   flex: 0 0 auto;
   border: 0;
-  background: $hb-forest;
+  background: $hb-coral;
   color: #fff;
   font-size: 13px;
   font-weight: 700;

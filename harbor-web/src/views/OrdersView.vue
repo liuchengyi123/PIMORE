@@ -88,18 +88,18 @@ function again(_o: OrderRow) {
 h1 { margin: 0; font-size: 17px; font-weight: 800; color: $hb-ink; }
 .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
 .tab {
-  height: 31px; padding: 0 12px; border-radius: 999px; border: 1px solid #E8E4DC; background: #fff;
+  height: 31px; padding: 0 12px; border-radius: 999px; border: 1px solid #E7ECF3; background: #fff;
   font-size: 12px; color: $hb-ink; cursor: pointer;
   &.on { background: $hb-ink; color: #fff; border-color: $hb-ink; }
 }
 .list { display: flex; flex-direction: column; gap: 10px; }
-.card { background: #fff; border: 1px solid #E8E4DC; border-radius: 16px; padding: 14px; }
+.card { background: #fff; border: 1px solid #E7ECF3; border-radius: 16px; padding: 14px; }
 .row { display: flex; align-items: center; gap: 8px; }
 .between { justify-content: space-between; }
 .oid { font-size: 11px; color: #6B7280; }
 .pill { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: #F3F4F6; color: $hb-ink; }
 .pill.paid { background: #ECFDF5; color: #047857; }
-.pill.ship { background: #E0F2FE; color: #0E7490; }
+.pill.ship { background: #E0F2FE; color: #FF6B4A; }
 .pill.pend { background: #FEF3C7; color: #B45309; }
 .thumbs { display: flex; gap: 10px; margin-top: 10px; }
 .thumbs img, .ph { width: 64px; height: 64px; border-radius: 10px; object-fit: cover; background: linear-gradient(145deg,#bae6fd,#0369a1); }
@@ -112,6 +112,6 @@ h1 { margin: 0; font-size: 17px; font-weight: 800; color: $hb-ink; }
   height: 33px; padding: 0 12px; border-radius: 12px; border: 0; background: $hb-ink; color: #fff;
   font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center;
 }
-.btn.soft { background: #fff; color: $hb-ink; border: 1px solid #E8E4DC; }
+.btn.soft { background: #fff; color: $hb-ink; border: 1px solid #E7ECF3; }
 .state { text-align: center; color: $hb-muted; padding: 40px 8px; }
 </style>

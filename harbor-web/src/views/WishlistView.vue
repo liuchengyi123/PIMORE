@@ -62,19 +62,19 @@ function add(p: Product) {
 }
 </script>
 <style scoped>
-.page { min-height: 100vh; background: #F7F4EF; color: #0F2744; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
+.page { min-height: 100vh; background: #F4F7FB; color: #1B2B4A; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
 .head { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
-.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; color: #0F2744; padding: 0 4px; cursor: pointer; }
+.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; color: #1B2B4A; padding: 0 4px; cursor: pointer; }
 .title { font-size: 17px; font-weight: 700; margin: 0; }
 .state, .gate { text-align: center; color: #6B7280; padding: 36px 8px; }
-.gate-btn { display: inline-flex; margin-top: 12px; background: #0F2744; color: #fff; padding: 12px 18px; border-radius: 999px; font-weight: 600; text-decoration: none; }
+.gate-btn { display: inline-flex; margin-top: 12px; background: #1B2B4A; color: #fff; padding: 12px 18px; border-radius: 999px; font-weight: 600; text-decoration: none; }
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.card { background: #fff; border: 1px solid #E8E4DC; border-radius: 16px; overflow: hidden; }
+.card { background: #fff; border: 1px solid #E7ECF3; border-radius: 16px; overflow: hidden; }
 .thumb { height: 130px; background: #e8e4dc; display: flex; align-items: flex-end; padding: 12px; position: relative; }
 .thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .ph { position: relative; z-index: 1; color: #fff; font-size: 11px; font-weight: 600; }
 .body { padding: 10px; }
-.nm { font-size: 13px; font-weight: 600; color: #0F2744; line-height: 1.3; min-height: 34px; }
+.nm { font-size: 13px; font-weight: 600; color: #1B2B4A; line-height: 1.3; min-height: 34px; }
 .price { margin-top: 6px; font-size: 16px; font-weight: 700; color: #B45309; }
-.add { margin-top: 8px; width: 100%; height: 33px; border-radius: 12px; border: 1px solid #E8E4DC; background: #fff; color: #0F2744; font-size: 12px; font-weight: 600; cursor: pointer; }
+.add { margin-top: 8px; width: 100%; height: 33px; border-radius: 12px; border: 1px solid #E7ECF3; background: #fff; color: #1B2B4A; font-size: 12px; font-weight: 600; cursor: pointer; }
 </style>

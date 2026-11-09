@@ -2,7 +2,9 @@
   <view class="card" @click="go">
     <view class="thumb" :style="thumbStyle">
       <image v-if="product.image" class="thumb-img" :src="product.image" mode="aspectFill" />
-      <view v-if="imageBadge" class="img-badge" :class="imageBadge.tone">
+      <view v-if="variant === 'browse'" class="heart" :class="{ on: saved }" @click.stop="saved = !saved" />
+      <view v-if="showBand && variant !== 'browse'" class="band"><text>$1–$10</text></view>
+      <view v-else-if="imageBadge" class="img-badge" :class="imageBadge.tone">
         <text>{{ imageBadge.label }}</text>
       </view>
       <view v-if="product.onlyLeft" class="only-left">
@@ -11,23 +13,30 @@
     </view>
     <view class="body">
       <text class="name">{{ product.name }}</text>
+      <text v-if="variant === 'browse'" class="cat">{{ product.category }}</text>
       <view class="price-row">
-        <text class="price">{{ money(product.price) }}</text>
-        <text v-if="product.compareAt" class="was">{{ money(product.compareAt) }}</text>
-        <text v-if="offPct" class="off-badge">{{ t('badge_off_pct', { pct: offPct }) }}</text>
+        <text class="price" :class="{ ink: variant === 'browse' }">{{ money(product.price) }}</text>
+        <text v-if="!plain && variant !== 'browse' && product.compareAt" class="was">{{ money(product.compareAt) }}</text>
+        <text v-if="!plain && variant !== 'browse' && offPct" class="off-badge">{{ t('badge_off_pct', { pct: offPct }) }}</text>
+        <view v-if="variant === 'browse'" class="add-text" @click.stop="go">Add +</view>
+        <view v-else class="add" @click.stop="go"><view class="add-ico" /></view>
       </view>
     </view>
   </view>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import type { Product } from '@/api/products'
 import { money } from '@/api/products'
 import { useI18n } from '@/composables/i18n'
 
 const { t } = useI18n()
-const props = defineProps<{ product: Product }>()
+const props = withDefaults(defineProps<{ product: Product; plain?: boolean; variant?: 'shelf' | 'browse' }>(), {
+  variant: 'shelf',
+})
+const saved = ref(false)
+const showBand = computed(() => props.product.price > 0 && props.product.price <= 10)
 
 const palette = [
   'linear-gradient(160deg, #E8F1EC 0%, #D5E4DB 100%)',
@@ -144,14 +153,73 @@ function go() {
   margin-top: 8px;
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 6px 8px;
 }
 .price {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 800;
-  letter-spacing: -0.4px;
-  color: $hb-ink;
+  letter-spacing: -0.3px;
+  color: $hb-coral;
+}
+.band {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  z-index: 1;
+  padding: 2px 6px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.94);
+  color: $hb-coral;
+  font-size: 10px;
+  font-weight: 800;
+}
+.add {
+  margin-left: auto;
+  width: 28px;
+  height: 28px;
+  border-radius: 99px;
+  background: $hb-coral;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+.add-ico {
+  width: 12px;
+  height: 10px;
+  border: 1.6px solid #fff;
+  border-radius: 2px 2px 3px 3px;
+  position: relative;
+}
+.price.ink { color: $hb-ink; font-size: 16px; }
+.cat { display: block; margin-top: 2px; font-size: 12px; color: #98A2B3; }
+.heart {
+  position: absolute; right: 8px; top: 8px; z-index: 2;
+  width: 22px; height: 22px; border-radius: 99px; background: rgba(255,255,255,.92);
+}
+.heart::before {
+  content: '';
+  position: absolute; left: 6px; top: 6px;
+  width: 8px; height: 8px;
+  border: 1.6px solid #98A2B3;
+  border-radius: 8px 8px 2px 8px;
+  transform: rotate(-45deg);
+}
+.heart.on::before { background: $hb-coral; border-color: $hb-coral; }
+.add-text {
+  margin-left: auto; color: $hb-coral; font-size: 13px; font-weight: 700; flex: none;
+}
+.add-ico::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: -4px;
+  width: 6px;
+  height: 4px;
+  border: 1.6px solid #fff;
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
 }
 .was {
   font-size: 12px;

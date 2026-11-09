@@ -3,7 +3,7 @@
     <header class="sticky">
       <div class="head">
         <h1>{{ t('cart_title') }} <small v-if="cart.syncing">sync…</small></h1>
-        <button v-if="lines.length" type="button" class="clear" @click="clear">清空</button>
+        <button v-if="lines.length" type="button" class="clear" @click="clear">Clear</button>
       </div>
       <AppSearchBar compact navigate-on-focus />
     </header>
@@ -11,7 +11,7 @@
     <div v-if="!lines.length" class="empty">
       <ShoppingBag :size="40" :stroke-width="1.5" class="empty-ico" />
       <p>{{ t('cart_empty') }}</p>
-      <router-link class="btn" to="/home">去逛逛</router-link>
+      <router-link class="btn" to="/home">Start shopping</router-link>
     </div>
 
     <div v-else class="list">
@@ -39,8 +39,8 @@
       <div class="tiny">Free shipping on this order</div>
     </div>
     <div v-if="lines.length" class="footer">
-      <div class="sum">合计 <b>{{ money(subtotal) }}</b></div>
-      <button type="button" class="checkout" @click="$router.push('/checkout')">去结算</button>
+      <div class="sum">Subtotal <b>{{ money(subtotal) }}</b></div>
+      <button type="button" class="checkout" @click="$router.push('/checkout')">Checkout</button>
     </div>
     <AppTabBar active="cart" />
   </div>
@@ -83,7 +83,7 @@ onMounted(() => {
 .page { min-height: 100vh; background: $hb-paper; padding: 0 16px 120px; }
 .sticky {
   position: sticky; top: 0; z-index: 20;
-  background: rgba(247,244,239,0.94); backdrop-filter: blur(14px);
+  background: rgba(244, 247, 251, 0.94); backdrop-filter: blur(14px);
   padding: calc(12px + env(safe-area-inset-top)) 0 10px;
 }
 .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
@@ -112,9 +112,9 @@ h1 small { font-size: 12px; color: $hb-muted; font-weight: 600; }
   display: inline-flex; align-items: center; justify-content: center; color: $hb-ink;
 }
 .footer {
-  position: fixed; left: 14px; right: 14px; bottom: calc(84px + env(safe-area-inset-bottom));
-  background: rgba(255,255,255,0.96); border-radius: 18px; padding: 10px 12px;
-  display: flex; align-items: center; gap: 10px; box-shadow: $hb-shadow-float; z-index: 90;
+  position: fixed; left: 0; right: 0; bottom: calc(56px + env(safe-area-inset-bottom));
+  background: $hb-white; border-top: 1px solid $hb-line; padding: 12px 16px;
+  display: flex; align-items: center; gap: 10px; z-index: 90;
 }
 .sum { flex: 1; font-size: 14px; }
 .sum b { color: $hb-ink; font-size: 18px; }
@@ -126,13 +126,13 @@ h1 small { font-size: 12px; color: $hb-muted; font-weight: 600; }
   margin: 12px 16px; background: #fff; border: 1px solid $hb-line; border-radius: 16px; padding: 14px;
 }
 .ship-row { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; color: $hb-ink; }
-.ship-bar { margin-top: 8px; height: 8px; background: #E8E4DC; border-radius: 4px; overflow: hidden; }
-.ship-bar > i { display: block; height: 100%; background: $hb-deep; }
+.ship-bar { margin-top: 8px; height: 8px; background: $hb-line; border-radius: 4px; overflow: hidden; }
+.ship-bar > i { display: block; height: 100%; background: $hb-coral; }
 .tiny { font-size: 11px; color: $hb-muted; margin-top: 6px; }
-.footer .checkout { background: $hb-ink !important; }
+.checkout { background: $hb-coral; }
 .price { color: $hb-price !important; }
 .empty { padding: 80px 24px; text-align: center; }
-.empty .btn { background: $hb-ink; color: #fff; border-radius: 999px; padding: 10px 18px; text-decoration: none; font-weight: 700; display: inline-block; margin-top: 16px; }
+.empty .btn { background: $hb-coral; color: #fff; border-radius: 999px; padding: 10px 18px; text-decoration: none; font-weight: 700; display: inline-block; margin-top: 16px; }
 
-.fn-page { --ink:#0F2744; --teal:#0E7490; --amber:#B45309; --sand:#F7F4EF; }
+.fn-page { --ink:#1B2B4A; --teal:#FF6B4A; --amber:#FF6B4A; --sand:#F4F7FB; }
 </style>

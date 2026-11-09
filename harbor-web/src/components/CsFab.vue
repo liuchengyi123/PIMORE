@@ -52,11 +52,11 @@ const to = computed(() => {
   gap: 7px;
   padding: 11px 15px;
   border-radius: 999px;
-  background: $hb-forest;
+  background: $hb-coral;
   color: #fff;
   font-weight: 720;
   font-size: 13px;
-  box-shadow: 0 12px 30px rgba(27, 77, 62, 0.32);
+  box-shadow: 0 8px 24px rgba(255, 107, 74, 0.35);
 }
 .ico { display: block; }
 .lab { line-height: 1; }

@@ -58,14 +58,14 @@ async function add() {
 onMounted(refresh)
 </script>
 <style scoped>
-.page { min-height: 100vh; background: #F7F4EF; color: #0F2744; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
+.page { min-height: 100vh; background: #F4F7FB; color: #1B2B4A; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
 .head { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
-.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #0F2744; }
+.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #1B2B4A; }
 .title { flex: 1; font-size: 17px; font-weight: 700; margin: 0; }
-.add { font-size: 13px; font-weight: 600; color: #0E7490; text-decoration: none; }
+.add { font-size: 13px; font-weight: 600; color: #FF6B4A; text-decoration: none; }
 .list { display: flex; flex-direction: column; gap: 10px; }
-.card { background: #fff; border: 2px solid #0F2744; border-radius: 16px; padding: 14px; }
-.badge { display: inline-flex; background: #E0F2FE; color: #0E7490; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px; margin-bottom: 8px; }
+.card { background: #fff; border: 2px solid #1B2B4A; border-radius: 16px; padding: 14px; }
+.badge { display: inline-flex; background: #E0F2FE; color: #FF6B4A; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px; margin-bottom: 8px; }
 .nm { font-size: 13px; font-weight: 600; }
 .line { margin-top: 4px; font-size: 13px; line-height: 1.45; }
 .state { text-align: center; color: #6B7280; padding: 36px 8px; }

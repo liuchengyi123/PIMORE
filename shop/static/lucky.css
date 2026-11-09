@@ -17,7 +17,7 @@
   padding: 28px 22px 22px;
   border-radius: 28px;
   background: #fbf8f2;
-  color: #16325c;
+  color: #1B2B4A;
   font-family: Inter, "Segoe UI", system-ui, sans-serif;
   text-align: center;
   box-shadow: 0 24px 60px rgba(15, 39, 68, 0.22);
@@ -33,19 +33,19 @@
   margin: 0 28px 8px;
   font-size: 32px;
   line-height: 1.12;
-  color: #16325c;
+  color: #1B2B4A;
 }
 .lucky-kicker {
   margin: 0 0 2px;
   font-size: 22px;
   line-height: 1.2;
-  color: #16325c;
+  color: #1B2B4A;
 }
 .lucky-winpct {
   margin: 0 0 12px;
   font-size: 40px;
   line-height: 1;
-  color: #16325c;
+  color: #1B2B4A;
 }
 .lucky-lead,
 .lucky-rules {
@@ -79,7 +79,7 @@
   padding: 12px 18px;
   border: 0;
   border-radius: 999px;
-  background: #16325c;
+  background: #FF6B4A;
   color: #fff;
   font-family: Fraunces, Georgia, serif;
   font-size: 20px;
@@ -98,7 +98,7 @@
   border: 1px solid #e6dfd4;
   border-radius: 999px;
   background: #fff;
-  color: #16325c;
+  color: #1B2B4A;
   font-size: 18px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -157,11 +157,11 @@
   height: 100%;
   border-radius: 50%;
   background: conic-gradient(from -30deg,
-    #1b3f6b 0 60deg,
+    #FF6B4A 0 60deg,
     #f7f3ea 60deg 120deg,
-    #1b3f6b 120deg 180deg,
+    #FF6B4A 120deg 180deg,
     #f7f3ea 180deg 240deg,
-    #1b3f6b 240deg 300deg,
+    #FF6B4A 240deg 300deg,
     #f7f3ea 300deg 360deg);
   box-shadow: 0 0 0 7px #e6c36a, 0 0 0 10px #c4963a, 0 14px 28px rgba(22, 50, 92, 0.16);
 }
@@ -169,9 +169,9 @@
   background: conic-gradient(from -30deg,
     #f3d48a 0 60deg,
     #f7f3ea 60deg 120deg,
-    #1b3f6b 120deg 180deg,
+    #FF6B4A 120deg 180deg,
     #f7f3ea 180deg 240deg,
-    #1b3f6b 240deg 300deg,
+    #FF6B4A 240deg 300deg,
     #f7f3ea 300deg 360deg);
 }
 .lucky-wheel.is-spinning {
@@ -212,8 +212,8 @@
 .lucky-wheel-wrap.is-small .lab:nth-child(6) { transform: rotate(300deg) translateY(-64px) rotate(-300deg); }
 .lucky-wheel .lab b { font-weight: 800; }
 .lucky-wheel .on-navy { color: #fff; }
-.lucky-wheel .on-cream { color: #1b3f6b; }
-.lucky-wheel.is-won .lab:first-child { color: #1b3f6b; }
+.lucky-wheel .on-cream { color: #F04E32; }
+.lucky-wheel.is-won .lab:first-child { color: #F04E32; }
 .lucky-goods {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -250,7 +250,7 @@
 }
 .lucky-good .now {
   display: block;
-  color: #16325c;
+  color: #1B2B4A;
   font-size: 15px;
   font-weight: 800;
 }
@@ -260,7 +260,7 @@
   padding: 2px 8px;
   border-radius: 999px;
   background: #f0d078;
-  color: #16325c;
+  color: #1B2B4A;
   font-size: 11px;
   font-weight: 700;
 }
@@ -288,13 +288,13 @@
   cursor: pointer;
 }
 .lucky-eggs button.is-win {
-  color: #1b3f6b;
+  color: #F04E32;
   background: radial-gradient(circle at 50% 30%, #fff6d0, #e2b34c 62%, #b8862f);
 }
-.lucky-eggs button.is-miss { color: #1b3f6b; }
+.lucky-eggs button.is-miss { color: #F04E32; }
 .lucky-prize {
   margin: 0 0 8px;
-  color: #16325c;
+  color: #1B2B4A;
   font-family: Fraunces, Georgia, serif;
   font-size: 26px;
   font-weight: 560;
@@ -307,7 +307,7 @@
   padding: 10px 14px;
   border: 0;
   border-radius: 999px;
-  background: #16325c;
+  background: #FF6B4A;
   color: #fff;
   font-family: Inter, "Segoe UI", sans-serif;
   font-weight: 700;

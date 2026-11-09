@@ -54,8 +54,10 @@ onUnmounted(() => {
   background: $hb-ink;
   color: #fff;
   &.compact {
-    padding: 6px 10px;
-    border-radius: 10px;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    color: $hb-coral;
   }
   &.light {
     background: rgba(255, 255, 255, 0.18);

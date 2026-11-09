@@ -76,35 +76,35 @@ async function claim() {
 onMounted(refresh)
 </script>
 <style scoped>
-.page { min-height: 100vh; background: #F7F4EF; color: #0F2744; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
+.page { min-height: 100vh; background: #F4F7FB; color: #1B2B4A; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
 .head { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
-.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #0F2744; }
+.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #1B2B4A; }
 .title { font-size: 17px; font-weight: 700; margin: 0; }
 .hero {
   border-radius: 16px; padding: 16px;
-  background: linear-gradient(162deg, #0F2744 4%, #0E7490 96%);
+  background: linear-gradient(162deg, #1B2B4A 4%, #FF6B4A 96%);
   color: #fff;
 }
 .kicker { font-size: 13px; opacity: 0.85; }
 .headline { margin-top: 6px; font-size: 22px; font-weight: 800; }
 .cta {
   margin-top: 14px; height: 41px; padding: 0 16px; border: 0; border-radius: 12px;
-  background: #fff; color: #0F2744; font-size: 14px; font-weight: 600; cursor: pointer;
+  background: #fff; color: #1B2B4A; font-size: 14px; font-weight: 600; cursor: pointer;
 }
 .cta:disabled { opacity: 0.7; }
 .login { display: inline-block; margin-top: 10px; color: #fff; font-size: 13px; }
 .days { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 14px; }
 .day {
-  background: #fff; border: 1px solid #E8E4DC; border-radius: 12px; padding: 10px 4px;
+  background: #fff; border: 1px solid #E7ECF3; border-radius: 12px; padding: 10px 4px;
   text-align: center; min-height: 65px;
 }
-.day.today { background: #0F2744; border-color: #0F2744; color: #fff; }
+.day.today { background: #1B2B4A; border-color: #1B2B4A; color: #fff; }
 .day.done .mark { color: #047857; font-weight: 700; }
 .mark { font-size: 12px; font-weight: 700; min-height: 16px; }
 .lab { margin-top: 4px; font-size: 11px; color: #6B7280; }
 .day.today .lab { color: #fff; }
 .balance-card {
-  margin-top: 14px; background: #fff; border: 1px solid #E8E4DC; border-radius: 16px; padding: 14px;
+  margin-top: 14px; background: #fff; border: 1px solid #E7ECF3; border-radius: 16px; padding: 14px;
 }
 .row { display: flex; justify-content: space-between; align-items: center; }
 .b-title { font-size: 16px; font-weight: 700; }
@@ -115,6 +115,6 @@ onMounted(refresh)
   display: flex; align-items: center; justify-content: center; height: 41px; border-radius: 12px;
   font-size: 14px; font-weight: 600; text-decoration: none;
 }
-.btn.outline { background: #fff; border: 1px solid #E8E4DC; color: #0F2744; }
-.btn.solid { background: #0F2744; color: #fff; border: 0; }
+.btn.outline { background: #fff; border: 1px solid #E7ECF3; color: #1B2B4A; }
+.btn.solid { background: #1B2B4A; color: #fff; border: 0; }
 </style>

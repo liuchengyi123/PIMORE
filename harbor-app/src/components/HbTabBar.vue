@@ -18,6 +18,9 @@
         <view v-else-if="t.id === 'cart'" class="ico bag" :class="{ on: t.id === active }">
           <view class="bag-body" />
           <view class="bag-handle" />
+          <view v-if="cartCount > 0" class="cart-badge">
+            <text>{{ cartCount > 9 ? '9+' : cartCount }}</text>
+          </view>
         </view>
         <!-- Me -->
         <view v-else class="ico me" :class="{ on: t.id === active }">
@@ -33,12 +36,15 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from '@/composables/i18n'
+import { useCart } from '@/composables/cart'
 
 type TabId = 'home' | 'browse' | 'cart' | 'me'
 
 defineProps<{ active: TabId }>()
 
 const { t } = useI18n()
+const { count } = useCart()
+const cartCount = computed(() => count.value)
 
 const tabs = computed(() => [
   { id: 'home' as const, label: t('tab_home'), url: '/pages/home/index' },
@@ -56,43 +62,38 @@ function go(tab: { id: TabId; label: string; url: string }) {
 @import '@/styles/theme.scss';
 
 .tab-spacer {
-  height: 88px;
+  height: calc(64px + env(safe-area-inset-bottom));
 }
 .homeind {
   position: absolute;
   left: 50%;
   bottom: 6px;
-  width: 108px;
-  height: 4px;
-  margin-left: -54px;
-  border-radius: 2px;
-  background: rgba(15, 39, 68, 0.18);
+  width: 128px;
+  height: 5px;
+  margin-left: -64px;
+  border-radius: 99px;
+  background: #1B2B4A;
 }
 .icon-wrap.on {
-  background: #0F2744;
-  border-radius: 10px;
-  width: 36px;
+  background: transparent;
+  width: 28px;
   height: 28px;
-}
-.icon-wrap.on .ico, .icon-wrap.on .ico.home, .icon-wrap.on .ico.browse, .icon-wrap.on .ico.bag, .icon-wrap.on .ico.me {
-  filter: brightness(10);
 }
 .tab-bar {
   position: fixed;
-  left: 14px;
-  right: 14px;
-  bottom: calc(10px + env(safe-area-inset-bottom));
-  height: $hb-tab-height;
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.86);
-  border: 1px solid rgba(255, 255, 255, 0.65);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: auto;
+  padding: 8px 8px calc(12px + env(safe-area-inset-bottom));
+  border-radius: 0;
+  background: #fff;
+  border-top: 1px solid #EEF1F6;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-around;
   z-index: 100;
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  box-shadow: $hb-shadow-tab;
+  box-shadow: none;
 }
 .tab {
   width: 64px;
@@ -113,14 +114,31 @@ function go(tab: { id: TabId; label: string; url: string }) {
   height: 22px;
 }
 .label {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
-  letter-spacing: 0.2px;
-  color: $hb-muted;
+  letter-spacing: 0;
+  color: #9AA3B2;
   &.on {
     font-weight: 700;
-    color: $hb-forest;
+    color: $hb-coral;
   }
+}
+.cart-badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 99px;
+  background: $hb-coral;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 16px;
 }
 
 /* Home icon */
@@ -146,11 +164,11 @@ function go(tab: { id: TabId; label: string; url: string }) {
   box-sizing: border-box;
 }
 .home.on .home-roof {
-  border-bottom-color: $hb-forest;
+  border-bottom-color: $hb-coral;
 }
 .home.on .home-body {
-  border-color: $hb-forest;
-  background: rgba(30, 77, 59, 0.12);
+  border-color: $hb-coral;
+  background: transparent;
 }
 
 /* Browse 2x2 */
@@ -167,10 +185,10 @@ function go(tab: { id: TabId; label: string; url: string }) {
 .browse .c { left: 1px; bottom: 1px; }
 .browse .d { right: 1px; bottom: 1px; }
 .browse.on .sq {
-  border-color: $hb-forest;
+  border-color: $hb-coral;
 }
 .browse.on .a {
-  background: $hb-forest;
+  background: $hb-coral;
 }
 
 /* Bag */
@@ -195,12 +213,12 @@ function go(tab: { id: TabId; label: string; url: string }) {
   border-radius: 8px 8px 0 0;
   box-sizing: border-box;
 }
-.bag.on .bag-body {
-  border-color: $hb-forest;
-  background: rgba(30, 77, 59, 0.12);
-}
+.bag.on .bag-body,
 .bag.on .bag-handle {
-  border-color: $hb-forest;
+  border-color: $hb-coral;
+}
+.bag.on .bag-body {
+  background: transparent;
 }
 
 /* Me */
@@ -225,25 +243,12 @@ function go(tab: { id: TabId; label: string; url: string }) {
   border-radius: 10px 10px 0 0;
   box-sizing: border-box;
 }
-.me.on .head {
-  border-color: $hb-forest;
-  background: rgba(30, 77, 59, 0.12);
-}
+.me.on .head,
 .me.on .shoulders {
-  border-color: $hb-forest;
+  border-color: $hb-coral;
 }
-
-/* capsule tab */
-.tab-bar {
-  background: rgba(247, 244, 239, 0.96) !important;
-  border-top: 1px solid #E8E4DC !important;
-  padding-bottom: calc(8px + env(safe-area-inset-bottom)) !important;
+.me.on .head {
+  background: transparent;
 }
-.icon-wrap.on {
-  background: #0F2744 !important;
-  border-radius: 14px !important;
-}
-.icon-wrap.on .ico, .icon-wrap.on .ico * { border-color: #fff !important; background: #fff !important; }
-.label.on { color: #0F2744 !important; font-weight: 700 !important; }
 </style>
 

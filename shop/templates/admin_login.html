@@ -1,20 +1,33 @@
 {% extends "admin_base.html" %}
 {% block screen %}
-<div class="login-wrap">
-  <form class="login-card" method="post" action="/admin/login" data-figma="AD01">
-    <h1>Harbor 后台</h1>
-    <p class="lead">使用分配给你的账号和密码</p>
+<div class="login-split">
+  <aside class="login-brand" aria-hidden="false">
+    <div class="login-lighthouse" role="img" aria-label="灯塔"></div>
+    <div class="login-brand-copy">
+      <span class="login-brand-mark">P</span>
+      <h2>Harbor / Pimo</h2>
+      <p class="login-tagline">让数据赋能业务</p>
+    </div>
+  </aside>
+  <main class="login-panel-wrap">
+  <form class="login-card login-panel" method="post" action="/admin/login" data-figma="AD01">
+    <h1>后台登录</h1>
+    <p class="lead">欢迎回来，请登录您的账号</p>
     {% if error %}
     <div class="login-error" role="alert">{{ error }}</div>
     {% endif %}
-    <label>账号
-      <input name="username" autocomplete="username" placeholder="admin" autofocus>
+    <label>邮箱
+      <input name="username" type="text" autocomplete="username" placeholder="请输入邮箱地址" autofocus>
     </label>
     <label>密码
-      <input name="password" type="password" autocomplete="current-password">
+      <input name="password" type="password" autocomplete="current-password" placeholder="请输入密码">
+    </label>
+    <label class="login-remember">
+      <input type="checkbox"> 记住我
     </label>
     <button class="btn login-submit" type="submit">登录</button>
     <p class="muted small login-foot">忘记密码请联系管理员，在「员工」页重置。</p>
   </form>
+  </main>
 </div>
 {% endblock %}

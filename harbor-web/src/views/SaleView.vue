@@ -57,9 +57,9 @@ function ph(p: Product) {
 function go(p: Product) { router.push(`/p/${encodeURIComponent(p.sku || p.id)}`) }
 </script>
 <style scoped>
-.page { min-height: 100vh; background: #F7F4EF; color: #0F2744; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
+.page { min-height: 100vh; background: #F4F7FB; color: #1B2B4A; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
 .head { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
-.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #0F2744; }
+.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #1B2B4A; }
 .title { font-size: 17px; font-weight: 700; margin: 0; }
 .hero {
   border-radius: 18px; padding: 20px; color: #fff; margin-bottom: 14px;
@@ -71,7 +71,7 @@ function go(p: Product) { router.push(`/p/${encodeURIComponent(p.sku || p.id)}`)
 .state { text-align: center; color: #6B7280; padding: 28px 8px; }
 .list { display: flex; flex-direction: column; gap: 10px; }
 .row {
-  display: flex; gap: 12px; background: #fff; border: 1px solid #E8E4DC; border-radius: 16px;
+  display: flex; gap: 12px; background: #fff; border: 1px solid #E7ECF3; border-radius: 16px;
   padding: 10px; align-items: center;
 }
 .thumb { position: relative; width: 72px; height: 72px; border-radius: 12px; overflow: hidden; flex-shrink: 0; background: #e8e4dc; }

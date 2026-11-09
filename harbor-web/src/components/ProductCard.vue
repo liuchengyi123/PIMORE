@@ -11,6 +11,9 @@
         <span class="price">{{ money(product.price) }}</span>
         <span v-if="product.compareAt" class="was">{{ money(product.compareAt) }}</span>
         <span v-if="offPct" class="off-badge">-{{ offPct }}%</span>
+        <button type="button" class="go-btn" aria-label="View product" @click.stop="go">
+          <ChevronRight :size="18" :stroke-width="2" />
+        </button>
       </div>
       <div v-if="product.shipNote || product.onlyLeft" class="ship-line">
         <template v-if="product.onlyLeft">{{ t('only_left') }} {{ product.onlyLeft }}</template>
@@ -23,6 +26,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { ChevronRight } from 'lucide-vue-next'
 import type { Product } from '@/api/products'
 import { money } from '@/api/products'
 import { useI18n } from '@/composables/i18n'
@@ -32,10 +36,10 @@ const router = useRouter()
 const { t } = useI18n()
 
 const palette = [
-  'linear-gradient(160deg, #E8F1EC 0%, #D5E4DB 100%)',
-  'linear-gradient(160deg, #F0EBE3 0%, #E4D9CC 100%)',
-  'linear-gradient(160deg, #E9EEF2 0%, #D5DEE6 100%)',
-  'linear-gradient(160deg, #F3E8E4 0%, #E6D5CF 100%)',
+  'linear-gradient(160deg, #FFF1EC 0%, #FFE4DC 100%)',
+  'linear-gradient(160deg, #F4F7FB 0%, #E7ECF3 100%)',
+  'linear-gradient(160deg, #FFF1EC 0%, #F4F7FB 100%)',
+  'linear-gradient(160deg, #E7ECF3 0%, #FFF1EC 100%)',
 ]
 
 const thumbStyle = computed(() => {
@@ -70,7 +74,7 @@ function go() {
 <style lang="scss" scoped>
 @import '@/styles/theme.scss';
 .card {
-  border-radius: 18px;
+  border-radius: $hb-radius-sm;
   overflow: hidden;
   background: $hb-white;
   box-shadow: $hb-shadow-soft;
@@ -81,28 +85,35 @@ function go() {
 .thumb {
   aspect-ratio: 1 / 1;
   position: relative;
-  background: $hb-soft;
+  background: $hb-coral-soft;
 }
 .thumb-img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .img-badge {
   position: absolute; left: 8px; top: 8px;
   padding: 4px 8px; border-radius: 999px; font-size: 11px; font-weight: 720; color: #fff;
   &.flash, &.deal { background: $hb-coral; }
-  &.new { background: $hb-forest; }
-  &.ship { background: #2a6f9e; }
+  &.new { background: $hb-ink; }
+  &.ship { background: $hb-coral-deep; }
 }
 .only-left {
   position: absolute; right: 8px; bottom: 8px;
-  background: rgba(0,0,0,0.55); color: #fff; font-size: 11px; padding: 3px 7px; border-radius: 8px;
+  background: rgba(27, 43, 74, 0.55); color: #fff; font-size: 11px; padding: 3px 7px; border-radius: 8px;
 }
 .body { padding: 11px 11px 13px; }
 .name {
   font-size: 13px; font-weight: 650; color: $hb-ink; line-height: 1.35;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.7em;
 }
-.price-row { display: flex; align-items: baseline; gap: 6px; margin-top: 7px; flex-wrap: wrap; }
-.ship-line { margin-top: 4px; font-size: 11px; color: \-muted; }
-.price { font-size: 16px; font-weight: 780; color: $hb-ink; letter-spacing: -0.02em; }
+.price-row { display: flex; align-items: center; gap: 6px; margin-top: 7px; flex-wrap: wrap; }
+.ship-line { margin-top: 4px; font-size: 11px; color: $hb-muted; }
+.price { font-size: 16px; font-weight: 780; color: $hb-price; letter-spacing: -0.02em; flex: 1; min-width: 0; }
 .was { font-size: 12px; color: $hb-muted; text-decoration: line-through; }
-.off-badge { font-size: 11px; color: $hb-forest; font-weight: 720; background: $hb-soft; padding: 2px 7px; border-radius: 999px; }
+.off-badge { font-size: 11px; color: $hb-coral-deep; font-weight: 720; background: $hb-coral-soft; padding: 2px 7px; border-radius: 999px; }
+.go-btn {
+  flex-shrink: 0;
+  width: 32px; height: 32px; border: 0; border-radius: 999px;
+  background: $hb-coral; color: #fff;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; margin-left: auto;
+}
 </style>

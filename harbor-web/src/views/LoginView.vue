@@ -2,14 +2,14 @@
   <div class="fn-page page" data-figma="M17">
     <button type="button" class="back" @click="$router.back()" aria-label="back"><ChevronLeft :size="22" :stroke-width="1.75" /></button>
     <h1>{{ t('me_sign_in') }}</h1>
-    <p class="sub">应用内登录 · Cookie 同步到店铺</p>
+    <p class="sub">Sign in to sync orders, cart, and rewards across devices.</p>
     <form class="form" @submit.prevent="submit">
       <label>Email<input v-model="email" type="email" required autocomplete="email" /></label>
       <label>Password<input v-model="password" type="password" required autocomplete="current-password" /></label>
       <p v-if="error" class="err">{{ error }}</p>
       <button type="submit" class="btn" :disabled="busy">{{ busy ? '…' : t('me_sign_in') }}</button>
     </form>
-    <router-link class="link" :to="{ path: '/register', query: $route.query }">注册账号</router-link>
+    <router-link class="link" :to="{ path: '/register', query: $route.query }">Create an account</router-link>
   </div>
 </template>
 <script setup lang="ts">
@@ -54,9 +54,9 @@ h1 { margin: 18px 0 6px; font-size: 26px; }
 .form { display: flex; flex-direction: column; gap: 12px; background: $hb-white; padding: 16px; border-radius: 18px; box-shadow: $hb-shadow-soft; }
 label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700; color: $hb-muted; }
 input { border: 1px solid $hb-line; border-radius: 12px; padding: 12px; font-size: 15px; color: $hb-ink; }
-.btn { border: 0; height: 48px; border-radius: 14px; background: $hb-forest; color: #fff; font-weight: 740; cursor: pointer; }
-.err { color: $hb-coral; font-size: 13px; margin: 0; }
-.link { display: inline-block; margin-top: 16px; color: $hb-forest; font-weight: 680; }
+.btn { border: 0; height: 48px; border-radius: $hb-radius-sm; background: $hb-coral; color: #fff; font-weight: 740; cursor: pointer; }
+.err { color: $hb-coral-deep; font-size: 13px; margin: 0; }
+.link { display: inline-block; margin-top: 16px; color: $hb-coral; font-weight: 680; }
 
-.fn-page { --ink:#0F2744; --teal:#0E7490; --amber:#B45309; --sand:#F7F4EF; }
+.fn-page { --ink:#1B2B4A; --teal:#FF6B4A; --amber:#FF6B4A; --sand:#F4F7FB; }
 </style>

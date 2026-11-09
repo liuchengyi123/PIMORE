@@ -1,22 +1,23 @@
-﻿/* Harbor H5 design tokens — First Design (shopping, 2026) */
-$hb-forest: #0F2744; /* Function ink/navy */
-$hb-deep: #0E7490;
-$hb-soft: #E0F2FE;
-$hb-coral: #B91C1C; /* danger / alerts only — NOT price */
-$hb-coral-soft: #FEE2E2;
-$hb-paper: #F7F4EF;
-$hb-line: #E2E6EE;
-$hb-ink: #0F2744;
-$hb-muted: #5C6570;
+﻿/* Harbor H5 design tokens — Pimo coral (2026) */
+$hb-forest: #1B2B4A;
+$hb-ink: #1B2B4A;
+$hb-coral: #FF6B4A;
+$hb-coral-soft: #FFF1EC;
+$hb-coral-deep: #F04E32;
+$hb-deep: $hb-coral-deep;
+$hb-soft: $hb-coral-soft;
+$hb-paper: #F4F7FB;
+$hb-line: #E7ECF3;
+$hb-muted: #8B95A7;
 $hb-white: #FFFFFF;
-$hb-success: #128A5E;
-$hb-price: #B45309;
-$hb-radius-sm: 14px;
-$hb-radius-md: 20px;
-$hb-radius-lg: 24px;
+$hb-success: #16A34A;
+$hb-price: #FF6B4A;
+$hb-radius-sm: 16px;
+$hb-radius-md: 18px;
+$hb-radius-lg: 18px;
 $hb-radius-pill: 999px;
-$hb-shadow-soft: 0 4px 20px rgba(14, 17, 22, 0.06);
-$hb-shadow-float: 0 10px 36px rgba(14, 17, 22, 0.10);
+$hb-shadow-soft: 0 8px 24px rgba(27, 43, 74, 0.06);
+$hb-shadow-float: 0 8px 24px rgba(27, 43, 74, 0.06);
 $hb-icon-stroke: 1.65;
 
 :root {
@@ -25,6 +26,7 @@ $hb-icon-stroke: 1.65;
   --hb-soft: #{$hb-soft};
   --hb-coral: #{$hb-coral};
   --hb-coral-soft: #{$hb-coral-soft};
+  --hb-coral-deep: #{$hb-coral-deep};
   --hb-paper: #{$hb-paper};
   --hb-line: #{$hb-line};
   --hb-ink: #{$hb-ink};

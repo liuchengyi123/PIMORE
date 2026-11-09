@@ -63,24 +63,24 @@ async function save() {
 }
 </script>
 <style scoped>
-.page { min-height: 100vh; background: #F7F4EF; color: #0F2744; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
+.page { min-height: 100vh; background: #F4F7FB; color: #1B2B4A; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
 .head { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
-.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #0F2744; }
+.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #1B2B4A; }
 .title { font-size: 17px; font-weight: 700; margin: 0; }
 .hint { font-size: 11px; color: #6B7280; margin: 0 0 12px; }
 .card {
   width: 100%; display: flex; justify-content: space-between; align-items: center; text-align: left;
-  background: #fff; border: 1px solid #E8E4DC; border-radius: 16px; padding: 14px; margin-bottom: 8px;
+  background: #fff; border: 1px solid #E7ECF3; border-radius: 16px; padding: 14px; margin-bottom: 8px;
   cursor: pointer; color: inherit;
 }
-.card.on { border: 2px solid #0F2744; }
+.card.on { border: 2px solid #1B2B4A; }
 .left { display: flex; flex-direction: column; gap: 2px; }
 .nm { font-size: 16px; font-weight: 700; }
 .meta { font-size: 11px; color: #6B7280; }
-.radio { font-size: 16px; color: #0F2744; }
-.msg { font-size: 12px; color: #0E7490; margin: 8px 0; }
+.radio { font-size: 16px; color: #1B2B4A; }
+.msg { font-size: 12px; color: #FF6B4A; margin: 8px 0; }
 .cta {
-  width: 100%; height: 41px; border: 0; border-radius: 12px; background: #0F2744; color: #fff;
+  width: 100%; height: 41px; border: 0; border-radius: 12px; background: #1B2B4A; color: #fff;
   font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 8px;
 }
 .cta:disabled { opacity: 0.7; }

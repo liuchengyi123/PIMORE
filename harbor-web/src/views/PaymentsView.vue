@@ -65,15 +65,15 @@ function label(r: any) {
 function sub(r: any) { return r.provider || r.meta || '' }
 </script>
 <style scoped>
-.page { min-height: 100vh; background: #F7F4EF; color: #0F2744; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
+.page { min-height: 100vh; background: #F4F7FB; color: #1B2B4A; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
 .head { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
-.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #0F2744; }
+.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #1B2B4A; }
 .title { font-size: 17px; font-weight: 700; margin: 0; }
 .list { display: flex; flex-direction: column; gap: 8px; }
 .card { background: #fff; border: 1px solid #E2E6EE; border-radius: 16px; padding: 14px; }
 .row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .nm { font-size: 16px; font-weight: 700; }
-.badge { background: #E0F2FE; color: #0E7490; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px; }
+.badge { background: #E0F2FE; color: #FF6B4A; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px; }
 .sub { margin-top: 4px; font-size: 11px; color: #5C6570; }
 .state { text-align: center; color: #6B7280; padding: 36px 8px; }
 </style>

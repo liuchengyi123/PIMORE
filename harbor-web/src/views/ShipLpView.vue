@@ -45,5 +45,5 @@ onMounted(async () => {
 .state { text-align: center; color: $hb-muted; padding: 40px 16px; }
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 16px; }
 
-.fn-page { --ink:#0F2744; --teal:#0E7490; --amber:#B45309; --sand:#F7F4EF; }
+.fn-page { --ink:#1B2B4A; --teal:#FF6B4A; --amber:#FF6B4A; --sand:#F4F7FB; }
 </style>

@@ -23,14 +23,14 @@ const orderId = computed(() => String(route.query.id || ''))
 }
 .ok-ico {
   width: 72px; height: 72px; margin: 0 auto 16px; border-radius: 36px;
-  background: #D1FAE5; color: #047857; display: flex; align-items: center; justify-content: center;
+  background: rgba(22, 163, 74, 0.12); color: $hb-success; display: flex; align-items: center; justify-content: center;
   font-size: 28px; font-weight: 800;
 }
 h1 { margin: 0; font-size: 26px; font-weight: 800; color: $hb-ink; }
 .sub { margin: 10px auto 0; max-width: 320px; font-size: 13px; color: $hb-muted; line-height: 1.45; }
 .btn {
   display: flex; align-items: center; justify-content: center; margin: 12px auto 0; width: min(320px, 100%);
-  height: 48px; border-radius: 14px; background: $hb-ink; color: #fff; font-weight: 700; text-decoration: none;
+  height: 48px; border-radius: $hb-radius-sm; background: $hb-coral; color: #fff; font-weight: 700; text-decoration: none;
 }
 .btn.soft { background: #fff; color: $hb-ink; border: 1px solid $hb-line; }
 </style>

@@ -176,7 +176,7 @@ h1 { margin: 0; font-size: 18px; font-weight: 800; color: $hb-ink; }
 .sec { font-weight: 700; font-size: 14px; color: $hb-ink; }
 .row { display: flex; align-items: center; gap: 8px; }
 .between { justify-content: space-between; }
-.link { border: 0; background: transparent; color: $hb-deep; font-size: 12px; font-weight: 600; cursor: pointer; }
+.link { border: 0; background: transparent; color: $hb-coral; font-size: 12px; font-weight: 600; cursor: pointer; }
 .addr { margin-top: 8px; font-size: 13px; color: $hb-ink; line-height: 1.45; }
 .muted { color: $hb-muted; }
 .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; font-size: 11px; font-weight: 600; color: $hb-muted; }
@@ -189,7 +189,7 @@ h1 { margin: 0; font-size: 18px; font-weight: 800; color: $hb-ink; }
 .toggle {
   width: 40px; height: 24px; border-radius: 12px; border: 0; background: #E2E6EE; position: relative; cursor: pointer;
 }
-.toggle.on { background: $hb-ink; }
+.toggle.on { background: $hb-coral; }
 .knob {
   position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 9px; background: #fff; transition: left .15s;
 }
@@ -198,12 +198,12 @@ h1 { margin: 0; font-size: 18px; font-weight: 800; color: $hb-ink; }
   display: block; padding: 12px; border: 1px solid $hb-line; border-radius: 12px; margin-bottom: 8px;
   font-size: 13px; font-weight: 600; color: $hb-ink; cursor: pointer;
 }
-.pay.on { border-width: 2px; border-color: $hb-ink; }
+.pay.on { border-width: 2px; border-color: $hb-coral; }
 .pay input { margin-right: 8px; }
 .tiny-row { margin-bottom: 6px; font-size: 13px; color: $hb-ink; }
 .total-row { margin-top: 8px; padding-top: 8px; border-top: 1px solid $hb-line; }
 .price { font-size: 18px; font-weight: 800; color: $hb-price; }
-.err { color: #B91C1C; font-size: 13px; margin: 8px 0; }
+.err { color: $hb-coral-deep; font-size: 13px; margin: 8px 0; }
 .dock {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
   background: #fff; border-top: 1px solid $hb-line; padding: 12px 16px;
@@ -211,7 +211,7 @@ h1 { margin: 0; font-size: 18px; font-weight: 800; color: $hb-ink; }
   padding-bottom: calc(12px + env(safe-area-inset-bottom));
 }
 .place {
-  flex: 1; height: 48px; border: 0; border-radius: 14px; background: $hb-ink; color: #fff;
+  flex: 1; height: 48px; border: 0; border-radius: $hb-radius-sm; background: $hb-coral; color: #fff;
   font-weight: 700; font-size: 15px; cursor: pointer;
 }
 .place:disabled { opacity: .5; }

@@ -41,23 +41,23 @@ onMounted(async () => {
 })
 </script>
 <style scoped>
-.page { min-height: 100vh; background: #F7F4EF; color: #0F2744; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
+.page { min-height: 100vh; background: #F4F7FB; color: #1B2B4A; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
 .head { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
-.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #0F2744; }
+.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #1B2B4A; }
 .title { font-size: 17px; font-weight: 700; margin: 0; }
 .search-wrap { margin-bottom: 12px; }
 .state { text-align: center; color: #6B7280; padding: 24px 8px; }
 .faqs { display: flex; flex-direction: column; gap: 8px; }
 .faq {
-  text-align: left; width: 100%; background: #fff; border: 1px solid #E8E4DC; border-radius: 16px;
+  text-align: left; width: 100%; background: #fff; border: 1px solid #E7ECF3; border-radius: 16px;
   padding: 14px; cursor: pointer; color: inherit;
 }
 .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .q { font-size: 14px; font-weight: 700; }
-.chev { color: #0E7490; font-size: 14px; }
+.chev { color: #FF6B4A; font-size: 14px; }
 .a { margin: 10px 0 0; font-size: 13px; line-height: 1.45; color: #6B7280; }
 .contact {
-  display: block; margin-top: 16px; text-align: center; color: #0E7490; font-size: 13px; font-weight: 600;
+  display: block; margin-top: 16px; text-align: center; color: #FF6B4A; font-size: 13px; font-weight: 600;
   text-decoration: none;
 }
 </style>

@@ -1,9 +1,11 @@
 .lp-ad {
   margin: 0;
-  background: var(--wash, #f6f1ea);
-  color: #1c1917;
-  font-family: Inter, "Segoe UI", sans-serif;
+  background: var(--wash, #F4F7FB);
+  color: #1B2B4A;
+  font-family: "Plus Jakarta Sans", Inter, "Noto Sans SC", "Segoe UI", sans-serif;
   min-height: 100vh;
+  --accent: #FF6B4A;
+  --deep: #F04E32;
 }
 .lp-ad a { color: inherit; }
 .lp-top {
@@ -11,7 +13,7 @@
   align-items: center;
   gap: 10px;
   padding: 12px 14px;
-  background: #0f2744;
+  background: #FF6B4A;
   color: #fff;
 }
 .lp-brand {
@@ -88,7 +90,7 @@
   padding: 8px 12px;
   border-radius: 12px;
   background: #fff;
-  color: #0f2744;
+  color: #FF6B4A;
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -99,7 +101,7 @@
   font-size: 26px;
   font-weight: 800;
   letter-spacing: 0.03em;
-  color: #0f2744;
+  color: #FF6B4A;
   text-transform: none;
 }
 .lp-cd .cd-cs { color: var(--deep, #c2410c); }
@@ -169,7 +171,7 @@
   font-size: 14px;
   line-height: 1.35;
   font-weight: 700;
-  color: #0f2744;
+  color: #FF6B4A;
 }
 .lp-card-price {
   margin: 0;
@@ -190,9 +192,9 @@
 .lp-foot { margin-top: 16px; }
 .lp-empty { color: #57534e; }
 .lp-hero-sku { background: #fff; border-radius: 14px; padding: 10px; }
-.lp-hero-sku h1 { font-size: 22px; color: #0f2744; letter-spacing: 0; }
+.lp-hero-sku h1 { font-size: 22px; color: #FF6B4A; letter-spacing: 0; }
 .lp-hero-tools { margin: 12px 0; }
-.lp-rail-title { font-size: 16px; margin: 16px 0 8px; color: #0f2744; }
+.lp-rail-title { font-size: 16px; margin: 16px 0 8px; color: #FF6B4A; }
 .lp-rail {
   display: flex;
   gap: 10px;
@@ -206,7 +208,7 @@
 .lp-band h2 {
   margin: 0 0 8px;
   font-size: 15px;
-  color: #0f2744;
+  color: #FF6B4A;
 }
 .lp-ticker { overflow: hidden; margin: 0; background: #fff; border-bottom: 1px solid #efe8df; }
 .lp-ticker-track {
@@ -218,7 +220,7 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: none;
-  color: #0f2744;
+  color: #FF6B4A;
   animation: lp-marquee 16s linear infinite;
 }
 @keyframes lp-marquee {
@@ -268,7 +270,7 @@
   display: block;
 }
 .lp-cat:focus-visible {
-  outline: 2px solid #0f2744;
+  outline: 2px solid #FF6B4A;
   outline-offset: -3px;
 }
 .lp-scene-shot img {
@@ -286,7 +288,7 @@
 }
 .lp-scene .lp-kicker {
   margin: 0 0 8px;
-  color: #0f2744;
+  color: #FF6B4A;
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -306,15 +308,15 @@
   background: #fff;
   font-size: 13px;
   font-weight: 700;
-  color: #0f2744;
+  color: #FF6B4A;
 }
 .lp-scene-ship {
   margin: 0 0 14px;
   display: inline-block;
   padding: 4px 8px;
   border-radius: 999px;
-  border: 1px solid #0f2744;
-  color: #0f2744;
+  border: 1px solid #FF6B4A;
+  color: #FF6B4A;
   font-size: 12px;
   font-weight: 700;
 }

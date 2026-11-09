@@ -144,5 +144,5 @@ onMounted(() => {
 .hint.on { background: $hb-ink; color: #fff; }
 .more { display: block; margin: 18px auto 0; width: 140px; border: 0; padding: 12px; border-radius: 999px; background: $hb-white; color: $hb-forest; font-weight: 700; box-shadow: $hb-shadow-soft; cursor: pointer; }
 
-.fn-page { --ink:#0F2744; --teal:#0E7490; --amber:#B45309; --sand:#F7F4EF; }
+.fn-page { --ink:#1B2B4A; --teal:#FF6B4A; --amber:#FF6B4A; --sand:#F4F7FB; }
 </style>

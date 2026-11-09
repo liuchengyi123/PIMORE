@@ -49,7 +49,7 @@ function onBack() {
   position: sticky;
   top: 0;
   z-index: 30;
-  background: rgba(245, 246, 244, 0.92);
+  background: rgba(244, 247, 251, 0.94);
   backdrop-filter: blur(14px);
   margin: 0 -16px;
   padding: calc(8px + env(safe-area-inset-top)) 16px 12px;

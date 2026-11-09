@@ -14,13 +14,13 @@
 </template>
 <script setup lang="ts"></script>
 <style scoped>
-.page { min-height: 100vh; background: #F7F4EF; color: #0F2744; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
+.page { min-height: 100vh; background: #F4F7FB; color: #1B2B4A; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
 .head { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
-.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #0F2744; }
+.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #1B2B4A; }
 .title { font-size: 17px; font-weight: 700; margin: 0; }
 .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .tile {
-  background: #fff; border: 1px solid #E8E4DC; border-radius: 16px; padding: 16px; text-decoration: none; color: inherit;
+  background: #fff; border: 1px solid #E7ECF3; border-radius: 16px; padding: 16px; text-decoration: none; color: inherit;
   display: flex; flex-direction: column; gap: 6px; min-height: 88px;
 }
 .tt { font-size: 15px; font-weight: 700; }

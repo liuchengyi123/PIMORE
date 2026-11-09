@@ -49,13 +49,13 @@ async function share() {
 }
 </script>
 <style scoped>
-.page { min-height: 100vh; background: #F7F4EF; color: #0F2744; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
+.page { min-height: 100vh; background: #F4F7FB; color: #1B2B4A; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
 .head { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
-.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #0F2744; }
+.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #1B2B4A; }
 .title { font-size: 17px; font-weight: 700; margin: 0; }
 .hero {
   border-radius: 18px; padding: 20px; color: #fff; margin-bottom: 14px;
-  background-image: linear-gradient(161deg, #0F2744 4%, #0E7490 96%);
+  background-image: linear-gradient(161deg, #1B2B4A 4%, #FF6B4A 96%);
 }
 .eyebrow { font-size: 13px; opacity: 0.85; }
 .hl { margin-top: 6px; font-size: 22px; font-weight: 800; line-height: 1.25; }
@@ -65,17 +65,17 @@ async function share() {
 }
 .code-box strong { letter-spacing: 0.08em; }
 .primary {
-  width: 100%; height: 41px; border: 0; border-radius: 12px; background: #0F2744; color: #fff;
+  width: 100%; height: 41px; border: 0; border-radius: 12px; background: #1B2B4A; color: #fff;
   font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 10px;
 }
 .secondary {
-  width: 100%; height: 43px; border-radius: 12px; border: 1px solid #E8E4DC; background: #fff;
-  color: #0F2744; font-size: 14px; font-weight: 600; cursor: pointer;
+  width: 100%; height: 43px; border-radius: 12px; border: 1px solid #E7ECF3; background: #fff;
+  color: #1B2B4A; font-size: 14px; font-weight: 600; cursor: pointer;
 }
 .how {
-  margin-top: 14px; background: #fff; border: 1px solid #E8E4DC; border-radius: 16px; padding: 14px;
+  margin-top: 14px; background: #fff; border: 1px solid #E7ECF3; border-radius: 16px; padding: 14px;
 }
 .how .h { font-size: 14px; font-weight: 700; }
 .how ol { margin: 8px 0 0; padding-left: 18px; color: #6B7280; font-size: 11px; line-height: 1.6; }
-.msg { margin-top: 10px; font-size: 12px; color: #0E7490; }
+.msg { margin-top: 10px; font-size: 12px; color: #FF6B4A; }
 </style>

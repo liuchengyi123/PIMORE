@@ -1,14 +1,14 @@
 <template>
   <div class="fn-page page" data-figma="M19">
     <button type="button" class="back" @click="$router.back()" aria-label="back"><ChevronLeft :size="22" :stroke-width="1.75" /></button>
-    <h1>注册</h1>
+    <h1>Create account</h1>
     <form class="form" @submit.prevent="submit">
       <label>Email<input v-model="email" type="email" required /></label>
-      <label>Password（至少 8 位）<input v-model="password" type="password" required minlength="8" /></label>
+      <label>Password (8+ characters)<input v-model="password" type="password" required minlength="8" /></label>
       <p v-if="error" class="err">{{ error }}</p>
-      <button type="submit" class="btn" :disabled="busy">{{ busy ? '…' : '创建账号' }}</button>
+      <button type="submit" class="btn" :disabled="busy">{{ busy ? '…' : 'Create account' }}</button>
     </form>
-    <router-link class="link" :to="{ path: '/login', query: $route.query }">已有账号？登录</router-link>
+    <router-link class="link" :to="{ path: '/login', query: $route.query }">Already have an account? Sign in</router-link>
   </div>
 </template>
 <script setup lang="ts">
@@ -45,7 +45,7 @@ label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-w
 input { border: 1px solid $hb-line; border-radius: 12px; padding: 12px; font-size: 15px; }
 .btn { border: 0; height: 48px; border-radius: 14px; background: $hb-coral; color: #fff; font-weight: 740; cursor: pointer; }
 .err { color: $hb-coral; font-size: 13px; margin: 0; }
-.link { display: inline-block; margin-top: 16px; color: $hb-forest; font-weight: 680; }
+.link { display: inline-block; margin-top: 16px; color: $hb-coral; font-weight: 680; }
 
-.fn-page { --ink:#0F2744; --teal:#0E7490; --amber:#B45309; --sand:#F7F4EF; }
+.fn-page { --ink:#1B2B4A; --teal:#FF6B4A; --amber:#FF6B4A; --sand:#F4F7FB; }
 </style>

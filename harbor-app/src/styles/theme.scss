@@ -1,28 +1,28 @@
-﻿/* Harbor App · First Design shopping tokens */
-$hb-forest: #0F2744;
-$hb-deep: #0E7490;
-$hb-soft: #E0F2FE;
-$hb-coral: #E11D48;
-$hb-coral-soft: #FEE2E2;
-$hb-paper: #F7F4EF;
-$hb-line: #E2E6EE;
-$hb-ink: #0F2744;
-$hb-muted: #5C6570;
+﻿/* Harbor / Pimo — coral system from Figma file eptrtDM0XUICi87bqapjQb */
+$hb-forest: #1B2B4A;
+$hb-deep: #F04E32;
+$hb-soft: #FFF1EC;
+$hb-coral: #FF6B4A;
+$hb-coral-soft: #FFF1EC;
+$hb-paper: #F4F7FB;
+$hb-line: #E7ECF3;
+$hb-ink: #1B2B4A;
+$hb-muted: #8B95A7;
 $hb-white: #FFFFFF;
-$hb-strike: #8B93A0;
-$hb-success: #128A5E;
-$hb-price: #B45309;
+$hb-strike: #B0B7C3;
+$hb-success: #16A34A;
+$hb-price: #FF6B4A;
 
-$hb-radius-card: 22px;
-$hb-radius-btn: 16px;
-$hb-radius-btn-lg: 18px;
+$hb-radius-card: 16px;
+$hb-radius-btn: 14px;
+$hb-radius-btn-lg: 16px;
 $hb-radius-pill: 999px;
-$hb-tab-height: 58px;
+$hb-tab-height: 56px;
 $hb-page-pad: 16px;
 
-$hb-shadow-soft: 0 2px 16px rgba(14, 17, 22, 0.05);
-$hb-shadow-lift: 0 10px 30px rgba(14, 17, 22, 0.08);
-$hb-shadow-tab: 0 12px 40px rgba(14, 17, 22, 0.12);
+$hb-shadow-soft: 0 8px 24px rgba(27, 43, 74, 0.06);
+$hb-shadow-lift: 0 14px 32px rgba(255, 107, 74, 0.22);
+$hb-shadow-tab: 0 -6px 20px rgba(27, 43, 74, 0.04);
 
 :export {
   forest: $hb-forest;

@@ -17,6 +17,11 @@
       </div>
       <h1 class="title">{{ product.name }}</h1>
       <p v-if="interestCount > 0" class="interest">{{ t('pdp_interest', { n: interestCount }) }}</p>
+      <div class="ship-strip">
+        <span>{{ t('pdp_ship_tracked') }}</span>
+        <span class="dot">·</span>
+        <span>{{ product.shipsIn || t('pdp_ships_default') }}</span>
+      </div>
       <div class="ship-pills">
         <span class="pill ok">{{ t('pdp_ship_tracked') }}</span>
         <span class="pill info">{{ product.shipsIn || t('pdp_ships_default') }}</span>
@@ -173,7 +178,7 @@ async function addLocalAndMaybeServer() {
 }
 
 async function doWish() { /* wishlist cookie handled server-side via /wishlist when available */ }
-function doAdd() {
+async function doAdd() {
   if (optionLabels.value.length && !size.value) {
     sheetOpen.value = true
     return
@@ -295,9 +300,9 @@ async function notifyMe() {
   background: $hb-price; color: #fff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center;
 }
 .btn {
-  height: 44px; border-radius: 14px; border: 0; font-weight: 740; cursor: pointer; flex: 1;
-  &.outline { background: $hb-soft; color: $hb-forest; }
-  &.solid { background: $hb-price; color: #fff; }
+  height: 44px; border-radius: $hb-radius-sm; border: 0; font-weight: 740; cursor: pointer; flex: 1;
+  &.outline { background: $hb-white; color: $hb-coral; border: 2px solid $hb-coral; }
+  &.solid { background: $hb-coral; color: #fff; }
 }
 .empty { padding: 80px 20px; text-align: center; color: $hb-muted; }
 .sheet-mask { position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 60; display: flex; align-items: flex-end; }
@@ -306,12 +311,12 @@ async function notifyMe() {
 .opts { display: flex; flex-wrap: wrap; gap: 8px; }
 .opt {
   border: 1px solid $hb-line; background: $hb-paper; border-radius: 999px; padding: 8px 12px; cursor: pointer;
-  &.on { background: $hb-forest; color: #fff; border-color: $hb-forest; }
+  &.on { background: $hb-coral; color: #fff; border-color: $hb-coral; }
 }
 .muted { color: $hb-muted; font-size: 13px; }
 .qty-row { display: flex; align-items: center; gap: 16px; margin: 16px 0; font-size: 18px; font-weight: 700; }
 .qty-row button { width: 36px; height: 36px; border: 0; border-radius: 10px; background: $hb-paper; cursor: pointer; }
-.sheet-ok { width: 100%; height: 48px; border: 0; border-radius: 14px; background: $hb-price; color: #fff; font-weight: 740; cursor: pointer; }
+.sheet-ok { width: 100%; height: 48px; border: 0; border-radius: $hb-radius-sm; background: $hb-coral; color: #fff; font-weight: 740; cursor: pointer; }
 .body { background: #fff; border-radius: 20px 20px 0 0; margin-top: -16px; position: relative; padding-top: 14px; }
 .price { font-size: 26px; font-weight: 800; color: $hb-price; }
 .price.oos { color: #9CA3AF; }
@@ -320,18 +325,25 @@ async function notifyMe() {
 .ship-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .pill { display: inline-flex; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; background: #F3F4F6; color: #374151; }
 .pill.ok { background: #ECFDF5; color: #047857; }
-.pill.info { background: #E0F2FE; color: #0E7490; }
-.pill.amber { background: #FEF3C7; color: #B45309; }
-.pill.bad, .pill.coral { background: #FEE2E2; color: #B91C1C; }
-.reviews-box { margin-top: 16px; padding-top: 14px; border-top: 1px solid #E8E4DC; }
+.pill.info { background: $hb-coral-soft; color: $hb-coral-deep; }
+.pill.amber { background: $hb-coral-soft; color: $hb-coral; }
+.pill.bad, .pill.coral { background: $hb-coral-soft; color: $hb-coral-deep; }
+.ship-strip {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
+  margin-top: 12px; padding: 10px 12px; border-radius: $hb-radius-sm;
+  background: $hb-coral-soft; color: $hb-ink; font-size: 12px; font-weight: 650;
+}
+.ship-strip .dot { color: $hb-muted; }
+.reviews-box { margin-top: 16px; padding-top: 14px; border-top: 1px solid $hb-line; }
 .rev-head { display: flex; justify-content: space-between; align-items: center; font-size: 15px; }
-.rev-empty { margin-top: 10px; padding: 14px; background: #F7F4EF; border-radius: 12px; text-align: center; color: #6B7280; font-size: 13px; }
-.sticky-cta .btn.solid { background: $hb-price !important; }
-.sticky-cta .btn.disabled { background: #E8E4DC !important; color: #9CA3AF !important; }
+.rev-empty { margin-top: 10px; padding: 14px; background: $hb-paper; border-radius: 12px; text-align: center; color: $hb-muted; font-size: 13px; }
+.sticky-cta .btn.solid { background: $hb-coral !important; }
+.sticky-cta .btn.outline { background: #fff !important; border: 2px solid $hb-coral !important; color: $hb-coral !important; }
+.sticky-cta .btn.disabled { background: $hb-line !important; color: $hb-muted !important; }
 .dock.wish { flex-direction: column; font-size: 11px; color: $hb-muted; width: auto; padding: 0 6px; background: transparent; box-shadow: none; }
 .sheet { border-radius: 20px 20px 0 0 !important; }
-.sheet-ok { background: $hb-price !important; }
+.sheet-ok { background: $hb-coral !important; }
 .page { background: $hb-paper; }
 
-.fn-page { --ink:#0F2744; --teal:#0E7490; --amber:#B45309; --sand:#F7F4EF; }
+.fn-page { --ink:#1B2B4A; --teal:#FF6B4A; --amber:#FF6B4A; --sand:#F4F7FB; }
 </style>
