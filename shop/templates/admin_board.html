@@ -63,9 +63,13 @@
 <div class="split">
   <div class="card">
     <h2>每天访问</h2>
-    <div class="pad meters">
+    <div class="pad visit-chart" aria-label="每天访问">
       {% for row in board.trend %}
-      <div><span>{{ row.label }}</span><i style="width: {{ row.width }}%"></i><b>{{ row.n }}</b></div>
+      <div class="col">
+        <b>{{ row.n }}</b>
+        <span class="track"><i style="height: {{ row.width }}%"></i></span>
+        <span class="lab">{{ row.label }}</span>
+      </div>
       {% else %}
       <p class="muted">这段还没有访问。</p>
       {% endfor %}
@@ -78,7 +82,11 @@
         <thead><tr><th>语言</th><th>访问</th><th>占比</th></tr></thead>
         <tbody>
         {% for row in board.langs %}
-        <tr><td>{{ row.name }}</td><td>{{ row.n }}</td><td>{{ row.share }}</td></tr>
+        <tr>
+          <td>{{ row.name }}</td>
+          <td>{{ row.n }}</td>
+          <td><span class="share-bar"><i style="width: {{ row.share }}"></i></span> {{ row.share }}</td>
+        </tr>
         {% else %}
         <tr><td class="empty" colspan="3">这段还没有访问。</td></tr>
         {% endfor %}
@@ -127,10 +135,11 @@
   </div>
   <div class="card funnel-card">
     <h2>投放漏斗摘要</h2>
-    <div class="funnel-kpis">
-      <div class="funnel-kpi"><span>落地</span><b>{{ board.pages }}</b></div>
-      <div class="funnel-kpi"><span>点商品</span><b>{{ board.products }}</b></div>
-      <div class="funnel-kpi"><span>成交</span><b>{{ board.paid_orders }}</b></div>
+    {% set funnel_max = [board.pages, board.products, board.paid_orders]|max %}
+    <div class="funnel-bars">
+      <div><span>落地</span><i style="width: {{ 0 if funnel_max == 0 else (board.pages * 100 / funnel_max)|round(0, 'floor') }}%"></i><b>{{ board.pages }}</b></div>
+      <div><span>点商品</span><i style="width: {{ 0 if funnel_max == 0 else (board.products * 100 / funnel_max)|round(0, 'floor') }}%"></i><b>{{ board.products }}</b></div>
+      <div><span>成交</span><i style="width: {{ 0 if funnel_max == 0 else (board.paid_orders * 100 / funnel_max)|round(0, 'floor') }}%"></i><b>{{ board.paid_orders }}</b></div>
     </div>
     <p class="note">广告回传与账户配置请到投放回传。</p>
     <p><a class="btn ghost sm" href="/admin/traffic">打开投放回传</a></p>
