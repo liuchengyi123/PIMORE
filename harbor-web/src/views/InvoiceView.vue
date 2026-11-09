@@ -32,7 +32,11 @@
 
       <div class="table">
         <div class="tr head">
-          <span>SKU</span><span>{{ zh ? '商品' : 'ITEM' }}</span><span>{{ zh ? '数量' : 'QTY' }}</span><span>{{ zh ? '金额' : 'AMOUNT' }}</span>
+          <span>SKU</span>
+          <span>{{ zh ? '商品' : 'ITEM' }}</span>
+          <span class="num">{{ zh ? '数量' : 'QTY' }}</span>
+          <span class="num">{{ zh ? '单价' : 'UNIT' }}</span>
+          <span class="num">{{ zh ? '金额' : 'AMT' }}</span>
         </div>
         <div v-if="!rows.length" class="empty">{{ zh ? '暂无明细' : 'No line items' }}</div>
         <div v-for="(row, i) in rows" :key="row.sku + i" class="tr">
@@ -44,8 +48,9 @@
               <small v-if="row.option">{{ row.option }}</small>
             </span>
           </span>
-          <span>{{ row.qty || 1 }}</span>
-          <span>{{ row.amount || '—' }}</span>
+          <span class="num">{{ row.qty || 1 }}</span>
+          <span class="num">{{ row.price || '—' }}</span>
+          <span class="num">{{ row.amount || '—' }}</span>
         </div>
       </div>
 
@@ -180,65 +185,69 @@ async function share() {
 .page { min-height: 100vh; background: #FCFAF8; color: #1C2430; padding-bottom: 28px; }
 .hero {
   position: relative; display: flex; align-items: center; justify-content: center;
-  background: #F96141; color: #fff; min-height: 64px;
-  padding: 16px 48px; padding-top: calc(16px + env(safe-area-inset-top));
+  background: #F96141; color: #fff; min-height: 52px;
+  padding: 10px 44px; padding-top: calc(10px + env(safe-area-inset-top));
 }
 .back, .bag {
-  position: absolute; top: calc(12px + env(safe-area-inset-top));
-  width: 36px; height: 36px; border: 0; background: transparent; color: #fff;
+  position: absolute; top: calc(8px + env(safe-area-inset-top));
+  width: 32px; height: 32px; border: 0; background: transparent; color: #fff;
   display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
 }
-.back { left: 8px; }
-.bag { right: 8px; }
-h1 { margin: 0; font-size: 18px; font-weight: 800; }
+.back { left: 6px; }
+.bag { right: 6px; }
+h1 { margin: 0; font-size: 17px; font-weight: 800; letter-spacing: -0.02em; }
 .sheet {
-  margin: 16px; background: #fff; border-radius: 18px; padding: 18px 16px 14px;
-  box-shadow: 0 10px 28px rgba(28, 36, 48, 0.05);
+  margin: 10px 12px 0; background: #fff; border-radius: 16px; padding: 12px 12px 8px;
+  box-shadow: 0 8px 20px rgba(28, 36, 48, 0.05);
 }
-.mast, .bill { display: flex; justify-content: space-between; gap: 12px; }
-.brand { display: flex; gap: 8px; align-items: center; }
+.mast, .bill { display: flex; justify-content: space-between; gap: 8px; }
+.brand { display: flex; gap: 6px; align-items: center; }
 .mark {
-  width: 36px; height: 36px; border-radius: 10px; background: #FFF1EC; color: #F96141;
+  width: 28px; height: 28px; border-radius: 8px; background: #FFF1EC; color: #F96141;
   display: inline-flex; align-items: center; justify-content: center;
 }
-.logo { font-size: 22px; font-weight: 800; color: #F96141; letter-spacing: -0.04em; line-height: 1; }
-.tag { margin-top: 3px; font-size: 9px; letter-spacing: 0.08em; color: #8B919A; font-weight: 700; }
+.logo { font-size: 18px; font-weight: 800; color: #F96141; letter-spacing: -0.04em; line-height: 1; }
+.tag { margin-top: 2px; font-size: 8px; letter-spacing: 0.06em; color: #8B919A; font-weight: 700; }
 .inv { text-align: right; }
-.kicker { font-size: 11px; letter-spacing: 0.14em; font-weight: 800; color: #1C2430; }
-.kicker.soft { letter-spacing: 0.04em; color: #8B919A; font-weight: 700; }
-.inv b { display: block; margin-top: 4px; font-size: 14px; }
-.date, .bill p { margin-top: 2px; font-size: 12px; color: #8B919A; }
-.bill { display: block; margin-top: 18px; }
-.bill b { display: block; margin-top: 4px; font-size: 15px; }
-.bill p { margin: 2px 0 0; }
-.table { margin-top: 16px; border-top: 1px solid #F0EBE6; }
-.tr { display: grid; grid-template-columns: 72px 1fr 36px 64px; gap: 8px; align-items: center; padding: 10px 0; border-bottom: 1px solid #F6F1EC; font-size: 12px; }
-.tr.head { font-size: 10px; letter-spacing: 0.06em; color: #8B919A; font-weight: 800; }
+.kicker { font-size: 10px; letter-spacing: 0.12em; font-weight: 800; color: #1C2430; line-height: 1.2; }
+.kicker.soft { letter-spacing: 0.02em; color: #8B919A; font-weight: 700; }
+.inv b { display: block; margin-top: 1px; font-size: 13px; line-height: 1.2; }
+.date, .bill p { margin-top: 1px; font-size: 11px; line-height: 1.35; color: #8B919A; }
+.bill { display: block; margin-top: 10px; }
+.bill b { display: block; margin-top: 1px; font-size: 14px; line-height: 1.25; }
+.bill p { margin: 1px 0 0; }
+.table { margin-top: 10px; border-top: 1px solid #F0EBE6; }
+.tr {
+  display: grid; grid-template-columns: 62px minmax(0, 1fr) 28px 44px 48px; gap: 4px;
+  align-items: center; padding: 6px 0; border-bottom: 1px solid #F6F1EC; font-size: 11px; line-height: 1.2;
+}
+.tr.head { padding: 6px 0 4px; font-size: 9px; letter-spacing: 0.04em; color: #8B919A; font-weight: 800; }
 .sku { color: #6B7280; word-break: break-all; }
-.item { display: flex; gap: 8px; align-items: center; min-width: 0; }
-.item img { width: 36px; height: 36px; border-radius: 8px; object-fit: cover; background: #F6F1EC; }
-.item b { display: block; font-size: 13px; line-height: 1.25; }
-.item small { color: #8B919A; }
-.empty { padding: 16px 0; text-align: center; color: #8B919A; font-size: 13px; }
-.totals { margin-top: 8px; }
-.money { display: flex; justify-content: flex-end; gap: 28px; padding: 4px 0; font-size: 13px; color: #6B7280; }
-.money b { min-width: 72px; text-align: right; color: #1C2430; }
-.money.total { margin-top: 6px; color: #F96141; font-weight: 800; font-size: 16px; }
-.money.total b { color: #F96141; }
+.num { text-align: right; }
+.item { display: flex; gap: 6px; align-items: center; min-width: 0; }
+.item img { width: 28px; height: 28px; border-radius: 6px; object-fit: cover; background: #F6F1EC; flex: 0 0 auto; }
+.item b { display: block; font-size: 12px; font-weight: 700; line-height: 1.2; }
+.item small { display: block; color: #8B919A; font-size: 10px; line-height: 1.2; }
+.empty { padding: 10px 0; text-align: center; color: #8B919A; font-size: 12px; }
+.totals { margin-top: 4px; }
+.money { display: flex; justify-content: flex-end; gap: 18px; padding: 1px 0; font-size: 12px; line-height: 1.35; color: #6B7280; }
+.money b { min-width: 64px; text-align: right; color: #1C2430; font-weight: 650; }
+.money.total { margin-top: 4px; padding-top: 4px; color: #F96141; font-weight: 800; font-size: 15px; }
+.money.total b { color: #F96141; font-size: 15px; }
 .thanks {
-  margin-top: 14px; display: flex; gap: 10px; align-items: center;
-  background: #FFF7F4; border-radius: 12px; padding: 12px;
+  margin-top: 8px; display: flex; gap: 8px; align-items: center;
+  background: #FFF7F4; border-radius: 10px; padding: 8px 10px;
 }
 .house {
-  width: 32px; height: 32px; border-radius: 10px; background: #fff; color: #F96141;
+  width: 26px; height: 26px; border-radius: 8px; background: #fff; color: #F96141;
   display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
 }
-.thanks b { font-size: 13px; }
-.thanks p { margin: 2px 0 0; font-size: 12px; color: #8B919A; }
-.foot { margin-top: 14px; text-align: center; font-size: 11px; letter-spacing: 0.08em; color: #F96141; font-weight: 700; }
-.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 16px 0; }
+.thanks b { font-size: 12px; line-height: 1.25; }
+.thanks p { margin: 1px 0 0; font-size: 11px; line-height: 1.3; color: #8B919A; }
+.foot { margin-top: 8px; text-align: center; font-size: 10px; letter-spacing: 0.06em; color: #F96141; font-weight: 700; }
+.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 12px 0; }
 .btn {
-  height: 48px; border-radius: 14px; font-size: 14px; font-weight: 800; cursor: pointer;
+  height: 44px; border-radius: 12px; font-size: 14px; font-weight: 800; cursor: pointer;
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
 }
 .solid { border: 0; background: #F96141; color: #fff; }

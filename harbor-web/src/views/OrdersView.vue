@@ -33,7 +33,12 @@
       <p>{{ t('orders_login') }}</p>
       <router-link class="btn" :to="{ path: '/login', query: { next: '/orders' } }">{{ t('me_sign_in') }}</router-link>
     </div>
-    <div v-else-if="!visible.length" class="state">{{ t('orders_empty') }}</div>
+    <div v-else-if="!visible.length" class="blank">
+      <span class="blank-ico" aria-hidden="true"><Package :size="26" :stroke-width="1.75" /></span>
+      <h2>{{ filter ? (zh ? '这里还没有订单' : 'Nothing in this tab') : (zh ? '还没有订单' : 'No orders yet') }}</h2>
+      <p>{{ zh ? '下单之后，物流和发票会列在这里。' : 'Tracking and invoices show up here after you order.' }}</p>
+      <router-link class="btn" to="/browse">{{ zh ? '去逛逛' : 'Browse' }}</router-link>
+    </div>
     <div v-else class="list">
       <article v-for="o in visible" :key="o.id" class="card" @click="open(o)">
         <div class="top">
@@ -69,7 +74,7 @@
 </template>
 
 <script setup lang="ts">
-import { Check, ChevronRight, Clock3, Home, RotateCcw, Search, ShoppingBag, Truck } from 'lucide-vue-next'
+import { Check, ChevronRight, Clock3, Home, Package, RotateCcw, Search, ShoppingBag, Truck } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { fetchOrders, postBuyAgain, type OrderRow } from '@/api/accountApi'
@@ -270,4 +275,16 @@ h1 { margin: 18px 0 0; font-size: 28px; font-weight: 800; letter-spacing: -0.03e
 }
 .state { text-align: center; color: #8B919A; padding: 48px 16px; }
 .state .btn { margin-top: 12px; }
+.blank {
+  margin: 28px 16px 0; padding: 36px 22px 28px; text-align: center;
+  background: #fff; border-radius: 22px; box-shadow: 0 10px 28px rgba(28, 36, 48, 0.05);
+}
+.blank-ico {
+  width: 64px; height: 64px; margin: 0 auto 14px; border-radius: 20px;
+  background: #FFF1EC; color: #F96141;
+  display: flex; align-items: center; justify-content: center;
+}
+.blank h2 { margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -0.03em; color: #1C2430; }
+.blank p { margin: 8px auto 0; max-width: 240px; font-size: 14px; line-height: 1.45; color: #8B919A; }
+.blank .btn { margin-top: 18px; }
 </style>
