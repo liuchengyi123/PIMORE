@@ -75,18 +75,24 @@ body { background: var(--fn-sand) !important; }
   .fn-home { max-width: var(--fn-max); margin: 0 auto; padding: 18px 28px 28px;
     display: flex; gap: 16px; align-items: flex-start; }
   .fn-home .fn-left {
-    width: 180px; flex-shrink: 0; background: #fff; border: 1px solid var(--fn-line);
-    border-radius: 12px; padding: 10px; align-self: flex-start;
+    width: 180px; flex-shrink: 0; align-self: flex-start;
+    display: flex; flex-direction: column; gap: 12px;
+    background: transparent; border: 0; padding: 0;
   }
+  .fn-home .fn-depts {
+    background: #fff; border: 1px solid var(--fn-line);
+    border-radius: 12px; padding: 8px;
+  }
+  .fn-home .fn-depts h5,
   .fn-home .fn-left h5 {
     font-size: 11px; font-weight: 700; color: var(--fn-muted); letter-spacing: .06em;
     padding: 4px 8px 8px; margin: 0; text-transform: uppercase;
   }
-  .fn-home .fn-left a {
-    display: block; padding: 8px 10px; border-radius: 8px; font-size: 13px;
-    color: var(--fn-ink); text-decoration: none; font-weight: 500;
+  .fn-home .fn-depts a {
+    display: block; padding: 6px 8px; border-radius: 8px; font-size: 13px;
+    color: var(--fn-ink); text-decoration: none; font-weight: 500; line-height: 1.3;
   }
-  .fn-home .fn-left a.on, .fn-home .fn-left a:hover { background: var(--fn-ink); color: #fff; }
+  .fn-home .fn-depts a.on, .fn-home .fn-depts a:hover { background: var(--fn-ink); color: #fff; }
   .fn-home .fn-center { flex: 1; min-width: 0; }
   .fn-home .fn-right {
     width: 240px; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px;
@@ -1459,5 +1465,232 @@ body { background: var(--fn-sand) !important; }
   body.fn-home-page .fn-right .promo,
   body.fn-home-page .fn-right .fn-rail-card {
     padding: 12px 14px !important;
+  }
+}
+
+/* Desktop home: left ad column, 6-up feed, columns share one gap. */
+@media (min-width: 981px) {
+  body.fn-home-page main {
+    max-width: var(--fn-max, 1480px) !important;
+    width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    box-sizing: border-box !important;
+  }
+  body.fn-home-page .fn-home.fn-home-desk {
+    --fn-gap: 12px;
+    display: grid !important;
+    grid-template-columns: repeat(6, minmax(0, 1fr)) 240px !important;
+    grid-template-rows: 360px auto auto !important;
+    column-gap: var(--fn-gap) !important;
+    row-gap: 16px !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    max-width: var(--fn-max, 1480px) !important;
+    margin: 0 auto !important;
+    padding: 16px 20px 32px !important;
+    box-sizing: border-box !important;
+  }
+  body.fn-home-page .fn-home.fn-home-desk > .fn-left {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    width: auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-height: 360px !important;
+    align-self: stretch !important;
+    overflow: hidden !important;
+    align-items: stretch !important;
+    background: transparent !important;
+    border: 0 !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+  }
+  body.fn-home-page .fn-depts,
+  body.fn-home-page .fn-ad-slot {
+    width: 100% !important;
+    max-width: 100% !important;
+    align-self: stretch !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+  }
+  /* Icon row is kept in the markup for department art, and not shown on the desk home. */
+  body.fn-home-page .fn-icons { display: none !important; }
+  body.fn-home-page .fn-depts {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: auto;
+    background: #fff;
+    border: 1px solid var(--fn-line, #E2E6EE);
+    border-radius: 12px;
+    padding: 8px;
+  }
+  body.fn-home-page .fn-ad-slot {
+    flex: 0 0 132px;
+    height: 132px;
+    display: flex;
+    background: #fff;
+    border: 1px solid var(--fn-line, #E2E6EE);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  body.fn-home-page .fn-ad-slot .ad-slot,
+  body.fn-home-page .fn-ad-slot .ad-slot:hover {
+    display: flex !important;
+    flex: 1 1 auto;
+    align-items: stretch;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    color: inherit !important;
+    border-radius: 0 !important;
+    text-decoration: none !important;
+  }
+  body.fn-home-page .fn-ad-slot img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 0;
+    background: #F7F4EF;
+  }
+  body.fn-home-page .fn-ad-slot .ad-slot span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+  body.fn-home-page .fn-maincol {
+    grid-column: 2 / 7 !important;
+    grid-row: 1 !important;
+    min-width: 0 !important;
+    align-self: stretch !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  body.fn-home-page .fn-hero-row {
+    flex: 1 1 auto;
+    width: 100%;
+    margin: 0 !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    align-self: stretch !important;
+  }
+  body.fn-home-page .fn-hero,
+  body.fn-home-page .fn-hero1,
+  body.fn-home-page .fn-hero2 {
+    min-height: 0 !important;
+    max-height: none !important;
+    height: 100% !important;
+  }
+  body.fn-home-page .fn-shop,
+  body.fn-home-page .fn-feed {
+    grid-column: 1 / 7 !important;
+    min-width: 0 !important;
+  }
+  body.fn-home-page .fn-shop { grid-row: 2 !important; }
+  body.fn-home-page .fn-feed { grid-row: 3 !important; }
+  body.fn-home-page .fn-right {
+    grid-column: 7 !important;
+    grid-row: 1 / span 3 !important;
+    width: auto !important;
+    min-width: 0 !important;
+    align-self: start !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+  body.fn-home-page .fn-shop .fn-sec,
+  body.fn-home-page .fn-feed .fn-sec,
+  body.fn-home-page .fn-feed-head {
+    display: flex !important;
+    align-items: baseline !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    margin: 0 0 10px !important;
+  }
+  body.fn-home-page .fn-shop .fn-sec h3,
+  body.fn-home-page .fn-feed .fn-sec h3,
+  body.fn-home-page .fn-feed-head h3 {
+    margin: 0 !important;
+    font-size: 17px !important;
+    font-weight: 700 !important;
+    color: var(--fn-ink, #0F2744) !important;
+  }
+  body.fn-home-page .fn-feed .fn-tabs {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    align-items: center !important;
+    margin: 0 0 12px !important;
+  }
+  body.fn-home-page .fn-shop .fn-feat,
+  body.fn-home-page .fn-feed .product-grid.feed,
+  body.fn-home-page .fn-feed .fn-grid,
+  body.fn-home-page .fn-feed .fn-rail {
+    display: grid !important;
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+    margin-top: 0 !important;
+    width: 100% !important;
+  }
+  body.fn-home-page .fn-shop a.card,
+  body.fn-home-page .fn-feed a.card {
+    height: 100%;
+    min-width: 0;
+  }
+  body.fn-home-page .fn-continue-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  body.fn-home-page .fn-continue-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    text-decoration: none;
+    color: inherit;
+  }
+  body.fn-home-page .fn-continue-row img {
+    width: 56px;
+    height: 56px;
+    flex: 0 0 56px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: #E2E6EE;
+  }
+  body.fn-home-page .fn-continue-row span {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+  body.fn-home-page .fn-continue-row .nm {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--fn-ink, #0F2744);
+  }
+  body.fn-home-page .fn-continue-row .price {
+    display: block;
+    margin-top: 2px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--fn-amber, #B45309);
   }
 }
