@@ -2851,6 +2851,32 @@ for _lang, _extra in HEAT_UI.items():
     UI[_lang].update(_extra)
 
 
+# Mobile home / Me chrome. These were hardcoded English in the H5 templates.
+# English is the fallback for every storefront language; zh and zh-Hant override it.
+_MOBILE_CHROME_EN = {
+    "m_search_ph": "Search kitchen, storage, cleaning…",
+    "m_week": "THIS WEEK",
+    "m_kitchen_refresh": "Kitchen refresh · up to 30% off",
+    "m_shop_cta": "Shop →",
+    "m_new": "New",
+    "m_flash": "Flash",
+    "m_coupons": "Coupons",
+    "m_checkin": "Check-in",
+    "m_invite": "Invite",
+    "m_orders": "Orders",
+    "m_bath": "Bath",
+    "me": "Me",
+    "all": "All",
+    "guest_checkout": "Guest checkout available",
+    "welcome_harbor": "Welcome to Harbor",
+    "guest_welcome_sub": "Guest checkout available · sign in to sync orders & wishlist",
+    "lucky_chip": "{pct}% OFF",
+}
+for _pack in UI.values():
+    for _k, _v in _MOBILE_CHROME_EN.items():
+        _pack.setdefault(_k, _v)
+
+
 def heat_line(texts, heat) -> str:
     """Short card/API heat label for one storefront language."""
     try:

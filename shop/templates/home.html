@@ -216,37 +216,37 @@
   <form class="m01-search" action="{{ href('/search', country) }}" method="get">
     <input type="hidden" name="country" value="{{ country }}">
     <img src="/static/m01/search.svg" width="24" height="24" alt="">
-    <input type="search" name="q" value="{{ q|default('') }}" placeholder="Search kitchen, storage, cleaning…" aria-label="{{ t.search }}">
+    <input type="search" name="q" value="{{ q|default('') }}" placeholder="{{ t.m_search_ph }}" aria-label="{{ t.search }}">
   </form>
   <a class="m01-hero" href="{{ href('/sale', country) }}">
     <span class="m01-hero-copy">
-      <span class="kicker">THIS WEEK</span>
-      <strong>Kitchen refresh · up to 30% off</strong>
+      <span class="kicker">{{ t.m_week }}</span>
+      <strong>{{ t.m_kitchen_refresh }}</strong>
     </span>
-    <span class="m01-cta">Shop →</span>
+    <span class="m01-cta">{{ t.m_shop_cta }}</span>
   </a>
   <nav class="m01-cuts" aria-label="{{ t.departments }}">
-    <a href="{{ href('/sale', country) }}"><i><img src="/static/m01/sale.svg" width="24" height="24" alt=""></i>Sale</a>
-    <a href="{{ href('/new', country) }}"><i><img src="/static/m01/sparkles.svg" width="24" height="24" alt=""></i>New</a>
-    <a href="{{ href('/flash', country) }}"><i><img src="/static/m01/zap.svg" width="24" height="24" alt=""></i>Flash</a>
-    <a href="{{ href('/account/coupons', country) }}"><i><img src="/static/m01/ticket.svg" width="24" height="24" alt=""></i>Coupons</a>
-    <a href="{{ href('/check-in', country) }}"><i><img src="/static/m01/calendar.svg" width="24" height="24" alt=""></i>Check-in</a>
-    <a href="{{ href('/account/balance', country) }}"><i><img src="/static/m01/wallet.svg" width="24" height="24" alt=""></i>Balance</a>
-    <a href="{{ href('/share', country) }}"><i><img src="/static/m01/gift.svg" width="24" height="24" alt=""></i>Invite</a>
-    <a href="{{ href('/account/wishlist', country) }}"><i><img src="/static/m01/heart.svg" width="24" height="24" alt=""></i>Wishlist</a>
-    <a href="{{ href('/account/orders', country) }}"><i><img src="/static/m01/package.svg" width="24" height="24" alt=""></i>Orders</a>
-    <a href="{{ href('/help', country) }}"><i><img src="/static/m01/help.svg" width="24" height="24" alt=""></i>Help</a>
+    <a href="{{ href('/sale', country) }}"><i><img src="/static/m01/sale.svg" width="24" height="24" alt=""></i>{{ t.sale_badge }}</a>
+    <a href="{{ href('/new', country) }}"><i><img src="/static/m01/sparkles.svg" width="24" height="24" alt=""></i>{{ t.m_new }}</a>
+    <a href="{{ href('/flash', country) }}"><i><img src="/static/m01/zap.svg" width="24" height="24" alt=""></i>{{ t.m_flash }}</a>
+    <a href="{{ href('/account/coupons', country) }}"><i><img src="/static/m01/ticket.svg" width="24" height="24" alt=""></i>{{ t.m_coupons }}</a>
+    <a href="{{ href('/check-in', country) }}"><i><img src="/static/m01/calendar.svg" width="24" height="24" alt=""></i>{{ t.m_checkin }}</a>
+    <a href="{{ href('/account/balance', country) }}"><i><img src="/static/m01/wallet.svg" width="24" height="24" alt=""></i>{{ t.balance }}</a>
+    <a href="{{ href('/share', country) }}"><i><img src="/static/m01/gift.svg" width="24" height="24" alt=""></i>{{ t.m_invite }}</a>
+    <a href="{{ href('/account/wishlist', country) }}"><i><img src="/static/m01/heart.svg" width="24" height="24" alt=""></i>{{ t.wishlist }}</a>
+    <a href="{{ href('/account/orders', country) }}"><i><img src="/static/m01/package.svg" width="24" height="24" alt=""></i>{{ t.m_orders }}</a>
+    <a href="{{ href('/help', country) }}"><i><img src="/static/m01/help.svg" width="24" height="24" alt=""></i>{{ t.help }}</a>
   </nav>
   <div class="m01-chips" data-home-tabs>
-    <button type="button" class="on" data-home-tab="recommended">For you</button>
-    <button type="button" data-home-tab="kitchen">Kitchen</button>
-    <button type="button" data-home-tab="cleaning">Cleaning</button>
-    <button type="button" data-home-tab="storage">Storage</button>
-    <button type="button" data-home-tab="pet">Pet</button>
-    <button type="button" data-home-tab="personal">Bath</button>
+    <button type="button" class="on" data-home-tab="recommended">{{ t.for_you }}</button>
+    <button type="button" data-home-tab="kitchen">{{ t.categories.kitchen }}</button>
+    <button type="button" data-home-tab="cleaning">{{ t.categories.cleaning }}</button>
+    <button type="button" data-home-tab="storage">{{ t.categories.storage }}</button>
+    <button type="button" data-home-tab="pet">{{ t.categories.pet }}</button>
+    <button type="button" data-home-tab="personal">{{ t.m_bath }}</button>
   </div>
   <div class="m01-sec">
-    <h3>In the shop</h3>
+    <h3>{{ t.shop_picks }}</h3>
   </div>
   <div class="m01-grid" data-home-grid>
     {% for item in products[:20] %}{% set eager = loop.index <= 2 %}{% include "card.html" %}{% endfor %}

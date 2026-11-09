@@ -76,5 +76,5 @@
     </div>
   </div>
 </div>
-<button class="lucky-chip" type="button" data-lucky-chip hidden>10% OFF</button>
-<script src="/static/lucky.min.js?v=1" defer></script>
+<button class="lucky-chip" type="button" data-lucky-chip data-lucky-off="{{ t.lucky_chip }}" hidden>{{ t.lucky_chip.format(pct=10) }}</button>
+<script src="/static/lucky.min.js?v=2" defer></script>

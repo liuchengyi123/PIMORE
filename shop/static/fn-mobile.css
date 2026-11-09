@@ -2485,10 +2485,13 @@
   body.fn-help-page .fn-acc-mbar { margin: 0 -16px 10px !important; width: auto !important; }
 }
 
-/* welcome subtitle contrast */
+/* Welcome helper sits on the sand page. The navy-hero rule paints every
+   .fn-acc-sub white, so this selector has to win on the light block. */
+body.fn-acc-page .fn-acc-welcome .fn-acc-sub,
+body.fn-acc-page .fn-acc-welcome-title + .fn-acc-sub,
 .fn-acc-welcome .fn-acc-sub,
 .fn-acc-welcome-title + .fn-acc-sub {
-  color: #6B7280 !important;
+  color: #64748b !important;
 }
 .fn-acc-welcome-title {
   color: #0F2744 !important;

@@ -1018,10 +1018,12 @@ body { background: var(--fn-sand) !important; }
 }
 @media (min-width: 981px) {
 
-/* welcome subtitle contrast */
+/* Welcome helper sits on the sand page, not the navy hero. */
+body.fn-acc-page .fn-acc-welcome .fn-acc-sub,
+body.fn-acc-page .fn-acc-welcome-title + .fn-acc-sub,
 .fn-acc-welcome .fn-acc-sub,
 .fn-acc-welcome-title + .fn-acc-sub {
-  color: #6B7280 !important;
+  color: #64748b !important;
 }
 .fn-acc-welcome-title {
   color: #0F2744 !important;
