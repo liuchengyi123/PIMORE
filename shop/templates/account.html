@@ -18,7 +18,7 @@
     </div>
     <div class="fn-asset-grid fn-asset-in-hero">
       <a class="fn-asset" href="{{ href('/account/balance', country) }}"><b class="price">{{ balance_text }}</b><span class="tiny">{{ t.balance }}</span></a>
-      <a class="fn-asset" href="{{ href('/account/coupons', country) }}"><b>{{ offers|length }}</b><span class="tiny">{{ t.my_coupons if t.my_coupons is defined else 'Coupons' }}</span></a>
+      <a class="fn-asset" data-coupon-count="{{ coupon_count }}" href="{{ href('/account/coupons', country) }}"><b>{{ coupon_count }}</b><span class="tiny">{{ t.my_coupons if t.my_coupons is defined else 'Coupons' }}</span></a>
       <a class="fn-asset" href="{{ href('/account/wishlist', country) }}"><b>{{ wish_count }}</b><span class="tiny">{{ t.wishlist }}</span></a>
       <a class="fn-asset" href="{{ href('/check-in', country) }}"><b>{% if checked_today %}✓{% else %}–{% endif %}</b><span class="tiny">{{ t.checkin }}</span></a>
     </div>
@@ -159,6 +159,8 @@
 
 {% elif panel == 'coupons' %}
   <header class="fn-acc-mbar"><a class="fn-list-back" href="{{ href('/', country) }}">‹</a><h1 class="fn-list-mtitle">{{ t.my_coupons }}</h1><span class="fn-list-filter-spacer"></span></header>
+  <p class="tiny fn-coupon-spin">{{ t.coupons_spin_note }}</p>
+  {% if offers %}
   {% for offer in offers %}
   <article class="fn-coupon-row">
     <div class="fn-coupon-amt">{{ offer.amount }}</div>
@@ -168,9 +170,14 @@
       <span class="fn-pill {% if offer.owned %}ok{% endif %}" style="margin-top:8px">{{ offer.status }}</span>
     </div>
   </article>
-  {% else %}
-  <p class="fn-empty">{{ t.rebate_note }}</p>
   {% endfor %}
+  {% elif not email %}
+  <p class="fn-empty">{{ t.coupons_guest }}</p>
+  <p class="fn-acc-guest"><a class="btn" href="{{ href('/login?next=/account/coupons', country) }}">{{ t.login }}</a>
+    <a class="btn ghost" href="{{ href('/register?next=/account/coupons', country) }}">{{ t.create_account }}</a></p>
+  {% else %}
+  <p class="fn-empty">{{ t.coupons_empty }}</p>
+  {% endif %}
 
 {% elif panel == 'balance' %}
   <header class="fn-acc-mbar"><a class="fn-list-back" href="{{ href('/', country) }}">‹</a><h1 class="fn-list-mtitle">{{ t.balance }}</h1><span class="fn-list-filter-spacer"></span></header>

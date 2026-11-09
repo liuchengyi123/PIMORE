@@ -266,6 +266,23 @@ def list_coupons(conn, email, merchandise):
     return found
 
 
+def wallet_visible(kind, coupon_id, email, open_orders, granted_ids):
+    """Coupons that belong on Me and /account/coupons.
+
+    Guests own none of the catalog. A signed-in buyer sees grants, a first-order
+    coupon only while they have no live order, and public coupons (checkout can
+    still apply those). Unearned share, home-screen, and check-in templates stay
+    off the wallet even though the earn pages still advertise them.
+    """
+    if not email:
+        return False
+    if kind == "first":
+        return int(open_orders or 0) == 0
+    if int(coupon_id) in granted_ids:
+        return True
+    return kind == "public"
+
+
 def _lock_balance(conn, email):
     conn.execute(
         """

@@ -138,6 +138,7 @@ from shop.checkout import (
     issue_reset,
     best_coupon,
     list_coupons,
+    wallet_visible,
     load_lines,
     merge_line,
     _bind_referrer,
@@ -6295,6 +6296,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         ctx = view(request)
         email = buyer_email(request) or ""
         offers = []
+        earn_offers = []
         open_orders = 0
         granted_ids = set()
         if email:
@@ -6331,7 +6333,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 status = labels.get("coupon_used") or "Used"
             else:
                 status = labels.get("coupon_locked") or ""
-            offers.append({
+            offer = {
                 "id": int(row["id"]),
                 "name": labels.get(f"coupon_{kind}") or row["name"],
                 "kind": kind,
@@ -6339,7 +6341,11 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
                 "amount": money(ctx, row["amount_cents"]),
                 "owned": state == "ready",
                 "status": status,
-            })
+            }
+            if kind in {"share", "desktop", "checkin"}:
+                earn_offers.append(offer)
+            if wallet_visible(kind, row["id"], email, open_orders, granted_ids):
+                offers.append(offer)
         counts = {"pending": 0, "paid": 0, "shipped": 0, "returns": 0}
         balance = 0
         if email:
@@ -6382,13 +6388,15 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         return {
             "email": email,
             "offers": offers,
+            "coupon_count": len(offers),
+            "earn_offers": earn_offers,
             "counts": counts,
             "checked_today": checked_today,
             "balance_text": money(ctx, balance),
-        "recent": recent,
-        "from_history": bool(seen),
-        "wish_count": len(read_skus(request.cookies.get("wishlist"), 36)),
-    }
+            "recent": recent,
+            "from_history": bool(seen),
+            "wish_count": len(read_skus(request.cookies.get("wishlist"), 36)),
+        }
 
     @app.get("/account/orders", response_class=HTMLResponse)
     def my_orders(request: Request):

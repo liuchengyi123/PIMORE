@@ -2876,6 +2876,52 @@ for _pack in UI.values():
     for _k, _v in _MOBILE_CHROME_EN.items():
         _pack.setdefault(_k, _v)
 
+# Me wallet copy. The 10% OFF spin is the storewide promo; this page is owned coupons only.
+COUPON_WALLET_UI = {
+    "en": {
+        "coupons_guest": "Sign in to see coupons on your account.",
+        "coupons_empty": "No coupons yet. Check in or share, and they show up here.",
+        "coupons_spin_note": "Storewide saving is the 10% OFF spin. This page only lists coupons on your account.",
+    },
+    "es": {
+        "coupons_guest": "Entra para ver los cupones de tu cuenta.",
+        "coupons_empty": "Aún no hay cupones. El registro diario o compartir los deja aquí.",
+        "coupons_spin_note": "El ahorro de la tienda es la ruleta 10% OFF. Aquí solo están los cupones de tu cuenta.",
+    },
+    "de": {
+        "coupons_guest": "Melden Sie sich an, um die Gutscheine Ihres Kontos zu sehen.",
+        "coupons_empty": "Noch keine Gutscheine. Check-in oder Teilen legt sie hier ab.",
+        "coupons_spin_note": "Der Shop-Rabatt ist das 10% OFF Glücksrad. Hier stehen nur Gutscheine auf Ihrem Konto.",
+    },
+    "fr": {
+        "coupons_guest": "Connectez-vous pour voir les coupons de votre compte.",
+        "coupons_empty": "Pas encore de coupon. Le pointage ou un partage les affiche ici.",
+        "coupons_spin_note": "La remise boutique est la roue 10% OFF. Cette page ne liste que les coupons de votre compte.",
+    },
+    "pt": {
+        "coupons_guest": "Entre para ver os cupons da sua conta.",
+        "coupons_empty": "Nenhum cupom ainda. O check-in ou um convite aparece aqui.",
+        "coupons_spin_note": "O desconto da loja é a roleta 10% OFF. Esta página só lista cupons da sua conta.",
+    },
+    "ja": {
+        "coupons_guest": "ログインすると、アカウントのクーポンが表示されます。",
+        "coupons_empty": "クーポンはまだありません。チェックインかシェアでここに表示されます。",
+        "coupons_spin_note": "店全体の割引は 10% OFF のルーレットです。ここにあるのはアカウントのクーポンだけです。",
+    },
+    "zh": {
+        "coupons_guest": "登录后查看账户里的优惠券。",
+        "coupons_empty": "还没有优惠券。签到或邀请好友后会出现在这里。",
+        "coupons_spin_note": "全场优惠是幸运转盘的 10% OFF。这里只显示你账户里的券。",
+    },
+    "zh-Hant": {
+        "coupons_guest": "登入後查看帳戶裡的優惠券。",
+        "coupons_empty": "還沒有優惠券。簽到或邀請好友後會出現在這裡。",
+        "coupons_spin_note": "全場優惠是幸運轉盤的 10% OFF。這裡只顯示你帳戶裡的券。",
+    },
+}
+for _lang, _extra in COUPON_WALLET_UI.items():
+    UI[_lang].update(_extra)
+
 
 def heat_line(texts, heat) -> str:
     """Short card/API heat label for one storefront language."""
