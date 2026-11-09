@@ -33,7 +33,7 @@
       <td>#{{ row['id'] }}</td>
       <td>{{ row['email'] }}</td>
       <td><span class="tag {{ row['status'] }}">{{ status_name.get(row['status'], row['status']) }}</span></td>
-      <td>{{ format_money(row['due_local'], row['currency']) }}</td>
+      <td class="due">{{ format_money(row['due_local'], row['currency']) }}</td>
       <td class="track-cell">{% if (row['carrier'] if 'carrier' in row.keys() else none) or (row['tracking'] if 'tracking' in row.keys() else none) %}{{ (row['carrier'] if 'carrier' in row.keys() else none) or '' }}{% if (row['carrier'] if 'carrier' in row.keys() else none) and (row['tracking'] if 'tracking' in row.keys() else none) %}/{% endif %}{{ (row['tracking'] if 'tracking' in row.keys() else none) or '' }}{% else %}—{% endif %}</td>
       <td>{% if row['status'] == 'paid' %}<a class="btn sm" href="/admin/orders/{{ row['id'] }}">处理</a>{% else %}<a class="btn ghost sm" href="/admin/orders/{{ row['id'] }}">查看</a>{% endif %}</td>
     </tr>
@@ -657,7 +657,7 @@
   <div class="pad actions">
     {% if is_admin_role %}<button class="btn quiet" type="submit" form="batch" onclick="return confirm('确定删除选中的商品？此操作不可恢复。')">删除选中</button>{% endif %}
   </div>
-  <div class="table-wrap">
+  <div class="table-wrap catalog-table">
   <table>
         <thead><tr>
       <th><input id="pick-all" type="checkbox" aria-label="全选"></th>

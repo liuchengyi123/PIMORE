@@ -1881,6 +1881,33 @@ tbody td { border-top: 1px solid #F0F1F5; }
 }
 #launch-postback .funnel-totals span { font-size: 12px; color: #5C6570; }
 
+/* Orders + catalog tables only — denser rows, header, coral money */
+.orders-table th, .orders-table td,
+.catalog-table th, .catalog-table td {
+  padding: 6px 8px;
+  line-height: 1.25;
+  vertical-align: middle;
+}
+.orders-table thead th, .catalog-table thead th {
+  height: 32px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: #F7F8FA;
+  color: #8B919A;
+  border-bottom: 1px solid #E8EAF0;
+}
+.orders-table tbody td, .catalog-table tbody td {
+  height: 36px;
+  font-size: 12px;
+  color: #1C2430;
+  border-top: 1px solid #F0F1F5;
+}
+.orders-table td.due, .catalog-table .amber-price { color: #F96141; font-weight: 750; }
+.catalog-table .product-cell { display: flex; align-items: center; gap: 8px; }
+.catalog-table .thumb { width: 36px; height: 36px; border-radius: 8px; object-fit: cover; background: #F4F6FB; }
+.catalog-table .sku { font-size: 11px; color: #8B919A; }
+
 
 /* launch-side-fixed-mobile */
 @media (max-width: 800px) {
