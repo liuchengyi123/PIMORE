@@ -3141,11 +3141,25 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             items.append({"name": line.get("name") or line.get("sku") or "", "image": line.get("image") or "", **pair})
         return items
 
+    def lucky_chip_first_order(request, email):
+        """10% chip is only for a buyer who has not placed an order."""
+        if request.cookies.get("harbor_bought") == "1":
+            return False
+        who = (email or "").strip().lower()
+        if not who:
+            return True
+        row = conn.execute(
+            "select count(*) as n from orders where email = ? and status != 'cancelled'",
+            (who,),
+        ).fetchone()
+        return int(row["n"] or 0) == 0
+
     def lucky_view(request, email=None):
         from shop.lucky import actor_email, snapshot
         token = lucky_token(request)
         who = actor_email(conn, token, buyer_email(request) if email is None else email)
         data = snapshot(conn, token, who)
+        data["first_order"] = lucky_chip_first_order(request, who)
         if token:
             data["token"] = token
         percent = data["spin"]["percent"] if data.get("spin") else data["percent"]
@@ -5553,6 +5567,7 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
         if fresh:
             token = fresh
         data = snapshot(conn, token, who)
+        data["first_order"] = lucky_chip_first_order(request, who)
         if token:
             data["token"] = token
         percent = data["spin"]["percent"] if data.get("spin") else data["percent"]

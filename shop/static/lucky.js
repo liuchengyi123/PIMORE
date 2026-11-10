@@ -28,6 +28,10 @@
     return String(pattern).replace(/\{pct\}/g, String(percent()));
   }
 
+  function showOffChip() {
+    return !!(state && state.first_order && state.spin && state.spin.live && !state.free);
+  }
+
   function paintLabels() {
     var text = percent() + "% OFF";
     var nodes = root.querySelectorAll("[data-lucky-pct]");
@@ -106,7 +110,8 @@
     var text = clock(secondsLeft());
     var nodes = root.querySelectorAll("[data-lucky-clock]");
     for (var i = 0; i < nodes.length; i++) nodes[i].textContent = text;
-    if (state && state.spin && state.spin.live && !(state.free)) {
+    if (showOffChip()) {
+      chip.hidden = false;
       chip.textContent = offLabel() + " · " + text;
     }
   }
@@ -251,7 +256,12 @@
     if (event.target.closest("[data-lucky-close]")) {
       if (state && state.offer_spin && !state.spin) remember("harbor_lucky_dismiss", "1");
       hide();
-      if (state && (state.offer_spin || (state.spin && state.spin.live) || state.free || state.egg)) chip.hidden = false;
+      if (state && state.free) paintStatus();
+      else if (state && state.egg) {
+        chip.hidden = false;
+        chip.textContent = "Free order";
+      } else if (showOffChip()) chip.hidden = false;
+      else chip.hidden = true;
       return;
     }
     if (event.target.closest("[data-lucky-spin]")) {
@@ -269,7 +279,7 @@
         setTimeout(function () {
           pane("win");
           tick();
-          chip.hidden = false;
+          chip.hidden = !showOffChip();
         }, 4100);
       });
       return;
@@ -308,10 +318,10 @@
       tick();
       setInterval(tick, 1000);
       if (state.free) paintStatus();
-      else if (state.spin && state.spin.live) chip.hidden = false;
+      else if (showOffChip()) chip.hidden = false;
+      else chip.hidden = true;
       maybeEgg();
-      if (state.offer_spin && remembered("harbor_lucky_dismiss") !== "1" && !state.egg) pane("wheel");
-      else if (state.offer_spin) chip.hidden = false;
+      if (state.offer_spin && state.first_order && remembered("harbor_lucky_dismiss") !== "1" && !state.egg) pane("wheel");
       armBrowse();
       armPay();
     })

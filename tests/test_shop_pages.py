@@ -327,6 +327,16 @@ def test_zh_mobile_chrome_follows_locale(client):
         assert text in en_home, text
     assert "搜索厨房" not in en_home
     assert "店内推荐" not in en_home
+    cuts = en_home.split('class="m01-cuts"', 1)[1].split("</nav>", 1)[0]
+    assert "/c/kitchen?country=US" in cuts
+    assert "/c/storage?sort=newest&amp;country=US" in cuts or "/c/storage?sort=newest&country=US" in cuts
+    assert "/c/cleaning?country=US" in cuts
+    assert "/sale?" not in cuts
+    assert "/flash?" not in cuts
+    assert "/new?" not in cuts
+    assert "/account/coupons" in cuts
+    assert "/check-in" in cuts
+    assert "/help" in cuts
 
     zh_me = client.get("/account?country=CN&lang=zh").text
     assert "游客" in zh_me
@@ -340,6 +350,12 @@ def test_zh_mobile_chrome_follows_locale(client):
     css = client.get("/static/fn-mobile.min.css").text
     assert "body.fn-acc-page .fn-acc-welcome .fn-acc-sub" in css
     assert "#64748b" in css
+    assert ".m01-grid .was{" in css or ".m01-grid .was {" in css
+    assert "text-decoration:line-through" in css
+    assert "min-width:156px" in css
+    assert ".fn-me-mobile-nav{" in css or "fn-me-mobile-nav" in css
+    assert "margin:12px 0" in css
+    assert "bottom:calc(132px + env(safe-area-inset-bottom,0px))" in css
 
     assert UI["zh"]["me"] == "我的"
     assert UI["zh-Hant"]["me"] == "我的"

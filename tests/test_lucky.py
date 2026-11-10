@@ -151,11 +151,24 @@ def test_pages_and_admin_settings_are_wired():
     assert 'id="lucky"' in home.text
     assert "data-lucky-spin" in home.text
     assert "/static/lucky.min.css?v=2" in home.text
+    guest = client.get("/api/lucky").json()
+    assert guest["offer_spin"] is True
+    assert guest["first_order"] is True
+    assert guest["spin"] is None
     spun = client.post("/api/lucky/spin")
     assert spun.status_code == 200
     assert spun.json()["spin"]["percent"] == 10
     assert spun.json()["spin"]["live"] is True
-    assert client.get("/api/lucky").json()["offer_spin"] is False
+    assert spun.json()["first_order"] is True
+    after = client.get("/api/lucky").json()
+    assert after["offer_spin"] is False
+    assert after["first_order"] is True
+    bought = client.get("/api/lucky", cookies={"harbor_bought": "1"}).json()
+    assert bought["first_order"] is False
+    js = client.get("/static/lucky.min.js").text
+    assert "function showOffChip()" in js
+    assert "state.first_order&&state.spin&&state.spin.live" in js
+    assert "else if(state.offer_spin)chip.hidden=false" not in js
     save_staff(client.app.state.db, "admin", "secret-pass", "admin")
     entered = client.post(
         "/admin/login",
