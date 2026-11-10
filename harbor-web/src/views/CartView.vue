@@ -126,50 +126,50 @@ onMounted(() => {
 h1 { margin: 0; font-size: 24px; color: $hb-ink; font-weight: 780; }
 h1 small { font-size: 12px; color: $hb-muted; font-weight: 600; }
 .count { margin: 2px 0 0; font-size: 13px; color: $hb-muted; }
-.trash { border: 0; background: transparent; color: #9AA0A8; font-size: 18px; cursor: pointer; }
+.trash { border: 0; background: transparent; color: var(--hb-muted); font-size: 18px; cursor: pointer; }
 .confirm-mask {
   position: fixed; inset: 0; z-index: 80; background: rgba(28,36,48,0.45);
   display: flex; align-items: flex-end; justify-content: center;
 }
 .confirm-card {
-  width: min(100%, 768px); background: #fff; border-radius: 18px 18px 0 0; padding: 20px 16px 24px;
+  width: min(100%, 768px); background: var(--hb-surface); border-radius: 18px 18px 0 0; padding: 20px 16px 24px;
 }
 .confirm-card .mark {
-  width: 48px; height: 48px; border-radius: 16px; background: #FFF1EC; color: #F96141;
+  width: 48px; height: 48px; border-radius: 16px; background: var(--hb-primary-soft); color: var(--hb-primary);
   display: grid; place-items: center; font-size: 22px; font-weight: 800; margin-bottom: 10px;
 }
 .confirm-card h2 { margin: 0 0 8px; font-size: 18px; }
-.confirm-card p { margin: 0; color: #5C6570; }
+.confirm-card p { margin: 0; color: var(--hb-muted); }
 .confirm-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
 .confirm-actions button { height: 40px; padding: 0 16px; border-radius: 999px; font-weight: 700; cursor: pointer; }
-.confirm-actions .ghost { background: #fff; border: 1px solid #E6E8EE; color: #1C2430; }
-.confirm-actions .ok, .confirm-actions .link { background: #F96141; border: 0; color: #fff; text-decoration: none; }
+.confirm-actions .ghost { background: var(--hb-surface); border: 1px solid var(--hb-line); color: var(--hb-ink); }
+.confirm-actions .ok, .confirm-actions .link { background: var(--hb-primary); border: 0; color: var(--hb-on-primary); text-decoration: none; }
 @media (min-width: 960px) {
   .page {
     position: fixed; top: 0; right: 0; width: min(420px, 100vw); height: 100vh;
-    overflow: auto; z-index: 40; background: #fff;
-    border-left: 1px solid #EFEAE4; box-shadow: -12px 0 40px rgba(28,36,48,0.12);
+    overflow: auto; z-index: 40; background: var(--hb-surface);
+    border-left: 1px solid var(--hb-line); box-shadow: -12px 0 40px rgba(28,36,48,0.12);
   }
-  .sticky { background: #fff; }
+  .sticky { background: var(--hb-surface); }
 }
 .clear { border: 0; background: transparent; color: $hb-muted; cursor: pointer; font-weight: 650; }
 .empty { text-align: center; padding: 72px 16px; color: $hb-muted; }
-.empty .btn { border-radius: 999px; background: #F96141; }
+.empty .btn { border-radius: 999px; background: var(--hb-primary); }
 .empty-ico { color: $hb-muted; opacity: 0.55; margin-bottom: 10px; }
 .btn {
   display: inline-block; margin-top: 14px; padding: 11px 18px; border-radius: 14px;
-  background: $hb-coral; color: #fff; font-weight: 720;
+  background: $hb-coral; color: var(--hb-on-primary); font-weight: 720;
 }
 .list { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
 .row {
-  display: flex; gap: 12px; align-items: center; background: #fff; border-radius: 16px;
+  display: flex; gap: 12px; align-items: center; background: var(--hb-surface); border-radius: 16px;
   padding: 12px; box-shadow: 0 8px 18px rgba(28,36,48,0.05);
 }
 .img { width: 74px; height: 74px; border-radius: 14px; object-fit: cover; background: $hb-soft; }
 .body { flex: 1; min-width: 0; }
 .name { font-weight: 680; font-size: 14px; color: $hb-ink; }
 .meta { font-size: 12px; color: $hb-muted; margin-top: 2px; }
-.price { margin-top: 6px; color: #F96141; font-weight: 760; }
+.price { margin-top: 6px; color: var(--hb-sale); font-weight: 760; }
 .qty { display: flex; align-items: center; gap: 8px; }
 .qty button {
   width: 30px; height: 30px; border: 0; border-radius: 10px; background: $hb-paper; cursor: pointer;
@@ -179,25 +179,25 @@ h1 small { font-size: 12px; color: $hb-muted; font-weight: 600; }
   position: fixed; left: 50%; transform: translateX(-50%);
   width: min(100vw, 768px);
   bottom: calc(58px + env(safe-area-inset-bottom));
-  background: #fff; border-top: 1px solid #F1EEEA; padding: 10px 16px;
-  display: flex; align-items: center; gap: 10px; z-index: 90; color: #1C2430;
+  background: var(--hb-surface); border-top: 1px solid var(--hb-line); padding: 10px 16px;
+  display: flex; align-items: center; gap: 10px; z-index: 90; color: var(--hb-ink);
 }
-.sum { flex: 1; font-size: 13px; color: #8B919A; }
-.sum b { color: #F96141; font-size: 20px; }
+.sum { flex: 1; font-size: 13px; color: var(--hb-muted); }
+.sum b { color: var(--hb-sale); font-size: 20px; }
 .checkout {
-  border: 0; height: 44px; padding: 0 18px; border-radius: 999px; background: #F96141; color: #fff;
+  border: 0; height: 44px; padding: 0 18px; border-radius: 999px; background: var(--hb-primary); color: var(--hb-on-primary);
   font-weight: 740; cursor: pointer;
 }
 .ship-card {
-  margin: 12px 0; background: #fff; border: 1px solid $hb-line; border-radius: 16px; padding: 14px;
+  margin: 12px 0; background: var(--hb-surface); border: 1px solid $hb-line; border-radius: 16px; padding: 14px;
 }
 .ship-row { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; color: $hb-ink; }
 .ship-bar { margin-top: 8px; height: 8px; background: #E8E4DC; border-radius: 4px; overflow: hidden; }
-.ship-bar > i { display: block; height: 100%; background: #F96141; }
+.ship-bar > i { display: block; height: 100%; background: var(--hb-primary); }
 .tiny { font-size: 11px; color: $hb-muted; margin-top: 6px; }
-.price { color: #F96141 !important; }
+.price { color: var(--hb-sale) !important; }
 .empty { padding: 80px 24px; text-align: center; }
-.empty .btn { background: #F96141; color: #fff; border-radius: 999px; padding: 10px 18px; text-decoration: none; font-weight: 700; display: inline-block; margin-top: 16px; }
+.empty .btn { background: var(--hb-primary); color: var(--hb-on-primary); border-radius: 999px; padding: 10px 18px; text-decoration: none; font-weight: 700; display: inline-block; margin-top: 16px; }
 
-.fn-page { --ink:#1C2430; --teal:#0E7490; --amber:#F96141; --sand:#FCFAF8; }
+.fn-page { --ink:var(--hb-ink); --teal:var(--hb-primary); --amber:var(--hb-sale); --sand:var(--hb-page); }
 </style>

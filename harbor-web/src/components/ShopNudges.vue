@@ -137,24 +137,24 @@ watch(() => [route.name, route.query.locale], openNext)
   display: flex; align-items: flex-end; justify-content: center;
 }
 .card {
-  width: min(100%, 768px); background: #fff; border-radius: 20px 20px 0 0;
+  width: min(100%, 768px); background: var(--hb-surface); border-radius: 20px 20px 0 0;
   padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); position: relative;
   box-shadow: 0 -12px 32px rgba(28,36,48,0.08);
 }
 .grab { width: 36px; height: 4px; border-radius: 99px; background: #E6E2DC; margin: 0 auto 8px; }
-.x { position: absolute; right: 12px; top: 8px; border: 0; background: transparent; font-size: 22px; cursor: pointer; color: #8B919A; }
+.x { position: absolute; right: 12px; top: 8px; border: 0; background: transparent; font-size: 22px; cursor: pointer; color: var(--hb-muted); }
 .mark {
-  width: 56px; height: 56px; border-radius: 18px; background: #FFF1EC; color: #F96141;
+  width: 56px; height: 56px; border-radius: 18px; background: var(--hb-primary-soft); color: var(--hb-primary);
   display: grid; place-items: center; font-size: 24px; font-weight: 800; margin-bottom: 8px;
   box-shadow: inset 0 -8px 0 rgba(249,97,65,0.12);
 }
-h2 { margin: 0 0 6px; font-size: 18px; letter-spacing: -0.02em; color: #1C2430; }
-p { margin: 0 0 14px; color: #5C6570; line-height: 1.45; }
+h2 { margin: 0 0 6px; font-size: 18px; letter-spacing: -0.02em; color: var(--hb-ink); }
+p { margin: 0 0 14px; color: var(--hb-muted); line-height: 1.45; }
 .ok, .later, .row {
   display: flex; align-items: center; justify-content: center; width: 100%;
   height: 46px; border-radius: 999px; font-weight: 700; cursor: pointer; text-decoration: none;
 }
-.ok { border: 0; background: #F96141; color: #fff; }
-.later { margin-top: 8px; border: 0; background: transparent; color: #8B919A; }
-.row { justify-content: space-between; padding: 0 14px; margin-bottom: 8px; background: #F7F8FA; border: 0; color: #1C2430; }
+.ok { border: 0; background: var(--hb-primary); color: var(--hb-on-primary); }
+.later { margin-top: 8px; border: 0; background: transparent; color: var(--hb-muted); }
+.row { justify-content: space-between; padding: 0 14px; margin-bottom: 8px; background: #F7F8FA; border: 0; color: var(--hb-ink); }
 </style>

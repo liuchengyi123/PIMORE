@@ -15,8 +15,8 @@ html, body, #app {
   padding: 0;
   min-height: 100%;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-  background: #EFEAE4;
-  color: #1C2430;
+  background: var(--hb-page);
+  color: var(--hb-ink);
   -webkit-tap-highlight-color: transparent;
   -webkit-font-smoothing: antialiased;
 }
@@ -24,7 +24,7 @@ html, body, #app {
   max-width: 768px;
   margin: 0 auto;
   min-height: 100vh;
-  background: #FCFAF8;
+  background: var(--hb-page);
   position: relative;
 }
 * { box-sizing: border-box; }

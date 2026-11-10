@@ -51,6 +51,7 @@
       <a class="{% if request.url.path.startswith('/admin/withdrawals') %}on{% endif %}" href="/admin/withdrawals"><i></i>提现{% if nav_badges and nav_badges.payout %}<span class="nav-badge">{{ nav_badges.payout }}</span>{% endif %}</a>
       <a class="{% if request.url.path.startswith('/admin/staff') %}on{% endif %}" href="/admin/staff"><i></i>员工</a>
       <a class="{% if request.url.path.startswith('/admin/coefficients') %}on{% endif %}" href="/admin/coefficients"><i></i>国家系数</a>
+      <a class="{% if request.url.path.startswith('/admin/appearance') %}on{% endif %}" href="/admin/appearance"><i></i>买家主题</a>
       <a class="{% if request.url.path.startswith('/admin/cs') %}on{% endif %}" href="/admin/cs"><i></i>客服设置</a>
       <a class="{% if request.url.path.startswith('/admin/support') %}on{% endif %}" href="/admin/support"><i></i>客服聊天{% if nav_badges and nav_badges.cs %}<span class="nav-badge">{{ nav_badges.cs }}</span>{% endif %}</a>
       {% else %}
@@ -88,6 +89,7 @@
             {% elif request.url.path.startswith('/admin/conversions') %}转化日志
             {% elif request.url.path.startswith('/admin/traffic') %}投放回传
             {% elif request.url.path.startswith('/admin/ads') %}站点广告位
+            {% elif request.url.path.startswith('/admin/appearance') %}买家主题
             {% elif request.url.path.startswith('/admin/coefficients') %}国家系数
             {% elif request.url.path.startswith('/admin/staff') %}员工
             {% else %}后台{% endif %}
@@ -121,6 +123,8 @@
         {% elif flash == "reco_saved" %}<span class="ok">推荐规则已保存，前台约 30 秒内按新规则排。</span>
         {% elif flash == "reco_reset" %}<span class="ok">推荐规则已恢复默认。</span>
         {% elif flash == "reco_bad" %}<span class="error">推荐规则没有保存，请看页面上的说明。</span>
+        {% elif flash == "theme_saved" %}<span class="ok">买家主题已保存。新打开的买家页面会用这一套。</span>
+        {% elif flash == "theme_bad" %}<span class="error">没有这个主题包。</span>
         {% elif flash == "staff_self" %}<span class="error">不能停用当前登录账号。</span>
         {% elif flash == "staff_pwd" %}<span class="error">新密码至少 8 位。</span>
         {% else %}<span class="ok">已保存。</span>

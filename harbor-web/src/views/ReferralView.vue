@@ -26,19 +26,19 @@ const code = computed(() => String(route.query.code || route.params.code || ''))
 @import '@/styles/theme.scss';
 .page { min-height: 100vh; background: $hb-paper; padding: 10px 16px 32px; padding-top: calc(10px + env(safe-area-inset-top)); }
 .head { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
-.back { width: 34px; height: 34px; border: 0; border-radius: 12px; background: #fff; color: #1C2430; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
-.title { font-size: 20px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; color: #1C2430; }
-.sub { font-size: 12px; color: #8B919A; margin-top: 2px; }
+.back { width: 34px; height: 34px; border: 0; border-radius: 12px; background: var(--hb-surface); color: var(--hb-ink); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+.title { font-size: 20px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; color: var(--hb-ink); }
+.sub { font-size: 12px; color: var(--hb-muted); margin-top: 2px; }
 .state { text-align: center; color: $hb-muted; padding: 36px 8px; }
-.card { background: $hb-white; border: 1px solid #F1EEEA; border-radius: 14px; padding: 12px; }
-.btn { display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 999px; height: 36px; padding: 0 16px; background: #F96141; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 8px; text-decoration: none; box-sizing: border-box; }
-.btn.soft { background: #FFF1EC; color: #F96141; }
-.btn.coral { background: #F96141; color: #fff; }
+.card { background: $hb-white; border: 1px solid var(--hb-line); border-radius: 14px; padding: 12px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 999px; height: 36px; padding: 0 16px; background: var(--hb-primary); color: var(--hb-on-primary); font-size: 14px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 8px; text-decoration: none; box-sizing: border-box; }
+.btn.soft { background: var(--hb-primary-soft); color: var(--hb-primary); }
+.btn.coral { background: var(--hb-primary); color: var(--hb-on-primary); }
 .shop { display: block; margin-top: 12px; text-align: center; color: $hb-forest; font-weight: 680; font-size: 13px; }
 
-.kicker { font-size: 11px; color: #8B919A; letter-spacing: 0; text-transform: none; font-weight: 700; }
-.code { margin-top: 4px; font-size: 24px; font-weight: 800; color: #F96141; letter-spacing: 0.04em; line-height: 1.15; }
-.note { margin: 6px 0 0; font-size: 12px; color: #5C6570; line-height: 1.4; }
+.kicker { font-size: 11px; color: var(--hb-muted); letter-spacing: 0; text-transform: none; font-weight: 700; }
+.code { margin-top: 4px; font-size: 24px; font-weight: 800; color: var(--hb-primary); letter-spacing: 0.04em; line-height: 1.15; }
+.note { margin: 6px 0 0; font-size: 12px; color: var(--hb-muted); line-height: 1.4; }
 
-.fn-page { --ink:#1C2430; --teal:#0E7490; --amber:#F96141; --sand:#FCFAF8; }
+.fn-page { --ink:var(--hb-ink); --teal:var(--hb-primary); --amber:var(--hb-sale); --sand:var(--hb-page); }
 </style>

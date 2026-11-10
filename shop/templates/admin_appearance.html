@@ -1,0 +1,35 @@
+{% extends "admin_base.html" %}
+{% block body %}
+<section class="panel">
+  <div class="head-row">
+    <div>
+      <h1>买家主题</h1>
+      <p class="muted">H5、桌面和之后的 App 共用这一套颜色。这里只选择正在使用的主题包，不改页面布局。保存后，新打开的买家页面会按这一套画。</p>
+    </div>
+    <div class="actions">
+      <button class="btn" type="submit" form="theme-form">保存</button>
+    </div>
+  </div>
+
+  <form id="theme-form" method="post" action="/admin/appearance">
+    <div class="card">
+      <h2>正在使用</h2>
+      <div class="pad fields">
+        {% for pack in theme_packs %}
+        <label class="wide" style="display:flex;align-items:center;gap:10px;padding:10px 0">
+          <input type="radio" name="pack" value="{{ pack.id }}" {% if pack.selected %}checked{% endif %}>
+          <span style="display:inline-flex;gap:4px" aria-hidden="true">
+            <i style="width:18px;height:18px;border-radius:6px;background:{{ pack.primary }};display:block"></i>
+            <i style="width:18px;height:18px;border-radius:6px;background:{{ pack.soft }};display:block"></i>
+            <i style="width:18px;height:18px;border-radius:6px;background:{{ pack.page }};border:1px solid #E6E8EE;display:block"></i>
+            <i style="width:18px;height:18px;border-radius:6px;background:{{ pack.sale }};display:block"></i>
+          </span>
+          <span><b>{{ pack.name }}</b> <span class="muted">{{ pack.id }}</span></span>
+        </label>
+        {% endfor %}
+        <p class="muted small wide">现在只有 Coral Market。以后新增的主题包会出现在这里，选中并保存后，H5 和桌面一起换。后台和客服桌面不跟着换。商品图、海报不受影响。</p>
+      </div>
+    </div>
+  </form>
+</section>
+{% endblock %}

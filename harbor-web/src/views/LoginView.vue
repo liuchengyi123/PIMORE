@@ -63,24 +63,24 @@ async function submit() {
 </script>
 <style lang="scss" scoped>
 @import '@/styles/theme.scss';
-.page { min-height: 100vh; background: #FDF9F6; padding: 10px 16px 28px; padding-top: calc(10px + env(safe-area-inset-top)); }
-.back { width: 34px; height: 34px; border: 0; border-radius: 12px; background: transparent; color: #1C2430; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
-.brand { margin-top: 20px; text-align: center; font-size: 28px; font-weight: 800; color: #F96141; letter-spacing: -0.04em; }
+.page { min-height: 100vh; background: var(--hb-page); padding: 10px 16px 28px; padding-top: calc(10px + env(safe-area-inset-top)); }
+.back { width: 34px; height: 34px; border: 0; border-radius: 12px; background: transparent; color: var(--hb-ink); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+.brand { margin-top: 20px; text-align: center; font-size: 28px; font-weight: 800; color: var(--hb-primary); letter-spacing: -0.04em; }
 h1 { margin: 16px 0 4px; font-size: 22px; text-align: center; letter-spacing: -0.03em; }
-.sub { color: #8B919A; font-size: 13px; margin: 0 0 12px; text-align: center; line-height: 1.4; }
+.sub { color: var(--hb-muted); font-size: 13px; margin: 0 0 12px; text-align: center; line-height: 1.4; }
 .social { display: flex; gap: 8px; }
 .social button {
-  flex: 1; height: 40px; border-radius: 999px; border: 1px solid #F1EEEA; background: #fff;
-  color: #1C2430; font-size: 13px; font-weight: 700; cursor: pointer;
+  flex: 1; height: 40px; border-radius: 999px; border: 1px solid var(--hb-line); background: var(--hb-surface);
+  color: var(--hb-ink); font-size: 13px; font-weight: 700; cursor: pointer;
 }
-.or { margin: 10px 0; text-align: center; font-size: 12px; color: #8B919A; }
+.or { margin: 10px 0; text-align: center; font-size: 12px; color: var(--hb-muted); }
 .form { display: flex; flex-direction: column; gap: 8px; background: transparent; padding: 0; }
-label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 700; color: #8B919A; }
-input { height: 44px; border: 1px solid #E8E4DC; border-radius: 12px; padding: 0 14px; font-size: 14px; color: #1C2430; background: #fff; box-sizing: border-box; }
-.btn { border: 0; height: 40px; border-radius: 999px; background: #F96141; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 4px; }
+label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 700; color: var(--hb-muted); }
+input { height: 44px; border: 1px solid var(--hb-line); border-radius: 12px; padding: 0 14px; font-size: 14px; color: var(--hb-ink); background: var(--hb-surface); box-sizing: border-box; }
+.btn { border: 0; height: 40px; border-radius: 999px; background: var(--hb-primary); color: var(--hb-on-primary); font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 4px; }
 .err { color: #E11D2E; font-size: 12px; margin: 0; }
-.note { color: #8B919A; font-size: 12px; margin: 0; text-align: center; }
-.auth-links { display: flex; justify-content: space-between; margin-top: 12px; color: #F96141; font-weight: 700; font-size: 13px; }
+.note { color: var(--hb-muted); font-size: 12px; margin: 0; text-align: center; }
+.auth-links { display: flex; justify-content: space-between; margin-top: 12px; color: var(--hb-primary); font-weight: 700; font-size: 13px; }
 
-.fn-page { --ink:#1C2430; --teal:#0E7490; --amber:#F96141; --sand:#FCFAF8; }
+.fn-page { --ink:var(--hb-ink); --teal:var(--hb-primary); --amber:var(--hb-sale); --sand:var(--hb-page); }
 </style>

@@ -196,19 +196,19 @@ async function place() {
 .page { min-height: 100vh; background: $hb-paper; padding: 8px 16px 120px; padding-top: calc(8px + env(safe-area-inset-top)); }
 .ship-fields { display: none; }
 .head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-.back { width: 36px; height: 36px; border: 0; border-radius: 12px; background: #fff; display: inline-flex; align-items: center; justify-content: center; color: $hb-ink; box-shadow: $hb-shadow-soft; }
+.back { width: 36px; height: 36px; border: 0; border-radius: 12px; background: var(--hb-surface); display: inline-flex; align-items: center; justify-content: center; color: $hb-ink; box-shadow: $hb-shadow-soft; }
 h1 { margin: 0; font-size: 22px; font-weight: 800; color: $hb-ink; letter-spacing: -0.03em; }
-.card { background: #fff; border-radius: 16px; padding: 14px; margin-bottom: 12px; border: 0; box-shadow: 0 8px 20px rgba(28,36,48,0.05); }
+.card { background: var(--hb-surface); border-radius: 16px; padding: 14px; margin-bottom: 12px; border: 0; box-shadow: 0 8px 20px rgba(28,36,48,0.05); }
 .sec { font-weight: 700; font-size: 14px; color: $hb-ink; }
 .row { display: flex; align-items: center; gap: 8px; }
 .between { justify-content: space-between; }
-.link { border: 0; background: transparent; color: #F96141; font-size: 13px; font-weight: 700; cursor: pointer; }
+.link { border: 0; background: transparent; color: var(--hb-primary); font-size: 13px; font-weight: 700; cursor: pointer; }
 .addr { margin-top: 8px; font-size: 13px; color: $hb-ink; line-height: 1.45; }
 .muted { color: $hb-muted; }
 .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; font-size: 11px; font-weight: 600; color: $hb-muted; }
 .field input, .field select, .coupon-in {
   height: 42px; border-radius: 12px; border: 1px solid $hb-line; padding: 0 12px;
-  font-size: 14px; color: $hb-ink; background: #fff;
+  font-size: 14px; color: $hb-ink; background: var(--hb-surface);
 }
 .split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .tiny { font-size: 12px; color: $hb-muted; margin-top: 6px; }
@@ -217,14 +217,14 @@ h1 { margin: 0; font-size: 22px; font-weight: 800; color: $hb-ink; letter-spacin
 }
 .toggle.on { background: $hb-coral; }
 .knob {
-  position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 9px; background: #fff; transition: left .15s;
+  position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 9px; background: var(--hb-surface); transition: left .15s;
 }
 .toggle.on .knob { left: 19px; }
 .pay {
-  display: flex; align-items: center; min-height: 48px; padding: 0 14px; border: 1px solid #E8E4DC; border-radius: 14px; margin-bottom: 8px;
+  display: flex; align-items: center; min-height: 48px; padding: 0 14px; border: 1px solid var(--hb-line); border-radius: 14px; margin-bottom: 8px;
   font-size: 14px; font-weight: 650; color: $hb-ink; cursor: pointer;
 }
-.pay.on { border-width: 2px; border-color: $hb-coral; background: #FFF6F3; }
+.pay.on { border-width: 2px; border-color: $hb-coral; background: var(--hb-primary-soft); }
 .pay input { margin-right: 8px; }
 .tiny-row { margin-bottom: 6px; font-size: 13px; color: $hb-ink; }
 .total-row { margin-top: 8px; padding-top: 8px; border-top: 1px solid $hb-line; }
@@ -232,14 +232,14 @@ h1 { margin: 0; font-size: 22px; font-weight: 800; color: $hb-ink; letter-spacin
 .err { color: #B91C1C; font-size: 13px; margin: 8px 0; }
 .dock {
   position: fixed; left: 50%; transform: translateX(-50%); width: min(100vw, 768px); bottom: 0; z-index: 20;
-  background: #fff; border-top: 1px solid #F1EEEA; padding: 12px 16px;
+  background: var(--hb-surface); border-top: 1px solid var(--hb-line); padding: 12px 16px;
   display: flex; gap: 12px; align-items: center;
   padding-bottom: calc(12px + env(safe-area-inset-bottom));
   box-shadow: 0 -8px 24px rgba(28,36,48,0.06);
 }
 .dock .price { font-size: 20px; }
 .place {
-  flex: 1; height: 52px; border: 0; border-radius: 999px; background: #F96141; color: #fff;
+  flex: 1; height: 52px; border: 0; border-radius: 999px; background: var(--hb-primary); color: var(--hb-on-primary);
   font-weight: 700; font-size: 16px; cursor: pointer;
 }
 .place:disabled { opacity: .5; }
@@ -248,7 +248,7 @@ h1 { margin: 0; font-size: 22px; font-weight: 800; color: $hb-ink; letter-spacin
   display: flex; align-items: flex-end; justify-content: center;
 }
 .addr-sheet {
-  width: min(100%, 768px); background: #fff; border-radius: 20px 20px 0 0;
+  width: min(100%, 768px); background: var(--hb-surface); border-radius: 20px 20px 0 0;
   padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
 }
 .addr-sheet h2 { margin: 0 0 10px; font-size: 18px; }

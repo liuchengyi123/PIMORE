@@ -61,15 +61,15 @@ async function add() {
 onMounted(refresh)
 </script>
 <style scoped>
-.page { min-height: 100vh; background: #FCFAF8; color: #1C2430; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
+.page { min-height: 100vh; background: var(--hb-page); color: var(--hb-ink); padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
 .head { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
-.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #1C2430; }
+.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: var(--hb-ink); }
 .title { flex: 1; font-size: 22px; font-weight: 800; letter-spacing: -0.03em; margin: 0; }
-.add { font-size: 13px; font-weight: 700; color: #F96141; text-decoration: none; }
+.add { font-size: 13px; font-weight: 700; color: var(--hb-primary); text-decoration: none; }
 .list { display: flex; flex-direction: column; gap: 10px; }
-.card { background: #fff; border: 2px solid #F96141; border-radius: 16px; padding: 14px; }
-.badge { display: inline-flex; background: #FFF1EC; color: #F96141; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px; margin-bottom: 8px; }
+.card { background: var(--hb-surface); border: 2px solid var(--hb-primary); border-radius: 16px; padding: 14px; }
+.badge { display: inline-flex; background: var(--hb-primary-soft); color: var(--hb-primary); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px; margin-bottom: 8px; }
 .nm { font-size: 13px; font-weight: 600; }
 .line { margin-top: 4px; font-size: 13px; line-height: 1.45; }
-.state { text-align: center; color: #6B7280; padding: 36px 8px; }
+.state { text-align: center; color: var(--hb-muted); padding: 36px 8px; }
 </style>

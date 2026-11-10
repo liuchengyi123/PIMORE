@@ -86,14 +86,14 @@ function go() {
 .thumb-img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .img-badge {
   position: absolute; left: 8px; top: 8px;
-  padding: 4px 8px; border-radius: 999px; font-size: 11px; font-weight: 720; color: #fff;
-  &.flash, &.deal { background: $hb-coral; }
+  padding: 4px 8px; border-radius: 999px; font-size: 11px; font-weight: 720; color: var(--hb-on-primary);
+  &.flash, &.deal { background: var(--hb-badge); }
   &.new { background: $hb-forest; }
   &.ship { background: #2a6f9e; }
 }
 .only-left {
   position: absolute; right: 8px; bottom: 8px;
-  background: rgba(0,0,0,0.55); color: #fff; font-size: 11px; padding: 3px 7px; border-radius: 8px;
+  background: rgba(0,0,0,0.55); color: var(--hb-on-primary); font-size: 11px; padding: 3px 7px; border-radius: 8px;
 }
 .body { padding: 11px 11px 13px; }
 .name {
@@ -101,8 +101,8 @@ function go() {
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.7em;
 }
 .price-row { display: flex; align-items: baseline; gap: 6px; margin-top: 7px; flex-wrap: wrap; }
-.ship-line { margin-top: 4px; font-size: 11px; color: \-muted; }
+.ship-line { margin-top: 4px; font-size: 11px; color: var(--hb-muted); }
 .price { font-size: 16px; font-weight: 780; color: $hb-price; letter-spacing: -0.02em; }
 .was { font-size: 12px; color: $hb-muted; text-decoration: line-through; }
-.off-badge { font-size: 11px; color: $hb-forest; font-weight: 720; background: $hb-soft; padding: 2px 7px; border-radius: 999px; }
+.off-badge { font-size: 11px; color: var(--hb-badge); font-weight: 720; background: var(--hb-primary-soft); padding: 2px 7px; border-radius: 999px; }
 </style>

@@ -217,6 +217,7 @@ from shop.images import card_image, image_extension, phone_image, prepare_image,
 from shop.package import PackageError, describe_preview, is_jushuitan_sheet, preview_sheets, read_package
 from shop.net import outbound_proxy, remembered_proxy
 from shop.ops import board, record
+from shop.buyer_theme import ThemeError, admin_choices, public_theme, save_active_id
 from shop.reco import (
     DEFAULTS as RECO_DEFAULTS,
     RecoConfigError,
@@ -6900,6 +6901,25 @@ def create_app(*, units_per_usd=None, db_path=None, book=None, cache=None, advan
             )
         bust_reco_cache()
         return flash_redirect("/admin/reco", "reco_saved")
+
+    @app.get("/api/buyer-theme")
+    def api_buyer_theme():
+        return JSONResponse(public_theme(conn))
+
+    @app.get("/admin/appearance", response_class=HTMLResponse)
+    def admin_appearance(request: Request):
+        require_admin_role(request)
+        return render(request, "admin_appearance.html", theme_packs=admin_choices(conn))
+
+    @app.post("/admin/appearance")
+    async def admin_appearance_save(request: Request):
+        require_admin_role(request)
+        form = await request.form()
+        try:
+            save_active_id(conn, form.get("pack"))
+        except ThemeError:
+            return flash_redirect("/admin/appearance", "theme_bad")
+        return flash_redirect("/admin/appearance", "theme_saved")
 
     @app.get("/admin/staff", response_class=HTMLResponse)
     def admin_staff(request: Request):

@@ -70,7 +70,7 @@ function onBack() {
 }
 .page-head.light .back {
   background: rgba(255,255,255,0.18);
-  color: #fff;
+  color: var(--hb-on-primary);
   box-shadow: none;
 }
 .main { flex: 1; min-width: 0; }

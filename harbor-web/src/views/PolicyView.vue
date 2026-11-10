@@ -60,22 +60,22 @@ watch(() => route.fullPath, () => {
 @import '@/styles/theme.scss';
 .page { min-height: 100vh; background: $hb-paper; padding: 10px 16px 32px; padding-top: calc(10px + env(safe-area-inset-top)); }
 .head { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
-.back { width: 34px; height: 34px; border: 0; border-radius: 12px; background: #fff; color: #1C2430; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
-.title { font-size: 20px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; color: #1C2430; }
-.sub { font-size: 12px; color: #8B919A; margin-top: 2px; }
+.back { width: 34px; height: 34px; border: 0; border-radius: 12px; background: var(--hb-surface); color: var(--hb-ink); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+.title { font-size: 20px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; color: var(--hb-ink); }
+.sub { font-size: 12px; color: var(--hb-muted); margin-top: 2px; }
 .state { text-align: center; color: $hb-muted; padding: 36px 8px; }
 .card { background: $hb-white; border-radius: 20px; padding: 16px; box-shadow: $hb-shadow-soft; }
-.btn { display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 16px; padding: 14px 16px; background: $hb-forest; color: #fff; font-weight: 720; cursor: pointer; width: 100%; margin-top: 12px; text-decoration: none; box-sizing: border-box; }
+.btn { display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 16px; padding: 14px 16px; background: $hb-forest; color: var(--hb-on-primary); font-weight: 720; cursor: pointer; width: 100%; margin-top: 12px; text-decoration: none; box-sizing: border-box; }
 .btn.soft { background: $hb-soft; color: $hb-forest; }
-.btn.coral { background: $hb-coral; color: #fff; }
+.btn.coral { background: $hb-coral; color: var(--hb-on-primary); }
 .shop { display: block; margin-top: 12px; text-align: center; color: $hb-forest; font-weight: 680; font-size: 13px; }
 
 .tabs { display: flex; gap: 6px; margin-bottom: 8px; }
-.tab { flex: 1; height: 34px; border: 0; text-align: center; padding: 0 8px; border-radius: 999px; background: #fff; color: #1C2430; font-size: 13px; font-weight: 700; cursor: pointer; }
-.tab.on { background: #F96141; color: #fff; }
-.pd { background: $hb-white; border: 1px solid #F1EEEA; border-radius: 14px; padding: 10px 12px; margin-bottom: 6px; }
-.bt { font-size: 14px; font-weight: 800; color: #F96141; margin-bottom: 4px; line-height: 1.25; }
-.bb { font-size: 12px; color: #5C6570; line-height: 1.4; }
+.tab { flex: 1; height: 34px; border: 0; text-align: center; padding: 0 8px; border-radius: 999px; background: var(--hb-surface); color: var(--hb-ink); font-size: 13px; font-weight: 700; cursor: pointer; }
+.tab.on { background: var(--hb-primary-soft); color: var(--hb-primary); }
+.pd { background: $hb-white; border: 1px solid var(--hb-line); border-radius: 14px; padding: 10px 12px; margin-bottom: 6px; }
+.bt { font-size: 14px; font-weight: 800; color: var(--hb-primary); margin-bottom: 4px; line-height: 1.25; }
+.bb { font-size: 12px; color: var(--hb-muted); line-height: 1.4; }
 
-.fn-page { --ink:#1C2430; --teal:#0E7490; --amber:#F96141; --sand:#FCFAF8; }
+.fn-page { --ink:var(--hb-ink); --teal:var(--hb-primary); --amber:var(--hb-sale); --sand:var(--hb-page); }
 </style>

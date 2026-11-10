@@ -53,7 +53,7 @@ const to = computed(() => {
   padding: 11px 15px;
   border-radius: 999px;
   background: $hb-forest;
-  color: #fff;
+  color: var(--hb-on-primary);
   font-weight: 720;
   font-size: 13px;
   box-shadow: 0 12px 30px rgba(27, 77, 62, 0.32);

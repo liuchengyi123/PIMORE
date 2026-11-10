@@ -120,53 +120,53 @@ onMounted(async () => {
 })
 </script>
 <style scoped>
-.page { min-height: 100vh; background: #FCFAF8; color: #1C2430; padding-bottom: 90px; }
+.page { min-height: 100vh; background: var(--hb-page); color: var(--hb-ink); padding-bottom: 90px; }
 .hero {
   padding: 12px 16px 4px; padding-top: calc(12px + env(safe-area-inset-top));
-  background: #FCFAF8; color: #1C2430;
+  background: var(--hb-page); color: var(--hb-ink);
 }
 .top { display: flex; align-items: center; gap: 10px; }
 .avatar {
-  width: 52px; height: 52px; border-radius: 26px; background: #F96141; color: #fff;
+  width: 52px; height: 52px; border-radius: 26px; background: var(--hb-primary); color: var(--hb-on-primary);
   display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; flex-shrink: 0;
 }
 .who { flex: 1; min-width: 0; }
 .name { font-size: 17px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; }
-.email { margin-top: 2px; font-size: 12px; color: #8B919A; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.email { margin-top: 2px; font-size: 12px; color: var(--hb-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .locale-pill {
-  border: 0; background: #FFF1EC; color: #F96141; font-size: 11px; font-weight: 700;
+  border: 0; background: var(--hb-primary-soft); color: var(--hb-primary); font-size: 11px; font-weight: 700;
   height: 28px; padding: 0 10px; border-radius: 999px; cursor: pointer; white-space: nowrap;
 }
 .stats { display: flex; gap: 6px; margin-top: 8px; }
 .stat {
-  flex: 1; min-height: 52px; border: 1px solid #F1EEEA; background: #fff; color: #1C2430;
+  flex: 1; min-height: 52px; border: 1px solid var(--hb-line); background: var(--hb-surface); color: var(--hb-ink);
   border-radius: 12px; padding: 6px 4px; cursor: pointer;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
 }
-.stat b { font-size: 15px; color: #F96141; letter-spacing: -0.02em; line-height: 1.1; }
-.stat span { font-size: 10px; color: #8B919A; }
+.stat b { font-size: 15px; color: var(--hb-primary); letter-spacing: -0.02em; line-height: 1.1; }
+.stat span { font-size: 10px; color: var(--hb-muted); }
 .login-row { margin-top: 10px; }
 .login {
-  border: 0; background: #F96141; color: #fff; font-weight: 700; font-size: 14px;
+  border: 0; background: var(--hb-primary); color: var(--hb-on-primary); font-weight: 700; font-size: 14px;
   height: 36px; padding: 0 16px; border-radius: 999px; cursor: pointer;
 }
-.card { margin: 10px 16px 0; background: #fff; border: 1px solid #F1EEEA; border-radius: 14px; overflow: hidden; }
+.card { margin: 10px 16px 0; background: var(--hb-surface); border: 1px solid var(--hb-line); border-radius: 14px; overflow: hidden; }
 .ord-head { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px 0; }
 .h { font-size: 14px; font-weight: 800; }
-.all { border: 0; background: transparent; color: #F96141; font-size: 12px; font-weight: 700; cursor: pointer; }
+.all { border: 0; background: transparent; color: var(--hb-primary); font-size: 12px; font-weight: 700; cursor: pointer; }
 .ord-row { display: flex; gap: 6px; padding: 8px 10px 10px; }
 .ost {
-  flex: 1; height: 32px; border: 0; border-radius: 999px; background: #FFF6F3; cursor: pointer; color: #1C2430;
+  flex: 1; height: 32px; border: 0; border-radius: 999px; background: var(--hb-primary-soft); cursor: pointer; color: var(--hb-ink);
   display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 3px;
   font-size: 11px; font-weight: 700; padding: 0 4px;
 }
-.ost b { font-size: 12px; color: #F96141; font-weight: 800; }
+.ost b { font-size: 12px; color: var(--hb-primary); font-weight: 800; }
 .menu .row {
   width: 100%; display: flex; justify-content: space-between; align-items: center;
-  height: 44px; padding: 0 12px; border: 0; border-bottom: 1px solid #F1EEEA; background: #fff; cursor: pointer;
-  font-size: 14px; font-weight: 700; color: #1C2430; text-align: left;
+  height: 44px; padding: 0 12px; border: 0; border-bottom: 1px solid var(--hb-line); background: var(--hb-surface); cursor: pointer;
+  font-size: 14px; font-weight: 700; color: var(--hb-ink); text-align: left;
 }
 .menu .row:last-child { border-bottom: 0; }
-.chev { color: #F96141; font-size: 16px; }
+.chev { color: var(--hb-primary); font-size: 16px; }
 .cs-fab { display: none; }
 </style>

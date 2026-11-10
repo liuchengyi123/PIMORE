@@ -28,22 +28,22 @@ async function install() {
 </script>
 <style scoped>
 .page {
-  min-height: 100vh; background: #FCFAF8; color: #1C2430;
+  min-height: 100vh; background: var(--hb-page); color: var(--hb-ink);
   padding: 12px 28px 40px; padding-top: calc(12px + env(safe-area-inset-top));
 }
 .center { margin-top: 32px; text-align: center; }
 .icon {
-  width: 64px; height: 64px; margin: 0 auto; border-radius: 16px; background: #F96141;
-  color: #fff; font-size: 24px; font-weight: 800; display: flex; align-items: center; justify-content: center;
+  width: 64px; height: 64px; margin: 0 auto; border-radius: 16px; background: var(--hb-primary);
+  color: var(--hb-on-primary); font-size: 24px; font-weight: 800; display: flex; align-items: center; justify-content: center;
 }
 h1 { margin: 12px 0 0; font-size: 20px; font-weight: 800; letter-spacing: -0.03em; }
-p { margin: 8px auto 0; max-width: 320px; font-size: 13px; line-height: 1.4; color: #8B919A; }
+p { margin: 8px auto 0; max-width: 320px; font-size: 13px; line-height: 1.4; color: var(--hb-muted); }
 .primary {
   display: block; width: 100%; max-width: 320px; margin: 16px auto 0; height: 40px; border: 0; border-radius: 999px;
-  background: #F96141; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer;
+  background: var(--hb-primary); color: var(--hb-on-primary); font-size: 14px; font-weight: 700; cursor: pointer;
 }
 .later {
   display: block; width: 100%; max-width: 320px; margin: 8px auto 0; height: 36px; border-radius: 999px;
-  border: 1px solid #F1EEEA; background: #fff; color: #1C2430; font-size: 14px; font-weight: 700; cursor: pointer;
+  border: 1px solid var(--hb-line); background: var(--hb-surface); color: var(--hb-ink); font-size: 14px; font-weight: 700; cursor: pointer;
 }
 </style>

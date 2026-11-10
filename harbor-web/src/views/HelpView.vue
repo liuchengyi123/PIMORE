@@ -44,24 +44,24 @@ onMounted(async () => {
 })
 </script>
 <style scoped>
-.page { min-height: 100vh; background: #FCFAF8; color: #1C2430; padding: 10px 16px 32px; padding-top: calc(10px + env(safe-area-inset-top)); }
+.page { min-height: 100vh; background: var(--hb-page); color: var(--hb-ink); padding: 10px 16px 32px; padding-top: calc(10px + env(safe-area-inset-top)); }
 .head { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
-.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #1C2430; padding: 0; }
+.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: var(--hb-ink); padding: 0; }
 .title { font-size: 20px; font-weight: 800; letter-spacing: -0.03em; margin: 0; }
 .search-wrap { margin-bottom: 8px; }
-.state { text-align: center; color: #8B919A; padding: 16px 8px; font-size: 13px; }
+.state { text-align: center; color: var(--hb-muted); padding: 16px 8px; font-size: 13px; }
 .faqs { display: flex; flex-direction: column; gap: 6px; }
 .faq {
-  text-align: left; width: 100%; background: #fff; border: 1px solid #F1EEEA; border-radius: 14px;
+  text-align: left; width: 100%; background: var(--hb-surface); border: 1px solid var(--hb-line); border-radius: 14px;
   padding: 10px 12px; cursor: pointer; color: inherit;
 }
 .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 24px; }
 .q { font-size: 14px; font-weight: 700; line-height: 1.25; }
-.chev { color: #F96141; font-size: 14px; }
-.a { margin: 8px 0 0; font-size: 12px; line-height: 1.4; color: #5C6570; }
+.chev { color: var(--hb-primary); font-size: 14px; }
+.a { margin: 8px 0 0; font-size: 12px; line-height: 1.4; color: var(--hb-muted); }
 .contact {
   display: flex; align-items: center; justify-content: center; margin-top: 12px; height: 36px;
-  border-radius: 999px; background: #F96141; color: #fff; font-size: 14px; font-weight: 700;
+  border-radius: 999px; background: var(--hb-primary); color: var(--hb-on-primary); font-size: 14px; font-weight: 700;
   text-decoration: none;
 }
 </style>

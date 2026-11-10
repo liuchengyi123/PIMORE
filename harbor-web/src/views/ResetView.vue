@@ -64,14 +64,14 @@ async function submit() {
 </script>
 
 <style scoped>
-.page { min-height: 100vh; background: #FDF9F6; color: #1C2430; padding: 16px 20px 32px; }
+.page { min-height: 100vh; background: var(--hb-page); color: var(--hb-ink); padding: 16px 20px 32px; }
 .back { border: 0; background: transparent; font-size: 20px; cursor: pointer; }
 h1 { margin: 18px 0 6px; font-size: 28px; }
-.sub { margin: 0 0 18px; color: #8B919A; }
+.sub { margin: 0 0 18px; color: var(--hb-muted); }
 form { display: flex; flex-direction: column; gap: 12px; }
-label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700; color: #8B919A; }
-input { border: 1.5px solid #E7DFD8; border-radius: 16px; padding: 14px 16px; font-size: 15px; background: #fff; color: #1C2430; }
-.btn { height: 52px; border: 0; border-radius: 999px; background: #F96141; color: #fff; font-weight: 700; cursor: pointer; }
+label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700; color: var(--hb-muted); }
+input { border: 1.5px solid #E7DFD8; border-radius: 16px; padding: 14px 16px; font-size: 15px; background: var(--hb-surface); color: var(--hb-ink); }
+.btn { height: 52px; border: 0; border-radius: 999px; background: var(--hb-primary); color: var(--hb-on-primary); font-weight: 700; cursor: pointer; }
 .err { color: #E11D2E; margin: 0; font-size: 13px; }
 .ok { color: #128A5E; margin: 0; font-size: 13px; }
 </style>

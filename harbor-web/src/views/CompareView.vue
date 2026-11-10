@@ -51,18 +51,18 @@ function ph(p: any) {
 }
 </script>
 <style scoped>
-.page { min-height: 100vh; background: #FCFAF8; color: #1C2430; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
+.page { min-height: 100vh; background: var(--hb-page); color: var(--hb-ink); padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
 .head { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
-.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #1C2430; }
+.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: var(--hb-ink); }
 .title { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; margin: 0; }
-.mark { width: 56px; height: 56px; margin: 0 auto 10px; border-radius: 18px; background: #FFF1EC; color: #F96141; display: grid; place-items: center; font-size: 22px; font-weight: 800; }
-.link { color: #F96141; font-weight: 700; }
+.mark { width: 56px; height: 56px; margin: 0 auto 10px; border-radius: 18px; background: var(--hb-primary-soft); color: var(--hb-primary); display: grid; place-items: center; font-size: 22px; font-weight: 800; }
+.link { color: var(--hb-primary); font-weight: 700; }
 .grid { display: flex; gap: 8px; flex-wrap: wrap; }
-.card { width: calc(50% - 4px); background: #fff; border: 1px solid #E2E6EE; border-radius: 16px; padding: 10px; box-sizing: border-box; }
+.card { width: calc(50% - 4px); background: var(--hb-surface); border: 1px solid var(--hb-line); border-radius: 16px; padding: 10px; box-sizing: border-box; }
 .thumb { height: 90px; border-radius: 10px; overflow: hidden; background: #e8e4dc; position: relative; }
 .thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .nm { margin-top: 8px; font-size: 12px; font-weight: 600; }
-.price { margin-top: 2px; font-size: 13px; font-weight: 700; color: #F96141; }
-.state { text-align: center; color: #6B7280; padding: 36px 8px; }
-.link { display: inline-block; margin-top: 10px; color: #F96141; font-weight: 700; text-decoration: none; }
+.price { margin-top: 2px; font-size: 13px; font-weight: 700; color: var(--hb-sale); }
+.state { text-align: center; color: var(--hb-muted); padding: 36px 8px; }
+.link { display: inline-block; margin-top: 10px; color: var(--hb-primary); font-weight: 700; text-decoration: none; }
 </style>
