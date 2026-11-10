@@ -64,19 +64,19 @@ function add(p: Product) {
 }
 </script>
 <style scoped>
-.page { min-height: 100vh; background: #FCFAF8; color: #1C2430; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
+.page { min-height: 100vh; background: var(--hb-page); color: var(--hb-ink); padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
 .head { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
-.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; color: #1C2430; padding: 0 4px; cursor: pointer; }
+.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; color: var(--hb-ink); padding: 0 4px; cursor: pointer; }
 .title { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; margin: 0; }
-.state, .gate { text-align: center; color: #6B7280; padding: 36px 8px; }
-.gate-btn { display: inline-flex; margin-top: 12px; background: #F96141; color: #fff; padding: 12px 18px; border-radius: 999px; font-weight: 600; text-decoration: none; }
+.state, .gate { text-align: center; color: var(--hb-muted); padding: 36px 8px; }
+.gate-btn { display: inline-flex; margin-top: 12px; background: var(--hb-primary); color: var(--hb-on-primary); padding: 12px 18px; border-radius: 999px; font-weight: 600; text-decoration: none; }
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.card { background: #fff; border: 1px solid #E8E4DC; border-radius: 16px; overflow: hidden; }
+.card { background: var(--hb-surface); border: 1px solid var(--hb-line); border-radius: 16px; overflow: hidden; }
 .thumb { height: 130px; background: #e8e4dc; display: flex; align-items: flex-end; padding: 12px; position: relative; }
 .thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.ph { position: relative; z-index: 1; color: #fff; font-size: 11px; font-weight: 600; }
+.ph { position: relative; z-index: 1; color: var(--hb-on-primary); font-size: 11px; font-weight: 600; }
 .body { padding: 10px; }
-.nm { font-size: 13px; font-weight: 600; color: #1C2430; line-height: 1.3; min-height: 34px; }
-.price { margin-top: 6px; font-size: 16px; font-weight: 700; color: #F96141; }
-.add { margin-top: 8px; width: 100%; height: 34px; border-radius: 999px; border: 0; background: #F96141; color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; }
+.nm { font-size: 13px; font-weight: 600; color: var(--hb-ink); line-height: 1.3; min-height: 34px; }
+.price { margin-top: 6px; font-size: 16px; font-weight: 700; color: var(--hb-sale); }
+.add { margin-top: 8px; width: 100%; height: 34px; border-radius: 999px; border: 0; background: var(--hb-primary); color: var(--hb-on-primary); font-size: 12px; font-weight: 700; cursor: pointer; }
 </style>

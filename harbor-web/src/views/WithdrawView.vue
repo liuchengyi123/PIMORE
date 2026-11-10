@@ -49,21 +49,21 @@ async function submit() {
 }
 </script>
 <style scoped>
-.page { min-height: 100vh; background: #FCFAF8; color: #1C2430; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
+.page { min-height: 100vh; background: var(--hb-page); color: var(--hb-ink); padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
 .head { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
-.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #1C2430; }
+.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: var(--hb-ink); }
 .title { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; margin: 0; }
-.avail { font-size: 11px; color: #6B7280; margin: 0 0 10px; }
+.avail { font-size: 11px; color: var(--hb-muted); margin: 0 0 10px; }
 .field {
-  display: block; background: #fff; border: 1px solid #E8E4DC; border-radius: 12px;
+  display: block; background: var(--hb-surface); border: 1px solid var(--hb-line); border-radius: 12px;
   padding: 12px 14px; margin-bottom: 10px;
 }
-.field span { display: block; font-size: 11px; font-weight: 600; color: #6B7280; margin-bottom: 4px; }
-.field input { width: 100%; border: 0; outline: 0; font-size: 14px; color: #1C2430; background: transparent; }
-.hint { font-size: 11px; color: #6B7280; line-height: 1.45; margin: 0 0 14px; }
+.field span { display: block; font-size: 11px; font-weight: 600; color: var(--hb-muted); margin-bottom: 4px; }
+.field input { width: 100%; border: 0; outline: 0; font-size: 14px; color: var(--hb-ink); background: transparent; }
+.hint { font-size: 11px; color: var(--hb-muted); line-height: 1.45; margin: 0 0 14px; }
 .msg { font-size: 12px; color: #0E7490; margin: 0 0 10px; }
 .cta {
-  width: 100%; height: 46px; border: 0; border-radius: 999px; background: #F96141; color: #fff;
+  width: 100%; height: 46px; border: 0; border-radius: 999px; background: var(--hb-primary); color: var(--hb-on-primary);
   font-size: 14px; font-weight: 600; cursor: pointer;
 }
 .cta:disabled { opacity: 0.7; }

@@ -17,16 +17,16 @@
 import AppTabBar from '@/components/AppTabBar.vue'
 </script>
 <style scoped>
-.page { min-height: 100vh; background: #FCFAF8; color: #1C2430; padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
+.page { min-height: 100vh; background: var(--hb-page); color: var(--hb-ink); padding: 12px 16px 40px; padding-top: calc(12px + env(safe-area-inset-top)); }
 .head { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
-.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #1C2430; }
+.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: var(--hb-ink); }
 .title { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; margin: 0; }
 .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .tile {
-  background: #fff; border: 1px solid #E8E4DC; border-radius: 16px; padding: 16px; text-decoration: none; color: inherit;
+  background: var(--hb-surface); border: 1px solid var(--hb-line); border-radius: 16px; padding: 16px; text-decoration: none; color: inherit;
   display: flex; flex-direction: column; gap: 6px; min-height: 96px;
 }
-.tile.wheel { background: #FFF1EC; border-color: #F8D5CC; }
+.tile.wheel { background: var(--hb-primary-soft); border-color: #F8D5CC; }
 .tt { font-size: 15px; font-weight: 700; }
-.td { font-size: 12px; color: #6B7280; }
+.td { font-size: 12px; color: var(--hb-muted); }
 </style>

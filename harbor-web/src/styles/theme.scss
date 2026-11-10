@@ -1,48 +1,79 @@
-﻿/* Harbor H5 tokens aligned to the App Shopper coral system */
-$hb-forest: #1C2430;
-$hb-deep: #F96141;
-$hb-soft: #FFF1EC;
-$hb-coral: #F96141;
-$hb-coral-soft: #FFF1EC;
-$hb-paper: #FCFAF8;
-$hb-line: #EFEAE4;
-$hb-ink: #1C2430;
-$hb-muted: #8B919A;
-$hb-white: #FFFFFF;
+﻿/* Buyer theme v1. Defaults match shop/buyer_theme.py Coral Market.
+   Runtime values are overwritten from GET /api/buyer-theme. */
+
+:root {
+  --hb-primary: #FF6A3D;
+  --hb-primary-soft: #FFD4C4;
+  --hb-page: #FFF4F0;
+  --hb-ink: #2C2623;
+  --hb-muted: #6E5E58;
+  --hb-on-primary: #FFFFFF;
+  --hb-surface: #FFFFFF;
+  --hb-sale: #C41E16;
+  --hb-badge: #9F1239;
+  --hb-primary-hover: #E05D36;
+  --hb-primary-pressed: #C75330;
+  --hb-primary-disabled: #FFB29A;
+  --hb-line: #E8DED8;
+  --hb-line: color-mix(in srgb, var(--hb-ink) 14%, var(--hb-surface));
+
+  /* Aliases for styles that already used the previous names. */
+  --hb-coral: var(--hb-primary);
+  --hb-deep: var(--hb-primary);
+  --hb-forest: var(--hb-ink);
+  --hb-soft: var(--hb-primary-soft);
+  --hb-coral-soft: var(--hb-primary-soft);
+  --hb-paper: var(--hb-page);
+  --hb-white: var(--hb-surface);
+  --hb-price: var(--hb-sale);
+  --fn-ink: var(--hb-ink);
+  --fn-teal: var(--hb-primary);
+  --fn-amber: var(--hb-sale);
+  --fn-sand: var(--hb-page);
+  --fn-line: var(--hb-line);
+  --fn-muted: var(--hb-muted);
+  --fn-surface: var(--hb-surface);
+  --fn-white: var(--hb-surface);
+}
+
+$hb-forest: var(--hb-ink);
+$hb-deep: var(--hb-primary);
+$hb-soft: var(--hb-primary-soft);
+$hb-coral: var(--hb-primary);
+$hb-coral-soft: var(--hb-primary-soft);
+$hb-paper: var(--hb-page);
+$hb-line: var(--hb-line);
+$hb-ink: var(--hb-ink);
+$hb-muted: var(--hb-muted);
+$hb-white: var(--hb-surface);
 $hb-success: #128A5E;
-$hb-price: #F96141;
+$hb-price: var(--hb-sale);
 $hb-radius-sm: 14px;
 $hb-radius-md: 20px;
 $hb-radius-lg: 24px;
 $hb-radius-pill: 999px;
-$hb-shadow-soft: 0 4px 20px rgba(14, 17, 22, 0.06);
-$hb-shadow-float: 0 10px 36px rgba(14, 17, 22, 0.10);
+$hb-shadow-soft: 0 4px 20px rgba(44, 38, 35, 0.06);
+$hb-shadow-float: 0 10px 36px rgba(44, 38, 35, 0.10);
 $hb-icon-stroke: 1.65;
 
-:root {
-  --hb-forest: #{$hb-forest};
-  --hb-deep: #{$hb-deep};
-  --hb-soft: #{$hb-soft};
-  --hb-coral: #{$hb-coral};
-  --hb-coral-soft: #{$hb-coral-soft};
-  --hb-paper: #{$hb-paper};
-  --hb-line: #{$hb-line};
-  --hb-ink: #{$hb-ink};
-  --hb-muted: #{$hb-muted};
-  --hb-white: #{$hb-white};
-  --hb-success: #{$hb-success};
-  --hb-price: #{$hb-price};
-  --hb-radius-sm: #{$hb-radius-sm};
-  --hb-radius-md: #{$hb-radius-md};
-  --hb-radius-lg: #{$hb-radius-lg};
-  --hb-shadow-soft: #{$hb-shadow-soft};
-  --hb-shadow-float: #{$hb-shadow-float};
-  --hb-icon-stroke: #{$hb-icon-stroke};
+:where(.btn.solid, .sheet-ok, .gate-btn, .checkout, a.checkout, .go):hover {
+  background-color: var(--hb-primary-hover);
+}
+:where(.btn.solid, .sheet-ok, .gate-btn, .checkout, a.checkout, .go):active {
+  background-color: var(--hb-primary-pressed);
+}
+:where(.btn.solid, .sheet-ok, .checkout, .go):disabled,
+:where(.btn.disabled, .btn.solid.disabled) {
+  background-color: var(--hb-primary-disabled);
+  color: var(--hb-ink);
+}
+:where(.btn.outline):hover {
+  background-color: var(--hb-primary-soft);
 }
 
 .hb-page {
   min-height: 100vh;
-  background: var(--hb-paper);
+  background: var(--hb-page);
   color: var(--hb-ink);
 }
 

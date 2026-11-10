@@ -26,14 +26,14 @@ const orderId = computed(() => String(route.query.id || ''))
 }
 .ok-ico {
   width: 72px; height: 72px; margin: 0 auto 16px; border-radius: 22px;
-  background: #F96141; color: #fff; display: flex; align-items: center; justify-content: center;
+  background: var(--hb-primary); color: var(--hb-on-primary); display: flex; align-items: center; justify-content: center;
   font-size: 36px; font-weight: 800; box-shadow: 0 12px 30px rgba(249,97,65,0.35);
 }
-h1 { margin: 0; font-size: 28px; font-weight: 800; color: #1C2430; }
-.sub { margin: 10px auto 0; max-width: 320px; font-size: 14px; color: #8B919A; line-height: 1.45; }
+h1 { margin: 0; font-size: 28px; font-weight: 800; color: var(--hb-ink); }
+.sub { margin: 10px auto 0; max-width: 320px; font-size: 14px; color: var(--hb-muted); line-height: 1.45; }
 .btn {
   display: flex; align-items: center; justify-content: center; margin: 16px auto 0; width: min(420px, 100%);
-  height: 52px; border-radius: 999px; background: #F96141; color: #fff; font-weight: 700; text-decoration: none;
+  height: 52px; border-radius: 999px; background: var(--hb-primary); color: var(--hb-on-primary); font-weight: 700; text-decoration: none;
 }
-.btn.soft { background: #fff; color: #F96141; border: 1.5px solid #F96141; }
+.btn.soft { background: var(--hb-surface); color: var(--hb-primary); border: 1.5px solid var(--hb-primary); }
 </style>

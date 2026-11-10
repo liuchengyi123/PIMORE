@@ -64,8 +64,8 @@ function go(path: string) {
   height: calc(56px + env(safe-area-inset-bottom));
   padding-bottom: env(safe-area-inset-bottom);
   border-radius: 0;
-  background: #fff;
-  border-top: 1px solid #F1EEEA;
+  background: var(--hb-surface);
+  border-top: 1px solid var(--hb-line);
   display: flex; align-items: flex-start; justify-content: space-around;
   z-index: 100;
 }
@@ -75,7 +75,7 @@ function go(path: string) {
 .tab {
   position: relative;
   flex: 1; border: 0; background: transparent; padding: 6px 0 4px; cursor: pointer;
-  color: #A0A6AD;
+  color: var(--hb-muted);
   display: flex; flex-direction: column; align-items: center; gap: 2px;
   &.on { color: $hb-coral; }
 }
@@ -89,7 +89,7 @@ function go(path: string) {
 .badge {
   position: absolute; top: 2px; right: 22%;
   min-width: 16px; height: 16px; border-radius: 999px; padding: 0 4px;
-  background: $hb-coral; color: #fff; font-size: 10px; font-weight: 700;
+  background: $hb-coral; color: var(--hb-on-primary); font-size: 10px; font-weight: 700;
   display: flex; align-items: center; justify-content: center;
 }
 </style>

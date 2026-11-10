@@ -20,15 +20,15 @@ function retry() {
 
 <style scoped>
 .page {
-  min-height: 100vh; background: #FCFAF8; color: #1C2430;
+  min-height: 100vh; background: var(--hb-page); color: var(--hb-ink);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   padding: 32px 24px; text-align: center;
 }
-.mark { width: 64px; height: 64px; border-radius: 20px; background: #FFF1EC; color: #F96141; display: grid; place-items: center; font-size: 28px; font-weight: 800; margin-bottom: 12px; }
+.mark { width: 64px; height: 64px; border-radius: 20px; background: var(--hb-primary-soft); color: var(--hb-primary); display: grid; place-items: center; font-size: 28px; font-weight: 800; margin-bottom: 12px; }
 h1 { margin: 0 0 8px; font-size: 28px; }
-.sub { margin: 0 0 20px; color: #8B919A; }
+.sub { margin: 0 0 20px; color: var(--hb-muted); }
 .btn {
   height: 48px; padding: 0 22px; border: 0; border-radius: 999px;
-  background: #F96141; color: #fff; font-weight: 700; cursor: pointer;
+  background: var(--hb-primary); color: var(--hb-on-primary); font-weight: 700; cursor: pointer;
 }
 </style>

@@ -13,15 +13,15 @@ const zh = computed(() => String(navigator.language || '').toLowerCase().startsW
 </script>
 <style scoped>
 .page {
-  min-height: 100vh; background: #FCFAF8; color: #1C2430;
+  min-height: 100vh; background: var(--hb-page); color: var(--hb-ink);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   padding: 32px 24px; text-align: center;
 }
-.mark { min-width: 72px; height: 64px; padding: 0 12px; border-radius: 20px; background: #FFF1EC; color: #F96141; display: grid; place-items: center; font-size: 22px; font-weight: 800; margin-bottom: 12px; }
+.mark { min-width: 72px; height: 64px; padding: 0 12px; border-radius: 20px; background: var(--hb-primary-soft); color: var(--hb-primary); display: grid; place-items: center; font-size: 22px; font-weight: 800; margin-bottom: 12px; }
 h1 { margin: 8px 0; font-size: 24px; }
-.sub { margin: 0 0 20px; color: #8B919A; }
+.sub { margin: 0 0 20px; color: var(--hb-muted); }
 .btn {
   display: inline-flex; align-items: center; height: 48px; padding: 0 22px;
-  border-radius: 999px; background: #F96141; color: #fff; font-weight: 700;
+  border-radius: 999px; background: var(--hb-primary); color: var(--hb-on-primary); font-weight: 700;
 }
 </style>

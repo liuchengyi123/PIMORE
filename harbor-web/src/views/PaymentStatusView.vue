@@ -26,16 +26,16 @@ function refresh() {
 </script>
 
 <style scoped>
-.page { min-height: 100vh; background: #FDF9F6; color: #1C2430; padding: 16px 24px 40px; text-align: center; }
+.page { min-height: 100vh; background: var(--hb-page); color: var(--hb-ink); padding: 16px 24px 40px; text-align: center; }
 .back { border: 0; background: transparent; font-size: 20px; cursor: pointer; float: left; }
-.brand { clear: both; margin: 36px 0 0; color: #F96141; font-weight: 800; letter-spacing: -0.03em; font-size: 28px; }
+.brand { clear: both; margin: 36px 0 0; color: var(--hb-primary); font-weight: 800; letter-spacing: -0.03em; font-size: 28px; }
 h1 { margin: 28px 0 8px; font-size: 26px; }
-.sub { margin: 0 auto 16px; max-width: 36ch; color: #8B919A; }
-.amt { font-size: 20px; font-weight: 800; color: #F96141; }
+.sub { margin: 0 auto 16px; max-width: 36ch; color: var(--hb-muted); }
+.amt { font-size: 20px; font-weight: 800; color: var(--hb-sale); }
 .btn, .ghost {
   display: flex; align-items: center; justify-content: center; height: 52px; margin: 12px auto 0;
   width: min(100%, 420px); border-radius: 16px; font-weight: 700;
 }
-.btn { border: 0; background: #F96141; color: #fff; cursor: pointer; }
-.ghost { border: 1.5px solid #F96141; color: #F96141; background: #fff; }
+.btn { border: 0; background: var(--hb-primary); color: var(--hb-on-primary); cursor: pointer; }
+.ghost { border: 1.5px solid var(--hb-primary); color: var(--hb-primary); background: var(--hb-surface); }
 </style>

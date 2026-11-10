@@ -123,8 +123,8 @@ onMounted(() => {
 <style lang="scss" scoped>
 @import '@/styles/theme.scss';
 .page { min-height: 100vh; background: $hb-paper; padding: 0 16px 40px; }
-.search-title { margin: 12px 0 0; font-size: 28px; font-weight: 800; letter-spacing: -0.03em; color: #F96141; }
-.search-sub { margin: 4px 0 12px; color: #8B919A; font-size: 14px; }
+.search-title { margin: 12px 0 0; font-size: 28px; font-weight: 800; letter-spacing: -0.03em; color: var(--hb-primary); }
+.search-sub { margin: 4px 0 12px; color: var(--hb-muted); font-size: 14px; }
 .sticky {
   position: sticky; top: 0; z-index: 20;
   background: rgba(247,244,239,0.94); backdrop-filter: blur(14px);
@@ -147,11 +147,11 @@ onMounted(() => {
 .hint-sub { margin-top: 8px; color: $hb-muted; font-size: 13px; }
 .go-home {
   display: inline-flex; margin-top: 20px; padding: 10px 16px; border-radius: 999px;
-  background: #F96141; color: #fff; font-weight: 700; text-decoration: none;
+  background: var(--hb-primary); color: var(--hb-on-primary); font-weight: 700; text-decoration: none;
 }
 .sort-chips { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 12px; }
-.hint.on { background: #F96141; color: #fff; }
+.hint.on { background: var(--hb-primary-soft); color: var(--hb-primary); }
 .more { display: block; margin: 18px auto 0; width: 140px; border: 0; padding: 12px; border-radius: 999px; background: $hb-white; color: $hb-forest; font-weight: 700; box-shadow: $hb-shadow-soft; cursor: pointer; }
 
-.fn-page { --ink:#1C2430; --teal:#0E7490; --amber:#F96141; --sand:#FCFAF8; }
+.fn-page { --ink:var(--hb-ink); --teal:var(--hb-primary); --amber:var(--hb-sale); --sand:var(--hb-page); }
 </style>

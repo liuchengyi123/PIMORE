@@ -64,25 +64,25 @@ async function save() {
 }
 </script>
 <style scoped>
-.page { min-height: 100vh; background: #FCFAF8; color: #1C2430; padding: 10px 16px 32px; padding-top: calc(10px + env(safe-area-inset-top)); }
+.page { min-height: 100vh; background: var(--hb-page); color: var(--hb-ink); padding: 10px 16px 32px; padding-top: calc(10px + env(safe-area-inset-top)); }
 .head { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
-.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: #1C2430; padding: 0; }
+.back { border: 0; background: transparent; font-size: 22px; font-weight: 700; cursor: pointer; color: var(--hb-ink); padding: 0; }
 .title { font-size: 20px; font-weight: 800; letter-spacing: -0.03em; margin: 0; }
-.hint { font-size: 12px; color: #8B919A; margin: 0 0 8px; line-height: 1.35; }
+.hint { font-size: 12px; color: var(--hb-muted); margin: 0 0 8px; line-height: 1.35; }
 .card {
   width: 100%; display: flex; justify-content: space-between; align-items: center; text-align: left;
-  background: #fff; border: 1px solid #F1EEEA; border-radius: 14px; padding: 8px 12px; margin-bottom: 6px;
+  background: var(--hb-surface); border: 1px solid var(--hb-line); border-radius: 14px; padding: 8px 12px; margin-bottom: 6px;
   min-height: 44px; cursor: pointer; color: inherit;
 }
-.card.on { border-color: #F96141; background: #FFF6F3; }
-.card.on .radio { color: #F96141; }
+.card.on { border-color: var(--hb-primary); background: var(--hb-primary-soft); }
+.card.on .radio { color: var(--hb-primary); }
 .left { display: flex; flex-direction: column; gap: 1px; }
 .nm { font-size: 14px; font-weight: 700; line-height: 1.25; }
-.meta { font-size: 11px; color: #8B919A; }
+.meta { font-size: 11px; color: var(--hb-muted); }
 .radio { font-size: 16px; color: #C5C9D1; }
-.msg { font-size: 12px; color: #F96141; margin: 6px 0; }
+.msg { font-size: 12px; color: var(--hb-primary); margin: 6px 0; }
 .cta {
-  width: 100%; height: 40px; border: 0; border-radius: 999px; background: #F96141; color: #fff;
+  width: 100%; height: 40px; border: 0; border-radius: 999px; background: var(--hb-primary); color: var(--hb-on-primary);
   font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 6px;
 }
 .cta:disabled { opacity: 0.7; }

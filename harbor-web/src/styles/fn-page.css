@@ -1,12 +1,12 @@
-/* Harbor Function mobile tokens — visual rebuild */
+/* Harbor shopper tokens — follow the shared buyer theme. */
 :root {
-  --fn-ink: #1C2430;
-  --fn-teal: #F96141;
-  --fn-amber: #F96141;
-  --fn-sand: #FCFAF8;
-  --fn-line: #EFEAE4;
-  --fn-muted: #8B919A;
-  --fn-surface: #FFFFFF;
+  --fn-ink: var(--hb-ink, #2C2623);
+  --fn-teal: var(--hb-primary, #FF6A3D);
+  --fn-amber: var(--hb-sale, #C41E16);
+  --fn-sand: var(--hb-page, #FFF4F0);
+  --fn-line: var(--hb-line, #E8DED8);
+  --fn-muted: var(--hb-muted, #6E5E58);
+  --fn-surface: var(--hb-surface, #FFFFFF);
 }
 .fn-page {
   --ink: var(--fn-ink);

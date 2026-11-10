@@ -97,12 +97,12 @@ onMounted(() => {
   color: $hb-ink;
   height: 44px;
 }
-.input::placeholder { color: #9AA39C; }
+.input::placeholder { color: var(--hb-muted); }
 .go {
   flex: 0 0 auto;
   border: 0;
   background: $hb-coral;
-  color: #fff;
+  color: var(--hb-on-primary);
   font-size: 13px;
   font-weight: 700;
   height: 32px;
