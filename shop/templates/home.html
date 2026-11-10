@@ -226,9 +226,9 @@
     <span class="m01-cta">{{ t.m_shop_cta }}</span>
   </a>
   <nav class="m01-cuts" aria-label="{{ t.departments }}">
-    <a href="{{ href('/sale', country) }}"><i><img src="/static/m01/sale.svg" width="24" height="24" alt=""></i>{{ t.sale_badge }}</a>
-    <a href="{{ href('/new', country) }}"><i><img src="/static/m01/sparkles.svg" width="24" height="24" alt=""></i>{{ t.m_new }}</a>
-    <a href="{{ href('/flash', country) }}"><i><img src="/static/m01/zap.svg" width="24" height="24" alt=""></i>{{ t.m_flash }}</a>
+    <a href="{{ href('/c/kitchen', country) }}"><i><img src="/static/m01/sale.svg" width="24" height="24" alt=""></i>{{ t.sale_badge }}</a>
+    <a href="{{ href('/c/storage?sort=newest', country) }}"><i><img src="/static/m01/sparkles.svg" width="24" height="24" alt=""></i>{{ t.m_new }}</a>
+    <a href="{{ href('/c/cleaning', country) }}"><i><img src="/static/m01/zap.svg" width="24" height="24" alt=""></i>{{ t.m_flash }}</a>
     <a href="{{ href('/account/coupons', country) }}"><i><img src="/static/m01/ticket.svg" width="24" height="24" alt=""></i>{{ t.m_coupons }}</a>
     <a href="{{ href('/check-in', country) }}"><i><img src="/static/m01/calendar.svg" width="24" height="24" alt=""></i>{{ t.m_checkin }}</a>
     <a href="{{ href('/account/balance', country) }}"><i><img src="/static/m01/wallet.svg" width="24" height="24" alt=""></i>{{ t.balance }}</a>
